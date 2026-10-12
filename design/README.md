@@ -15,7 +15,7 @@
 
 ## 查看状态
 
-`panel.html` 支持 `?state=loading|readonly|empty|list|over|filter|nofilter|matched|nomatch|notrepo`、`?scheme=light|dark` 和 `?lang=en|zh`。新画板也用 URL 参数切状态、深浅色和语言，每个状态都要能看到。
+画板左侧有一排切换按钮：状态、深浅色和语言，点击直接切换，左右方向键依次切换状态。地址栏同步为 `?state=…&scheme=light|dark&lang=en|zh`，可以把某个状态的链接发给别人。新画板也这样做，每个状态都要能看到。
 
 ## 维护
 
