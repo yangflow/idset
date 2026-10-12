@@ -1,0 +1,65 @@
+{
+  "en": {
+    "Title": "Example",
+    "Increment": "Increment",
+    "Decrement": "Decrement",
+    "Reset": "Reset",
+    "Hint": "Use the arrow keys to count."
+  },
+  "zh-Hans": {
+    "Title": "示例",
+    "Increment": "增加",
+    "Decrement": "减少",
+    "Reset": "重置",
+    "Hint": "使用上下方向键计数。"
+  },
+  "zh-Hant": {
+    "Title": "範例",
+    "Increment": "增加",
+    "Decrement": "減少",
+    "Reset": "重設",
+    "Hint": "使用上下方向鍵計數。"
+  },
+  "ja": {
+    "Title": "例",
+    "Increment": "増やす",
+    "Decrement": "減らす",
+    "Reset": "リセット",
+    "Hint": "上下の矢印キーで数を変えます。"
+  },
+  "ko": {
+    "Title": "예제",
+    "Increment": "증가",
+    "Decrement": "감소",
+    "Reset": "초기화",
+    "Hint": "위아래 방향키로 숫자를 바꿉니다."
+  },
+  "fr": {
+    "Title": "Exemple",
+    "Increment": "Augmenter",
+    "Decrement": "Diminuer",
+    "Reset": "Réinitialiser",
+    "Hint": "Utilisez les flèches pour compter."
+  },
+  "de": {
+    "Title": "Beispiel",
+    "Increment": "Erhöhen",
+    "Decrement": "Verringern",
+    "Reset": "Zurücksetzen",
+    "Hint": "Mit den Pfeiltasten zählen."
+  },
+  "es": {
+    "Title": "Ejemplo",
+    "Increment": "Aumentar",
+    "Decrement": "Disminuir",
+    "Reset": "Restablecer",
+    "Hint": "Usa las flechas para contar."
+  },
+  "pt-BR": {
+    "Title": "Exemplo",
+    "Increment": "Aumentar",
+    "Decrement": "Diminuir",
+    "Reset": "Redefinir",
+    "Hint": "Use as setas para contar."
+  }
+}
