@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Panel</title>
+<style>
+:root { color-scheme:light; --background:#fafafa; --surface:#fff; --text:#242424; --muted:#6b6b6b; --border:#dedede; --accent:#006fdf; --accent-soft:#e6f0fc; --danger:#c62828; --warning:#c46a1a; --ghost-hover:rgba(0,0,0,.06) }
+:root[data-scheme=dark] { color-scheme:dark; --background:#202020; --surface:#2a2a2a; --text:#f3f3f3; --muted:#a3a3a3; --border:#3d3d3d; --accent:#4c9dff; --accent-soft:#1c2c40; --danger:#ff6b6b; --warning:#f0a050; --ghost-hover:rgba(255,255,255,.08) }
+* { box-sizing:border-box }
+body { margin:0; font-family:system-ui,sans-serif; font-size:13px; color:var(--text); background:#888; display:flex; gap:24px; padding:24px; align-items:flex-start }
+.controls { width:220px; flex:none; display:flex; flex-direction:column; gap:14px; padding:14px; border-radius:10px; background:#f4f4f4; color:#242424; font-size:12px }
+.controls h2 { margin:0 0 6px; font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:.04em; color:#666 }
+.controls .group { display:flex; flex-wrap:wrap; gap:4px }
+.controls button { padding:4px 8px; border:1px solid #ccc; border-radius:5px; background:#fff; color:#242424; font:inherit; cursor:pointer }
+.controls button.on { background:#006fdf; border-color:#006fdf; color:#fff }
+.controls .hint { color:#666; line-height:1.5 }
+.controls kbd { padding:0 4px; border:1px solid #ccc; border-radius:3px; background:#fff; font-size:11px }
+.panel { width:340px; height:480px; flex:none; display:flex; flex-direction:column; background:var(--background); border:1px solid var(--border); border-radius:10px; overflow:hidden }
+header, footer { display:flex; align-items:center; gap:8px; padding:12px 16px }
+header { border-bottom:1px solid var(--border) }
+footer { border-top:1px solid var(--border); justify-content:flex-end }
+h1 { flex:1; margin:0; font-size:15px }
+.content { flex:1; overflow:auto; padding:16px; display:flex; flex-direction:column; gap:12px }
+.content > * { flex-shrink:0 }
+.panel button { padding:5px 10px; border:1px solid var(--border); border-radius:6px; background:var(--surface); color:var(--text); font:inherit }
+.panel button.icon { width:28px; padding:5px 0 }
+.panel button.ghost { width:24px; height:24px; padding:0; display:grid; place-items:center; border:0; background:transparent; color:var(--muted); cursor:pointer }
+.panel button.ghost:hover { background:var(--ghost-hover) }
+.ghost svg { width:14px; height:14px }
+.muted { color:var(--muted) }
+.small { font-size:12px }
+.mono { font-family:ui-monospace,monospace; font-size:12px }
+.drop { border:1.5px dashed var(--border); border-radius:10px; padding:20px 16px; display:flex; flex-direction:column; align-items:center; gap:6px; text-align:center }
+.drop.over { border-color:var(--accent); background:var(--accent-soft) }
+.drop.compact { flex-direction:row; padding:8px 12px; justify-content:space-between; text-align:left }
+.avatar { flex:none; display:grid; place-items:center; font-weight:700; color:rgb(var(--c)); background:rgba(var(--c),.16) }
+:root[data-scheme=dark] .avatar { color:rgb(var(--cl)); background:rgba(var(--c),.24) }
+
+/* Result card: a context line with the folder and its actions, then the answer. */
+.result { border:1px solid var(--border); border-radius:10px; background:var(--surface); overflow:hidden }
+.result.warning { border-color:var(--warning) }
+.result.danger { border-color:var(--danger) }
+.result .top { display:flex; align-items:center; gap:4px; padding:8px 8px 8px 12px; border-bottom:1px solid var(--border) }
+.result .top .mono { flex:1; min-width:0; color:var(--muted); overflow-wrap:anywhere }
+.result .copied { font-size:11px; color:var(--muted); margin-right:2px }
+.result .who { display:flex; align-items:center; gap:12px; padding:14px 12px 10px }
+.result .avatar { width:36px; height:36px; border-radius:9px; font-size:16px }
+.result .name { font-size:15px; font-weight:600 }
+.result .uses { font-size:12px; color:var(--muted) }
+.result .kv { display:grid; grid-template-columns:56px 1fr; gap:4px 8px; padding:0 12px 12px 60px; font-size:12px }
+.result .kv > :nth-child(odd) { color:var(--muted) }
+.result .say { padding:12px; display:flex; align-items:center; gap:8px; font-weight:600 }
+.result .say.plain { font-weight:400 }
+.result .say.danger { color:var(--danger); font-weight:400 }
+
+/* Identity list: a heading with the count, then one grouped list. */
+.section { display:flex; justify-content:space-between; padding:0 2px; margin-bottom:-6px; font-size:12px; font-weight:600; color:var(--muted) }
+.list { border:1px solid var(--border); border-radius:10px; background:var(--surface); overflow:hidden }
+.item { display:flex; align-items:center; gap:10px; padding:9px 12px }
+.item + .item { border-top:1px solid var(--border) }
+.item .avatar { width:28px; height:28px; border-radius:7px; font-size:13px }
+.item .text { flex:1; min-width:0; display:flex; flex-direction:column; gap:1px }
+.item .label { font-weight:600 }
+.item .email { font-size:12px; color:var(--muted) }
+.item .tag { flex:none; font-family:ui-monospace,monospace; font-size:11px; color:var(--muted) }
+
+.search { width:100%; padding:6px 8px; border:1px solid var(--border); border-radius:6px; background:var(--surface); color:var(--text); font:inherit }
+.chips { display:flex; gap:6px }
+.panel .chip { padding:3px 10px; border-radius:12px; font-size:12px }
+.panel .chip.on { background:var(--accent); color:white; border-color:var(--accent) }
+.center { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; text-align:center }
+.error { color:var(--danger) }
+.spinner { width:16px; height:16px; flex:none; border:2px solid var(--border); border-top-color:var(--accent); border-radius:50% }
+.center .spinner { width:20px; height:20px }
+/* accounts.json cannot be read: nothing else can be done, so the error takes the whole panel. */
+.readonly { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; text-align:center; padding:0 8px }
+.readonly .warn { width:44px; height:44px; border-radius:11px; display:grid; place-items:center; color:var(--danger); background:color-mix(in srgb, var(--danger) 14%, transparent) }
+.readonly .warn svg { width:22px; height:22px }
+.readonly .title { font-size:15px; font-weight:600 }
+.readonly .hint { font-size:12px; color:var(--muted); line-height:1.5 }
+.readonly .reason { width:100%; text-align:left; font-family:ui-monospace,monospace; font-size:11px; color:var(--muted); background:var(--background); border:1px solid var(--border); border-radius:6px; padding:6px 8px; overflow-wrap:anywhere }
+.readonly .actions { display:flex; gap:8px; margin-top:4px }
+</style>
+<aside class="controls">
+  <div><h2>State</h2><div class="group" id="states"></div></div>
+  <div><h2>Scheme</h2><div class="group" id="schemes"></div></div>
+  <div><h2>Language</h2><div class="group" id="langs"></div></div>
+  <div class="hint">URL: <code>?state=…&amp;scheme=dark&amp;lang=zh</code><br><kbd>←</kbd> <kbd>→</kbd> switch state.</div>
+</aside>
+<div class="panel">
+  <header><h1>Idset</h1></header>
+  <div class="content" id="content"></div>
+  <footer><button id="quit"></button></footer>
+</div>
+<script>
+const TEXT = {
+  zh: {
+    close:'隐藏', quit:'退出', loading:'正在读取配置…', dropTitle:'把项目文件夹拖到这里', dropHint:'看看这个目录会用哪个身份推送',
+    choose:'选择文件夹…', dropAgain:'拖入另一个文件夹，或', empty:'还没有身份', emptyHint:'添加身份的入口会在账户窗口里提供。',
+    filter:'筛选身份', none:'没有匹配的身份', unnamed:'（未命名）', readonly:'accounts.json 读不出来',
+    readonlyHint:'修好文件或从备份恢复之前，Idset 不会写入它。', reload:'重新读取', reveal:'在 Finder 中显示', copy:'复制完整路径', copied:'已复制', clear:'清除结果',
+    uses:'Git 在这里用这个身份', alias:'别名', email:'邮箱', folders:'生效目录', global:'全局', noAlias:'没有别名', noEmail:'没有邮箱',
+    noMatch:'没有身份匹配这个目录', notRepo:'不是 Git 仓库', notFolder:'只能查看文件夹', checking:'正在查看…',
+    gitFailed:'无法运行 git：exec: "git": executable file not found in $PATH', identities:'身份',
+  },
+  en: {
+    close:'Hide', quit:'Quit', loading:'Reading configuration…', dropTitle:'Drop a project folder here', dropHint:'See which identity pushes from it',
+    choose:'Choose Folder…', dropAgain:'Drop another folder, or', empty:'No identities yet', emptyHint:'Identities are added in the accounts window.',
+    filter:'Filter identities', none:'No matching identities', unnamed:'(unnamed)', readonly:'accounts.json cannot be read',
+    readonlyHint:'Idset will not write to it until it is fixed or restored from a backup.', reload:'Read Again', reveal:'Show in Finder', copy:'Copy the full path', copied:'Copied', clear:'Clear result',
+    uses:'Git uses this identity here', alias:'Alias', email:'Email', folders:'Folders', global:'Global', noAlias:'no alias', noEmail:'no email',
+    noMatch:'No identity matches this folder', notRepo:'Not a Git repository', notFolder:'Only folders can be checked', checking:'Checking…',
+    gitFailed:'Could not run git: exec: "git": executable file not found in $PATH', identities:'Identities',
+  },
+};
+const STATES = {
+  list:'有身份', over:'拖着经过', filter:'筛选', nofilter:'筛选无结果', checking:'正在查看', matched:'已匹配', copied:'已复制',
+  nomatch:'没有匹配', notrepo:'不是仓库', notfolder:'不是文件夹', giterror:'git 失败', empty:'没有身份', loading:'读取中', readonly:'读不出来',
+};
+const ids = [
+  { label:'work', alias:'github-work', email:'bob@example.com', c:'58,123,213', cl:'120,170,240', scope:['~/work/', '~/src/new/'] },
+  { label:'personal', alias:'github-personal', email:'bob@example.net', c:'46,158,91', cl:'95,200,135', scope:null },
+  { label:'client', alias:'gitlab-client', email:'bob@client.example', c:'224,122,31', cl:'240,165,95', scope:['~/work/client/'] },
+  { label:'', alias:'', email:'nobody@example.com', c:'142,68,173', cl:'190,130,215', scope:['~/misc/'] },
+];
+const icon = {
+  copy:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="5.5" y="5.5" width="8" height="8" rx="1.5"/><path d="M10.5 3.5v-.5a1 1 0 0 0-1-1h-6a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h.5"/></svg>',
+  check:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 8.5l3 3 6-7"/></svg>',
+  x:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M4 4l8 8M12 4l-8 8"/></svg>',
+  warn:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2.5l6 11H2z"/><path d="M8 6.5v3M8 11.6v.1"/></svg>',
+};
+const q = new URLSearchParams(location.search);
+const view = {
+  state: STATES[q.get('state')] ? q.get('state') : 'list',
+  scheme: q.get('scheme') === 'dark' ? 'dark' : 'light',
+  lang: q.get('lang') === 'zh' ? 'zh' : 'en',
+};
+
+function panel(state, T) {
+  const ghost = (name, label) => `<button class="ghost" title="${label}" aria-label="${label}">${icon[name]}</button>`;
+  const avatar = i => `<div class="avatar" style="--c:${i.c};--cl:${i.cl}">${(i.label || '?').slice(0, 1).toUpperCase()}</div>`;
+  const tag = i => i.scope ? i.scope[0] + (i.scope.length > 1 ? ` +${i.scope.length - 1}` : '') : T.global;
+  const list = n => `<div class="section"><span>${T.identities}</span><span>${n}</span></div>` +
+    `<div class="list">${ids.slice(0, n).map(i => `<div class="item">${avatar(i)}<div class="text"><span class="label">${i.label || T.unnamed}</span><span class="email">${i.email || T.noEmail}</span></div><span class="tag">${tag(i)}</span></div>`).join('')}</div>`;
+  const drop = (compact, over) => compact
+    ? `<div class="drop compact"><span class="muted small">${T.dropAgain}</span><button>${T.choose}</button></div>`
+    : `<div class="drop${over ? ' over' : ''}"><strong>${T.dropTitle}</strong><span class="muted small">${T.dropHint}</span><button>${T.choose}</button></div>`;
+  const filter = `<input class="search" placeholder="${T.filter}"><div class="chips"><button class="chip on">GitHub</button><button class="chip">GitLab</button><button class="chip">Gitea</button></div>`;
+  const filtered = `<div class="section"><span>${T.identities}</span><span>4</span></div>` + filter;
+  const top = (path, actions) => `<div class="top"><span class="mono">${path}</span>${actions}</div>`;
+  const result = (kind, path, body, actions = ghost('x', T.clear)) => `<div class="result ${kind}">${top(path, actions)}${body}</div>`;
+  const matched = copied => result('', '~/work/api', `
+    <div class="who">${avatar(ids[0])}<div><div class="name">work</div><div class="uses">${T.uses}</div></div></div>
+    <div class="kv"><span>${T.alias}</span><span class="mono">github-work</span><span>${T.email}</span><span>bob@example.com</span><span>${T.folders}</span><span class="mono">~/work/ · ~/src/new/</span></div>`,
+    (copied ? `<span class="copied">${T.copied}</span>${ghost('check', T.copy)}` : ghost('copy', T.copy)) + ghost('x', T.clear));
+  return {
+    loading: `<div class="center"><div class="spinner"></div><span class="muted">${T.loading}</span></div>`,
+    readonly: `<div class="readonly"><div class="warn">${icon.warn}</div><div class="title">${T.readonly}</div><div class="hint">${T.readonlyHint}</div>
+      <div class="reason">~/.config/idset/accounts.json<br>invalid character '}' looking for beginning of object key string</div>
+      <div class="actions"><button>${T.reveal}</button><button>${T.reload}</button></div></div>`,
+    empty: drop(false) + `<div class="center"><strong>${T.empty}</strong><span class="muted small">${T.emptyHint}</span></div>`,
+    list: drop(false) + list(2),
+    over: drop(false, true) + list(2),
+    filter: drop(false) + list(4).replace('</div><div class="list">', `</div>${filter}<div class="list">`),
+    nofilter: drop(false) + filtered + `<span class="muted center">${T.none}</span>`,
+    checking: result('', '~/work/api', `<div class="say plain"><div class="spinner"></div>${T.checking}</div>`, '') + drop(true) + list(2),
+    matched: matched(false) + drop(true) + list(2),
+    copied: matched(true) + drop(true) + list(2),
+    nomatch: result('warning', '~/scratch/notes', `<div class="say">${T.noMatch}</div>`) + drop(true) + list(2),
+    notrepo: result('warning', '~/scratch/notes', `<div class="say">${T.notRepo}</div>`) + drop(true) + list(2),
+    notfolder: result('warning', '~/Downloads/report.pdf', `<div class="say">${T.notFolder}</div>`) + drop(true) + list(2),
+    giterror: result('danger', '~/work/api', `<div class="say danger">${T.gitFailed}</div>`) + drop(true) + list(2),
+  }[state];
+}
+
+function buttons(id, options, key) {
+  document.getElementById(id).innerHTML = Object.entries(options)
+    .map(([value, label]) => `<button data-value="${value}" class="${view[key] === value ? 'on' : ''}">${label}</button>`).join('');
+  document.getElementById(id).onclick = e => { const v = e.target.dataset.value; if (v) { view[key] = v; render(); } };
+}
+
+function render() {
+  const T = TEXT[view.lang];
+  document.documentElement.dataset.scheme = view.scheme;
+  document.getElementById('quit').textContent = T.quit;
+  document.getElementById('content').innerHTML = panel(view.state, T);
+  buttons('states', STATES, 'state');
+  buttons('schemes', { light:'浅色', dark:'深色' }, 'scheme');
+  buttons('langs', { zh:'中文', en:'English' }, 'lang');
+  history.replaceState(null, '', `?state=${view.state}&scheme=${view.scheme}&lang=${view.lang}`);
+}
+
+onkeydown = e => {
+  if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+  const keys = Object.keys(STATES), i = keys.indexOf(view.state);
+  view.state = keys[(i + (e.key === 'ArrowRight' ? 1 : keys.length - 1)) % keys.length];
+  render();
+};
+render();
+</script>
+</html>

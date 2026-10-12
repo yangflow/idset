@@ -6,8 +6,7 @@
 
 | 界面 | 规格 | 画板 | 代码 | 状态 |
 |---|---|---|---|---|
-| Example | `docs/product.md` 当前界面 | `screens/example.html` | `internal/ui/example/` | 模板示例，产品第一个界面落地时删掉 |
-| 面板 | `docs/product.md`「托盘和面板」「拖入文件夹」 | 待画 | `internal/ui/panel/` | 计划中 |
+| 面板 | `docs/product.md`「托盘和面板」「拖入文件夹」 | `screens/panel.html` | `internal/ui/panel/` | 已定稿 |
 | 账户窗口 | `docs/product.md`「账户窗口」 | 待画 | `internal/ui/accounts/` | 计划中 |
 | 设置窗口 | `docs/product.md`「设置窗口」「密钥」「导入」 | 待画 | `internal/ui/settings/` | 计划中 |
 | 关于窗口 | `docs/product.md`「关于窗口」 | 待画 | `internal/ui/about/` | 计划中 |
@@ -16,7 +15,7 @@
 
 ## 查看状态
 
-`example.html` 支持 `?state=zero|positive|negative` 和 `?scheme=light|dark`。新画板也用 URL 参数切状态和深浅色，每个状态都要能看到。
+画板左侧有一排切换按钮：状态、深浅色和语言，点击直接切换，左右方向键依次切换状态。地址栏同步为 `?state=…&scheme=light|dark&lang=en|zh`，可以把某个状态的链接发给别人。新画板也这样做，每个状态都要能看到。
 
 ## 维护
 

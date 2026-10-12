@@ -26,15 +26,21 @@ Private keys stay where they are; Idset only refers to them by path.
 
 ## Status
 
-Early development, version 0.1.0, with no release yet. The window still shows the template's counter example.
-The behavior to build is specified in [docs/product.md](docs/product.md) (in Chinese), in the order of the
-[roadmap](docs/roadmap.md).
+Early development, version 0.1.0, with no release yet. The behavior to build is specified in
+[docs/product.md](docs/product.md) (in Chinese), in the order of the [roadmap](docs/roadmap.md).
+
+Working now:
+
+- **Identities in the tray.** A tray icon opens a panel listing the identities in `~/.config/idset/accounts.json`,
+  most recently used first, with a filter once there are three or more.
+- **Drop a folder to check it.** Drop a project folder into the panel, or choose one, to see which identity Git
+  uses there.
+
+Identities cannot be added in the app yet; that comes with the accounts window.
 
 Planned:
 
-- **Identities in the tray.** A tray icon opens a panel listing your identities, most recently used first.
-- **Drop a folder to check it.** Drop a project folder into the panel to see which identity Git and SSH will
-  use there, and bind it to another one in one click.
+- **Bind in one click.** Bind a folder to another identity from the panel, with undo.
 - **Generated configuration.** SSH host aliases, `includeIf` rules and `insteadOf` URL rewrites are generated
   from the list and backed up before each change.
 - **Diagnostics.** Checks each identity with `ssh -T` and says what to do when a key is rejected, locked or

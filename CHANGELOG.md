@@ -6,4 +6,5 @@ All notable user-facing changes are recorded here, following [Keep a Changelog](
 
 ### Added
 
-- Native window with a localized counter example and native update window support.
+- A tray icon opens a panel listing your identities, most recently used first, with a filter for three or more.
+- Drop a folder into the panel, or choose one, to see which identity Git uses there.

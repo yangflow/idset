@@ -25,7 +25,7 @@
 
 ## 目录
 
-- `main.go`：生命周期、托盘、面板和窗口、原生更新插件。
+- `main.go`：生命周期、单实例、托盘、面板窗口的位置和显示、后台读取和匹配、原生更新插件。
 - `internal/ui/<界面>/`：一个界面一个包，放状态、文案目录和无头交互测试。目录名和 `design/screens/<界面>.html` 对应。
 - `resources/`：随包分发的许可证和产品资源。
 - `scripts/`：检查、版本号、打包。
@@ -39,6 +39,11 @@
 - `internal/project/`：从身份列表生成托管文件的内容。纯函数，不碰磁盘。
 - `internal/include/`：Include 标记块的插入、替换和移除。纯函数。
 - `internal/apply/`：唯一写配置文件的地方：托管文件和用户文件里的标记块。
+- `internal/sysexec/`：调用系统命令：超时、不接标准输入、不经过 shell（ADR 0004）。
+- `internal/match/`：拖入的文件夹用哪个身份。调 `git` 的部分可以注入，测试用假的。
+- `internal/trayicon/`：用代码画托盘图标，不放图片文件。
+- `internal/ui/locale/`：系统语言到界面语言（简体中文、英文）的映射，所有文案目录共用。
+- `internal/ui/panel/`：面板。
 
 ## 代码
 
