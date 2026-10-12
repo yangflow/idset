@@ -1,24 +1,31 @@
-# 0002 只写托管文件，用户配置里只加一行 Include
+# 0002 Write only managed files and add one Include line to the user's configuration
 
-- 状态：已采纳
-- 日期：2026-10-12
-- 相关：[docs/product.md](../product.md)「生成配置」
+- Status: accepted
+- Date: 2026-10-12
+- Related: [docs/product.md](../product.md), "Generated configuration" (生成配置)
 
-## 背景
+## Context
 
-用户的 `~/.ssh/config` 和 `~/.gitconfig` 往往是手写的，有注释、有别的工具的配置，有的放在 dotfiles 仓库里。直接改写这两个文件，一旦出错会弄坏用户的整个 SSH 和 Git 环境，而且和 dotfiles 管理工具冲突。
+The user's `~/.ssh/config` and `~/.gitconfig` are often written by hand, with comments and configuration from other
+tools, and some live in a dotfiles repository. Rewriting these two files directly would, on any mistake, break the
+user's whole SSH and Git setup, and would conflict with dotfiles managers.
 
-## 决定
+## Decision
 
-- Idset 只拥有自己的目录（各平台路径见 product.md），所有身份配置都生成到这个目录下的托管文件里，每次从 `accounts.json` 整体重新生成。
-- 用户的 `~/.ssh/config` 和 `~/.gitconfig` 里只插入一个带标记的块，块里只有一行 `Include`（Git 是 `[include] path = ...`）。插入是幂等的，第二次插入不会重复。
-- 移除时只删标记块，不动文件其余内容，也不删 `accounts.json` 和私钥。
-- 私钥只按路径引用，Idset 不读取、不复制、不上传私钥内容。
+- Idset owns only its own directory (the path on each platform is in product.md). All identity configuration is
+  generated into managed files in that directory, regenerated as a whole from `accounts.json` every time.
+- In the user's `~/.ssh/config` and `~/.gitconfig`, Idset inserts only one marked block, which holds a single
+  `Include` line (for Git, `[include] path = ...`). Insertion is idempotent: inserting a second time adds nothing.
+- Removal deletes only the marked block and leaves the rest of the file alone; it does not delete `accounts.json` or
+  private keys.
+- Private keys are referred to by path only. Idset does not read, copy or upload their contents.
 
-## 代价
+## Cost
 
-`Include` 在 `~/.ssh/config` 里必须放在最前面，才能对所有 `Host` 生效，所以标记块总是插到文件开头。用户手写的同名 `Host` 或 `includeIf` 可能和托管文件冲突，要靠诊断提示，不能自动修。
+In `~/.ssh/config` the `Include` must come first to apply to every `Host`, so the marked block is always inserted at
+the top of the file. A `Host` or `includeIf` of the same name written by the user can conflict with the managed
+files; diagnostics point this out, it cannot be fixed automatically.
 
-## 什么时候重新考虑
+## When to revisit
 
-`ssh` 或 `git` 改变 `Include` 的语义，或者某个平台上的 `ssh` 不支持 `Include`。
+`ssh` or `git` changes the meaning of `Include`, or `ssh` on some platform does not support `Include`.

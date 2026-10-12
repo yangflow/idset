@@ -1,23 +1,32 @@
-# 0003 拖放区放在托盘弹出的窗口里
+# 0003 The drop zone lives in the window the tray icon opens
 
-- 状态：已采纳
-- 日期：2026-10-12
-- 相关：[docs/product.md](../product.md)「拖入文件夹」、[ADR 0001](0001-pure-go-native-ui.md)
+- Status: accepted
+- Date: 2026-10-12
+- Related: [docs/product.md](../product.md), "Dropping a folder" (拖入文件夹); [ADR 0001](0001-pure-go-native-ui.md)
 
-## 背景
+## Context
 
-最直接的手势是把项目文件夹拖到托盘图标上，看这个仓库会用哪个身份。MyGo v0.3.5 的托盘图标只有单击和右键两个事件，不接受拖放；只有窗口能接收文件拖放（`OnFileDrop`）。
+The most direct gesture is to drag a project folder onto the tray icon to see which identity that repository uses.
+In MyGo v0.3.5 a tray icon has only click and right-click events and does not accept drops; only a window receives
+dropped files (`OnFileDrop`).
 
-## 决定
+## Decision
 
-单击托盘图标，在图标下方打开一个无边框的小窗口（下称「面板」），位置和 MyGo 的菜单栏示例一样。面板里有拖放区，文件夹拖进面板后进入匹配流程。拖放区在没有匹配结果时最显眼，有结果后缩成一行提示，结果卡片在下面。
+A click on the tray icon opens a small frameless window (the "panel") below the icon, placed as in MyGo's menu bar
+example. The panel has a drop zone; a folder dropped into the panel starts matching. The drop zone is most prominent
+when there is no result; once there is one it shrinks to a one-line hint, with the result card above it.
 
-## 代价
+## Cost
 
-多一步：先点开面板，再拖进去。拖着文件夹时没法打开面板，所以要先点开。
+One more step: open the panel first, then drop. The panel cannot be opened while a folder is being dragged, so it has
+to be opened before.
 
-面板不能随失焦隐藏：用户要先点 Finder 或资源管理器才能开始拖，那一下就让面板失焦了。所以面板浮在其他窗口上面，只在再次单击托盘图标或按 Esc 时隐藏（Linux 上用托盘菜单的「隐藏 Idset」）。代价是面板会一直挡着一块屏幕，直到用户主动收起。
+The panel cannot hide when it loses focus: the user has to click Finder or Explorer to start dragging, and that click
+takes the focus away. So the panel floats above other windows and hides only on another click on the tray icon or on
+Escape (on Linux, with "Hide Idset" in the tray menu). The cost is that the panel covers part of the screen until the
+user puts it away.
 
-## 什么时候重新考虑
+## When to revisit
 
-MyGo 的托盘图标支持拖放。那时可以加上拖到图标上这个入口，面板里的拖放区保留。
+MyGo's tray icon supports drops. Dropping onto the icon can then be added as another way in, and the drop zone in the
+panel stays.
