@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Panel, light and dark</title>
+<!-- Static comparison of the panel in both appearances. Colors are the MyGo default theme roles and sizes the
+     4 DIP spacing unit at 13 px text; see design/tokens.md. No scripts and no external resources.
+     Every state, in both languages, is in panel.html. -->
+<style>
+* { box-sizing:border-box }
+body { margin:0; padding:24px; font-family:system-ui,sans-serif; background:#e4e4e7; color:#18181b }
+h2 { margin:0 0 4px; font-size:16px }
+p.note { margin:0 0 20px; font-size:13px; color:#52525b }
+.row { display:flex; flex-wrap:wrap; gap:24px; align-items:flex-start }
+figure { margin:0 }
+figcaption { margin:8px 0 0; font-size:12px; color:#52525b }
+.light { --background:#ffffff; --surface:#f4f4f5; --hover:#e9e9ec; --text:#18181b; --muted:#71717a; --border:#d9d9de; --accent:#2563eb; --selection:rgba(37,99,235,.25); --focus:rgba(37,99,235,.55); --warning:#d97706; --danger:#dc2626 }
+.dark { --background:#18181b; --surface:#27272a; --hover:#323236; --text:#f4f4f5; --muted:#a1a1aa; --border:#3f3f46; --accent:#3b82f6; --selection:rgba(59,130,246,.4); --focus:rgba(96,165,250,.6); --warning:#f59e0b; --danger:#ef4444 }
+.panel { width:340px; height:480px; display:flex; flex-direction:column; font-size:13px; background:var(--background); color:var(--text); border:1px solid #a1a1aa; border-radius:10px; overflow:hidden }
+header, footer { display:flex; align-items:center; padding:12px 16px; flex:none }
+header { border-bottom:1px solid var(--border) }
+footer { border-top:1px solid var(--border); justify-content:flex-end }
+h1 { margin:0; font-size:15px }
+.content { flex:1; padding:16px; display:flex; flex-direction:column; gap:12px; overflow:hidden }
+.content > * { flex-shrink:0 }
+button { padding:5px 10px; border:1px solid var(--border); border-radius:6px; background:var(--surface); color:var(--text); font:inherit }
+button.ghost { width:24px; height:24px; padding:0; display:grid; place-items:center; border:0; background:transparent; color:var(--muted) }
+button.focus { outline:2px solid var(--focus); outline-offset:1px }
+.ghost svg { width:14px; height:14px }
+.muted { color:var(--muted) }
+.small { font-size:12px }
+.mono { font-family:ui-monospace,monospace; font-size:12px }
+.drop { border:1.5px dashed var(--border); border-radius:10px; padding:20px 16px; display:flex; flex-direction:column; align-items:center; gap:6px; text-align:center }
+.drop.over { border-color:var(--accent); background:var(--selection) }
+.drop.compact { flex-direction:row; padding:8px 12px; justify-content:space-between; text-align:left }
+.avatar { flex:none; display:grid; place-items:center; font-weight:700; color:rgb(var(--c)); background:rgba(var(--c),.16) }
+.dark .avatar { color:rgb(var(--cl)); background:rgba(var(--c),.24) }
+.result { border:1px solid var(--border); border-radius:10px; background:var(--surface); overflow:hidden }
+.result.warning { border-color:var(--warning) }
+.result .top { display:flex; align-items:center; gap:4px; padding:8px 8px 8px 12px; border-bottom:1px solid var(--border) }
+.result .top .mono { flex:1; color:var(--muted) }
+.result .who { display:flex; align-items:center; gap:12px; padding:14px 12px 10px }
+.result .avatar { width:36px; height:36px; border-radius:9px; font-size:16px }
+.result .name { font-size:15px; font-weight:600 }
+.result .kv { display:grid; grid-template-columns:56px 1fr; gap:4px 8px; padding:0 12px 12px 60px; font-size:12px }
+.result .kv > :nth-child(odd) { color:var(--muted) }
+.result .say { padding:12px; font-weight:600 }
+.section { display:flex; justify-content:space-between; padding:0 2px; margin-bottom:-6px; font-size:12px; font-weight:600; color:var(--muted) }
+.list { border:1px solid var(--border); border-radius:10px; background:var(--surface); overflow:hidden }
+.item { display:flex; align-items:center; gap:10px; padding:9px 12px }
+.item + .item { border-top:1px solid var(--border) }
+.item .avatar { width:28px; height:28px; border-radius:7px; font-size:13px }
+.item .text { flex:1; display:flex; flex-direction:column; gap:1px }
+.item .label { font-weight:600 }
+.item .tag { font-family:ui-monospace,monospace; font-size:11px; color:var(--muted) }
+</style>
+<h2>Panel: light and dark</h2>
+<p class="note">Top row: files dragged over the drop zone, then a matched folder with the keyboard focus on the copy
+button. Bottom row: the same states in dark, then a folder without a match.</p>
+<div class="row">
+  <figure><div class="panel light"><header><h1>Idset</h1></header><div class="content">
+    <div class="drop over"><strong>Drop a project folder here</strong><span class="muted small">See which identity pushes from it</span><button>Choose Folder…</button></div>
+    <div class="section"><span>Identities</span><span>2</span></div>
+    <div class="list">
+      <div class="item"><div class="avatar" style="--c:58,123,213;--cl:120,170,240">W</div><div class="text"><span class="label">work</span><span class="muted small">bob@example.com</span></div><span class="tag">~/work/ +1</span></div>
+      <div class="item"><div class="avatar" style="--c:46,158,91;--cl:95,200,135">P</div><div class="text"><span class="label">personal</span><span class="muted small">bob@example.net</span></div><span class="tag">Global</span></div>
+    </div>
+  </div><footer><button>Quit</button></footer></div><figcaption>Light, dragging over</figcaption></figure>
+
+  <figure><div class="panel light"><header><h1>Idset</h1></header><div class="content">
+    <div class="result"><div class="top"><span class="mono">~/work/api</span>
+      <button class="ghost focus" aria-label="Copy the full path"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="5.5" y="5.5" width="8" height="8" rx="1.5"/><path d="M10.5 3.5v-.5a1 1 0 0 0-1-1h-6a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h.5"/></svg></button>
+      <button class="ghost" aria-label="Clear result"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M4 4l8 8M12 4l-8 8"/></svg></button></div>
+      <div class="who"><div class="avatar" style="--c:58,123,213;--cl:120,170,240">W</div><div><div class="name">work</div><div class="muted small">Git uses this identity here</div></div></div>
+      <div class="kv"><span>Alias</span><span class="mono">github-work</span><span>Email</span><span>bob@example.com</span><span>Folders</span><span class="mono">~/work/ · ~/src/new/</span></div></div>
+    <div class="drop compact"><span class="muted small">Drop another folder, or</span><button>Choose Folder…</button></div>
+    <div class="section"><span>Identities</span><span>2</span></div>
+    <div class="list"><div class="item"><div class="avatar" style="--c:58,123,213;--cl:120,170,240">W</div><div class="text"><span class="label">work</span><span class="muted small">bob@example.com</span></div><span class="tag">~/work/ +1</span></div></div>
+  </div><footer><button>Quit</button></footer></div><figcaption>Light, matched, focus ring</figcaption></figure>
+</div>
+<div class="row" style="margin-top:24px">
+  <figure><div class="panel dark"><header><h1>Idset</h1></header><div class="content">
+    <div class="drop over"><strong>Drop a project folder here</strong><span class="muted small">See which identity pushes from it</span><button>Choose Folder…</button></div>
+    <div class="section"><span>Identities</span><span>2</span></div>
+    <div class="list">
+      <div class="item"><div class="avatar" style="--c:58,123,213;--cl:120,170,240">W</div><div class="text"><span class="label">work</span><span class="muted small">bob@example.com</span></div><span class="tag">~/work/ +1</span></div>
+      <div class="item"><div class="avatar" style="--c:46,158,91;--cl:95,200,135">P</div><div class="text"><span class="label">personal</span><span class="muted small">bob@example.net</span></div><span class="tag">Global</span></div>
+    </div>
+  </div><footer><button>Quit</button></footer></div><figcaption>Dark, dragging over</figcaption></figure>
+
+  <figure><div class="panel dark"><header><h1>Idset</h1></header><div class="content">
+    <div class="result"><div class="top"><span class="mono">~/work/api</span>
+      <button class="ghost focus" aria-label="Copy the full path"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="5.5" y="5.5" width="8" height="8" rx="1.5"/><path d="M10.5 3.5v-.5a1 1 0 0 0-1-1h-6a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h.5"/></svg></button>
+      <button class="ghost" aria-label="Clear result"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M4 4l8 8M12 4l-8 8"/></svg></button></div>
+      <div class="who"><div class="avatar" style="--c:58,123,213;--cl:120,170,240">W</div><div><div class="name">work</div><div class="muted small">Git uses this identity here</div></div></div>
+      <div class="kv"><span>Alias</span><span class="mono">github-work</span><span>Email</span><span>bob@example.com</span><span>Folders</span><span class="mono">~/work/ · ~/src/new/</span></div></div>
+    <div class="drop compact"><span class="muted small">Drop another folder, or</span><button>Choose Folder…</button></div>
+    <div class="section"><span>Identities</span><span>2</span></div>
+    <div class="list"><div class="item"><div class="avatar" style="--c:58,123,213;--cl:120,170,240">W</div><div class="text"><span class="label">work</span><span class="muted small">bob@example.com</span></div><span class="tag">~/work/ +1</span></div></div>
+  </div><footer><button>Quit</button></footer></div><figcaption>Dark, matched, focus ring</figcaption></figure>
+
+  <figure><div class="panel dark"><header><h1>Idset</h1></header><div class="content">
+    <div class="result warning"><div class="top"><span class="mono">~/scratch/notes</span>
+      <button class="ghost" aria-label="Clear result"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M4 4l8 8M12 4l-8 8"/></svg></button></div>
+      <div class="say">No identity matches this folder</div></div>
+    <div class="drop compact"><span class="muted small">Drop another folder, or</span><button>Choose Folder…</button></div>
+    <div class="section"><span>Identities</span><span>2</span></div>
+    <div class="list">
+      <div class="item"><div class="avatar" style="--c:58,123,213;--cl:120,170,240">W</div><div class="text"><span class="label">work</span><span class="muted small">bob@example.com</span></div><span class="tag">~/work/ +1</span></div>
+      <div class="item"><div class="avatar" style="--c:46,158,91;--cl:95,200,135">P</div><div class="text"><span class="label">personal</span><span class="muted small">bob@example.net</span></div><span class="tag">Global</span></div>
+    </div>
+  </div><footer><button>Quit</button></footer></div><figcaption>Dark, no match</figcaption></figure>
+</div>
+</html>
