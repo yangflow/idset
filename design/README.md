@@ -6,7 +6,7 @@
 
 | 界面 | 规格 | 画板 | 代码 | 状态 |
 |---|---|---|---|---|
-| 面板 | `docs/product.md`「托盘和面板」「拖入文件夹」 | `screens/panel.html` | `internal/ui/panel/` | 待评审 |
+| 面板 | `docs/product.md`「托盘和面板」「拖入文件夹」 | `screens/panel.html` | `internal/ui/panel/` | 已定稿 |
 | 账户窗口 | `docs/product.md`「账户窗口」 | 待画 | `internal/ui/accounts/` | 计划中 |
 | 设置窗口 | `docs/product.md`「设置窗口」「密钥」「导入」 | 待画 | `internal/ui/settings/` | 计划中 |
 | 关于窗口 | `docs/product.md`「关于窗口」 | 待画 | `internal/ui/about/` | 计划中 |
