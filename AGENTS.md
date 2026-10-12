@@ -31,7 +31,14 @@
 - `scripts/`：检查、版本号、打包。
 - `mygo.json`：名称、identifier、版本号、打包配置。版本号只写在这里，用 `python3 scripts/bump.py <版本>` 改，它会同时给两份 changelog 定日期。
 
-核心逻辑落地时按职责分包，放在 `internal/` 下：账户存储、配置生成、Include 标记块、目录匹配、调用系统命令。生成配置的包是纯函数，不碰磁盘；写文件只在一处。
+- `internal/paths/`：路径的存储形式（正斜杠、`~`）和绝对形式互转，Windows 不区分大小写。
+- `internal/fsutil/`：原子写、拒绝符号链接、跟随符号链接找真实文件。
+- `internal/account/`：身份的字段、`accounts.json` 的编解码、保存前的校验。字段按 JSON 键的字母顺序排，有测试拦。
+- `internal/store/`：读写 `accounts.json`、只读状态、备份和恢复。
+- `internal/gitdir/`：`gitdir` 路径的规范化、`includeIf` 的写入顺序和匹配。
+- `internal/project/`：从身份列表生成托管文件的内容。纯函数，不碰磁盘。
+- `internal/include/`：Include 标记块的插入、替换和移除。纯函数。
+- `internal/apply/`：唯一写配置文件的地方：托管文件和用户文件里的标记块。
 
 ## 代码
 
