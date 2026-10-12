@@ -6,8 +6,8 @@ so every folder uses the right one (see [product.md](product.md), in Chinese). I
 panel that the tray icon opens: the identity list, and a drop zone that shows which identity Git uses in a folder.
 
 The UI is built on the native toolkit of [MyGo](https://github.com/egoist/mygo). This document summarizes the parts
-of its [UI guides](https://github.com/egoist/mygo/blob/v0.3.5/docs/ui/README.md) that matter for design; the guides
-stay the authority on API details. Links point to MyGo v0.3.5, the version pinned in `go.mod`. When the pin moves,
+of its [UI guides](https://github.com/egoist/mygo/blob/v0.3.6/docs/ui/README.md) that matter for design; the guides
+stay the authority on API details. Links point to MyGo v0.3.6, the version pinned in `go.mod`. When the pin moves,
 check the pages again and update the links and this document together.
 
 The panel (`internal/ui/panel/`) is the reference the values below call "the panel". The accounts, settings and
@@ -39,7 +39,7 @@ Related files: [design/README.md](../design/README.md) (mockups and how a UI cha
   dark appearance and accent color. A control that looks and behaves like the platform's is learned already. Style
   an element yourself only when no widget does the job (the drop zone, the initial badge, the result card), and
   build it from containers and widgets, or on the
-  [custom widget](https://github.com/egoist/mygo/blob/v0.3.5/docs/ui/custom-widgets.md) bases, so focus, keyboard
+  [custom widget](https://github.com/egoist/mygo/blob/v0.3.6/docs/ui/custom-widgets.md) bases, so focus, keyboard
   and accessibility stay intact. No WebView and no HTML frontend.
 - **Consistent across platforms, respectful of each.** One view serves macOS, Windows and Linux. Follow each
   platform's conventions where MyGo exposes them: the menu bar or notification area for the tray, a template icon on
@@ -55,14 +55,14 @@ Related files: [design/README.md](../design/README.md) (mockups and how a UI cha
   identity's color badge sits next to its name, and the state of a result card is written as a sentence.
 - **The UI thread draws.** A frame is built from in-memory state. No disk, network or subprocess work in a view,
   including reading `accounts.json` and running `git`; start that work in the background and change the state back
-  on the UI thread (see [Views](https://github.com/egoist/mygo/blob/v0.3.5/docs/ui/views.md)).
+  on the UI thread (see [Views](https://github.com/egoist/mygo/blob/v0.3.6/docs/ui/views.md)).
 - **Spec before code.** Every screen is specified in its mockup in `design/` and in this document before it is
   written. Only `design/` and this document count as the design reference for Idset.
 
 ## Layout and spacing
 
 Layout uses flexbox in device-independent pixels (DIPs); see
-[Layout](https://github.com/egoist/mygo/blob/v0.3.5/docs/ui/layout.md).
+[Layout](https://github.com/egoist/mygo/blob/v0.3.6/docs/ui/layout.md).
 
 - **One spacing unit.** The theme's `Spacing` (4 DIPs by default; 3 is compact, 5 roomy) is the unit of every widget's
   padding and gap. Size your own elements with `t.Space(n)` so they follow it. Do not write raw pixel numbers for
@@ -80,7 +80,7 @@ Layout uses flexbox in device-independent pixels (DIPs); see
 - **Do not truncate.** Paths, names and emails wrap rather than being cut; a path that is cut can point somewhere
   else.
 - **Scrolling.** Content that can exceed the window goes in a
-  [scroll view](https://github.com/egoist/mygo/blob/v0.3.5/docs/ui/scroll.md). The panel scrolls when it shows the
+  [scroll view](https://github.com/egoist/mygo/blob/v0.3.6/docs/ui/scroll.md). The panel scrolls when it shows the
   identity list. The loading, read-only and no-identity states never need to scroll and are not in a scroll view, so
   their content can be centered vertically (centering only works in a container of fixed height).
 - **The panel.** Fixed 340×480. Title bar and footer padding `Space(3)`×`Space(4)` (12×16), each separated from the
@@ -92,7 +92,7 @@ Layout uses flexbox in device-independent pixels (DIPs); see
 
 Colors come from the theme, `c.Theme()`: it is the light or dark theme, switches when the system appearance changes,
 and carries the user's accent color and contrast settings. See
-[Styling and themes](https://github.com/egoist/mygo/blob/v0.3.5/docs/ui/styling.md).
+[Styling and themes](https://github.com/egoist/mygo/blob/v0.3.6/docs/ui/styling.md).
 
 - **Always use theme roles, never literals.** Use only MyGo theme colors; for example, secondary text uses
   `TextMuted`. Hard-coded colors do not follow dark mode, accent or high contrast. The one exception is identity
@@ -135,7 +135,7 @@ and carries the user's accent color and contrast settings. See
 
 - **System font.** Leave `Font` empty so text uses the platform's UI font. The default text size is 13 on macOS and
   14 elsewhere, and scales with the desktop's text size (`Preferences().TextScale`) when you rely on the theme. See
-  [Text](https://github.com/egoist/mygo/blob/v0.3.5/docs/ui/text.md). Paths, SSH aliases and folders use
+  [Text](https://github.com/egoist/mygo/blob/v0.3.6/docs/ui/text.md). Paths, SSH aliases and folders use
   `Font("monospace")`.
 - **Size relative to the theme.** Use `t.Rem(n)` for sizes (`n` times the theme font size) rather than fixed numbers,
   so custom text follows the user's text scale. Widgets use the theme size.
@@ -166,7 +166,7 @@ and carries the user's accent color and contrast settings. See
   and the text size automatically. The panel's four symbols (clear, copy, check, warning) are 16×16 line drawings
   defined in `internal/ui/panel/view.go` and parsed once at package level; there is no third-party icon set. If one
   is adopted, use one set for the whole app and record it and its license in `THIRD_PARTY.md`. See
-  [Icon](https://github.com/egoist/mygo/blob/v0.3.5/docs/ui/icon.md).
+  [Icon](https://github.com/egoist/mygo/blob/v0.3.6/docs/ui/icon.md).
 - **An icon needs a name when it is alone.** Icons are decoration for assistive technology unless given a `Label`.
   A button that shows only an icon must get a readable name with `.Label()`; an icon next to a visible text label
   needs none.
@@ -182,7 +182,7 @@ and carries the user's accent color and contrast settings. See
 
 Pick the widget by the job. Each name links to the upstream page, which also says what assistive technology sees of
 the widget. The complete list is the
-[UI index](https://github.com/egoist/mygo/blob/v0.3.5/docs/ui/README.md).
+[UI index](https://github.com/egoist/mygo/blob/v0.3.6/docs/ui/README.md).
 
 What Idset uses today:
 
@@ -194,7 +194,7 @@ What Idset uses today:
 | `ui.TextInput` | The identity filter, shown from three identities on, with the placeholder "Filter identities". Not `ui.SearchField`: its placeholder ("Search") is fixed English. |
 | `ui.Spinner` | Reading the configuration and checking a folder. |
 | `ui.Divider` | Between the title bar, content and footer; between the two parts of a result card; between list rows. |
-| Drop zone | A `ui.Column` with a 1.5 DIP dashed `Border` outline (`BorderStyle(ui.BorderDashed)`), taking files with `DroppedFiles`; while `FileDragOver`, the outline turns `Accent` and the fill `Selection`. See [Dropped files](https://github.com/egoist/mygo/blob/v0.3.5/docs/ui/input.md#dropped-files). |
+| Drop zone | A `ui.Column` with a 1.5 DIP dashed `Border` outline (`BorderStyle(ui.BorderDashed)`), taking files with `DroppedFiles`; while `FileDragOver`, the outline turns `Accent` and the fill `Selection`. See [Dropped files](https://github.com/egoist/mygo/blob/v0.3.6/docs/ui/input.md#dropped-files). |
 | Initial badge | A rounded square with the first letter of the identity's name ("?" without a name), in the identity's color (see [Color](#color-and-dark-mode)). |
 | Borderless symbol button | `Space(6)` square (24), transparent, icon `Rem(1.1)` in `TextMuted`, `SurfaceHover` fill on hover. Must have a `.Label()`. After the path is copied, the icon turns into a check mark with "Copied" before it for 1.2 seconds. |
 | Result card | A context line (the path in monospace `TextMuted`, then the copy and clear buttons) and below it the answer. `Surface` fill, `Border` outline; `Warning` for the cards without a match, `Danger` when `git` fails. |
@@ -207,69 +207,69 @@ The tables below say what to reach for as the accounts, settings and about windo
 
 | Need | Use |
 |---|---|
-| The main action of a group, once (Save in the accounts window) | [Button](https://github.com/egoist/mygo/blob/v0.3.5/docs/ui/button.md) (`PrimaryButton`) |
-| Other actions | [Button](https://github.com/egoist/mygo/blob/v0.3.5/docs/ui/button.md) |
-| Open the GitHub page from the about window | [Link](https://github.com/egoist/mygo/blob/v0.3.5/docs/ui/link.md) |
-| "Rebind to" another identity | [Menu button](https://github.com/egoist/mygo/blob/v0.3.5/docs/ui/menu-button.md) |
-| Actions on a specific identity, on right click | [Context menu](https://github.com/egoist/mygo/blob/v0.3.5/docs/ui/context-menu.md) |
-| Choose one of a few modes (global or limited scope) | [Segmented control](https://github.com/egoist/mygo/blob/v0.3.5/docs/ui/segmented.md) |
-| Window-level commands ("Add identity") | [Toolbar](https://github.com/egoist/mygo/blob/v0.3.5/docs/ui/toolbar.md) |
+| The main action of a group, once (Save in the accounts window) | [Button](https://github.com/egoist/mygo/blob/v0.3.6/docs/ui/button.md) (`PrimaryButton`) |
+| Other actions | [Button](https://github.com/egoist/mygo/blob/v0.3.6/docs/ui/button.md) |
+| Open the GitHub page from the about window | [Link](https://github.com/egoist/mygo/blob/v0.3.6/docs/ui/link.md) |
+| "Rebind to" another identity | [Menu button](https://github.com/egoist/mygo/blob/v0.3.6/docs/ui/menu-button.md) |
+| Actions on a specific identity, on right click | [Context menu](https://github.com/egoist/mygo/blob/v0.3.6/docs/ui/context-menu.md) |
+| Choose one of a few modes (global or limited scope) | [Segmented control](https://github.com/egoist/mygo/blob/v0.3.6/docs/ui/segmented.md) |
+| Window-level commands ("Add identity") | [Toolbar](https://github.com/egoist/mygo/blob/v0.3.6/docs/ui/toolbar.md) |
 
 ### Choices
 
 | Need | Use |
 |---|---|
-| A setting applied immediately (start at login, push on a URL rewrite) | [Switch](https://github.com/egoist/mygo/blob/v0.3.5/docs/ui/switch.md) |
-| A yes/no value submitted with a form ("also delete the private key"), or several independent options (import candidates) | [Checkbox](https://github.com/egoist/mygo/blob/v0.3.5/docs/ui/checkbox.md) |
-| One of two to five visible options (port 22 or 443) | [Radio](https://github.com/egoist/mygo/blob/v0.3.5/docs/ui/radio.md) |
-| One of many options (platform, interface language) | [Select](https://github.com/egoist/mygo/blob/v0.3.5/docs/ui/select.md); with typing to filter, [Combobox](https://github.com/egoist/mygo/blob/v0.3.5/docs/ui/combobox.md) |
-| An identity's color | The six presets as named choices; any other value with a [color well](https://github.com/egoist/mygo/blob/v0.3.5/docs/ui/color-picker.md) (`ui.ColorWell`) |
+| A setting applied immediately (start at login, push on a URL rewrite) | [Switch](https://github.com/egoist/mygo/blob/v0.3.6/docs/ui/switch.md) |
+| A yes/no value submitted with a form ("also delete the private key"), or several independent options (import candidates) | [Checkbox](https://github.com/egoist/mygo/blob/v0.3.6/docs/ui/checkbox.md) |
+| One of two to five visible options (port 22 or 443) | [Radio](https://github.com/egoist/mygo/blob/v0.3.6/docs/ui/radio.md) |
+| One of many options (platform, interface language) | [Select](https://github.com/egoist/mygo/blob/v0.3.6/docs/ui/select.md); with typing to filter, [Combobox](https://github.com/egoist/mygo/blob/v0.3.6/docs/ui/combobox.md) |
+| An identity's color | The six presets as named choices; any other value with a [color well](https://github.com/egoist/mygo/blob/v0.3.6/docs/ui/color-picker.md) (`ui.ColorWell`) |
 
 ### Text
 
 | Need | Use |
 |---|---|
-| Free text (name, email, alias, key path, notes) | [Text input](https://github.com/egoist/mygo/blob/v0.3.5/docs/ui/text-input.md) |
-| Filtering a list with localized copy | [Text input](https://github.com/egoist/mygo/blob/v0.3.5/docs/ui/text-input.md) with a translated `Label` and `Placeholder` |
-| Labeled controls with help and errors (the identity form) | [Form](https://github.com/egoist/mygo/blob/v0.3.5/docs/ui/form.md) |
+| Free text (name, email, alias, key path, notes) | [Text input](https://github.com/egoist/mygo/blob/v0.3.6/docs/ui/text-input.md) |
+| Filtering a list with localized copy | [Text input](https://github.com/egoist/mygo/blob/v0.3.6/docs/ui/text-input.md) with a translated `Label` and `Placeholder` |
+| Labeled controls with help and errors (the identity form) | [Form](https://github.com/egoist/mygo/blob/v0.3.6/docs/ui/form.md) |
 
 ### Collections
 
 | Need | Use |
 |---|---|
-| Identities in the accounts window, backups, long lists of one kind | [List](https://github.com/egoist/mygo/blob/v0.3.5/docs/ui/list.md) |
-| Rows with sortable, resizable columns | [Table](https://github.com/egoist/mygo/blob/v0.3.5/docs/ui/table.md) |
+| Identities in the accounts window, backups, long lists of one kind | [List](https://github.com/egoist/mygo/blob/v0.3.6/docs/ui/list.md) |
+| Rows with sortable, resizable columns | [Table](https://github.com/egoist/mygo/blob/v0.3.6/docs/ui/table.md) |
 
 ### Containers and navigation
 
 | Need | Use |
 |---|---|
-| Scrolling content | [Scroll view](https://github.com/egoist/mygo/blob/v0.3.5/docs/ui/scroll.md) |
-| Columns and rows of controls | [Grid](https://github.com/egoist/mygo/blob/v0.3.5/docs/ui/grid.md) |
-| List and detail of the accounts window | [Split view](https://github.com/egoist/mygo/blob/v0.3.5/docs/ui/split.md) |
-| Optional detail (the clone helper of an identity row, a backup's contents) | [Collapsible](https://github.com/egoist/mygo/blob/v0.3.5/docs/ui/collapsible.md), [Accordion](https://github.com/egoist/mygo/blob/v0.3.5/docs/ui/accordion.md) for several in a stack; only one identity row is expanded at a time, which the screen's state enforces |
-| The five panes of the settings window | [Sidebar](https://github.com/egoist/mygo/blob/v0.3.5/docs/ui/sidebar.md) with a [router](https://github.com/egoist/mygo/blob/v0.3.5/docs/ui/navigation.md) |
+| Scrolling content | [Scroll view](https://github.com/egoist/mygo/blob/v0.3.6/docs/ui/scroll.md) |
+| Columns and rows of controls | [Grid](https://github.com/egoist/mygo/blob/v0.3.6/docs/ui/grid.md) |
+| List and detail of the accounts window | [Split view](https://github.com/egoist/mygo/blob/v0.3.6/docs/ui/split.md) |
+| Optional detail (the clone helper of an identity row, a backup's contents) | [Collapsible](https://github.com/egoist/mygo/blob/v0.3.6/docs/ui/collapsible.md), [Accordion](https://github.com/egoist/mygo/blob/v0.3.6/docs/ui/accordion.md) for several in a stack; only one identity row is expanded at a time, which the screen's state enforces |
+| The five panes of the settings window | [Sidebar](https://github.com/egoist/mygo/blob/v0.3.6/docs/ui/sidebar.md) with a [router](https://github.com/egoist/mygo/blob/v0.3.6/docs/ui/navigation.md) |
 
 ### Dialogs, messages and status
 
 | Need | Use |
 |---|---|
-| Confirm something that cannot be undone (deleting an identity, restoring a backup, removing the Include) | [Alert dialog](https://github.com/egoist/mygo/blob/v0.3.5/docs/ui/alert-dialog.md) |
-| Choose a folder or a key file | `mygo.Dialog` ([desktop APIs](https://github.com/egoist/mygo/blob/v0.3.5/docs/native.md)) |
-| A small panel tied to an element | [Popover](https://github.com/egoist/mygo/blob/v0.3.5/docs/ui/popover.md) |
-| A short label or hint for a control | [Tooltip](https://github.com/egoist/mygo/blob/v0.3.5/docs/ui/tooltip.md) (never the only place for essential information) |
-| Feedback that needs no decision | Text on the card or form that caused it ("Copied", "Saved"); a [Toast](https://github.com/egoist/mygo/blob/v0.3.5/docs/ui/toast.md) only where there is no such place |
-| Unknown duration (reading, checking, `ssh -T`) | [Spinner](https://github.com/egoist/mygo/blob/v0.3.5/docs/ui/spinner.md) |
-| A count or short status | [Badge](https://github.com/egoist/mygo/blob/v0.3.5/docs/ui/badge.md) |
+| Confirm something that cannot be undone (deleting an identity, restoring a backup, removing the Include) | [Alert dialog](https://github.com/egoist/mygo/blob/v0.3.6/docs/ui/alert-dialog.md) |
+| Choose a folder or a key file | `mygo.Dialog` ([desktop APIs](https://github.com/egoist/mygo/blob/v0.3.6/docs/native.md)) |
+| A small panel tied to an element | [Popover](https://github.com/egoist/mygo/blob/v0.3.6/docs/ui/popover.md) |
+| A short label or hint for a control | [Tooltip](https://github.com/egoist/mygo/blob/v0.3.6/docs/ui/tooltip.md) (never the only place for essential information) |
+| Feedback that needs no decision | Text on the card or form that caused it ("Copied", "Saved"); a [Toast](https://github.com/egoist/mygo/blob/v0.3.6/docs/ui/toast.md) only where there is no such place |
+| Unknown duration (reading, checking, `ssh -T`) | [Spinner](https://github.com/egoist/mygo/blob/v0.3.6/docs/ui/spinner.md) |
+| A count or short status | [Badge](https://github.com/egoist/mygo/blob/v0.3.6/docs/ui/badge.md) |
 
 Overlays share focus and Escape behavior; see
-[Overlays](https://github.com/egoist/mygo/blob/v0.3.5/docs/ui/overlays.md). Rules of thumb:
+[Overlays](https://github.com/egoist/mygo/blob/v0.3.6/docs/ui/overlays.md). Rules of thumb:
 
 - Prefer undo over confirmation. Binding a folder needs no confirmation and can be undone. Confirm only what cannot
   be undone, with a button named for the action ("Delete"), not "OK", and Cancel as the Escape action.
 - Do not stack dialogs, and do not use a dialog for an error.
 - Errors say what happened and what to do, on the card or form where they happened (`Error`, or a
-  [form](https://github.com/egoist/mygo/blob/v0.3.5/docs/ui/form.md) field).
+  [form](https://github.com/egoist/mygo/blob/v0.3.6/docs/ui/form.md) field).
 - Confirmations of copying and saving are a 1.2 second "Copied" or "Saved" next to the control; a repeat restarts
   the timer.
 
@@ -321,8 +321,8 @@ unbind and rebind actions on result cards.
   room, kept inside the work area of that display. It does not hide when it loses focus: the user clicks the file
   manager to start dragging a folder, which takes the focus away ([ADR 0003](adr/0003-drop-zone-in-tray-window.md)).
   The tray icon and Escape hide it. See
-  [Windows with native UI](https://github.com/egoist/mygo/blob/v0.3.5/docs/ui/windows.md) and the
-  [window options](https://github.com/egoist/mygo/blob/v0.3.5/docs/windows.md).
+  [Windows with native UI](https://github.com/egoist/mygo/blob/v0.3.6/docs/ui/windows.md) and the
+  [window options](https://github.com/egoist/mygo/blob/v0.3.6/docs/windows.md).
 - **Without a tray** (Linux without AppIndicator), the panel is an ordinary window with the system title bar and the
   same content; Escape does not hide it, and closing it quits.
 - **Planned windows** (accounts 760×520, settings 720×480, about) keep the system title bar, set `MinWidth` and
@@ -332,11 +332,11 @@ unbind and rebind actions on result cards.
   Idset" while the panel shows) and "Quit"; the accounts window, settings and about join it when they exist. On Linux
   AppIndicator reports no clicks, so a click opens that menu and it is the only way to open and hide the panel. The
   tooltip is "Idset", "Idset · <identity>" after a match, or "Idset · no match". See
-  [Menus and the tray](https://github.com/egoist/mygo/blob/v0.3.5/docs/menus.md#tray-icons).
+  [Menus and the tray](https://github.com/egoist/mygo/blob/v0.3.6/docs/menus.md#tray-icons).
 - **Menus.** The macOS menu bar has an app menu (About, check for updates, Quit) and the Edit menu (`RoleEditMenu`)
   so copy, paste and the other editing shortcuts work in text fields. Use roles (`RoleAbout`, `RoleQuit` and the
   others) for standard items: they carry the right label and shortcut. Give custom items an accelerator with
-  `CmdOrCtrl`. See [Menus](https://github.com/egoist/mygo/blob/v0.3.5/docs/menus.md).
+  `CmdOrCtrl`. See [Menus](https://github.com/egoist/mygo/blob/v0.3.6/docs/menus.md).
 - **One instance.** A second launch opens the panel of the running instance and exits.
 - **Notifications.** System notifications only for what the user would want while the panel is hidden; the first
   launch says once that Idset lives in the tray, without taking the focus.
@@ -344,7 +344,7 @@ unbind and rebind actions on result cards.
 ## Accessibility checklist
 
 MyGo exposes native UI to VoiceOver, Narrator, NVDA and Orca; see
-[Accessibility](https://github.com/egoist/mygo/blob/v0.3.5/docs/ui/accessibility.md).
+[Accessibility](https://github.com/egoist/mygo/blob/v0.3.6/docs/ui/accessibility.md).
 
 - [ ] Every interactive element has an accessible name: its text, or `Label` when it shows only an icon or a symbol
       (the copy and clear buttons, the filter input).
@@ -362,7 +362,7 @@ MyGo exposes native UI to VoiceOver, Narrator, NVDA and Orca; see
 - [ ] Pointer targets are at least about 24×24 DIPs.
 - [ ] `ui.NewTester` tests click controls by their accessible names, so a missing name fails the test, and check
       announcements with `Announcements()` (see
-      [Testing](https://github.com/egoist/mygo/blob/v0.3.5/docs/ui/testing.md)).
+      [Testing](https://github.com/egoist/mygo/blob/v0.3.6/docs/ui/testing.md)).
 
 Contrast, scaling, keyboard use and screen readers are verified on real devices; a passing headless test does not
 count as accessibility acceptance.
@@ -370,8 +370,8 @@ count as accessibility acceptance.
 ## Motion
 
 Idset has no custom animation: state changes take effect immediately. See
-[Transitions](https://github.com/egoist/mygo/blob/v0.3.5/docs/ui/transitions.md) and
-[Drawing and animation](https://github.com/egoist/mygo/blob/v0.3.5/docs/ui/drawing.md) for what the toolkit offers.
+[Transitions](https://github.com/egoist/mygo/blob/v0.3.6/docs/ui/transitions.md) and
+[Drawing and animation](https://github.com/egoist/mygo/blob/v0.3.6/docs/ui/drawing.md) for what the toolkit offers.
 
 - **Default is none.** Do not add `Transition`, `Animate` or page transitions without a mockup that shows the change
   they explain and the maintainer's agreement; record the exception here.
@@ -420,6 +420,6 @@ Run before a UI pull request is merged, and on each target platform before a rel
 ## References
 
 This design language draws on the UI documentation of MyGo (MIT License, Copyright (c) egoist):
-<https://github.com/egoist/mygo/tree/v0.3.5/docs/ui>, together with `docs/native.md`, `docs/menus.md` and
+<https://github.com/egoist/mygo/tree/v0.3.6/docs/ui>, together with `docs/native.md`, `docs/menus.md` and
 `docs/windows.md` from the same version. The text here is a summary in our own words; the upstream pages are the
 source for APIs and behavior. See also [THIRD_PARTY.md](../THIRD_PARTY.md).

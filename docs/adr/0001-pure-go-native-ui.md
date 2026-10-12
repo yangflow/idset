@@ -10,7 +10,7 @@ Idset manages several Git and SSH identities on one machine. The problem is the 
 `~/.ssh/config`, `~/.gitconfig`, `includeIf "gitdir:"` and the behavior of `ssh` are essentially the same on all
 three. Idset wants a single language, reproducible builds and a truly native window, with one code base for the
 three platforms. References: [MyGo native UI docs](https://mygo.egoist.dev/docs/ui) and
-[the source at the pinned version](https://github.com/egoist/mygo/tree/v0.3.5).
+[the source at the pinned version](https://github.com/egoist/mygo/tree/v0.3.6).
 
 ## Decision
 
