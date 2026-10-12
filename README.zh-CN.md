@@ -57,10 +57,10 @@ python3 scripts/scan_secrets.py   # 扫描全部历史里的密钥
 | 主题 | 位置 |
 |---|---|
 | 行为、数据模型和生成的文件 | [docs/product.md](docs/product.md) |
-| 颜色、字体、间距和组件 | [docs/design-system.md](docs/design-system.md) |
+| 设计语言：布局、颜色、字体、组件、无障碍（英文） | [docs/design.md](docs/design.md) |
 | 界面画板 | [design/](design/README.md) |
 | 工作顺序 | [docs/roadmap.md](docs/roadmap.md) |
-| 架构决定 | [docs/adr/](docs/adr/README.md) |
+| 架构决定（英文） | [docs/adr/](docs/adr/README.md) |
 
 人和代理改仓库的规矩在 [AGENTS.md](AGENTS.md)。漏洞请按 [SECURITY.md](SECURITY.md) 私下报告，不要开公开 issue。
 

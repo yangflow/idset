@@ -25,38 +25,47 @@ var (
 	warnIcon  = svg(`<path d="M8 2.5l6 11H2z" stroke-width="1.6"/><path d="M8 6.5v3M8 11.6v.1" stroke-width="1.6"/>`)
 )
 
-// View draws the panel. It reads state only; drops and clicks go to the owner through Actions.
+// View draws the panel. It reads state only; drops and clicks go to the owner through Actions. Spacing and type
+// sizes derive from the theme so they follow its Spacing, FontSize and the desktop's text scale; see docs/design.md.
 func (s *Screen) View(c *ui.Context) {
+	t := c.Theme()
 	if c.Shortcut(0, ui.KeyEscape) {
 		s.act.Hide()
 	}
 	ui.Column(c).Fill().Children(func() {
 		// No hide button: the tray icon and Escape hide the panel, as with other tray panels.
-		ui.Row(c).PaddingY(12).PaddingX(16).AlignItems(ui.Center).Children(func() {
-			ui.Text(c, "Idset").FontSize(15).Bold()
+		ui.Row(c).PaddingY(t.Space(3)).PaddingX(t.Space(4)).AlignItems(ui.Center).Children(func() {
+			ui.Text(c, "Idset").FontSize(t.Rem(1.15)).Bold().Role(ui.RoleHeading).Level(1)
 		})
 		ui.Divider(c)
 		// States without a list never need scrolling, and centering only works in a container of fixed height.
 		if s.loading || s.readErr != nil || len(s.accounts) == 0 {
-			ui.Column(c).Grow(1).Padding(16).Gap(12).Children(func() { s.content(c) })
+			ui.Column(c).Grow(1).Padding(t.Space(4)).Gap(t.Space(3)).Children(func() { s.content(c) })
 		} else {
-			ui.Scroll(c).Grow(1).Padding(16).Gap(12).Children(func() { s.content(c) })
+			ui.Scroll(c).Grow(1).Padding(t.Space(4)).Gap(t.Space(3)).Children(func() { s.content(c) })
 		}
 		ui.Divider(c)
-		ui.Row(c).PaddingY(12).PaddingX(16).Children(func() {
+		ui.Row(c).PaddingY(t.Space(3)).PaddingX(t.Space(4)).Children(func() {
 			ui.Spacer(c)
 			if ui.Button(c, s.text.Quit).Clicked() {
 				s.act.Quit()
 			}
 		})
 	})
+	if s.announcedSeq != s.resultSeq {
+		// The result card is not focusable, so tell screen readers what the dropped folder resolved to.
+		s.announcedSeq = s.resultSeq
+		if msg := s.resultMessage(); msg != "" {
+			c.Announce(msg)
+		}
+	}
 }
 
-// ghost is a borderless 24-point symbol button for actions inside a card.
+// ghost is a borderless square symbol button, 24 DIPs at the default spacing, for actions inside a card.
 func ghost(c *ui.Context, label string, icon *ui.SVG) ui.Element {
 	t := c.Theme()
-	b := ui.Button(c, "").Label(label).Size(24, 24).Padding(0).Radius(6).Border(0, ui.Color{}).Background(ui.Color{}).
-		TextColor(t.TextMuted).Children(func() { ui.Icon(c, icon).FontSize(14) })
+	b := ui.Button(c, "").Label(label).Size(t.Space(6), t.Space(6)).Padding(0).Radius(t.Radius).Border(0, ui.Color{}).
+		Background(ui.Color{}).TextColor(t.TextMuted).Children(func() { ui.Icon(c, icon).FontSize(t.Rem(1.1)) })
 	if b.Hovered() {
 		b.Background(t.SurfaceHover)
 	}
@@ -67,7 +76,7 @@ func (s *Screen) content(c *ui.Context) {
 	t := c.Theme()
 	switch {
 	case s.loading:
-		ui.Column(c).Grow(1).Gap(8).AlignItems(ui.Center).Justify(ui.Center).Children(func() {
+		ui.Column(c).Grow(1).Gap(t.Space(2)).AlignItems(ui.Center).Justify(ui.Center).Children(func() {
 			ui.Spinner(c)
 			ui.Text(c, s.text.Loading).TextColor(t.TextMuted)
 		})
@@ -79,20 +88,21 @@ func (s *Screen) content(c *ui.Context) {
 	s.resultCard(c)
 	s.dropZone(c)
 	if len(s.accounts) == 0 {
-		ui.Column(c).Grow(1).Gap(6).AlignItems(ui.Center).Justify(ui.Center).Children(func() {
-			ui.Text(c, s.text.Empty).Bold()
-			ui.Text(c, s.text.EmptyHint).FontSize(12).TextColor(t.TextMuted)
+		ui.Column(c).Grow(1).Gap(t.Space(1.5)).AlignItems(ui.Center).Justify(ui.Center).Children(func() {
+			ui.Text(c, s.text.Empty).Bold().Role(ui.RoleHeading).Level(2)
+			ui.Text(c, s.text.EmptyHint).FontSize(t.Rem(0.9)).TextColor(t.TextMuted)
 		})
 		return
 	}
-	ui.Row(c).PaddingX(2).Children(func() {
-		ui.Text(c, s.text.Identities).FontSize(12).FontWeight(600).TextColor(t.TextMuted).Grow(1)
-		ui.Textf(c, "%d", len(s.accounts)).FontSize(12).FontWeight(600).TextColor(t.TextMuted)
+	ui.Row(c).PaddingX(t.Space(0.5)).Children(func() {
+		ui.Text(c, s.text.Identities).FontSize(t.Rem(0.9)).FontWeight(600).TextColor(t.TextMuted).Grow(1).
+			Role(ui.RoleHeading).Level(2)
+		ui.Textf(c, "%d", len(s.accounts)).FontSize(t.Rem(0.9)).FontWeight(600).TextColor(t.TextMuted)
 	})
 	if len(s.accounts) >= FilterThreshold {
 		ui.TextInput(c.Key("filter"), &s.query).Label(s.text.Filter).Placeholder(s.text.Filter)
 		if used := account.ProvidersInUse(s.accounts); len(used) > 1 {
-			ui.Row(c).Gap(6).Children(func() {
+			ui.Row(c).Gap(t.Space(1.5)).Children(func() {
 				for _, p := range used {
 					s.providerChip(c, p)
 				}
@@ -121,17 +131,19 @@ func (s *Screen) readOnly(c *ui.Context) {
 	if inner := errors.Unwrap(reason); inner != nil {
 		reason = inner
 	}
-	ui.Column(c).Grow(1).Gap(10).PaddingX(8).AlignItems(ui.Center).Justify(ui.Center).Children(func() {
-		ui.Column(c).Size(44, 44).Radius(11).Background(t.Danger.Alpha(0.14)).AlignItems(ui.Center).Justify(ui.Center).Children(func() {
-			ui.Icon(c, warnIcon).FontSize(22).TextColor(t.Danger)
+	ui.Column(c).Grow(1).Gap(t.Space(2.5)).PaddingX(t.Space(2)).AlignItems(ui.Center).Justify(ui.Center).Children(func() {
+		ui.Column(c).Size(t.Space(11), t.Space(11)).Radius(11).Background(t.Danger.Alpha(0.14)).AlignItems(ui.Center).
+			Justify(ui.Center).Children(func() {
+			ui.Icon(c, warnIcon).FontSize(t.Rem(1.7)).TextColor(t.Danger)
 		})
-		ui.Text(c, s.text.ReadOnly).FontSize(15).FontWeight(600)
-		ui.Text(c, s.text.ReadOnlyHint).FontSize(12).TextColor(t.TextMuted).TextAlign(ui.Center)
-		ui.Column(c).FillWidth().Gap(2).PaddingY(6).PaddingX(8).Radius(6).Background(t.Background).Border(1, t.Border).Children(func() {
-			ui.Text(c, s.env.Tilde(s.dataPath)).Font("monospace").FontSize(11).TextColor(t.TextMuted).Selectable()
-			ui.Text(c, reason.Error()).Font("monospace").FontSize(11).TextColor(t.TextMuted).Selectable()
+		ui.Text(c, s.text.ReadOnly).FontSize(t.Rem(1.15)).FontWeight(600).Role(ui.RoleHeading).Level(2)
+		ui.Text(c, s.text.ReadOnlyHint).FontSize(t.Rem(0.9)).TextColor(t.TextMuted).TextAlign(ui.Center)
+		ui.Column(c).FillWidth().Gap(t.Space(0.5)).PaddingY(t.Space(1.5)).PaddingX(t.Space(2)).Radius(t.Radius).
+			Background(t.Background).Border(1, t.Border).Children(func() {
+			ui.Text(c, s.env.Tilde(s.dataPath)).Font("monospace").FontSize(t.Rem(0.85)).TextColor(t.TextMuted).Selectable()
+			ui.Text(c, reason.Error()).Font("monospace").FontSize(t.Rem(0.85)).TextColor(t.TextMuted).Selectable()
 		})
-		ui.Row(c).Gap(8).PaddingY(4).Children(func() {
+		ui.Row(c).Gap(t.Space(2)).PaddingY(t.Space(1)).Children(func() {
 			if ui.Button(c, s.revealLabel()).Clicked() {
 				s.act.Reveal(s.dataPath)
 			}
@@ -155,7 +167,7 @@ func (s *Screen) providerChip(c *ui.Context, p account.Provider) {
 	for _, q := range s.providers {
 		on = on || q == p
 	}
-	b := ui.Button(c.Key("chip-"+string(p)), s.providerName(p)).Selected(on).FontSize(12).Radius(12)
+	b := ui.Button(c.Key("chip-"+string(p)), s.providerName(p)).Selected(on).FontSize(t.Rem(0.9)).Radius(12)
 	if on {
 		b.Background(t.Accent).TextColor(t.AccentText)
 	}
@@ -229,13 +241,13 @@ func orDefault(v, fallback string) string {
 
 func (s *Screen) row(c *ui.Context, a account.Account) {
 	t := c.Theme()
-	ui.Row(c).Gap(10).PaddingY(9).PaddingX(12).AlignItems(ui.Center).Children(func() {
-		badge(c, a, 28, 7, 13)
-		ui.Column(c).Grow(1).Gap(1).Children(func() {
+	ui.Row(c).Gap(t.Space(2.5)).PaddingY(t.Space(2.25)).PaddingX(t.Space(3)).AlignItems(ui.Center).Children(func() {
+		badge(c, a, t.Space(7), 7, t.Rem(1))
+		ui.Column(c).Grow(1).Gap(t.Space(0.25)).Children(func() {
 			ui.Text(c, s.label(a)).FontWeight(600)
-			ui.Text(c, orDefault(a.GitUserEmail, s.text.NoEmail)).FontSize(12).TextColor(t.TextMuted)
+			ui.Text(c, orDefault(a.GitUserEmail, s.text.NoEmail)).FontSize(t.Rem(0.9)).TextColor(t.TextMuted)
 		})
-		ui.Text(c, s.folders(a)).Font("monospace").FontSize(11).TextColor(t.TextMuted)
+		ui.Text(c, s.folders(a)).Font("monospace").FontSize(t.Rem(0.85)).TextColor(t.TextMuted)
 	})
 }
 
@@ -250,17 +262,17 @@ func (s *Screen) dropZone(c *ui.Context) {
 		s.Drop(files)
 	}
 	if compact {
-		zone.Row().PaddingY(8).PaddingX(12).Gap(8).AlignItems(ui.Center).Children(func() {
-			ui.Text(c, s.text.DropAgain).FontSize(12).TextColor(t.TextMuted).Grow(1)
+		zone.Row().PaddingY(t.Space(2)).PaddingX(t.Space(3)).Gap(t.Space(2)).AlignItems(ui.Center).Children(func() {
+			ui.Text(c, s.text.DropAgain).FontSize(t.Rem(0.9)).TextColor(t.TextMuted).Grow(1)
 			if ui.Button(c, s.text.Choose).Clicked() {
 				s.act.ChooseFolder()
 			}
 		})
 		return
 	}
-	zone.PaddingY(20).PaddingX(16).Gap(6).AlignItems(ui.Center).Children(func() {
+	zone.PaddingY(t.Space(5)).PaddingX(t.Space(4)).Gap(t.Space(1.5)).AlignItems(ui.Center).Children(func() {
 		ui.Text(c, s.text.DropTitle).Bold()
-		ui.Text(c, s.text.DropHint).FontSize(12).TextColor(t.TextMuted)
+		ui.Text(c, s.text.DropHint).FontSize(t.Rem(0.9)).TextColor(t.TextMuted)
 		if ui.Button(c, s.text.Choose).Clicked() {
 			s.act.ChooseFolder()
 		}
@@ -274,8 +286,8 @@ func (s *Screen) resultCard(c *ui.Context) {
 	r, checking, resultErr, dir := s.result, s.checking, s.resultErr, s.lastDir
 	card := func(border ui.Color, path string, copyable bool, body func()) {
 		ui.Column(c).Key("result").Radius(10).Background(t.Surface).Border(1, border).Clip().Children(func() {
-			ui.Row(c).Gap(4).Padding(8, 8, 8, 12).AlignItems(ui.Center).Children(func() {
-				ui.Text(c, s.env.Tilde(path)).Font("monospace").FontSize(12).TextColor(t.TextMuted).Grow(1).Selectable()
+			ui.Row(c).Gap(t.Space(1)).Padding(t.Space(2), t.Space(2), t.Space(2), t.Space(3)).AlignItems(ui.Center).Children(func() {
+				ui.Text(c, s.env.Tilde(path)).Font("monospace").FontSize(t.Rem(0.9)).TextColor(t.TextMuted).Grow(1).Selectable()
 				if copyable {
 					s.copyButton(c, path)
 				}
@@ -288,12 +300,12 @@ func (s *Screen) resultCard(c *ui.Context) {
 		})
 	}
 	say := func(text string, color ui.Color, weight int) func() {
-		return func() { ui.Text(c, text).TextColor(color).FontWeight(weight).Padding(12) }
+		return func() { ui.Text(c, text).TextColor(color).FontWeight(weight).Padding(t.Space(3)) }
 	}
 	switch {
 	case checking != "":
 		card(t.Border, checking, false, func() {
-			ui.Row(c).Gap(8).Padding(12).AlignItems(ui.Center).Children(func() {
+			ui.Row(c).Gap(t.Space(2)).Padding(t.Space(3)).AlignItems(ui.Center).Children(func() {
 				ui.Spinner(c)
 				ui.Text(c, s.text.Checking)
 			})
@@ -307,18 +319,19 @@ func (s *Screen) resultCard(c *ui.Context) {
 			return
 		}
 		card(t.Border, r.Root, true, func() {
-			ui.Row(c).Gap(12).Padding(14, 12, 10, 12).AlignItems(ui.Center).Children(func() {
-				badge(c, a, 36, 9, 16)
-				ui.Column(c).Gap(1).Children(func() {
-					ui.Text(c, s.label(a)).FontSize(15).FontWeight(600)
-					ui.Text(c, s.text.UsesHere).FontSize(12).TextColor(t.TextMuted)
+			ui.Row(c).Gap(t.Space(3)).Padding(t.Space(3.5), t.Space(3), t.Space(2.5), t.Space(3)).AlignItems(ui.Center).Children(func() {
+				badge(c, a, t.Space(9), 9, t.Rem(1.25))
+				ui.Column(c).Gap(t.Space(0.25)).Children(func() {
+					ui.Text(c, s.label(a)).FontSize(t.Rem(1.15)).FontWeight(600)
+					ui.Text(c, s.text.UsesHere).FontSize(t.Rem(0.9)).TextColor(t.TextMuted)
 				})
 			})
-			ui.Column(c).Gap(4).Padding(0, 12, 12, 60).Children(func() {
+			// The left padding lines the details up with the identity name: badge plus gap.
+			ui.Column(c).Gap(t.Space(1)).Padding(0, t.Space(3), t.Space(3), t.Space(15)).Children(func() {
 				detail := func(label, value string, mono bool) {
-					ui.Row(c).Gap(8).Children(func() {
-						ui.Text(c, label).FontSize(12).TextColor(t.TextMuted).Width(56)
-						v := ui.Text(c, value).FontSize(12).Grow(1)
+					ui.Row(c).Gap(t.Space(2)).Children(func() {
+						ui.Text(c, label).FontSize(t.Rem(0.9)).TextColor(t.TextMuted).Width(t.Space(14))
+						v := ui.Text(c, value).FontSize(t.Rem(0.9)).Grow(1)
 						if mono {
 							v.Font("monospace")
 						}
@@ -330,7 +343,7 @@ func (s *Screen) resultCard(c *ui.Context) {
 			})
 		})
 	default:
-		msg := map[match.Kind]string{match.NoMatch: s.text.NoMatch, match.NotRepo: s.text.NotRepo, match.NotFolder: s.text.NotFolder}[r.Kind]
+		msg := s.unresolved(r.Kind)
 		path := r.Root
 		if path == "" {
 			path = r.Dir
@@ -344,12 +357,14 @@ func (s *Screen) copyButton(c *ui.Context, path string) {
 	t := c.Theme()
 	icon := copyIcon
 	if s.now().Before(s.copiedUntil) {
-		ui.Text(c, s.text.Copied).FontSize(11).TextColor(t.TextMuted)
+		ui.Text(c, s.text.Copied).FontSize(t.Rem(0.85)).TextColor(t.TextMuted)
 		icon = checkIcon
 	}
 	if ghost(c, s.text.CopyPath, icon).Clicked() {
 		s.act.CopyText(path)
 		s.copiedUntil = s.now().Add(copiedFor)
 		c.After(copiedFor)
+		// The focus stays on the button, whose name does not change, so say that the copy worked.
+		c.Announce(s.text.Copied)
 	}
 }

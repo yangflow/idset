@@ -7,10 +7,11 @@ the configuration so every folder uses the right one. Targets: macOS 12+, Window
 (AppIndicator for the tray), on amd64 and arm64. MIT licensed. `CLAUDE.md` is the single line `@AGENTS.md`; put
 nothing else in it and keep no other agent file.
 
-Reference documents (in Chinese):
+Reference documents:
 
-- `docs/product.md`: behavior, data model, format of the generated files, flows, scope.
-- `docs/design-system.md`: colors, type, spacing, components.
+- `docs/product.md` (in Chinese): behavior, data model, format of the generated files, flows, scope.
+- `docs/design.md`: the design language: layout, color, type, components, accessibility, localization.
+- `design/tokens.md`: spacing, size and color values, mapped to MyGo theme roles.
 - `design/`: a mockup per screen with all its states.
 - `docs/adr/`: architecture decisions.
 
@@ -42,7 +43,7 @@ internal/trayicon/       the tray icon, drawn in code, no image files
 resources/               shipped licenses and product assets
 scripts/                 checks, version bump, secret scan, packaging
 mygo.json                name, identifier, version, packaging
-docs/, design/           product spec, design system, ADRs, mockups
+docs/, design/           product spec, design language, ADRs, mockups, tokens
 ```
 
 ## Commands
@@ -68,8 +69,8 @@ python3 scripts/bump.py <version>
   `GIT_AUTHOR_EMAIL` and `GIT_COMMITTER_EMAIL` override git config, so check `git var GIT_AUTHOR_IDENT` before
   committing.
 - Product behavior changes start in `docs/product.md`. A UI change starts from the mockup in design/; the
-  maintainer confirms the visual direction before UI code is written. Mockup, `docs/design-system.md` and code go
-  in the same PR. Screenshots go in the PR body, never in the repository.
+  maintainer confirms the visual direction before UI code is written. Mockup, `docs/design.md` and code go in
+  the same PR. Screenshots go in the PR body, never in the repository.
 - User-visible changes go under `[Unreleased]` in `CHANGELOG.md`. The version lives only in `mygo.json`; change it
   with `python3 scripts/bump.py <version>`, which also dates the changelog.
 - `README.md` (English) and `README.zh-CN.md` (Chinese) say the same thing; change both together. Feature status

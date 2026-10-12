@@ -69,12 +69,12 @@ go test -race ./...
 python3 scripts/scan_secrets.py   # secret scan of the whole history
 ```
 
-| Topic | Where (in Chinese) |
+| Topic | Where |
 |---|---|
-| Behavior, data model and generated files | [docs/product.md](docs/product.md) |
-| Colors, type, spacing and components | [docs/design-system.md](docs/design-system.md) |
+| Behavior, data model and generated files (in Chinese) | [docs/product.md](docs/product.md) |
+| Design language: layout, color, type, components, accessibility | [docs/design.md](docs/design.md) |
 | Screen mockups | [design/](design/README.md) |
-| Order of work | [docs/roadmap.md](docs/roadmap.md) |
+| Order of work (in Chinese) | [docs/roadmap.md](docs/roadmap.md) |
 | Architecture decisions | [docs/adr/](docs/adr/README.md) |
 
 Repository rules for people and agents are in [AGENTS.md](AGENTS.md). Report vulnerabilities privately as

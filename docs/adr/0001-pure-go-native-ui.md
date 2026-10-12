@@ -1,21 +1,30 @@
-# 0001 纯 Go 原生 UI
+# 0001 Pure Go native UI
 
-- 状态：已采纳
-- 日期：2026-10-12
-- 相关：[docs/product.md](../product.md)「技术基线」
+- Status: accepted
+- Date: 2026-10-12
+- Related: [docs/product.md](../product.md), "Technical baseline" (技术基线)
 
-## 背景
+## Context
 
-Idset 管理一台机器上的多个 Git 和 SSH 身份。这件事在 macOS、Windows、Linux 上一样存在：`~/.ssh/config`、`~/.gitconfig`、`includeIf "gitdir:"` 和 `ssh` 的行为三个平台基本一致。需要一种语言、可复现的构建、真正的原生窗口，三个平台共用一套代码。参考 [MyGo 原生 UI 文档](https://mygo.egoist.dev/docs/ui) 和[固定版本的源码](https://github.com/egoist/mygo/tree/v0.3.5)。
+Idset manages several Git and SSH identities on one machine. The problem is the same on macOS, Windows and Linux:
+`~/.ssh/config`, `~/.gitconfig`, `includeIf "gitdir:"` and the behavior of `ssh` are essentially the same on all
+three. Idset wants a single language, reproducible builds and a truly native window, with one code base for the
+three platforms. References: [MyGo native UI docs](https://mygo.egoist.dev/docs/ui) and
+[the source at the pinned version](https://github.com/egoist/mygo/tree/v0.3.5).
 
-## 决定
+## Decision
 
-用 MyGo 原生 UI，一个 Go 模块，命令行工具在 `go.mod` 里用 `tool` 固定版本。常驻在菜单栏（macOS）或通知区域（Windows、Linux）的托盘图标里。更新用原生更新插件。
+Use MyGo native UI and one Go module, with the command-line tool pinned in `go.mod` with `tool`. The app lives in a
+tray icon, in the menu bar (macOS) or the notification area (Windows, Linux). Updates use the native updater plugin.
 
-## 代价
+## Cost
 
-控件是 GPU 绘制的，无障碍和各平台表现要在真机上测。托盘图标不接受拖放，拖放只能放在窗口里（见 [ADR 0003](0003-drop-zone-in-tray-window.md)）。Linux 的托盘依赖 AppIndicator，没有这个库就只能开普通窗口。MyGo 版本还早，每次升级要看 API 和打包的变化。
+Controls are drawn on the GPU, so accessibility and behavior on each platform have to be tested on real devices. The
+tray icon does not accept drops, so dropping can only happen in a window (see
+[ADR 0003](0003-drop-zone-in-tray-window.md)). The tray on Linux depends on AppIndicator; without that library the
+app can only open an ordinary window. MyGo is at an early version; every upgrade needs a look at API and packaging
+changes.
 
-## 什么时候重新考虑
+## When to revisit
 
-某个必须的平台能力或无障碍要求，原生 UI 做不到。
+A required platform capability or accessibility requirement cannot be met by native UI.

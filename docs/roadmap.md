@@ -4,7 +4,7 @@
 
 ## 0.1 仓库基线（已完成）
 
-MyGo 模板初始化、MIT 许可、开源社区文件、CI。产品规格 [product.md](product.md) 和架构决定 [ADR 0001–0004](adr/README.md)。窗口里还是模板的计数示例。
+用 MyGo 搭好项目、MIT 许可、开源社区文件、CI。产品规格 [product.md](product.md) 和架构决定 [ADR 0001–0004](adr/README.md)。窗口里还是一个计数示例。
 
 ## 0.2 身份数据和生成配置（已完成）
 

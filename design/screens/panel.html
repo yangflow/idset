@@ -4,8 +4,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Panel</title>
 <style>
-:root { color-scheme:light; --background:#fafafa; --surface:#fff; --text:#242424; --muted:#6b6b6b; --border:#dedede; --accent:#006fdf; --accent-soft:#e6f0fc; --danger:#c62828; --warning:#c46a1a; --ghost-hover:rgba(0,0,0,.06) }
-:root[data-scheme=dark] { color-scheme:dark; --background:#202020; --surface:#2a2a2a; --text:#f3f3f3; --muted:#a3a3a3; --border:#3d3d3d; --accent:#4c9dff; --accent-soft:#1c2c40; --danger:#ff6b6b; --warning:#f0a050; --ghost-hover:rgba(255,255,255,.08) }
+/* Colors are the MyGo default theme roles and sizes the 4 DIP spacing unit at 13 px text; see design/tokens.md. */
+:root { color-scheme:light; --background:#ffffff; --surface:#f4f4f5; --text:#18181b; --muted:#71717a; --border:#d9d9de; --accent:#2563eb; --accent-soft:rgba(37,99,235,.25); --danger:#dc2626; --warning:#d97706; --ghost-hover:#e9e9ec }
+:root[data-scheme=dark] { color-scheme:dark; --background:#18181b; --surface:#27272a; --text:#f4f4f5; --muted:#a1a1aa; --border:#3f3f46; --accent:#3b82f6; --accent-soft:rgba(59,130,246,.4); --danger:#ef4444; --warning:#f59e0b; --ghost-hover:#323236 }
 * { box-sizing:border-box }
 body { margin:0; font-family:system-ui,sans-serif; font-size:13px; color:var(--text); background:#888; display:flex; gap:24px; padding:24px; align-items:flex-start }
 .controls { width:220px; flex:none; display:flex; flex-direction:column; gap:14px; padding:14px; border-radius:10px; background:#f4f4f4; color:#242424; font-size:12px }
