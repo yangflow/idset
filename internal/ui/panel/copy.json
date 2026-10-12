@@ -36,7 +36,11 @@
     "Folders": "Folders",
     "Global": "Global",
     "NoFolders": "no folders",
-    "Identities": "Identities"
+    "Identities": "Identities",
+    "Reload": "Read Again",
+    "RevealFinder": "Show in Finder",
+    "RevealExplorer": "Show in Explorer",
+    "RevealFiles": "Show in File Manager"
   },
   "zh-Hans": {
     "Hide": "隐藏",
@@ -55,7 +59,7 @@
     "NoAlias": "没有别名",
     "NoEmail": "没有邮箱",
     "ReadOnly": "accounts.json 读不出来",
-    "ReadOnlyHint": "在修好或从备份恢复之前，Idset 不会写入这个文件。",
+    "ReadOnlyHint": "修好文件或从备份恢复之前，Idset 不会写入它。",
     "CopyPath": "复制完整路径",
     "Copied": "已复制",
     "Clear": "清除结果",
@@ -75,6 +79,10 @@
     "Folders": "生效目录",
     "Global": "全局",
     "NoFolders": "没有目录",
-    "Identities": "身份"
+    "Identities": "身份",
+    "Reload": "重新读取",
+    "RevealFinder": "在 Finder 中显示",
+    "RevealExplorer": "在资源管理器中显示",
+    "RevealFiles": "在文件管理器中显示"
   }
 }

@@ -74,6 +74,8 @@ func (a *app) ready() {
 		CopyText:     func(s string) { mygo.Clipboard.WriteText(s) },
 		Hide:         func() { a.win.Hide() },
 		Quit:         mygo.App.Quit,
+		Reload:       func() { a.load() },
+		Reveal:       mygo.Shell.ShowItemInFolder,
 	})
 	// The application menu keeps the standard editing shortcuts working in text fields.
 	mygo.App.SetMenu(mygo.NewMenu([]*mygo.MenuItem{

@@ -2,6 +2,7 @@ package panel
 
 import (
 	"errors"
+	"fmt"
 	"reflect"
 	"slices"
 	"strings"
@@ -23,6 +24,8 @@ type recorder struct {
 	chosen   int
 	hidden   int
 	quit     int
+	reloaded int
+	revealed []string
 }
 
 func (r *recorder) actions() Actions {
@@ -32,6 +35,8 @@ func (r *recorder) actions() Actions {
 		CopyText:     func(s string) { r.copied = append(r.copied, s) },
 		Hide:         func() { r.hidden++ },
 		Quit:         func() { r.quit++ },
+		Reload:       func() { r.reloaded++ },
+		Reveal:       func(p string) { r.revealed = append(r.revealed, p) },
 	}
 }
 
@@ -74,18 +79,40 @@ func TestEveryLanguageHasEveryText(t *testing.T) {
 }
 
 func TestLoadingAndReadOnly(t *testing.T) {
-	s, tt, _ := screen(t)
+	s, tt, rec := screen(t)
 	if !tt.HasText("Reading configuration…") || tt.HasText("Drop a project folder here") {
 		t.Fatalf("loading: %v", tt.Texts())
 	}
-	s.SetAccounts(nil, errors.New("bad"), "/home/ada/.config/idset/accounts.json")
+	s.goos = "darwin"
+	s.SetAccounts(nil, fmt.Errorf("accounts.json cannot be read: %w", errors.New("unexpected end of JSON input")), "/home/ada/.config/idset/accounts.json")
 	tt.Frame()
-	if !tt.HasText("accounts.json cannot be read") || !tt.HasText("~/.config/idset/accounts.json") || tt.HasText("Drop a project folder here") {
-		t.Fatalf("read-only: %v", tt.Texts())
+	for _, want := range []string{"accounts.json cannot be read", "~/.config/idset/accounts.json", "unexpected end of JSON input", "Show in Finder"} {
+		if !tt.HasText(want) {
+			t.Fatalf("missing %q: %v", want, tt.Texts())
+		}
+	}
+	if tt.HasText("Drop a project folder here") {
+		t.Fatal("nothing else shows while read-only")
+	}
+	if err := tt.Click("Read Again"); err != nil {
+		t.Fatal(err)
+	}
+	if err := tt.Click("Show in Finder"); err != nil {
+		t.Fatal(err)
+	}
+	if rec.reloaded != 1 || !slices.Equal(rec.revealed, []string{"/home/ada/.config/idset/accounts.json"}) {
+		t.Fatalf("actions: %d %v", rec.reloaded, rec.revealed)
 	}
 	s.Drop([]string{"/home/ada/x"})
 	if s.checking != "" {
 		t.Fatal("no drops while read-only")
+	}
+	for goos, want := range map[string]string{"windows": "Show in Explorer", "linux": "Show in File Manager"} {
+		s.goos = goos
+		tt.Frame()
+		if !tt.HasText(want) {
+			t.Errorf("%s: %v", goos, tt.Texts())
+		}
 	}
 }
 

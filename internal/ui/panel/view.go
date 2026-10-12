@@ -1,6 +1,7 @@
 package panel
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -21,6 +22,7 @@ var (
 	closeIcon = svg(`<path d="M4 4l8 8M12 4l-8 8" stroke-width="1.6"/>`)
 	copyIcon  = svg(`<rect x="5.5" y="5.5" width="8" height="8" rx="1.5" stroke-width="1.4"/><path d="M10.5 3.5v-.5a1 1 0 0 0-1-1h-6a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h.5" stroke-width="1.4"/>`)
 	checkIcon = svg(`<path d="M3.5 8.5l3 3 6-7" stroke-width="1.6"/>`)
+	warnIcon  = svg(`<path d="M8 2.5l6 11H2z" stroke-width="1.6"/><path d="M8 6.5v3M8 11.6v.1" stroke-width="1.6"/>`)
 )
 
 // View draws the panel. It reads state only; drops and clicks go to the owner through Actions.
@@ -36,7 +38,12 @@ func (s *Screen) View(c *ui.Context) {
 			}
 		})
 		ui.Divider(c)
-		ui.Scroll(c).Grow(1).Padding(16).Gap(12).Children(func() { s.content(c) })
+		// States without a list never need scrolling, and centering only works in a container of fixed height.
+		if s.loading || s.readErr != nil || len(s.accounts) == 0 {
+			ui.Column(c).Grow(1).Padding(16).Gap(12).Children(func() { s.content(c) })
+		} else {
+			ui.Scroll(c).Grow(1).Padding(16).Gap(12).Children(func() { s.content(c) })
+		}
 		ui.Divider(c)
 		ui.Row(c).PaddingY(12).PaddingX(16).Children(func() {
 			ui.Spacer(c)
@@ -68,11 +75,7 @@ func (s *Screen) content(c *ui.Context) {
 		})
 		return
 	case s.readErr != nil:
-		ui.Column(c).Gap(4).Padding(12).Radius(10).Background(t.Surface).Border(1, t.Danger).Children(func() {
-			ui.Text(c, s.text.ReadOnly).Bold().TextColor(t.Danger)
-			ui.Text(c, s.env.Tilde(s.dataPath)).Font("monospace").FontSize(12).Selectable()
-			ui.Text(c, s.text.ReadOnlyHint).FontSize(12)
-		})
+		s.readOnly(c)
 		return
 	}
 	s.resultCard(c)
@@ -110,6 +113,34 @@ func (s *Screen) content(c *ui.Context) {
 			}
 			s.row(c.Key(a.ID), a)
 		}
+	})
+}
+
+// readOnly takes the whole panel: while accounts.json cannot be read there is nothing else to do.
+func (s *Screen) readOnly(c *ui.Context) {
+	t := c.Theme()
+	reason := s.readErr
+	if inner := errors.Unwrap(reason); inner != nil {
+		reason = inner
+	}
+	ui.Column(c).Grow(1).Gap(10).PaddingX(8).AlignItems(ui.Center).Justify(ui.Center).Children(func() {
+		ui.Column(c).Size(44, 44).Radius(11).Background(t.Danger.Alpha(0.14)).AlignItems(ui.Center).Justify(ui.Center).Children(func() {
+			ui.Icon(c, warnIcon).FontSize(22).TextColor(t.Danger)
+		})
+		ui.Text(c, s.text.ReadOnly).FontSize(15).FontWeight(600)
+		ui.Text(c, s.text.ReadOnlyHint).FontSize(12).TextColor(t.TextMuted).TextAlign(ui.Center)
+		ui.Column(c).FillWidth().Gap(2).PaddingY(6).PaddingX(8).Radius(6).Background(t.Background).Border(1, t.Border).Children(func() {
+			ui.Text(c, s.env.Tilde(s.dataPath)).Font("monospace").FontSize(11).TextColor(t.TextMuted).Selectable()
+			ui.Text(c, reason.Error()).Font("monospace").FontSize(11).TextColor(t.TextMuted).Selectable()
+		})
+		ui.Row(c).Gap(8).PaddingY(4).Children(func() {
+			if ui.Button(c, s.revealLabel()).Clicked() {
+				s.act.Reveal(s.dataPath)
+			}
+			if ui.Button(c, s.text.Reload).Clicked() {
+				s.act.Reload()
+			}
+		})
 	})
 }
 

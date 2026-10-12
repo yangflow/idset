@@ -6,6 +6,7 @@ import (
 	_ "embed"
 	"encoding/json"
 	"fmt"
+	"runtime"
 	"slices"
 	"strings"
 	"time"
@@ -24,7 +25,7 @@ type Copy struct {
 	Hide, Quit, Loading, DropTitle, DropHint, DropAgain, Choose, ChooseTitle, Empty, EmptyHint, Filter, NoneMatch,
 	Unnamed, NoAlias, NoEmail, ReadOnly, ReadOnlyHint, CopyPath, Copied, Clear, Checking, NoMatch, NotRepo, NotFolder,
 	GitFailed, TooltipIdle, TooltipMatch, TooltipNoMatch, Open, Custom, UsesHere, Alias, Email, Folders, Global,
-	NoFolders, Identities string
+	NoFolders, Identities, Reload, RevealFinder, RevealExplorer, RevealFiles string
 }
 
 var translations = func() map[string]Copy {
@@ -43,6 +44,8 @@ func Text(systemLocale string) Copy { return translations[locale.Language(system
 type Actions struct {
 	Resolve      func(dir string)
 	ChooseFolder func()
+	Reload       func()
+	Reveal       func(path string)
 	CopyText     func(string)
 	Hide         func()
 	Quit         func()
@@ -71,11 +74,12 @@ type Screen struct {
 	providers   []account.Provider
 	copiedUntil time.Time
 	now         func() time.Time
+	goos        string
 }
 
 // New returns a panel that shows the loading state until SetAccounts.
 func New(text Copy, env paths.Env, act Actions) *Screen {
-	return &Screen{text: text, env: env, act: act, loading: true, now: time.Now}
+	return &Screen{text: text, env: env, act: act, loading: true, now: time.Now, goos: runtime.GOOS}
 }
 
 // SetAccounts shows a freshly loaded list, or the read-only state when readErr is set.
@@ -126,6 +130,17 @@ func (s *Screen) label(a account.Account) string {
 		return s.text.Unnamed
 	}
 	return a.Label
+}
+
+// revealLabel names the platform's file manager on the reveal button.
+func (s *Screen) revealLabel() string {
+	switch s.goos {
+	case "darwin":
+		return s.text.RevealFinder
+	case "windows":
+		return s.text.RevealExplorer
+	}
+	return s.text.RevealFiles
 }
 
 // Tooltip is the tray icon's tooltip for the current result.
