@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 	"time"
+	"unicode"
 
 	"github.com/egoist/mygo/ui"
 	"github.com/yangflow/idset/internal/account"
@@ -12,7 +13,15 @@ import (
 
 const copiedFor = 1200 * time.Millisecond
 
-var closeIcon = ui.MustParseSVG([]byte(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path d="M4 4l8 8M12 4l-8 8" stroke="#000" stroke-width="1.6" stroke-linecap="round"/></svg>`))
+func svg(paths string) *ui.SVG {
+	return ui.MustParseSVG([]byte(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="none" stroke="#000" stroke-linecap="round" stroke-linejoin="round">` + paths + `</svg>`))
+}
+
+var (
+	closeIcon = svg(`<path d="M4 4l8 8M12 4l-8 8" stroke-width="1.6"/>`)
+	copyIcon  = svg(`<rect x="5.5" y="5.5" width="8" height="8" rx="1.5" stroke-width="1.4"/><path d="M10.5 3.5v-.5a1 1 0 0 0-1-1h-6a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h.5" stroke-width="1.4"/>`)
+	checkIcon = svg(`<path d="M3.5 8.5l3 3 6-7" stroke-width="1.6"/>`)
+)
 
 // View draws the panel. It reads state only; drops and clicks go to the owner through Actions.
 func (s *Screen) View(c *ui.Context) {
@@ -22,7 +31,7 @@ func (s *Screen) View(c *ui.Context) {
 	ui.Column(c).Fill().Children(func() {
 		ui.Row(c).PaddingY(12).PaddingX(16).Gap(8).AlignItems(ui.Center).Children(func() {
 			ui.Text(c, "Idset").FontSize(15).Bold().Grow(1)
-			if iconButton(c, s.text.Hide).Clicked() {
+			if ui.Button(c, "").Label(s.text.Hide).Width(28).Children(func() { ui.Icon(c, closeIcon) }).Clicked() {
 				s.act.Hide()
 			}
 		})
@@ -38,8 +47,15 @@ func (s *Screen) View(c *ui.Context) {
 	})
 }
 
-func iconButton(c *ui.Context, label string) ui.Element {
-	return ui.Button(c, "").Label(label).Width(28).Children(func() { ui.Icon(c, closeIcon) })
+// ghost is a borderless 24-point symbol button for actions inside a card.
+func ghost(c *ui.Context, label string, icon *ui.SVG) ui.Element {
+	t := c.Theme()
+	b := ui.Button(c, "").Label(label).Size(24, 24).Padding(0).Radius(6).Border(0, ui.Color{}).Background(ui.Color{}).
+		TextColor(t.TextMuted).Children(func() { ui.Icon(c, icon).FontSize(14) })
+	if b.Hovered() {
+		b.Background(t.SurfaceHover)
+	}
+	return b
 }
 
 func (s *Screen) content(c *ui.Context) {
@@ -52,7 +68,7 @@ func (s *Screen) content(c *ui.Context) {
 		})
 		return
 	case s.readErr != nil:
-		card(c, t.Danger).Children(func() {
+		ui.Column(c).Gap(4).Padding(12).Radius(10).Background(t.Surface).Border(1, t.Danger).Children(func() {
 			ui.Text(c, s.text.ReadOnly).Bold().TextColor(t.Danger)
 			ui.Text(c, s.env.Tilde(s.dataPath)).Font("monospace").FontSize(12).Selectable()
 			ui.Text(c, s.text.ReadOnlyHint).FontSize(12)
@@ -68,6 +84,10 @@ func (s *Screen) content(c *ui.Context) {
 		})
 		return
 	}
+	ui.Row(c).PaddingX(2).Children(func() {
+		ui.Text(c, s.text.Identities).FontSize(12).FontWeight(600).TextColor(t.TextMuted).Grow(1)
+		ui.Textf(c, "%d", len(s.accounts)).FontSize(12).FontWeight(600).TextColor(t.TextMuted)
+	})
 	if len(s.accounts) >= FilterThreshold {
 		ui.TextInput(c.Key("filter"), &s.query).Label(s.text.Filter).Placeholder(s.text.Filter)
 		if used := account.ProvidersInUse(s.accounts); len(used) > 1 {
@@ -81,17 +101,16 @@ func (s *Screen) content(c *ui.Context) {
 	visible := s.visible()
 	if len(visible) == 0 {
 		ui.Text(c, s.text.NoneMatch).TextColor(t.TextMuted).AlignSelf(ui.Center)
+		return
 	}
-	ui.Column(c).Gap(2).Children(func() {
-		for _, a := range visible {
+	ui.Column(c).Radius(10).Background(t.Surface).Border(1, t.Border).Clip().Children(func() {
+		for i, a := range visible {
+			if i > 0 {
+				ui.Divider(c)
+			}
 			s.row(c.Key(a.ID), a)
 		}
 	})
-}
-
-func card(c *ui.Context, border ui.Color) ui.Element {
-	t := c.Theme()
-	return ui.Column(c).Gap(4).Padding(12).Radius(8).Background(t.Surface).Border(1, border)
 }
 
 func (s *Screen) providerName(p account.Provider) string {
@@ -116,50 +135,85 @@ func (s *Screen) providerChip(c *ui.Context, p account.Provider) {
 	}
 }
 
-func dot(c *ui.Context, a account.Account) {
-	r, g, b := a.RGB()
-	ui.Box(c).Size(8, 8).Radius(4).Background(ui.RGB(r, g, b))
+// initial is the first letter of the label in upper case, or "?" without a label.
+func initial(a account.Account) string {
+	for _, r := range strings.TrimSpace(a.Label) {
+		return string(unicode.ToUpper(r))
+	}
+	return "?"
 }
 
-func (s *Screen) subtitle(a account.Account) string {
-	alias, email := a.SSHAlias, a.GitUserEmail
-	if alias == "" {
-		alias = s.text.NoAlias
+// badge draws the identity's initial on a square tinted with its color, lighter on a dark theme for contrast.
+func badge(c *ui.Context, a account.Account, size, radius, font float32) {
+	r, g, b := a.RGB()
+	fill, ink := ui.RGBA(r, g, b, 0.16), ui.RGB(r, g, b)
+	if c.Theme().Dark {
+		light := func(v uint8) uint8 { return v + uint8(float32(255-v)*0.4) }
+		fill, ink = ui.RGBA(r, g, b, 0.24), ui.RGB(light(r), light(g), light(b))
 	}
-	if email == "" {
-		email = s.text.NoEmail
+	ui.Column(c).Size(size, size).Radius(radius).Background(fill).AlignItems(ui.Center).Justify(ui.Center).Children(func() {
+		ui.Text(c, initial(a)).FontSize(font).Bold().TextColor(ink)
+	})
+}
+
+func usablePaths(a account.Account) []string {
+	var out []string
+	for _, p := range a.Scope.Paths {
+		if strings.TrimSpace(p) != "" {
+			out = append(out, p)
+		}
 	}
-	return alias + " · " + email
+	return out
+}
+
+// folders is the short scope at the end of a list row: the first folder and how many more.
+func (s *Screen) folders(a account.Account) string {
+	paths := usablePaths(a)
+	switch {
+	case a.Scope.Global:
+		return s.text.Global
+	case len(paths) == 0:
+		return s.text.NoFolders
+	case len(paths) == 1:
+		return paths[0]
+	}
+	return fmt.Sprintf("%s +%d", paths[0], len(paths)-1)
+}
+
+func (s *Screen) allFolders(a account.Account) string {
+	paths := usablePaths(a)
+	switch {
+	case a.Scope.Global:
+		return s.text.Global
+	case len(paths) == 0:
+		return s.text.NoFolders
+	}
+	return strings.Join(paths, " · ")
+}
+
+func orDefault(v, fallback string) string {
+	if v == "" {
+		return fallback
+	}
+	return v
 }
 
 func (s *Screen) row(c *ui.Context, a account.Account) {
 	t := c.Theme()
-	ui.Row(c).Gap(10).PaddingY(8).PaddingX(4).AlignItems(ui.Center).Children(func() {
-		dot(c, a)
-		ui.Column(c).Grow(1).Children(func() {
-			ui.Text(c, s.label(a)).SingleLine()
-			ui.Text(c, s.subtitle(a)).FontSize(12).TextColor(t.TextMuted).SingleLine()
+	ui.Row(c).Gap(10).PaddingY(9).PaddingX(12).AlignItems(ui.Center).Children(func() {
+		badge(c, a, 28, 7, 13)
+		ui.Column(c).Grow(1).Gap(1).Children(func() {
+			ui.Text(c, s.label(a)).FontWeight(600)
+			ui.Text(c, orDefault(a.GitUserEmail, s.text.NoEmail)).FontSize(12).TextColor(t.TextMuted)
 		})
+		ui.Text(c, s.folders(a)).Font("monospace").FontSize(11).TextColor(t.TextMuted)
 	})
-}
-
-func (s *Screen) scopeText(a account.Account) string {
-	if a.Scope.Global {
-		return s.text.ScopeGlobal
-	}
-	var parts []string
-	for _, p := range a.Scope.Paths {
-		if strings.TrimSpace(p) != "" {
-			parts = append(parts, p)
-		}
-	}
-	return fmt.Sprintf(s.text.ScopePaths, strings.Join(parts, " · "))
 }
 
 func (s *Screen) dropZone(c *ui.Context) {
 	t := c.Theme()
 	compact := s.result != nil || s.resultErr != nil || s.checking != ""
-	zone := ui.Column(c).Key("drop").Radius(8).Border(1.5, t.Border).BorderStyle(ui.BorderDashed)
+	zone := ui.Column(c).Key("drop").Radius(10).Border(1.5, t.Border).BorderStyle(ui.BorderDashed)
 	if zone.FileDragOver() {
 		zone.Border(1.5, t.Accent).Background(t.Selection)
 	}
@@ -184,71 +238,89 @@ func (s *Screen) dropZone(c *ui.Context) {
 	})
 }
 
+// resultCard is a context line with the folder and its actions, then the answer.
 func (s *Screen) resultCard(c *ui.Context) {
 	t := c.Theme()
-	// Clearing happens inside the card, so the rest of this frame works on the result it started with.
-	r := s.result
-	header := func(title string, a *account.Account) {
-		ui.Row(c).Gap(8).AlignItems(ui.Center).Children(func() {
-			if a != nil {
-				dot(c, *a)
-			}
-			ui.Text(c, title).Bold().Grow(1)
-			if iconButton(c, s.text.Clear).Clicked() {
-				s.clear()
-			}
+	// Clearing happens inside the card, so the rest of this frame works on the state it started with.
+	r, checking, resultErr, dir := s.result, s.checking, s.resultErr, s.lastDir
+	card := func(border ui.Color, path string, copyable bool, body func()) {
+		ui.Column(c).Key("result").Radius(10).Background(t.Surface).Border(1, border).Clip().Children(func() {
+			ui.Row(c).Gap(4).Padding(8, 8, 8, 12).AlignItems(ui.Center).Children(func() {
+				ui.Text(c, s.env.Tilde(path)).Font("monospace").FontSize(12).TextColor(t.TextMuted).Grow(1).Selectable()
+				if copyable {
+					s.copyButton(c, path)
+				}
+				if checking == "" && ghost(c, s.text.Clear, closeIcon).Clicked() {
+					s.clear()
+				}
+			})
+			ui.Divider(c)
+			body()
 		})
 	}
+	say := func(text string, color ui.Color, weight int) func() {
+		return func() { ui.Text(c, text).TextColor(color).FontWeight(weight).Padding(12) }
+	}
 	switch {
-	case s.checking != "":
-		card(c, t.Border).Children(func() {
-			ui.Row(c).Gap(8).AlignItems(ui.Center).Children(func() {
+	case checking != "":
+		card(t.Border, checking, false, func() {
+			ui.Row(c).Gap(8).Padding(12).AlignItems(ui.Center).Children(func() {
 				ui.Spinner(c)
-				ui.Text(c, fmt.Sprintf(s.text.Checking, s.env.Tilde(s.checking))).FontSize(12).Grow(1)
+				ui.Text(c, s.text.Checking)
 			})
 		})
-	case s.resultErr != nil:
-		card(c, t.Danger).Children(func() {
-			header(fmt.Sprintf(s.text.GitFailed, s.resultErr), nil)
-		})
+	case resultErr != nil:
+		card(t.Danger, dir, false, say(fmt.Sprintf(s.text.GitFailed, resultErr), t.Danger, 400))
 	case r == nil:
 	case r.Kind == match.Matched:
 		a, ok := s.find(r.ID)
 		if !ok {
 			return
 		}
-		card(c, t.Border).Children(func() {
-			header(s.label(a), &a)
-			ui.Text(c, s.subtitle(a)).FontSize(12).TextColor(t.TextMuted)
-			ui.Text(c, s.scopeText(a)).FontSize(12)
-			s.pathButton(c, r.Root)
+		card(t.Border, r.Root, true, func() {
+			ui.Row(c).Gap(12).Padding(14, 12, 10, 12).AlignItems(ui.Center).Children(func() {
+				badge(c, a, 36, 9, 16)
+				ui.Column(c).Gap(1).Children(func() {
+					ui.Text(c, s.label(a)).FontSize(15).FontWeight(600)
+					ui.Text(c, s.text.UsesHere).FontSize(12).TextColor(t.TextMuted)
+				})
+			})
+			ui.Column(c).Gap(4).Padding(0, 12, 12, 60).Children(func() {
+				detail := func(label, value string, mono bool) {
+					ui.Row(c).Gap(8).Children(func() {
+						ui.Text(c, label).FontSize(12).TextColor(t.TextMuted).Width(56)
+						v := ui.Text(c, value).FontSize(12).Grow(1)
+						if mono {
+							v.Font("monospace")
+						}
+					})
+				}
+				detail(s.text.Alias, orDefault(a.SSHAlias, s.text.NoAlias), a.SSHAlias != "")
+				detail(s.text.Email, orDefault(a.GitUserEmail, s.text.NoEmail), false)
+				detail(s.text.Folders, s.allFolders(a), !a.Scope.Global)
+			})
 		})
 	default:
 		msg := map[match.Kind]string{match.NoMatch: s.text.NoMatch, match.NotRepo: s.text.NotRepo, match.NotFolder: s.text.NotFolder}[r.Kind]
-		card(c, t.Warning).Children(func() {
-			header(msg, nil)
-			path := r.Root
-			if path == "" {
-				path = r.Dir
-			}
-			ui.Text(c, s.env.Tilde(path)).Font("monospace").FontSize(12).SingleLine()
-		})
+		path := r.Root
+		if path == "" {
+			path = r.Dir
+		}
+		card(t.Warning, path, false, say(msg, t.Text, 600))
 	}
 }
 
-func (s *Screen) pathButton(c *ui.Context, path string) {
+// copyButton copies the full path; for a moment afterwards it shows a check mark and "Copied".
+func (s *Screen) copyButton(c *ui.Context, path string) {
 	t := c.Theme()
-	copied := s.now().Before(s.copiedUntil)
-	ui.Row(c).Gap(8).AlignItems(ui.Center).Children(func() {
-		b := ui.Text(c, s.env.Tilde(path)).Font("monospace").FontSize(12).SingleLine().Underline().
-			Cursor(ui.CursorPointer).Tooltip(s.text.CopyPath).Description(s.text.CopyPath).Focusable()
-		if b.Clicked() {
-			s.act.CopyText(path)
-			s.copiedUntil = s.now().Add(copiedFor)
-			c.After(copiedFor)
-		}
-		if copied {
-			ui.Text(c, s.text.Copied).FontSize(12).TextColor(t.TextMuted)
-		}
-	})
+	icon := copyIcon
+	if s.now().Before(s.copiedUntil) {
+		ui.Text(c, s.text.Copied).FontSize(11).TextColor(t.TextMuted)
+		icon = checkIcon
+	}
+	if ghost(c, s.text.CopyPath, icon).Clicked() {
+		s.act.CopyText(path)
+		s.copiedUntil = s.now().Add(copiedFor)
+		c.After(copiedFor)
+	}
 }

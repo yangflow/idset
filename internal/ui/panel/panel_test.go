@@ -110,8 +110,10 @@ func TestListIsSortedAndFilterAppearsAtThree(t *testing.T) {
 	if slices.Index(texts, "home") > slices.Index(texts, "work") {
 		t.Fatalf("most recently used first: %v", texts)
 	}
-	if !tt.HasText("github-work · bob@example.com") || !tt.HasText("no alias · no email") {
-		t.Fatalf("subtitles: %v", texts)
+	for _, want := range []string{"Identities", "2", "bob@example.com", "~/work/", "no email", "Global"} {
+		if !tt.HasText(want) {
+			t.Fatalf("missing %q: %v", want, texts)
+		}
 	}
 	if tt.HasText("Filter identities") {
 		t.Fatal("no filter for two identities")
@@ -159,7 +161,7 @@ func TestDropAndMatchedResult(t *testing.T) {
 		t.Fatalf("resolve: %v", r.resolved)
 	}
 	tt.Frame()
-	if !tt.HasText("Checking ~/work/api…") || !tt.HasText("Drop another folder, or") {
+	if !tt.HasText("Checking…") || !tt.HasText("~/work/api") || !tt.HasText("Drop another folder, or") || tt.HasText("Clear result") {
 		t.Fatalf("checking: %v", tt.Texts())
 	}
 	s.SetResult("/home/ada/elsewhere", match.Result{Kind: match.NoMatch}, nil)
@@ -168,7 +170,8 @@ func TestDropAndMatchedResult(t *testing.T) {
 	}
 	s.SetResult("/home/ada/work/api", match.Result{Kind: match.Matched, Root: "/home/ada/work/api", ID: "work"}, nil)
 	tt.Frame()
-	for _, want := range []string{"work", "github-work · bob@example.com", "Scope: gitdir ~/work/ · ~/src/new/", "~/work/api"} {
+	for _, want := range []string{"W", "work", "Git uses this identity here", "Alias", "github-work", "Email", "bob@example.com",
+		"Folders", "~/work/ · ~/src/new/", "~/work/api", "~/work/ +1"} {
 		if !tt.HasText(want) {
 			t.Fatalf("missing %q: %v", want, tt.Texts())
 		}
@@ -176,7 +179,7 @@ func TestDropAndMatchedResult(t *testing.T) {
 	if s.Tooltip() != "Idset · work" {
 		t.Errorf("tooltip %q", s.Tooltip())
 	}
-	if err := tt.Click("~/work/api"); err != nil {
+	if err := tt.Click("Copy the full path"); err != nil {
 		t.Fatal(err)
 	}
 	if !slices.Equal(r.copied, []string{"/home/ada/work/api"}) || !tt.HasText("Copied") {
@@ -241,7 +244,7 @@ func TestChineseCopy(t *testing.T) {
 	s := New(Text("zh-Hans"), env, r.actions())
 	s.SetAccounts([]account.Account{identity("", "", "", account.Custom, 0)}, nil, "")
 	tt := ui.NewTester(s.View, 340, 480)
-	for _, want := range []string{"把项目文件夹拖到这里", "（未命名）", "没有别名 · 没有邮箱", "退出"} {
+	for _, want := range []string{"把项目文件夹拖到这里", "（未命名）", "?", "没有邮箱", "全局", "身份", "退出"} {
 		if !tt.HasText(want) {
 			t.Errorf("missing %q: %v", want, tt.Texts())
 		}

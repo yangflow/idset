@@ -22,8 +22,9 @@ var catalog []byte
 // Copy is the panel's text in one language. Main reads the tray texts from it too.
 type Copy struct {
 	Hide, Quit, Loading, DropTitle, DropHint, DropAgain, Choose, ChooseTitle, Empty, EmptyHint, Filter, NoneMatch,
-	Unnamed, NoAlias, NoEmail, ReadOnly, ReadOnlyHint, ScopeGlobal, ScopePaths, CopyPath, Copied, Clear, Checking,
-	NoMatch, NotRepo, NotFolder, GitFailed, TooltipIdle, TooltipMatch, TooltipNoMatch, Open, Custom string
+	Unnamed, NoAlias, NoEmail, ReadOnly, ReadOnlyHint, CopyPath, Copied, Clear, Checking, NoMatch, NotRepo, NotFolder,
+	GitFailed, TooltipIdle, TooltipMatch, TooltipNoMatch, Open, Custom, UsesHere, Alias, Email, Folders, Global,
+	NoFolders, Identities string
 }
 
 var translations = func() map[string]Copy {
@@ -62,6 +63,7 @@ type Screen struct {
 	accounts []account.Account
 
 	checking  string
+	lastDir   string
 	result    *match.Result
 	resultErr error
 
@@ -89,7 +91,7 @@ func (s *Screen) Drop(dropped []string) {
 	if len(dropped) == 0 || s.loading || s.readErr != nil {
 		return
 	}
-	s.checking, s.result, s.resultErr = dropped[0], nil, nil
+	s.checking, s.lastDir, s.result, s.resultErr = dropped[0], dropped[0], nil, nil
 	s.act.Resolve(dropped[0])
 }
 

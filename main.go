@@ -178,13 +178,20 @@ func (a *app) resolve(dir string) {
 	s := a.store
 	go func() {
 		r, err := match.Resolve(context.Background(), a.git, dir, list, a.env)
+		touched := false
 		if err == nil && r.Kind == match.Matched {
 			if err := s.Touch(r.ID); err != nil {
 				slog.Warn("Could not record the use of an identity", "error", err)
+			} else {
+				touched = true
 			}
 		}
 		a.win.Update(func() {
 			a.screen.SetResult(dir, r, err)
+			if touched {
+				// The use moves the identity up the list.
+				a.screen.SetAccounts(s.Accounts(), s.ReadOnly(), s.Path())
+			}
 			a.updateTooltip()
 		})
 	}()
