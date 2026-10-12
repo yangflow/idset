@@ -1,66 +1,103 @@
-# 开发约束
+# AGENTS.md
 
-本文件约束人和代理怎么改这个仓库，不重复产品说明。
+## What it is
 
-代理读到的文件名是 `AGENTS.md`。`CLAUDE.md` 只有一行 `@AGENTS.md`，不要往里写别的，也不要另起一份。
+Idset is a native tray app, written in pure Go with MyGo, that keeps a list of Git and SSH identities and generates
+the configuration so every folder uses the right one. Targets: macOS 12+, Windows 10/11 and Linux with GTK 3
+(AppIndicator for the tray), on amd64 and arm64. MIT licensed. `CLAUDE.md` is the single line `@AGENTS.md`; put
+nothing else in it and keep no other agent file.
 
-## 基线
+Reference documents (in Chinese):
 
-- `docs/product.md`：产品行为、数据模型、生成的配置文件格式、流程。
-- `docs/design-system.md`：颜色、字体、间距、组件。
-- `design/`：每个界面的画板和状态，台账在 `design/README.md`。
-- `docs/adr/`：架构决定。
+- `docs/product.md`: behavior, data model, format of the generated files, flows, scope.
+- `docs/design-system.md`: colors, type, spacing, components.
+- `design/`: a mockup per screen with all its states.
+- `docs/adr/`: architecture decisions.
 
-文档和代码冲突时，先判断是哪边错了：文档已经改了决定就改代码；文档仍有效而代码悄悄退让也改代码；文档本身会让人做错事才改文档。
+When a document and the code disagree, decide which is wrong first: if the document records a changed decision,
+change the code; if the document is still valid and the code quietly falls short, change the code; change the
+document only when following it would lead someone to do the wrong thing.
 
-## 工作流程
+## Layout
 
-1. 先开 issue。标题 `[类型] 动词开头的一句话`，类型用 `ui`、`bug`、`feat`、`documentation`；正文分「What's wrong」「Fix direction」「Done when」三段。要人拍板的加 `needs-decision` 标签，定了以后在 issue 里记下结论，再去掉标签。
-2. 分支 `<类型>/<issue 号>-<短名>`，例如 `feat/12-bind-folder`。
-3. 提交信息第一行 `#<issue 号> · [类型] <和 issue 标题同义的一句话>`。每个提交用 `git commit -s` 签名（DCO 检查会拦）。作者邮箱用 GitHub 的 noreply 地址 `269347247+yangflow@users.noreply.github.com`：克隆后先 `git config user.email` 设好，不用个人邮箱和本机的全局配置。环境变量 `GIT_AUTHOR_EMAIL`、`GIT_COMMITTER_EMAIL` 会覆盖 git 配置，提交前用 `git var GIT_AUTHOR_IDENT` 确认。
-4. PR 标题同上，正文写 `Closes #<号>`，squash 合并，合并后删分支。
-5. 改视觉或交互：先改画板和 `docs/design-system.md`，再改代码，放在同一个 PR。改产品行为：先改 `docs/product.md`。
-6. 合并前 `scripts/check.sh --cross` 要过。用户能感知的改动写进 `CHANGELOG.md` 和 `CHANGELOG.zh.md` 的 `[Unreleased]`。
-7. `README.md`（英文）和 `README.zh-CN.md`（中文）内容保持一致，改一份就同时改另一份。功能状态只写已经合并的，计划中的写明是计划。
+```
+main.go                  lifecycle, single instance, tray, panel window position and visibility,
+                         background loading and matching, native updater plugin
+internal/ui/<screen>/    one package per screen: state, copy.json catalog, headless interaction tests;
+                         the name matches design/screens/<screen>.html
+internal/ui/panel/       the panel
+internal/ui/locale/      system language to UI language (Simplified Chinese, English), shared by all catalogs
+internal/paths/          stored path form (forward slashes, `~`) to absolute and back; case-insensitive on Windows
+internal/fsutil/         atomic writes, refusing symlinks, following symlinks to the real file
+internal/account/        identity fields, accounts.json encoding, validation before save; fields are sorted by
+                         JSON key, enforced by a test
+internal/store/          reading and writing accounts.json, read-only state, backup and restore
+internal/gitdir/         normalizing `gitdir` paths, includeIf write order and matching
+internal/project/        managed file contents generated from the identity list; pure, no disk access
+internal/include/        inserting, replacing and removing the Include marker block; pure
+internal/apply/          the only place that writes config files: managed files and the marker block in user files
+internal/sysexec/        running system commands: timeout, no stdin, no shell (ADR 0004)
+internal/match/          which identity a dropped folder uses; the `git` calls are injectable, tests use a fake
+internal/trayicon/       the tray icon, drawn in code, no image files
+resources/               shipped licenses and product assets
+scripts/                 checks, version bump, secret scan, packaging
+mygo.json                name, identifier, version, packaging
+docs/, design/           product spec, design system, ADRs, mockups
+```
 
-## 目录
+## Commands
 
-- `main.go`：生命周期、单实例、托盘、面板窗口的位置和显示、后台读取和匹配、原生更新插件。
-- `internal/ui/<界面>/`：一个界面一个包，放状态、文案目录和无头交互测试。目录名和 `design/screens/<界面>.html` 对应。
-- `resources/`：随包分发的许可证和产品资源。
-- `scripts/`：检查、版本号、打包。
-- `mygo.json`：名称、identifier、版本号、打包配置。版本号只写在这里，用 `python3 scripts/bump.py <版本>` 改，它会同时给两份 changelog 定日期。
+```sh
+scripts/check.sh --cross     # gofmt, go mod tidy, version pin, vet, tests, script tests, six cross-compiled targets
+go test -race ./...
+python3 scripts/scan_secrets.py
+go tool mygo dev
+go tool mygo build
+python3 scripts/bump.py <version>
+```
 
-- `internal/paths/`：路径的存储形式（正斜杠、`~`）和绝对形式互转，Windows 不区分大小写。
-- `internal/fsutil/`：原子写、拒绝符号链接、跟随符号链接找真实文件。
-- `internal/account/`：身份的字段、`accounts.json` 的编解码、保存前的校验。字段按 JSON 键的字母顺序排，有测试拦。
-- `internal/store/`：读写 `accounts.json`、只读状态、备份和恢复。
-- `internal/gitdir/`：`gitdir` 路径的规范化、`includeIf` 的写入顺序和匹配。
-- `internal/project/`：从身份列表生成托管文件的内容。纯函数，不碰磁盘。
-- `internal/include/`：Include 标记块的插入、替换和移除。纯函数。
-- `internal/apply/`：唯一写配置文件的地方：托管文件和用户文件里的标记块。
-- `internal/sysexec/`：调用系统命令：超时、不接标准输入、不经过 shell（ADR 0004）。
-- `internal/match/`：拖入的文件夹用哪个身份。调 `git` 的部分可以注入，测试用假的。
-- `internal/trayicon/`：用代码画托盘图标，不放图片文件。
-- `internal/ui/locale/`：系统语言到界面语言（简体中文、英文）的映射，所有文案目录共用。
-- `internal/ui/panel/`：面板。
+`scripts/check.sh --cross` must pass before merge.
 
-## 代码
+## Conventions
 
-- 只用 MyGo 原生视图和原生更新插件。不引入 WebView、HTML 前端、cgo 生产依赖或前端工具链。
-- 绘制路径里不做磁盘、网络和子进程操作。耗时工作放到后台，结果回到 UI 线程再改状态。
-- 调用 `ssh`、`git` 等系统命令一律带超时，参数用参数列表传，不经过 shell。
-- 路径处理同时考虑三个平台：`~` 展开、Windows 盘符和反斜杠、`gitdir:` 末尾的斜杠。
-- 界面文案放在各界面包的 `copy.json`，只有 `en` 和 `zh-Hans`，两种一起改。不加其他语言。
-- 行为变了，就改该区域已有的测试。无头测试通过不等于真机验收。
-- 不因为文件长就拆。不留临时脚本、调试输出和注释掉的代码。
-- MyGo 库和命令行工具是同一个模块，在 `go.mod` 里一起升级。依赖变了同步改 `THIRD_PARTY.md` 和 `resources/ThirdPartyLicenses/`。
+- Commit messages and PR titles use Conventional Commits: `feat|fix|docs|refactor|perf|test|build|ci|chore|revert(scope)!: subject`.
+  Branches are `<type>/<issue>-<slug>`, for example `feat/12-bind-folder`. Open an issue first; the PR body says
+  `Closes #<n>`; squash merge.
+- Commit author email is the GitHub noreply address `269347247+yangflow@users.noreply.github.com`: set it with
+  `git config user.email` after cloning; do not use a personal address or the machine's global config.
+  `GIT_AUTHOR_EMAIL` and `GIT_COMMITTER_EMAIL` override git config, so check `git var GIT_AUTHOR_IDENT` before
+  committing.
+- Product behavior changes start in `docs/product.md`. A UI change starts from the mockup in design/; the
+  maintainer confirms the visual direction before UI code is written. Mockup, `docs/design-system.md` and code go
+  in the same PR. Screenshots go in the PR body, never in the repository.
+- User-visible changes go under `[Unreleased]` in `CHANGELOG.md`. The version lives only in `mygo.json`; change it
+  with `python3 scripts/bump.py <version>`, which also dates the changelog.
+- `README.md` (English) and `README.zh-CN.md` (Chinese) say the same thing; change both together. Feature status
+  lists only merged work; planned work is marked as planned.
+- Only MyGo native views and the native updater plugin. No WebView, HTML frontend, production cgo dependency or
+  frontend toolchain.
+- No disk, network or subprocess work in the draw path. Do slow work in the background and change state back on
+  the UI thread.
+- Calls to `ssh`, `git` and other system commands always have a timeout and pass arguments as a list, never
+  through a shell.
+- Path handling covers all three platforms: `~` expansion, Windows drive letters and backslashes, the trailing
+  slash of `gitdir:`.
+- UI copy lives in each screen package's `copy.json`, in `en` and `zh-Hans` only; change both together. Add no
+  other languages.
+- When behavior changes, update the existing tests for that area. Passing headless tests is not acceptance on a
+  real machine.
+- Do not split files just because they are long. Leave no temporary scripts, debug output or commented-out code.
+- The MyGo library and CLI are one module; upgrade them together in `go.mod`. When dependencies change, update
+  `THIRD_PARTY.md` and `resources/ThirdPartyLicenses/`.
 
-## 红线
+## Red lines
 
-- 不读取、不复制、不记录私钥内容。只按路径引用私钥。
-- 只写 Idset 自己的目录。用户的 `~/.ssh/config` 和 `~/.gitconfig` 只动标记块（见 ADR 0002）。
-- 口令、token、签名私钥不出现在代码、PR、issue、日志和截图里。`scripts/scan_secrets.py` 在 CI 里扫全部历史。
-- 签名、发布、往外部服务发数据，先问维护者。
-- 提交前看清暂存的文件列表，不用 `git add -A`。
-- 个人邮箱、本机用户名和本机路径不进提交信息、文件、测试数据和日志。测试数据用 `example.com`。
+- Never read, copy or log private key contents. Refer to private keys by path only.
+- Write only to Idset's own directory. In the user's `~/.ssh/config` and `~/.gitconfig`, touch only the marker
+  block (ADR 0002).
+- Credentials (passphrases, tokens, signing keys) never appear in code, PRs, issues, logs, screenshots or chat.
+  `scripts/scan_secrets.py` scans the whole history in CI.
+- Releases, signing and anything sent to an external service need the maintainer's confirmation.
+- Review the staged file list before committing; no blind `git add -A` of unknown files.
+- Personal email addresses, local user names and local paths stay out of commit messages, files, test data and
+  logs. Test data uses `example.com`.
