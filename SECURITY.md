@@ -1,30 +1,38 @@
-# 安全策略
+# Security policy
 
-## 报告漏洞
+## Reporting a vulnerability
 
-用 GitHub 的私密漏洞报告：<https://github.com/yangflow/idset/security/advisories/new>。不要开公开 issue、讨论或 PR。
+Use GitHub private vulnerability reporting: <https://github.com/yangflow/idset/security/advisories/new>. Do not
+open a public issue, discussion or pull request.
 
-写清楚版本或提交、操作系统、怎么复现、攻击者能得到什么。不要贴私钥、真实邮箱和主机名；贴配置文件前先脱敏。
+Include the version or commit, the operating system, how to reproduce it and what an attacker gains. Do not paste
+private keys, real email addresses or host names; redact configuration files before sharing them.
 
-## 范围
+## Scope
 
-下面这些算安全问题：
+In scope:
 
-- 更新：更新包的签名或校验被绕过，或从非 HTTPS 源安装了更新。
-- 私钥：私钥内容被读出、复制、上传，或出现在日志和崩溃报告里；删除私钥时跟随了符号链接，或删了别的账户还在用的私钥。
-- 配置文件：Idset 写到了 `~/.config/idset/` 以外的地方，或者改动了 `~/.ssh/config`、`~/.gitconfig` 中托管块以外的内容。
-- 注入：账户字段（标签、别名、邮箱、路径）能在生成的 SSH 或 Git 配置里注入额外指令，或者让 Idset 执行任意命令。
+- Updates: bypassing the signature or checksum of an update package, or installing an update from a non-HTTPS
+  source.
+- Private keys: key contents being read, copied, uploaded, or appearing in logs or crash reports; deleting a key
+  by following a symlink, or deleting a key another identity still uses.
+- Configuration files: Idset writing outside `~/.config/idset/`, or changing anything in `~/.ssh/config` or
+  `~/.gitconfig` outside its managed block.
+- Injection: identity fields (label, alias, email, path) injecting extra directives into the generated SSH or Git
+  configuration, or making Idset run arbitrary commands.
 
-下面这些不算：
+Out of scope:
 
-- GitHub、GitLab 等托管平台，以及系统自带的 `ssh`、`git` 本身的漏洞。
-- 需要先拿到本机用户权限的攻击。
-- 开发用的未签名包没有签名。
+- Vulnerabilities in GitHub, GitLab or other hosting platforms, or in the system `ssh` and `git` themselves.
+- Attacks that first require local user access.
+- Unsigned development builds being unsigned.
 
-## 预期
+## What to expect
 
-维护者一个人，业余时间处理。大约一周内确认收到。确认的漏洞会在新版本修复，并发布 GitHub 安全公告，默认署名报告者。没有赏金。
+One maintainer handles reports in spare time. Expect an acknowledgement within about a week. Confirmed
+vulnerabilities are fixed in a new release and published as a GitHub security advisory, crediting the reporter by
+default. There is no bounty.
 
-## 支持的版本
+## Supported versions
 
-只修最新版本。
+Only the latest release is supported.

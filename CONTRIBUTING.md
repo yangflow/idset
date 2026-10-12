@@ -1,45 +1,58 @@
-# 参与贡献
+# Contributing
 
-Idset 是管理多个 Git 和 SSH 身份的原生桌面工具，主要由维护者和 AI 编码代理一起写。欢迎任何人提 issue 和 PR，流程在这一页。仓库的完整开发约束在 [AGENTS.md](AGENTS.md)，动手前读一遍。
+Thanks for helping. Idset is mostly written by the maintainer working with AI coding agents; issues and pull
+requests from anyone are welcome. Read [AGENTS.md](AGENTS.md) for the full set of repository rules.
 
-## 开工前
+## Before you start
 
-先开 issue，再写代码。
+- Issues and pull requests may be written in English or Simplified Chinese. 欢迎用中文或英文提 issue 和 PR。
+- Open an issue before a large change or a new feature so we can agree on the direction first. Small fixes can go
+  straight to a pull request.
+- The scope is in [docs/product.md](docs/product.md) (in Chinese): Idset does not rewrite the body of your
+  existing dotfiles, does not touch private key contents and does not sync to a cloud. Pull requests outside the
+  scope may be closed.
+- Do not report vulnerabilities in public issues; see [SECURITY.md](SECURITY.md).
 
-- 标题 `[类型] 动词开头的一句话`，类型用 `ui`、`bug`、`feat`、`documentation`。
-- 正文分「What's wrong」「Fix direction」「Done when」三段，issue 表单已经按这个排好。
-- 新功能先等维护者确认再动手。范围写在 [docs/product.md](docs/product.md)「范围」：不改写用户已有 dotfiles 的正文、不碰私钥内容、不做云同步这些。范围外的 PR 可能被直接关掉。需要拍板的 issue 会加 `needs-decision` 标签，决定记在 issue 里（见 [GOVERNANCE.md](GOVERNANCE.md)）。
-- 使用问题看 [SUPPORT.md](SUPPORT.md)。
-- 安全漏洞不要公开提，见 [SECURITY.md](SECURITY.md)。
+## Development setup
 
-## 怎么改
+Requirements: the Go version in `.go-version` and Python 3 for the helper scripts. No Node, Bun or WebView.
 
-1. 从 `main` 切分支，名字 `<类型>/<issue 号>-<短名>`，例如 `feat/12-bind-folder`。
-2. 一个 PR 只做一件事。
-3. 提交信息第一行 `#<issue 号> · [类型] 和 issue 标题同义的一句话`。每个提交用 `git commit -s` 签名：`Signed-off-by` 表示你同意 [Developer Certificate of Origin](https://developercertificate.org/)，DCO 检查没有它会失败。不想公开邮箱的话，用 GitHub 设置 → Emails 里的 noreply 地址。
-4. 本地跑检查，Go 版本见 `.go-version`：
+```bash
+scripts/check.sh --cross     # gofmt, go mod tidy, version pin, vet, tests, script tests, six cross-compiled targets
+go test -race ./...
+go tool mygo dev             # run the app
+go tool mygo build           # package it into build/
+```
 
-   ```bash
-   scripts/check.sh --cross
-   go test -race ./...
-   ```
+Both check commands must pass before merge. CI also runs `python3 scripts/scan_secrets.py` over the whole history
+and `go test ./...` on Windows.
 
-   `check.sh` 包括 gofmt、`go mod tidy` 无差异、vet、测试和六个目标的交叉编译。合并前必须过。
-5. PR 标题同提交信息第一行，正文写 `Closes #<号>`，按模板填。PR 用 squash 合并，合并后删分支。`pr-title` 检查会拦格式不对的标题。
-6. 行为变了，就改该区域已有的测试。用户能感知的改动写进 `CHANGELOG.md` 和 `CHANGELOG.zh.md`。
+## Commits, branches and pull requests
 
-界面文案在各界面包的 `copy.json`，只有简体中文和英文，两种一起改。改产品行为先改 [docs/product.md](docs/product.md)。
+- Commit messages and pull request titles follow [Conventional Commits](https://www.conventionalcommits.org/):
+  `feat|fix|docs|refactor|perf|test|build|ci|chore|revert(scope)!: subject`.
+- Name branches `<type>/<issue>-<slug>`, for example `feat/12-bind-folder`.
+- Link the issue with `Closes #<n>`. The maintainer squash-merges, so the pull request title becomes the commit
+  message. No DCO or sign-off is required.
+- Keep a change focused. When behavior changes, update the existing tests for that area and, if users would notice
+  it, add a line under `## [Unreleased]` in both `CHANGELOG.md` and `CHANGELOG.zh.md`.
+- Change `docs/product.md` before changing product behavior. UI copy lives in each screen's `copy.json`, in `en`
+  and `zh-Hans` only; change both together.
 
-## 界面改动
+## UI changes
 
-- 先改 `design/` 里的画板和 [docs/design-system.md](docs/design-system.md)，再改代码，三者放在同一个 PR。台账见 [design/README.md](design/README.md)。
-- 只用 MyGo 原生控件和主题色。缺组件时，先在文档里补上它的规格和全部状态。
-- 截图贴在 PR 正文里，浅色和深色、每个状态一张。不要把截图提交进仓库，图片会一直留在 git 历史里。
+A UI change starts from the mockup in [design/](design/README.md) and
+[docs/design-system.md](docs/design-system.md); the maintainer confirms the visual direction before UI code is
+written. Mockup, design-system and code changes go in the same pull request. Use only MyGo native controls and
+theme colors.
 
-## AI 辅助
+Put screenshots in the pull request body (light and dark, one per state), not in the repository.
 
-可以用 AI 工具。在 PR 里写明用了哪个、做了什么。你提交的每一行都要自己读懂并跑过，作为作者你对这个改动负责。
+## AI-assisted changes
+
+AI tools are fine. Say in the pull request which one you used and for what. You are responsible for every line you
+submit: read it, understand it and run it.
 
 ## License
 
-提交贡献即表示你同意它按 [MIT](LICENSE) 授权。
+Contributions are licensed under the [MIT License](LICENSE).

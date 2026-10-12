@@ -1,19 +1,11 @@
-<h1 align="center">Idset</h1>
+# Idset
 
-<p align="center">
-  Use the right Git and SSH identity in every folder, from a native tray app written in pure Go.
-</p>
+English | [中文](README.zh-CN.md)
 
-<p align="center">
-  <a href="https://github.com/yangflow/idset/actions/workflows/ci.yml"><img src="https://github.com/yangflow/idset/actions/workflows/ci.yml/badge.svg?branch=main" alt="CI"></a>
-  <a href="LICENSE"><img src="https://img.shields.io/github/license/yangflow/idset" alt="License: MIT"></a>
-</p>
+Use the right Git and SSH identity in every folder, from a native tray app written in pure Go.
 
-<p align="center">
-  <b>English</b> · <a href="README.zh-CN.md">简体中文</a>
-</p>
-
-## Why Idset
+[![CI](https://github.com/yangflow/idset/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/yangflow/idset/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/github/license/yangflow/idset)](LICENSE)
 
 Work and personal repositories on one machine need different commit emails and different SSH keys. Getting it
 right means hand-editing `~/.ssh/config` host aliases, `includeIf "gitdir:"` blocks in `~/.gitconfig`, and
@@ -24,7 +16,7 @@ Idset keeps your identities in one list and writes the configuration for you. It
 maintain: it generates its own files and adds a single `Include` line to `~/.ssh/config` and `~/.gitconfig`.
 Private keys stay where they are; Idset only refers to them by path.
 
-## Status
+## Features
 
 Early development, version 0.1.0, with no release yet. The behavior to build is specified in
 [docs/product.md](docs/product.md) (in Chinese), in the order of the [roadmap](docs/roadmap.md).
@@ -35,8 +27,6 @@ Working now:
   most recently used first, with a filter once there are three or more.
 - **Drop a folder to check it.** Drop a project folder into the panel, or choose one, to see which identity Git
   uses there.
-
-Identities cannot be added in the app yet; that comes with the accounts window.
 
 Planned:
 
@@ -53,39 +43,46 @@ AppIndicator.
 
 ## Quick start
 
-Build from source with Go 1.27.1 (see `.go-version`) and Python 3:
+There is no release yet. Build from source with the Go version in `.go-version` and Python 3:
 
 ```bash
 git clone https://github.com/yangflow/idset
 cd idset
-scripts/check.sh --cross   # format, vet, tests and six cross-compiled targets
 go tool mygo dev           # run the desktop app
 go tool mygo build         # package it into build/
 ```
 
-## Security
+## Usage
 
-Report vulnerabilities privately, as described in [SECURITY.md](SECURITY.md). Do not open public issues for them.
+1. Start Idset; it lives in the tray (menu bar on macOS, notification area on Windows).
+2. Identities cannot be added in the app yet; that comes with the accounts window. Until then they are read from
+   `~/.config/idset/accounts.json` (on Windows `%USERPROFILE%\.config\idset\accounts.json`); the format is in
+   [docs/product.md](docs/product.md).
+3. Click the tray icon to open the panel, then drop a project folder into it, or choose one, to see which identity
+   Git uses there.
 
-## Documentation
+## Development
+
+```bash
+scripts/check.sh --cross          # gofmt, go mod tidy, vet, tests, script tests, six cross-compiled targets
+go test -race ./...
+python3 scripts/scan_secrets.py   # secret scan of the whole history
+```
 
 | Topic | Where (in Chinese) |
 |---|---|
 | Behavior, data model and generated files | [docs/product.md](docs/product.md) |
 | Colors, type, spacing and components | [docs/design-system.md](docs/design-system.md) |
-| Screens and their states | [design/README.md](design/README.md) |
+| Screen mockups | [design/](design/README.md) |
 | Order of work | [docs/roadmap.md](docs/roadmap.md) |
 | Architecture decisions | [docs/adr/](docs/adr/README.md) |
-| Rules for changing the repository | [AGENTS.md](AGENTS.md) |
+
+Repository rules for people and agents are in [AGENTS.md](AGENTS.md). Report vulnerabilities privately as
+described in [SECURITY.md](SECURITY.md).
 
 ## Contributing
 
-Issues and pull requests are welcome; read [CONTRIBUTING.md](CONTRIBUTING.md) first. Every commit is signed off
-with `git commit -s` for the Developer Certificate of Origin.
-
-## Support
-
-See [SUPPORT.md](SUPPORT.md). Questions go to issues; there are no Discussions and no paid support.
+Issues and pull requests are welcome, in English or Simplified Chinese. See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## License
 
