@@ -22,7 +22,7 @@ var catalog []byte
 
 // Copy is the panel's text in one language. Main reads the tray texts from it too.
 type Copy struct {
-	Hide, Quit, Loading, DropTitle, DropHint, DropAgain, Choose, ChooseTitle, Empty, EmptyHint, Filter, NoneMatch,
+	HidePanel, Quit, Loading, DropTitle, DropHint, DropAgain, Choose, ChooseTitle, Empty, EmptyHint, Filter, NoneMatch,
 	Unnamed, NoAlias, NoEmail, ReadOnly, ReadOnlyHint, CopyPath, Copied, Clear, Checking, NoMatch, NotRepo, NotFolder,
 	GitFailed, TooltipIdle, TooltipMatch, TooltipNoMatch, Open, Custom, UsesHere, Alias, Email, Folders, Global,
 	NoFolders, Identities, Reload, RevealFinder, RevealExplorer, RevealFiles string

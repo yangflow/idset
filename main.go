@@ -33,6 +33,8 @@ type app struct {
 	win      *mygo.Window
 	tray     *mygo.Tray
 	menu     *mygo.Menu
+	openItem *mygo.MenuItem
+	hideItem *mygo.MenuItem
 	quitting bool
 }
 
@@ -72,7 +74,7 @@ func (a *app) ready() {
 		Resolve:      a.resolve,
 		ChooseFolder: a.chooseFolder,
 		CopyText:     func(s string) { mygo.Clipboard.WriteText(s) },
-		Hide:         func() { a.win.Hide() },
+		Hide:         a.hide,
 		Quit:         mygo.App.Quit,
 		Reload:       func() { a.load() },
 		Reveal:       mygo.Shell.ShowItemInFolder,
@@ -84,8 +86,23 @@ func (a *app) ready() {
 		}},
 		{Role: mygo.RoleEditMenu},
 	}))
+	tray, err := mygo.NewTray(mygo.TrayOptions{
+		Icon: trayicon.PNG(runtime.GOOS == "darwin"), IconIsTemplate: runtime.GOOS == "darwin", ToolTip: a.text.TooltipIdle,
+	})
+	if err != nil {
+		// Without a tray (Linux without AppIndicator) the panel is an ordinary window, the app's only one: closing
+		// it quits.
+		slog.Warn("No tray icon", "error", err)
+		a.win = mygo.NewWindow(mygo.WindowOptions{
+			Title: "Idset", Width: 340, Height: 480, DisableResize: true, Content: ui.View(a.screen.View),
+		})
+		mygo.App.OnWindowAllClosed(mygo.App.Quit)
+		a.load()
+		return
+	}
+	a.tray = tray
 	// The panel does not hide when it loses focus: the user clicks a file manager to start dragging a folder
-	// into it. The tray icon, Escape and the hide button hide it.
+	// into it. The tray icon and Escape hide it.
 	a.win = mygo.NewWindow(mygo.WindowOptions{
 		Title: "Idset", Width: 340, Height: 480, Hidden: true, Frameless: true,
 		DisableResize: true, DisableMinimize: true, DisableMaximize: true, DisableFullScreen: true,
@@ -95,27 +112,18 @@ func (a *app) ready() {
 	a.win.OnClose(func(e *mygo.CloseEvent) {
 		if !a.quitting {
 			e.PreventDefault()
-			a.win.Hide()
+			a.hide()
 		}
 	})
-	tray, err := mygo.NewTray(mygo.TrayOptions{
-		Icon: trayicon.PNG(runtime.GOOS == "darwin"), IconIsTemplate: runtime.GOOS == "darwin", ToolTip: a.text.TooltipIdle,
-	})
-	if err != nil {
-		// Without a tray (Linux without AppIndicator) the panel is the app's only window.
-		slog.Warn("No tray icon", "error", err)
-		mygo.App.OnWindowAllClosed(mygo.App.Quit)
-		a.show()
-		return
-	}
-	a.tray = tray
+	a.openItem = &mygo.MenuItem{Label: a.text.Open, Click: func(*mygo.MenuItem, *mygo.Window) { a.show() }}
+	a.hideItem = &mygo.MenuItem{Label: a.text.HidePanel, Hidden: true, Click: func(*mygo.MenuItem, *mygo.Window) { a.hide() }}
 	a.menu = mygo.NewMenu([]*mygo.MenuItem{
-		{Label: a.text.Open, Click: func(*mygo.MenuItem, *mygo.Window) { a.show() }},
+		a.openItem, a.hideItem,
 		mygo.Separator(),
 		{Label: a.text.Quit, Click: func(*mygo.MenuItem, *mygo.Window) { mygo.App.Quit() }},
 	})
 	if runtime.GOOS == "linux" {
-		// AppIndicator reports no clicks; its menu is the only way in.
+		// AppIndicator reports no clicks; its menu is the only way to open and hide the panel.
 		a.tray.SetMenu(a.menu)
 	} else {
 		a.tray.OnClick(a.toggle)
@@ -143,10 +151,20 @@ func (a *app) load() {
 
 func (a *app) toggle() {
 	if a.win.IsVisible() {
-		a.win.Hide()
+		a.hide()
 		return
 	}
 	a.show()
+}
+
+// hide hides the panel; without a tray the panel is the only window and stays.
+func (a *app) hide() {
+	if a.tray == nil {
+		return
+	}
+	a.win.Hide()
+	a.openItem.SetVisible(true)
+	a.hideItem.SetVisible(false)
 }
 
 // show places the panel by the tray icon, inside the work area of its display, and reloads the list.
@@ -169,6 +187,10 @@ func (a *app) show() {
 		}
 	}
 	a.win.Show()
+	if a.tray != nil {
+		a.openItem.SetVisible(false)
+		a.hideItem.SetVisible(true)
+	}
 	a.load()
 }
 

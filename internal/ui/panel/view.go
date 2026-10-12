@@ -31,11 +31,9 @@ func (s *Screen) View(c *ui.Context) {
 		s.act.Hide()
 	}
 	ui.Column(c).Fill().Children(func() {
-		ui.Row(c).PaddingY(12).PaddingX(16).Gap(8).AlignItems(ui.Center).Children(func() {
-			ui.Text(c, "Idset").FontSize(15).Bold().Grow(1)
-			if ui.Button(c, "").Label(s.text.Hide).Width(28).Children(func() { ui.Icon(c, closeIcon) }).Clicked() {
-				s.act.Hide()
-			}
+		// No hide button: the tray icon and Escape hide the panel, as with other tray panels.
+		ui.Row(c).PaddingY(12).PaddingX(16).AlignItems(ui.Center).Children(func() {
+			ui.Text(c, "Idset").FontSize(15).Bold()
 		})
 		ui.Divider(c)
 		// States without a list never need scrolling, and centering only works in a container of fixed height.

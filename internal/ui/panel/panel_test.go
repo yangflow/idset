@@ -250,14 +250,14 @@ func TestUnresolvedResults(t *testing.T) {
 
 func TestHideAndQuit(t *testing.T) {
 	_, tt, r := screen(t, identity("work", "w", "w@example.com", account.GitHub, 0))
-	tt.Key(0, ui.KeyEscape)
-	if err := tt.Click("Hide"); err != nil {
-		t.Fatal(err)
+	if tt.HasText("Hide") {
+		t.Fatal("the panel has no hide button; the tray icon and Escape hide it")
 	}
+	tt.Key(0, ui.KeyEscape)
 	if err := tt.Click("Quit"); err != nil {
 		t.Fatal(err)
 	}
-	if r.hidden != 2 || r.quit != 1 {
+	if r.hidden != 1 || r.quit != 1 {
 		t.Fatalf("hidden %d quit %d", r.hidden, r.quit)
 	}
 	tt.SetDark(true)

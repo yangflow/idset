@@ -1,6 +1,5 @@
 {
   "en": {
-    "Hide": "Hide",
     "Quit": "Quit",
     "Loading": "Reading configuration…",
     "DropTitle": "Drop a project folder here",
@@ -40,10 +39,10 @@
     "Reload": "Read Again",
     "RevealFinder": "Show in Finder",
     "RevealExplorer": "Show in Explorer",
-    "RevealFiles": "Show in File Manager"
+    "RevealFiles": "Show in File Manager",
+    "HidePanel": "Hide Idset"
   },
   "zh-Hans": {
-    "Hide": "隐藏",
     "Quit": "退出",
     "Loading": "正在读取配置…",
     "DropTitle": "把项目文件夹拖到这里",
@@ -83,6 +82,7 @@
     "Reload": "重新读取",
     "RevealFinder": "在 Finder 中显示",
     "RevealExplorer": "在资源管理器中显示",
-    "RevealFiles": "在文件管理器中显示"
+    "RevealFiles": "在文件管理器中显示",
+    "HidePanel": "隐藏 Idset"
   }
 }
