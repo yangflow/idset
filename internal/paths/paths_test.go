@@ -21,6 +21,13 @@ func TestTildeAndExpand(t *testing.T) {
 			t.Errorf("Tilde(%q) = %q, want %q", c.abs, got, c.stored)
 		}
 	}
+	linked := Env{Home: "/tmp/ada", RealHome: "/private/tmp/ada"}
+	if got := linked.Tilde("/private/tmp/ada/work"); got != "~/work" {
+		t.Errorf("resolved home: %q", got)
+	}
+	if got := linked.Tilde("/tmp/ada/work"); got != "~/work" {
+		t.Errorf("configured home: %q", got)
+	}
 	if got := unix.Expand("~/work/"); got != "/home/ada/work/" {
 		t.Errorf("Expand = %q", got)
 	}

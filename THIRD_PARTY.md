@@ -6,6 +6,7 @@
 | github.com/ebitengine/purego | v0.11.1 | Apache-2.0 | yes | `resources/ThirdPartyLicenses/purego/LICENSE` | no |
 | github.com/go-text/typesetting | v0.3.5 | BSD-3-Clause | yes | `resources/ThirdPartyLicenses/typesetting/LICENSE` | no |
 | golang.org/x/image | v0.46.0 | BSD-3-Clause | yes | `resources/ThirdPartyLicenses/image/LICENSE` | no |
+| golang.org/x/text | v0.43.0 | BSD-3-Clause | yes | `resources/ThirdPartyLicenses/text/LICENSE` | no |
 
 ## Notes
 

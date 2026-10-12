@@ -10,9 +10,11 @@ import (
 )
 
 // Env is the home directory and whether paths compare as on Windows: case-insensitively, with drive letters.
+// RealHome is Home with symbolic links resolved, when that differs, because git reports resolved paths.
 type Env struct {
-	Home    string
-	Windows bool
+	Home     string
+	RealHome string
+	Windows  bool
 }
 
 // Current returns the environment of the running program.
@@ -21,7 +23,11 @@ func Current() (Env, error) {
 	if err != nil {
 		return Env{}, err
 	}
-	return Env{Home: home, Windows: runtime.GOOS == "windows"}, nil
+	env := Env{Home: home, Windows: runtime.GOOS == "windows"}
+	if real, err := filepath.EvalSymlinks(home); err == nil && real != home {
+		env.RealHome = real
+	}
+	return env, nil
 }
 
 // Slash returns p with forward slashes, which git, ssh and Go accept on every platform.
@@ -42,17 +48,17 @@ func (e Env) HasPrefix(p, prefix string) bool {
 
 func (e Env) home() string { return strings.TrimSuffix(Slash(e.Home), "/") }
 
-// Tilde returns p in slash form, with the home directory replaced by ~.
+// Tilde returns p in slash form, with the home directory, as configured or resolved, replaced by ~.
 func (e Env) Tilde(p string) string {
 	p = Slash(p)
-	home := e.home()
-	switch {
-	case home == "":
-		return p
-	case e.Equal(p, home):
-		return "~"
-	case e.HasPrefix(p, home+"/"):
-		return "~" + p[len(home):]
+	for _, home := range []string{e.home(), strings.TrimSuffix(Slash(e.RealHome), "/")} {
+		switch {
+		case home == "":
+		case e.Equal(p, home):
+			return "~"
+		case e.HasPrefix(p, home+"/"):
+			return "~" + p[len(home):]
+		}
 	}
 	return p
 }
