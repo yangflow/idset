@@ -206,11 +206,21 @@ func TestDropAndMatchedResult(t *testing.T) {
 	if s.Tooltip() != "Idset · work" {
 		t.Errorf("tooltip %q", s.Tooltip())
 	}
+	if got := tt.Announcements(); !slices.Equal(got, []string{"Git uses work here"}) {
+		t.Fatalf("the result must be announced once: %v", got)
+	}
+	tt.Frame()
+	if got := tt.Announcements(); len(got) != 0 {
+		t.Fatalf("announced again: %v", got)
+	}
 	if err := tt.Click("Copy the full path"); err != nil {
 		t.Fatal(err)
 	}
 	if !slices.Equal(r.copied, []string{"/home/ada/work/api"}) || !tt.HasText("Copied") {
 		t.Fatalf("copy: %v %v", r.copied, tt.Texts())
+	}
+	if !slices.Contains(tt.Announcements(), "Copied") {
+		t.Fatal("the copy must be announced")
 	}
 	s.now = func() time.Time { return time.Now().Add(2 * time.Second) }
 	tt.Frame()
@@ -236,6 +246,9 @@ func TestUnresolvedResults(t *testing.T) {
 		if !tt.HasText(want) || !tt.HasText("~/scratch") {
 			t.Errorf("%v: %v", kind, tt.Texts())
 		}
+		if got := tt.Announcements(); !slices.Equal(got, []string{want}) {
+			t.Errorf("%v announced %v", kind, got)
+		}
 		if kind != match.Matched && s.Tooltip() != "Idset · no match" {
 			t.Errorf("tooltip %q", s.Tooltip())
 		}
@@ -245,6 +258,9 @@ func TestUnresolvedResults(t *testing.T) {
 	tt.Frame()
 	if !slices.ContainsFunc(tt.Texts(), func(s string) bool { return strings.HasPrefix(s, "Could not run git") }) {
 		t.Errorf("git error: %v", tt.Texts())
+	}
+	if got := tt.Announcements(); len(got) != 1 || !strings.HasPrefix(got[0], "Could not run git") {
+		t.Errorf("git error announced %v", got)
 	}
 }
 

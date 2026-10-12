@@ -24,7 +24,7 @@ var catalog []byte
 type Copy struct {
 	HidePanel, Quit, Loading, DropTitle, DropHint, DropAgain, Choose, ChooseTitle, Empty, EmptyHint, Filter, NoneMatch,
 	Unnamed, NoAlias, NoEmail, ReadOnly, ReadOnlyHint, CopyPath, Copied, Clear, Checking, NoMatch, NotRepo, NotFolder,
-	GitFailed, TooltipIdle, TooltipMatch, TooltipNoMatch, Open, Custom, UsesHere, Alias, Email, Folders, Global,
+	GitFailed, Matched, TooltipIdle, TooltipMatch, TooltipNoMatch, Open, Custom, UsesHere, Alias, Email, Folders, Global,
 	NoFolders, Identities, Reload, RevealFinder, RevealExplorer, RevealFiles string
 }
 
@@ -69,6 +69,9 @@ type Screen struct {
 	lastDir   string
 	result    *match.Result
 	resultErr error
+	// resultSeq counts the results shown; the view announces each one once, when announcedSeq catches up.
+	resultSeq    int
+	announcedSeq int
 
 	query       string
 	providers   []account.Provider
@@ -105,6 +108,7 @@ func (s *Screen) SetResult(dir string, r match.Result, err error) {
 		return
 	}
 	s.checking = ""
+	s.resultSeq++
 	if err != nil {
 		s.result, s.resultErr = nil, err
 		return
@@ -114,6 +118,27 @@ func (s *Screen) SetResult(dir string, r match.Result, err error) {
 
 // Result is the latest outcome, nil when there is none.
 func (s *Screen) Result() *match.Result { return s.result }
+
+// unresolved is the sentence for a result without an identity.
+func (s *Screen) unresolved(k match.Kind) string {
+	return map[match.Kind]string{match.NoMatch: s.text.NoMatch, match.NotRepo: s.text.NotRepo, match.NotFolder: s.text.NotFolder}[k]
+}
+
+// resultMessage says the latest result in one sentence for screen readers, or "" when there is none.
+func (s *Screen) resultMessage() string {
+	switch {
+	case s.resultErr != nil:
+		return fmt.Sprintf(s.text.GitFailed, s.resultErr)
+	case s.result == nil:
+		return ""
+	case s.result.Kind == match.Matched:
+		if a, ok := s.find(s.result.ID); ok {
+			return fmt.Sprintf(s.text.Matched, s.label(a))
+		}
+		return ""
+	}
+	return s.unresolved(s.result.Kind)
+}
 
 func (s *Screen) clear() { s.checking, s.result, s.resultErr = "", nil, nil }
 
