@@ -35,7 +35,7 @@ and `go test ./...` on Windows.
 - Link the issue with `Closes #<n>`. The maintainer squash-merges, so the pull request title becomes the commit
   message. No DCO or sign-off is required.
 - Keep a change focused. When behavior changes, update the existing tests for that area and, if users would notice
-  it, add a line under `## [Unreleased]` in both `CHANGELOG.md` and `CHANGELOG.zh.md`.
+  it, add a line under `## [Unreleased]` in `CHANGELOG.md`.
 - Change `docs/product.md` before changing product behavior. UI copy lives in each screen's `copy.json`, in `en`
   and `zh-Hans` only; change both together.
 

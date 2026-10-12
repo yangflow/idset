@@ -70,8 +70,8 @@ python3 scripts/bump.py <version>
 - Product behavior changes start in `docs/product.md`. A UI change starts from the mockup in design/; the
   maintainer confirms the visual direction before UI code is written. Mockup, `docs/design-system.md` and code go
   in the same PR. Screenshots go in the PR body, never in the repository.
-- User-visible changes go under `[Unreleased]` in both `CHANGELOG.md` and `CHANGELOG.zh.md`. The version lives only
-  in `mygo.json`; change it with `python3 scripts/bump.py <version>`, which also dates both changelogs.
+- User-visible changes go under `[Unreleased]` in `CHANGELOG.md`. The version lives only in `mygo.json`; change it
+  with `python3 scripts/bump.py <version>`, which also dates the changelog.
 - `README.md` (English) and `README.zh-CN.md` (Chinese) say the same thing; change both together. Feature status
   lists only merged work; planned work is marked as planned.
 - Only MyGo native views and the native updater plugin. No WebView, HTML frontend, production cgo dependency or
