@@ -8,6 +8,10 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   check:
     runs-on: ubuntu-latest
@@ -15,8 +19,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
         with:
-          # scan_secrets.py 扫全部历史。
-          fetch-depth: 0
+          fetch-depth: 0 # scan_secrets.py reads the whole history
       - uses: actions/setup-go@v7
         with:
           go-version-file: go.mod
@@ -26,7 +29,7 @@ jobs:
       - run: scripts/check.sh --cross
       - run: python3 scripts/scan_secrets.py
       - run: go test -race ./...
-  # 数据目录的文件锁和路径在 Windows 上走另一套代码，check.sh 只交叉编译、不运行。
+  # File locks and paths in the data directory take a different code path on Windows; check.sh only cross-compiles it.
   test-windows:
     runs-on: windows-latest
     timeout-minutes: 20
