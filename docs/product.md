@@ -47,8 +47,8 @@ Idset 管理一台机器上的多个 Git 和 SSH 身份：每个身份有自己�
 
 - 目录按需创建，第一次保存身份之前不写用户的配置文件。
 - 所有写入都是原子的：写同目录的临时文件再替换。
-- 新建的 `~/.ssh/config` 和托管文件在 macOS、Linux 上权限是 `0600`，目录 `0700`；Windows 上只给当前用户访问权限。
-- 目标路径是符号链接时，备份、恢复和删除私钥都拒绝操作。写 `~/.ssh/config` 和 `~/.gitconfig` 时跟随符号链接写到真实文件，因为 dotfiles 常用符号链接管理。
+- 新建的 `~/.ssh/config` 和托管文件在 macOS、Linux 上权限是 `0600`，目录 `0700`；Windows 上继承用户目录的权限，默认只有当前用户和系统能访问。已有的文件保留原来的权限。
+- 目标路径是符号链接时，备份、恢复和删除私钥都拒绝操作。写 `~/.ssh/config` 和 `~/.gitconfig` 时跟随符号链接写到真实文件，因为 dotfiles 常用符号链接管理；文件原来用 CRLF 换行就保持 CRLF。
 
 ## 数据模型
 
@@ -87,8 +87,9 @@ Idset 管理一台机器上的多个 Git 和 SSH 身份：每个身份有自己�
 - `keyPath` 可以留空，留空的身份不生成 Host 块和 `core.sshCommand`。
 - `custom` 必须有 `hostName`。
 - 最多一个全局身份。已有全局身份时，再把别的身份设成全局，提示先把 <名称> 改成限定。
-- 字段里不能有换行，防止往生成的配置里注入额外指令。
-- 校验失败时，在对应字段下面显示原因，不保存。
+- 除备注外，字段里不能有换行；密钥路径和 `gitdir` 路径里不能有双引号。防止往生成的配置里注入额外指令。
+- 颜色是六个预设名之一或 `#RRGGBB`。
+- 校验失败时，在对应字段下面显示原因，不保存。只拦这次修改新引入的问题：`accounts.json` 被手改出的问题（比如多个全局身份）不妨碍其他修改，由诊断提示。
 
 ### 范围
 
@@ -100,38 +101,50 @@ Idset 管理一台机器上的多个 Git 和 SSH 身份：每个身份有自己�
 
 ```json
 {
-  "version": 1,
   "accounts": [
     {
-      "id": "22222222-2222-2222-2222-222222222222",
-      "label": "work",
-      "provider": "github",
-      "sshPort": 443,
-      "sshAlias": "github-work",
-      "username": "bob",
-      "keyPath": "~/.ssh/id_work",
-      "keyFingerprint": "SHA256:AbCdEf...",
-      "gitUserName": "Bob",
-      "gitUserEmail": "bob@example.com",
-      "scope": {"gitdir": {"paths": ["~/work/", "~/src/new-app/"]}},
-      "urlRewrites": [
-        {"from": "https://github.com/example-org/", "to": "git@github-work:example-org/", "push": false}
-      ],
       "color": "#3A7BD5",
-      "notes": "",
       "createdAt": "2026-08-01T10:00:00Z",
+      "gitUserEmail": "bob@example.com",
+      "gitUserName": "Bob",
+      "id": "22222222-2222-2222-2222-222222222222",
+      "keyFingerprint": "SHA256:AbCdEf",
+      "keyPath": "~/.ssh/id_work",
+      "label": "work",
+      "lastUsedAt": "2026-08-20T09:30:00Z",
+      "notes": "",
+      "provider": "github",
+      "scope": {
+        "gitdir": {
+          "paths": [
+            "~/work/",
+            "~/src/new-app/"
+          ]
+        }
+      },
+      "sshAlias": "github-work",
+      "sshPort": 443,
       "updatedAt": "2026-08-20T09:00:00Z",
-      "lastUsedAt": "2026-08-20T09:30:00Z"
+      "urlRewrites": [
+        {
+          "from": "https://github.com/example-org/",
+          "push": false,
+          "to": "git@github-work:example-org/"
+        }
+      ],
+      "username": "bob"
     }
-  ]
+  ],
+  "version": 1
 }
 ```
 
 - 键按字母排序、缩进两格输出，时间是 UTC 的 RFC 3339。没有值的可选字段省略。
 - `{"global": {}}` 表示全局范围。
-- 文件里不出现任何私钥内容，有测试保证。
+- 文件里只有私钥的路径和指纹，没有私钥内容。
+- 缺少 `provider` 时按 `github`，缺少 `sshPort` 时按该平台的默认端口。
 - 文件不存在：身份列表为空，不创建文件。
-- 文件读不出来（JSON 错误、版本比当前程序新、必填字段缺失）：进入只读状态。面板顶部说明文件读不出来，给出路径和「打开备份」入口；在用户恢复备份或手动修好之前，任何写操作都不可用，绝不覆盖这个文件。
+- 文件读不出来（JSON 错误、版本比当前程序新、缺少 `id` 或 `scope`、未知的平台）：进入只读状态。面板顶部说明文件读不出来，给出路径和「打开备份」入口；在用户恢复备份或手动修好之前，任何写操作都不可用，绝不覆盖这个文件。
 
 ### 存储顺序
 
@@ -193,6 +206,7 @@ Host github-work
 - 全局 `[user]`：来自全局身份，没有署名就不写。`accounts.json` 被手改成多个全局身份时，用存储顺序最后一个有署名的，和 git 实际生效的一致。
 - 地址改写：收集所有身份的规则（包括限定范围的身份，改写对所有仓库都生效），去掉 `from` 或 `to` 为空的，按 `to` 分组，组按 `to` 升序输出，组内按身份存储顺序和规则顺序，完全相同的规则只写一次。`push` 为真的写 `pushInsteadOf`。
 - `includeIf`：每条路径一个块，指向这个身份唯一的子文件。
+- 值里有 `#`、`;` 或首尾空白时整体加双引号；`\`、`"` 和 Tab 一律转义。
 
 ### includeIf 的顺序
 
