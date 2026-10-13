@@ -25,6 +25,8 @@ h1 { flex:1; margin:0; font-size:15px }
 .content > * { flex-shrink:0 }
 .panel button { padding:5px 10px; border:1px solid var(--border); border-radius:6px; background:var(--surface); color:var(--text); font:inherit }
 .panel button.icon { width:28px; padding:5px 0 }
+.panel button.text { border-color:transparent; background:transparent; padding:5px 4px; color:var(--accent); display:inline-flex; align-items:center; gap:4px; align-self:flex-start }
+.panel button.text svg { width:14px; height:14px }
 .panel button.ghost { width:24px; height:24px; padding:0; display:grid; place-items:center; border:0; background:transparent; color:var(--muted); cursor:pointer }
 .panel button.ghost:hover { background:var(--ghost-hover) }
 .ghost svg { width:14px; height:14px }
@@ -97,7 +99,7 @@ h1 { flex:1; margin:0; font-size:15px }
 const TEXT = {
   zh: {
     close:'隐藏', quit:'退出', loading:'正在读取配置…', dropTitle:'把项目文件夹拖到这里', dropHint:'看看这个目录会用哪个身份推送',
-    choose:'选择文件夹…', dropAgain:'拖入另一个文件夹，或', empty:'还没有身份', emptyHint:'添加身份的入口会在账户窗口里提供。',
+    choose:'选择文件夹…', dropAgain:'拖入另一个文件夹，或', empty:'还没有身份', emptyHint:'添加一个，让文件夹用上自己的 Git 署名、邮箱和 SSH 密钥。', add:'添加身份',
     filter:'筛选身份', none:'没有匹配的身份', unnamed:'（未命名）', readonly:'accounts.json 读不出来',
     readonlyHint:'修好文件或从备份恢复之前，Idset 不会写入它。', reload:'重新读取', reveal:'在 Finder 中显示', copy:'复制完整路径', copied:'已复制', clear:'清除结果',
     uses:'Git 在这里用这个身份', alias:'别名', email:'邮箱', folders:'生效目录', global:'全局', noAlias:'没有别名', noEmail:'没有邮箱',
@@ -106,7 +108,7 @@ const TEXT = {
   },
   en: {
     close:'Hide', quit:'Quit', loading:'Reading configuration…', dropTitle:'Drop a project folder here', dropHint:'See which identity pushes from it',
-    choose:'Choose Folder…', dropAgain:'Drop another folder, or', empty:'No identities yet', emptyHint:'Identities are added in the accounts window.',
+    choose:'Choose Folder…', dropAgain:'Drop another folder, or', empty:'No identities yet', emptyHint:'Add one to give a folder its own Git name, email and SSH key.', add:'Add Identity',
     filter:'Filter identities', none:'No matching identities', unnamed:'(unnamed)', readonly:'accounts.json cannot be read',
     readonlyHint:'Idset will not write to it until it is fixed or restored from a backup.', reload:'Read Again', reveal:'Show in Finder', copy:'Copy the full path', copied:'Copied', clear:'Clear result',
     uses:'Git uses this identity here', alias:'Alias', email:'Email', folders:'Folders', global:'Global', noAlias:'no alias', noEmail:'no email',
@@ -129,6 +131,7 @@ const icon = {
   check:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 8.5l3 3 6-7"/></svg>',
   x:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M4 4l8 8M12 4l-8 8"/></svg>',
   warn:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2.5l6 11H2z"/><path d="M8 6.5v3M8 11.6v.1"/></svg>',
+  plus:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M8 3v10M3 8h10"/></svg>',
 };
 const q = new URLSearchParams(location.search);
 const view = {
@@ -142,7 +145,7 @@ function panel(state, T) {
   const avatar = i => `<div class="avatar" style="--c:${i.c};--cl:${i.cl}">${(i.label || '?').slice(0, 1).toUpperCase()}</div>`;
   const tag = i => i.scope ? i.scope[0] + (i.scope.length > 1 ? ` +${i.scope.length - 1}` : '') : T.global;
   const list = n => `<div class="section"><span>${T.identities}</span><span>${n}</span></div>` +
-    `<div class="list">${ids.slice(0, n).map(i => `<div class="item">${avatar(i)}<div class="text"><span class="label">${i.label || T.unnamed}</span><span class="email">${i.email || T.noEmail}</span></div><span class="tag">${tag(i)}</span></div>`).join('')}</div>`;
+    `<div class="list">${ids.slice(0, n).map(i => `<div class="item">${avatar(i)}<div class="text"><span class="label">${i.label || T.unnamed}</span><span class="email">${i.email || T.noEmail}</span></div><span class="tag">${tag(i)}</span></div>`).join('')}</div><button class="text">${icon.plus}${T.add}</button>`;
   const drop = (compact, over) => compact
     ? `<div class="drop compact"><span class="muted small">${T.dropAgain}</span><button>${T.choose}</button></div>`
     : `<div class="drop${over ? ' over' : ''}"><strong>${T.dropTitle}</strong><span class="muted small">${T.dropHint}</span><button>${T.choose}</button></div>`;
@@ -159,7 +162,7 @@ function panel(state, T) {
     readonly: `<div class="readonly"><div class="warn">${icon.warn}</div><div class="title">${T.readonly}</div><div class="hint">${T.readonlyHint}</div>
       <div class="reason">~/.config/idset/accounts.json<br>invalid character '}' looking for beginning of object key string</div>
       <div class="actions"><button>${T.reveal}</button><button>${T.reload}</button></div></div>`,
-    empty: drop(false) + `<div class="center"><strong>${T.empty}</strong><span class="muted small">${T.emptyHint}</span></div>`,
+    empty: drop(false) + `<div class="center"><strong>${T.empty}</strong><span class="muted small">${T.emptyHint}</span><button>${T.add}</button></div>`,
     list: drop(false) + list(2),
     over: drop(false, true) + list(2),
     filter: drop(false) + list(4).replace('</div><div class="list">', `</div>${filter}<div class="list">`),

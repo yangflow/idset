@@ -8,7 +8,7 @@
     "Choose": "Choose Folder…",
     "ChooseTitle": "Choose a project folder",
     "Empty": "No identities yet",
-    "EmptyHint": "Identities are added in the accounts window.",
+    "EmptyHint": "Add one to give a folder its own Git name, email and SSH key.",
     "Filter": "Filter identities",
     "NoneMatch": "No matching identities",
     "Unnamed": "(unnamed)",
@@ -41,7 +41,9 @@
     "RevealFinder": "Show in Finder",
     "RevealExplorer": "Show in Explorer",
     "RevealFiles": "Show in File Manager",
-    "HidePanel": "Hide Idset"
+    "HidePanel": "Hide Idset",
+    "AddIdentity": "Add Identity",
+    "OpenAccounts": "Open Accounts Window"
   },
   "zh-Hans": {
     "Quit": "退出",
@@ -52,7 +54,7 @@
     "Choose": "选择文件夹…",
     "ChooseTitle": "选择项目文件夹",
     "Empty": "还没有身份",
-    "EmptyHint": "添加身份的入口会在账户窗口里提供。",
+    "EmptyHint": "添加一个，让文件夹用上自己的 Git 署名、邮箱和 SSH 密钥。",
     "Filter": "筛选身份",
     "NoneMatch": "没有匹配的身份",
     "Unnamed": "（未命名）",
@@ -85,6 +87,8 @@
     "RevealFinder": "在 Finder 中显示",
     "RevealExplorer": "在资源管理器中显示",
     "RevealFiles": "在文件管理器中显示",
-    "HidePanel": "隐藏 Idset"
+    "HidePanel": "隐藏 Idset",
+    "AddIdentity": "添加身份",
+    "OpenAccounts": "打开账户窗口"
   }
 }

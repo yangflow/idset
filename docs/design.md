@@ -316,8 +316,11 @@ Identity list rows: padding `Space(2.25)`×`Space(3)` (9×12), a `Space(7)` (28)
 `Space(2.5)` (10), the name and the email on two lines, and at the end the folders: the first one, "+N" when there
 are more, "Global" for a global identity, "no folders" without any. Text is not truncated.
 
-Planned (product.md): a settings button in the title bar; About and Recheck in the footer; "Add identity" and
-"Import" when there are no identities; a connectivity dot, an expand arrow and problem bars on identity rows; bind,
+Identity rows open the accounts window on their identity, and "Add Identity" (a text button with a plus, `Accent`,
+under the list, or a bordered button in the empty state) opens it on a new draft.
+
+Planned (product.md): a settings button in the title bar; About and Recheck in the footer; "Import" when there are no
+identities; a connectivity dot, an expand arrow and problem bars on identity rows; bind,
 unbind and rebind actions on result cards.
 
 ## The accounts window
