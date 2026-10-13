@@ -73,6 +73,9 @@ type Request struct {
 	// storage order, unless one is selected already.
 	New bool
 	ID  string
+	// Folder, with New, scopes the draft to this folder: the folder of a result card to bind a new identity to.
+	// A draft that is open already takes the folder as one more path.
+	Folder string
 }
 
 // flashFor is how long "Written" stays on the Save button.
@@ -105,8 +108,10 @@ type Screen struct {
 	// forms are the edits in progress, by identity ID; the draft of a new identity is one of them.
 	forms   map[string]*form
 	draftID string
-	sel     string
-	splitW  float32
+	// draftFolder is the folder the draft was opened for, "" when it was not opened for one.
+	draftFolder string
+	sel         string
+	splitW      float32
 
 	busy bool
 	// problems are the checks the last save attempt failed, for the form they were made on, until it changes.
@@ -139,7 +144,7 @@ func (s *Screen) Open(req Request) {
 func (s *Screen) apply(req Request) {
 	switch {
 	case req.New:
-		s.newDraft()
+		s.newDraft(req.Folder)
 	case req.ID != "" && s.stored(req.ID) != nil:
 		s.sel = req.ID
 	case s.selectedForm() == nil:
@@ -217,17 +222,25 @@ func (s *Screen) selectedForm() *form {
 func (s *Screen) empty() bool { return len(s.list) == 0 && s.draftID == "" }
 
 // newDraft selects the draft, creating it with the defaults of a new identity and asking for the signature of
-// `git config --global` to be filled in.
-func (s *Screen) newDraft() {
+// `git config --global` to be filled in. With a folder the draft applies to that folder only.
+func (s *Screen) newDraft(folder string) {
 	if s.readErr != nil {
 		return
 	}
+	stored := gitdir.Normalize(folder, s.env)
 	if s.draftID == "" {
 		a := account.New(s.now())
 		a.Color = s.freeColor()
+		if stored != "" {
+			a.Scope = account.Scope{Paths: []string{stored}}
+			s.draftFolder = folder
+		}
 		s.draftID = a.ID
 		s.forms[a.ID] = newForm(a, true)
 		s.act.Prefill(a.ID)
+	} else if f := s.forms[s.draftID]; stored != "" && f != nil {
+		f.addFolder(stored)
+		s.draftFolder = folder
 	}
 	s.sel = s.draftID
 	s.notice = ""
@@ -352,7 +365,7 @@ func (s *Screen) SaveDone(id string, list []account.Account, err error) {
 		return
 	}
 	if id == s.draftID {
-		s.draftID = ""
+		s.draftID, s.draftFolder = "", ""
 	}
 	s.forms[id] = newForm(*a, false)
 	s.sel, s.problems = id, nil
@@ -385,7 +398,7 @@ func (s *Screen) revert() {
 	s.notice, s.problems = "", nil
 	if f.isNew {
 		delete(s.forms, f.id)
-		s.draftID = ""
+		s.draftID, s.draftFolder = "", ""
 		s.selectFirst()
 		return
 	}
@@ -520,6 +533,14 @@ func (s *Screen) providerName(p account.Provider) string {
 
 // Selected is the ID of the selected identity or draft, "" when none is.
 func (s *Screen) Selected() string { return s.sel }
+
+// DraftFolder is the folder the draft with this ID was opened for, "" for any other identity.
+func (s *Screen) DraftFolder(id string) string {
+	if id == "" || id != s.draftID {
+		return ""
+	}
+	return s.draftFolder
+}
 
 // Draft is the ID of the draft, "" when there is none.
 func (s *Screen) Draft() string { return s.draftID }

@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"reflect"
 	"strings"
 	"testing"
 	"time"
@@ -75,8 +76,9 @@ func TestResolve(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	want := Result{Kind: Matched, Dir: paths.Slash(dir), Root: "/home/ada/work/api", Origin: "https://github.com/example-org/api.git", ID: "work"}
-	if r != want {
+	want := Result{Kind: Matched, Dir: paths.Slash(dir), Root: "/home/ada/work/api", Origin: "https://github.com/example-org/api.git", ID: "work",
+		Covering: []Cover{{ID: "work", Path: "~/work/"}}}
+	if !reflect.DeepEqual(r, want) {
 		t.Fatalf("%+v", r)
 	}
 
@@ -128,5 +130,50 @@ func TestSystemGit(t *testing.T) {
 	}
 	if r.Kind != Matched || !strings.EqualFold(r.Root, paths.Slash(dir)) || r.Origin != "git@example.com:o/r.git" {
 		t.Fatalf("%+v", r)
+	}
+}
+
+func TestCoveringListsGitsReadOrderWithTheWinnerLast(t *testing.T) {
+	env := paths.Env{Home: "/home/ada"}
+	list := []account.Account{identity("work", "~/work/"), identity("client", "~/work/client/"), identity("home"), identity("misc", "~/misc/")}
+	want := []Cover{{"work", "~/work/"}, {"client", "~/work/client/"}}
+	if got := Covering(list, "/home/ada/work/client/app", env); !reflect.DeepEqual(got, want) {
+		t.Fatalf("%+v", got)
+	}
+	if got := Covering(list, "/home/ada/work/web", env); len(got) != 1 {
+		t.Fatalf("one identity is no overlap: %+v", got)
+	}
+	if got := Covering(list, "/home/ada/src", env); len(got) != 0 {
+		t.Fatalf("a global identity covers nothing by path: %+v", got)
+	}
+	// One identity with two covering paths appears once, where its last one is read.
+	list = append(list, identity("both", "~/", "~/work/client/app/"))
+	got := Covering(list, "/home/ada/work/client/app", env)
+	if len(got) != 3 || got[2] != (Cover{"both", "~/work/client/app/"}) {
+		t.Fatalf("%+v", got)
+	}
+	win := paths.Env{Home: `C:\Users\Ada`, Windows: true}
+	got = Covering([]account.Account{identity("a", "~/work/"), identity("b", "c:/users/ada/work/api/")}, `C:\Users\Ada\work\api`, win)
+	if len(got) != 2 || got[1].ID != "b" {
+		t.Fatalf("Windows path forms: %+v", got)
+	}
+}
+
+func TestResolveSaysWhetherTheMatchedIdentityHasTheFolderItself(t *testing.T) {
+	dir := t.TempDir()
+	env := paths.Env{Home: "/home/ada"}
+	git := fakeGit{"rev-parse --show-toplevel": {"/home/ada/work/api", 0}}
+	for _, c := range []struct {
+		scope []string
+		exact bool
+	}{{[]string{"~/work/"}, false}, {[]string{"~/work/", "~/work/api/"}, true}} {
+		r, err := Resolve(context.Background(), git.run, dir, []account.Account{identity("work", c.scope...)}, env)
+		if err != nil || r.Exact != c.exact {
+			t.Errorf("%v: %+v %v", c.scope, r, err)
+		}
+	}
+	r, _ := Resolve(context.Background(), git.run, dir, []account.Account{identity("home")}, env)
+	if r.Exact || len(r.Covering) != 0 {
+		t.Errorf("a global identity has no path: %+v", r)
 	}
 }

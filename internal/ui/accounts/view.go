@@ -70,7 +70,7 @@ func (s *Screen) emptyState(c *ui.Context) {
 		ui.Text(c, s.text.NoneHint).TextColor(t.TextMuted)
 		ui.Row(c).Gap(t.Space(2)).PaddingY(t.Space(1)).Children(func() {
 			if ui.PrimaryButton(c, s.text.Create).Clicked() {
-				s.newDraft()
+				s.newDraft("")
 			}
 		})
 	})
@@ -119,7 +119,7 @@ func (s *Screen) sidebar(c *ui.Context) {
 		ui.Divider(c)
 		ui.Row(c).Height(barHeight(t)).PaddingX(t.Space(2)).AlignItems(ui.Center).Children(func() {
 			if ghost(c, s.text.AddIdentity, plusIcon).Disabled(s.readErr != nil).Clicked() {
-				s.newDraft()
+				s.newDraft("")
 			}
 		})
 	})

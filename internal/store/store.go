@@ -202,6 +202,31 @@ func (s *Store) Update(a account.Account) error {
 	return s.commit(next, false, true)
 }
 
+// UpdateMany replaces several identities, matched by ID, in one write and one regeneration, and stamps UpdatedAt
+// on each. Nothing is written when one of them is unknown.
+func (s *Store) UpdateMany(changes []account.Account) error { return s.replace(changes, true) }
+
+// RestoreMany puts identities back as they were, UpdatedAt and LastUsedAt included, in one write and one
+// regeneration; it is the undo of UpdateMany. Nothing is written when one of them is unknown.
+func (s *Store) RestoreMany(previous []account.Account) error { return s.replace(previous, false) }
+
+func (s *Store) replace(changes []account.Account, stamp bool) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	next := slices.Clone(s.accounts)
+	for _, a := range changes {
+		i := slices.IndexFunc(next, func(o account.Account) bool { return o.ID == a.ID })
+		if i < 0 {
+			return ErrNotFound
+		}
+		if stamp {
+			a.UpdatedAt = s.now()
+		}
+		next[i] = a
+	}
+	return s.commit(next, false, true)
+}
+
 // Delete removes an identity.
 func (s *Store) Delete(id string) error {
 	s.mu.Lock()
@@ -230,7 +255,7 @@ func (s *Store) Touch(id string) error {
 	return s.commit(next, false, false)
 }
 
-// ReplaceAll writes a whole new list, for undo.
+// ReplaceAll writes a whole new list.
 func (s *Store) ReplaceAll(list []account.Account) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()

@@ -2,12 +2,14 @@ package main
 
 import (
 	"context"
+	"errors"
 	"log/slog"
 	"runtime"
 
 	"github.com/egoist/mygo"
 	"github.com/egoist/mygo/ui"
 	"github.com/yangflow/idset/internal/account"
+	"github.com/yangflow/idset/internal/store"
 	"github.com/yangflow/idset/internal/ui/accounts"
 )
 
@@ -104,12 +106,18 @@ func (w *accountsWindow) actions() accounts.Actions {
 			if b == nil {
 				return
 			}
+			// A new identity opened for a folder of the panel's result card: look at that folder again once it is saved.
+			folder := w.screen.DraftFolder(acc.ID)
 			go func() {
 				err := b.Save(acc, isNew)
 				list, readErr, path := b.Store.Accounts(), b.Store.ReadOnly(), b.Store.Path()
 				a.post(func() {
 					w.screen.SaveDone(acc.ID, list, err)
 					a.showAccounts(list, readErr, path)
+					var regenerate *store.RegenerateError
+					if folder != "" && (err == nil || errors.As(err, &regenerate)) {
+						a.screen.Recheck(folder)
+					}
 				})
 			}()
 		},

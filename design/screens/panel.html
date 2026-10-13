@@ -41,7 +41,7 @@ h1 { flex:1; margin:0; font-size:15px }
 :root[data-scheme=dark] .avatar { color:rgb(var(--cl)); background:rgba(var(--c),.24) }
 
 /* Result card: a context line with the folder and its actions, then the answer. */
-.result { border:1px solid var(--border); border-radius:10px; background:var(--surface); overflow:hidden }
+.result { border:1px solid var(--border); border-radius:10px; background:var(--surface) }
 .result.warning { border-color:var(--warning) }
 .result.danger { border-color:var(--danger) }
 .result .top { display:flex; align-items:center; gap:4px; padding:8px 8px 8px 12px; border-bottom:1px solid var(--border) }
@@ -56,6 +56,54 @@ h1 { flex:1; margin:0; font-size:15px }
 .result .say { padding:12px; display:flex; align-items:center; gap:8px; font-weight:600 }
 .result .say.plain { font-weight:400 }
 .result .say.danger { color:var(--danger); font-weight:400 }
+
+
+/* Binding. Rows are 44 high, buttons 28 high and 80 wide, so a label never resizes a control. */
+.panel button.field { background:var(--background) }
+.panel button.fixed { width:80px; height:28px; padding:0; text-align:center }
+.panel button.primary { background:var(--accent); border-color:var(--accent); color:#fff }
+.result .head { padding:0 12px 6px; font-size:12px; font-weight:600; color:var(--muted) }
+.result .say.tight { padding-bottom:8px }
+.result .row { display:flex; align-items:center; gap:10px; height:44px; padding:0 12px; border-top:1px solid var(--border) }
+.result .row.short { height:40px; padding:0 8px }
+.result .row .dot { flex:none; width:10px; height:10px; border-radius:50%; background:rgb(var(--c)) }
+:root[data-scheme=dark] .result .row .dot { background:rgb(var(--cl)) }
+.result .row .lines { flex:1; min-width:0; display:flex; flex-direction:column; gap:1px }
+.result .row .label { font-weight:600 }
+.result .row .note { font-size:12px; color:var(--muted); overflow-wrap:anywhere }
+.result .row .go { flex:none; width:44px; text-align:right; color:var(--accent) }
+.result .row.lost .label { color:var(--muted); font-weight:400 }
+.result .row .verdict { flex:none; display:flex; align-items:center; gap:4px; font-size:12px; color:var(--muted) }
+.result .row .verdict.win { color:var(--accent); font-weight:600 }
+.result .row .verdict svg { width:14px; height:14px }
+.result .row.pick { background:var(--ghost-hover) }
+.result .confirm.nobd { border-top:0 }
+.result .confirm { border-top:1px solid var(--border); padding:12px; display:flex; flex-direction:column; gap:12px }
+.result .confirm p { margin:0; line-height:1.45 }
+.result .buttons { display:flex; justify-content:flex-end; gap:8px }
+.result button.text { align-self:center }
+.result .kv .paths { display:flex; flex-direction:column; gap:2px }
+.result .actions { position:relative; display:flex; align-items:center; gap:4px; height:40px; padding:0 8px; border-top:1px solid var(--border) }
+.result .actions .gap { flex:1 }
+.result .menuwrap { display:flex }
+.result .actions button.text svg.chev { width:12px; height:12px }
+.menu { position:absolute; z-index:1; top:calc(100% + 4px); right:8px; width:224px; padding:4px; border:1px solid var(--border); border-radius:8px; background:var(--background) }
+.menu .entry { display:flex; align-items:center; gap:8px; height:32px; padding:0 8px; border-radius:6px }
+.menu .entry.hot { background:var(--ghost-hover) }
+.menu .entry .dot { flex:none; width:10px; height:10px; border-radius:50%; background:rgb(var(--c)) }
+:root[data-scheme=dark] .menu .entry .dot { background:rgb(var(--cl)) }
+.menu .entry .label { flex:1 }
+.menu .entry .tag { font-family:ui-monospace,monospace; font-size:11px; color:var(--muted) }
+.result .stack { display:flex; flex-direction:column; align-items:flex-start; padding:4px 8px; border-top:1px solid var(--border) }
+.result .stack button.text { align-self:flex-start }
+.result .bar { position:relative; display:flex; align-items:center; gap:0; min-height:36px; padding:8px 12px; border-top:1px solid var(--border); line-height:1.4 }
+.result .bar.note { font-size:12px; color:var(--muted) }
+.result .bar.timed { height:36px; padding:0 8px 0 12px; border-radius:0 0 9px 9px; overflow:hidden }
+/* The countdown: a 2 DIP line on the bottom edge of the bar, as wide as the time left of the card's width (here 3 of 5 seconds), Accent at 45%. */
+.result .bar.timed::after { content:""; position:absolute; left:0; bottom:0; height:2px; width:var(--left); background:color-mix(in srgb, var(--accent) 45%, transparent) }
+.result .bar button.text { padding:5px 4px }
+.result .overlap-hint { padding:0 12px 10px; font-size:12px; color:var(--muted) }
+.panel.full { height:auto; min-height:480px }
 
 /* Identity list: a heading with the count, then one grouped list. */
 .section { display:flex; justify-content:space-between; padding:0 2px; margin-bottom:-6px; font-size:12px; font-weight:600; color:var(--muted) }
@@ -89,8 +137,9 @@ h1 { flex:1; margin:0; font-size:15px }
 <aside class="controls">
   <div><h2>State</h2><div class="group" id="states"></div></div>
   <div><h2>Scheme</h2><div class="group" id="schemes"></div></div>
+  <div><h2>Height</h2><div class="group" id="heights"></div></div>
   <div><h2>Language</h2><div class="group" id="langs"></div></div>
-  <div class="hint">URL: <code>?state=…&amp;scheme=dark&amp;lang=zh</code><br><kbd>←</kbd> <kbd>→</kbd> switch state.</div>
+  <div class="hint">URL: <code>?state=…&amp;scheme=dark&amp;lang=zh&amp;height=full</code><br><kbd>←</kbd> <kbd>→</kbd> switch state.</div>
 </aside>
 <div class="panel">
   <header><h1>Idset</h1></header>
@@ -107,6 +156,10 @@ const TEXT = {
     uses:'Git 在这里用这个身份', alias:'别名', email:'邮箱', folders:'生效目录', global:'全局', noAlias:'没有别名', noEmail:'没有邮箱',
     noMatch:'没有身份匹配这个目录', notRepo:'不是 Git 仓库', notFolder:'只能查看文件夹', checking:'正在查看…',
     gitFailed:'无法运行 git：exec: "git": executable file not found in $PATH', identities:'身份',
+    bindTo:'绑定到', bind:'绑定', globalId:'全局身份', newId:'新建身份并绑到这里', cancel:'取消', rebindDo:'改绑', unbind:'解绑', rebind:'改绑到', openFinder:'在 Finder 中打开',
+    overlapHint:'Git 按这个顺序读取，后面的覆盖前面的', used:'生效', overridden:'被覆盖', undo:'撤销', undone:'已撤销',
+    has:p => `已有 ${p} · 会再加一条`, confirmGlobal:n => `绑定后 ${n} 只在这个文件夹生效，不再全局生效。`, coveredNote:(n, p) => `${n} 的 ${p} 已经覆盖这里，没有改动`,
+    overlapTitle:n => `${n} 个身份覆盖这里`, onlyUse:n => `这里只用 ${n}`, removeFrom:(n, p) => `从 ${n} 去掉 ${p}`, boundTo:n => `已绑到 ${n}`,
   },
   en: {
     close:'Hide', quit:'Quit', loading:'Reading configuration…', dropTitle:'Drop a project folder here', dropHint:'See which identity pushes from it',
@@ -116,11 +169,16 @@ const TEXT = {
     uses:'Git uses this identity here', alias:'Alias', email:'Email', folders:'Folders', global:'Global', noAlias:'no alias', noEmail:'no email',
     noMatch:'No identity matches this folder', notRepo:'Not a Git repository', notFolder:'Only folders can be checked', checking:'Checking…',
     gitFailed:'Could not run git: exec: "git": executable file not found in $PATH', identities:'Identities',
+    bindTo:'Bind to', bind:'Bind', globalId:'Global identity', newId:'New Identity and Bind Here', cancel:'Cancel', rebindDo:'Rebind', unbind:'Unbind', rebind:'Rebind to', openFinder:'Open in Finder',
+    overlapHint:'Git reads them in this order; the last one wins.', used:'Used', overridden:'Overridden', undo:'Undo', undone:'Undone',
+    has:p => `Has ${p} · adds another`, confirmGlobal:n => `After binding, ${n} applies only to this folder, not globally.`, coveredNote:(n, p) => `${n} already covers this folder with ${p}. Nothing changed.`,
+    overlapTitle:n => `${n} identities cover this folder`, onlyUse:n => `Use only ${n} here`, removeFrom:(n, p) => `Remove ${p} from ${n}`, boundTo:n => `Bound to ${n}`,
   },
 };
 const STATES = {
-  list:'有身份', over:'拖着经过', filter:'筛选', nofilter:'筛选无结果', checking:'正在查看', matched:'已匹配', copied:'已复制',
-  nomatch:'没有匹配', notrepo:'不是仓库', notfolder:'不是文件夹', giterror:'git 失败', empty:'没有身份', loading:'读取中', readonly:'读不出来',
+  list:'有身份', over:'拖着经过', filter:'筛选', nofilter:'筛选无结果', checking:'正在查看', matched:'已匹配（父目录）', exact:'已匹配（可解绑）', rebind:'改绑菜单', copied:'已复制',
+  overlap:'多个身份覆盖', covered:'已覆盖，没改', undo:'撤销条', undone:'撤销之后',
+  nomatch:'没有匹配', confirm:'改绑到全局身份', notrepo:'不是仓库', notfolder:'不是文件夹', giterror:'git 失败', empty:'没有身份', loading:'读取中', readonly:'读不出来',
 };
 const ids = [
   { label:'work', alias:'github-work', email:'bob@example.com', c:'58,123,213', cl:'120,170,240', scope:['~/work/', '~/src/new/'] },
@@ -128,11 +186,19 @@ const ids = [
   { label:'client', alias:'gitlab-client', email:'bob@client.example', c:'224,122,31', cl:'240,165,95', scope:['~/work/client/'] },
   { label:'', alias:'', email:'nobody@example.com', c:'142,68,173', cl:'190,130,215', scope:['~/misc/'] },
 ];
+const [work, personal, client, unnamed] = ids;
+const workExact = { ...work, scope:['~/work/api/', '~/src/new/'] };
+const workBound = { ...work, scope:['~/work/', '~/src/new/', '~/scratch/notes/'] };
+// Two sample sets: with a global identity, and without one (the only case that can have no match).
+const withGlobal = [work, personal, client, unnamed];
+const noGlobal = [work, client, unnamed];
+const swap = (set, from, to) => set.map(i => i === from ? to : i);
 const icon = {
   copy:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="5.5" y="5.5" width="8" height="8" rx="1.5"/><path d="M10.5 3.5v-.5a1 1 0 0 0-1-1h-6a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h.5"/></svg>',
   check:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 8.5l3 3 6-7"/></svg>',
   x:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M4 4l8 8M12 4l-8 8"/></svg>',
   warn:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2.5l6 11H2z"/><path d="M8 6.5v3M8 11.6v.1"/></svg>',
+  chev:'<svg class="chev" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l4 4 4-4"/></svg>',
   plus:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M8 3v10M3 8h10"/></svg>',
 };
 const q = new URLSearchParams(location.search);
@@ -140,14 +206,18 @@ const view = {
   state: STATES[q.get('state')] ? q.get('state') : 'list',
   scheme: q.get('scheme') === 'dark' ? 'dark' : 'light',
   lang: q.get('lang') === 'zh' ? 'zh' : 'en',
+  height: q.get('height') === 'full' ? 'full' : 'fixed',
 };
 
 function panel(state, T) {
   const ghost = (name, label) => `<button class="ghost" title="${label}" aria-label="${label}">${icon[name]}</button>`;
   const avatar = i => `<div class="avatar" style="--c:${i.c};--cl:${i.cl}">${(i.label || '?').slice(0, 1).toUpperCase()}</div>`;
   const tag = i => i.scope ? i.scope[0] + (i.scope.length > 1 ? ` +${i.scope.length - 1}` : '') : T.global;
-  const list = n => `<div class="section"><span>${T.identities}</span><span>${n}</span></div>` +
-    `<div class="list">${ids.slice(0, n).map(i => `<div class="item"><span class="dot" style="--c:${i.c};--cl:${i.cl}"></span><div class="text"><span class="label">${i.label || T.unnamed}</span><span class="email">${i.email || T.noEmail}</span></div><span class="tag">${tag(i)}</span></div>`).join('')}</div>`;
+  const rows = set => set.map(i => `<div class="item"><span class="dot" style="--c:${i.c};--cl:${i.cl}"></span><div class="text"><span class="label">${i.label || T.unnamed}</span><span class="email">${i.email || T.noEmail}</span></div><span class="tag">${tag(i)}</span></div>`).join('');
+  // The filter shows from three identities on; the platform buttons only in the filter state.
+  const list = (set = withGlobal, chips = false) => `<div class="section"><span>${T.identities}</span><span>${set.length}</span></div>` +
+    (set.length >= 3 ? `<input class="search" placeholder="${T.filter}">` : '') + (chips ? `<div class="chips"><button class="chip on">GitHub</button><button class="chip">GitLab</button><button class="chip">Gitea</button></div>` : '') +
+    `<div class="list">${rows(set)}</div>`;
   const drop = (compact, over) => compact
     ? `<div class="drop compact"><span class="muted small">${T.dropAgain}</span><button>${T.choose}</button></div>`
     : `<div class="drop${over ? ' over' : ''}"><strong>${T.dropTitle}</strong><span class="muted small">${T.dropHint}</span><button>${T.choose}</button></div>`;
@@ -155,27 +225,57 @@ function panel(state, T) {
   const filtered = `<div class="section"><span>${T.identities}</span><span>4</span></div>` + filter;
   const top = (path, actions) => `<div class="top"><span class="mono">${path}</span>${actions}</div>`;
   const result = (kind, path, body, actions = ghost('x', T.clear)) => `<div class="result ${kind}">${top(path, actions)}${body}</div>`;
-  const matched = copied => result('', '~/work/api', `
-    <div class="who">${avatar(ids[0])}<div><div class="name">work</div><div class="uses">${T.uses}</div></div></div>
-    <div class="kv"><span>${T.alias}</span><span class="mono">github-work</span><span>${T.email}</span><span>bob@example.com</span><span>${T.folders}</span><span class="mono">~/work/ · ~/src/new/</span></div>`,
-    (copied ? `<span class="copied">${T.copied}</span>${ghost('check', T.copy)}` : ghost('copy', T.copy)) + ghost('x', T.clear));
+  const dot = i => `<span class="dot" style="--c:${i.c};--cl:${i.cl}"></span>`;
+  const name = i => i.label || T.unnamed;
+  const btn = label => `<button class="text">${label}</button>`;
+  const ack = text => `<span class="copied">${text}</span>`;
+  // A matched card: the answer, then the actions. Unbind only when the identity lists this very folder.
+  const confirmBlock = `<div class="row pick">${dot(personal)}<div class="lines"><span class="label">${name(personal)}</span><span class="note">${T.globalId}</span></div></div>` +
+    `<div class="confirm nobd"><p>${T.confirmGlobal(name(personal))}</p><div class="buttons"><button class="field fixed">${T.cancel}</button><button class="primary fixed">${T.rebindDo}</button></div></div>`;
+  const matched = (o = {}) => {
+    const i = o.id || work, path = o.path || '~/work/api';
+    const menu = `<div class="menu">${[personal, client, unnamed].map((m, n) => `<div class="entry${n === 0 ? ' hot' : ''}">${dot(m)}<span class="label">${name(m)}</span><span class="tag">${m.scope ? m.scope[0] : T.global}</span></div>`).join('')}</div>`;
+    return result('', path, `
+      <div class="who">${avatar(i)}<div><div class="name">${name(i)}</div><div class="uses">${T.uses}</div></div></div>
+      <div class="kv"><span>${T.alias}</span><span class="mono">${i.alias}</span><span>${T.email}</span><span>${i.email}</span><span>${T.folders}</span><span class="mono paths">${i.scope ? i.scope.map(p => `<span>${p}</span>`).join('') : T.global}</span></div>
+      <div class="actions">${btn(T.openFinder)}<span class="gap"></span>
+        <span class="menuwrap">${btn(T.rebind + icon.chev)}${o.menu ? menu : ''}</span>${o.exact ? btn(T.unbind) : ''}</div>${o.confirm ? confirmBlock : ''}${o.foot || ''}`,
+      (o.copied ? ack(T.copied) + ghost('check', T.copy) : ghost('copy', T.copy)) + ghost('x', T.clear));
+  };
+  const bindRow = (i, note, pick) => `<div class="row${pick ? ' pick' : ''}">${dot(i)}<div class="lines"><span class="label">${name(i)}</span><span class="note">${note}</span></div>${pick ? '' : `<span class="go">${T.bind}</span>`}</div>`;
+  const noMatch = undone => result('warning', '~/scratch/notes', `<div class="say tight">${T.noMatch}</div><div class="head">${T.bindTo}</div>`
+    + bindRow(work, T.has('~/work/')) + bindRow(client, T.has('~/work/client/')) + bindRow(unnamed, T.has('~/misc/'))
+    + `<div class="row short">${btn(icon.plus + T.newId)}</div>`, (undone ? ack(T.undone) : '') + ghost('x', T.clear));
+  const verdict = (win, label) => `<span class="verdict${win ? ' win' : ''}">${win ? icon.check : ''}${label}</span>`;
+  const overlap = () => result('', '~/work/client/app', `<div class="say tight">${T.overlapTitle(2)}</div><div class="overlap-hint">${T.overlapHint}</div>`
+    + `<div class="row lost">${dot(work)}<div class="lines"><span class="label">${name(work)}</span><span class="note mono">~/work/</span></div>${verdict(false, T.overridden)}</div>`
+    + `<div class="row">${dot(client)}<div class="lines"><span class="label">${name(client)}</span><span class="note mono">~/work/client/</span></div>${verdict(true, T.used)}</div>`
+    + `<div class="stack">${btn(T.onlyUse(name(client)))}${btn(T.removeFrom(name(work), '~/work/'))}</div>`);
+  const undoBar = who => `<div class="bar timed" style="--left:60%"><span>${T.boundTo(name(who))} ·</span>${btn(T.undo)}</div>`;
   return {
     loading: `<div class="center"><div class="spinner"></div><span class="muted">${T.loading}</span></div>`,
     readonly: `<div class="readonly"><div class="warn">${icon.warn}</div><div class="title">${T.readonly}</div><div class="hint">${T.readonlyHint}</div>
       <div class="reason">~/.config/idset/accounts.json<br>invalid character '}' looking for beginning of object key string</div>
       <div class="actions"><button>${T.reveal}</button><button>${T.reload}</button></div></div>`,
     empty: drop(false) + `<div class="center"><strong>${T.empty}</strong><span class="muted small">${T.emptyHint}</span><button>${T.add}</button></div>`,
-    list: drop(false) + list(2),
-    over: drop(false, true) + list(2),
-    filter: drop(false) + list(4).replace('</div><div class="list">', `</div>${filter}<div class="list">`),
+    list: drop(false) + list(),
+    over: drop(false, true) + list(),
+    filter: drop(false) + list(withGlobal, true),
     nofilter: drop(false) + filtered + `<span class="muted center">${T.none}</span>`,
-    checking: result('', '~/work/api', `<div class="say plain"><div class="spinner"></div>${T.checking}</div>`, '') + drop(true) + list(2),
-    matched: matched(false) + drop(true) + list(2),
-    copied: matched(true) + drop(true) + list(2),
-    nomatch: result('warning', '~/scratch/notes', `<div class="say">${T.noMatch}</div>`) + drop(true) + list(2),
-    notrepo: result('warning', '~/scratch/notes', `<div class="say">${T.notRepo}</div>`) + drop(true) + list(2),
-    notfolder: result('warning', '~/Downloads/report.pdf', `<div class="say">${T.notFolder}</div>`) + drop(true) + list(2),
-    giterror: result('danger', '~/work/api', `<div class="say danger">${T.gitFailed}</div>`) + drop(true) + list(2),
+    checking: result('', '~/work/api', `<div class="say plain"><div class="spinner"></div>${T.checking}</div>`, '') + drop(true) + list(),
+    matched: matched() + drop(true) + list(),
+    exact: matched({ id:workExact, exact:true }) + drop(true) + list(swap(withGlobal, work, workExact)),
+    rebind: matched({ id:workExact, exact:true, menu:true }) + drop(true) + list(swap(withGlobal, work, workExact)),
+    confirm: matched({ id:workExact, exact:true, confirm:true }) + drop(true) + list(swap(withGlobal, work, workExact)),
+    copied: matched({ copied:true }) + drop(true) + list(),
+    overlap: overlap() + matched({ id:client, path:'~/work/client/app' }) + drop(true) + list(),
+    covered: matched({ foot:`<div class="bar note">${T.coveredNote(name(work), '~/work/')}</div>` }) + drop(true) + list(),
+    undo: matched({ id:workBound, path:'~/scratch/notes', exact:true, foot:undoBar(work) }) + drop(true) + list(swap(noGlobal, work, workBound)),
+    undone: noMatch(true) + drop(true) + list(noGlobal),
+    nomatch: noMatch(false) + drop(true) + list(noGlobal),
+    notrepo: result('warning', '~/scratch/notes', `<div class="say">${T.notRepo}</div>`) + drop(true) + list(),
+    notfolder: result('warning', '~/Downloads/report.pdf', `<div class="say">${T.notFolder}</div>`) + drop(true) + list(),
+    giterror: result('danger', '~/work/api', `<div class="say danger">${T.gitFailed}</div>`) + drop(true) + list(),
   }[state];
 }
 
@@ -188,6 +288,7 @@ function buttons(id, options, key) {
 function render() {
   const T = TEXT[view.lang];
   document.documentElement.dataset.scheme = view.scheme;
+  document.querySelector('.panel').classList.toggle('full', view.height === 'full');
   document.getElementById('quit').textContent = T.quit;
   // Add Identity lives in the fixed footer, so it stays reachable however long the list is; the empty state has its own button.
   const add = document.getElementById('add');
@@ -196,8 +297,9 @@ function render() {
   document.getElementById('content').innerHTML = panel(view.state, T);
   buttons('states', STATES, 'state');
   buttons('schemes', { light:'浅色', dark:'深色' }, 'scheme');
+  buttons('heights', { fixed:'480', full:'Full' }, 'height');
   buttons('langs', { zh:'中文', en:'English' }, 'lang');
-  history.replaceState(null, '', `?state=${view.state}&scheme=${view.scheme}&lang=${view.lang}`);
+  history.replaceState(null, '', `?state=${view.state}&scheme=${view.scheme}&lang=${view.lang}&height=${view.height}`);
 }
 
 onkeydown = e => {

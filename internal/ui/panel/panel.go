@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/yangflow/idset/internal/account"
+	"github.com/yangflow/idset/internal/bind"
 	"github.com/yangflow/idset/internal/match"
 	"github.com/yangflow/idset/internal/paths"
 	"github.com/yangflow/idset/internal/ui/locale"
@@ -25,7 +26,10 @@ type Copy struct {
 	HidePanel, Quit, Loading, DropTitle, DropHint, DropAgain, Choose, ChooseTitle, Empty, EmptyHint, Filter, NoneMatch,
 	Unnamed, NoAlias, NoEmail, ReadOnly, ReadOnlyHint, CopyPath, Copied, Clear, Checking, NoMatch, NotRepo, NotFolder,
 	GitFailed, Matched, TooltipIdle, TooltipMatch, TooltipNoMatch, Open, Custom, UsesHere, Alias, Email, Folders, Global,
-	NoFolders, Identities, Reload, RevealFinder, RevealExplorer, RevealFiles, AddIdentity string
+	NoFolders, Identities, Reload, RevealFinder, RevealExplorer, RevealFiles, AddIdentity,
+	OpenFinder, OpenExplorer, OpenFiles, BindTo, Bind, BindLabel, GlobalIdentity, NewBound, Cancel, Rebind, RebindTo,
+	Unbind, OverlapTitle, OverlapHint, Used, Overridden, OnlyUse, RemoveFrom, Has, ConfirmGlobal, Covered, BoundTo,
+	Undo, Undone, BindFailed, BindRegenFailed string
 }
 
 var translations = func() map[string]Copy {
@@ -40,18 +44,24 @@ var translations = func() map[string]Copy {
 func Text(systemLocale string) Copy { return translations[locale.Language(systemLocale)] }
 
 // Actions are what the panel asks its owner to do. Resolve and ChooseFolder run in the background and report
-// back through SetResult.
+// back through SetResult, Run through OpDone.
 type Actions struct {
 	Resolve      func(dir string)
 	ChooseFolder func()
-	// OpenAccounts opens the accounts window on an identity; NewIdentity opens it on a new draft.
-	OpenAccounts func(id string)
-	NewIdentity  func()
-	Reload       func()
-	Reveal       func(path string)
-	CopyText     func(string)
-	Hide         func()
-	Quit         func()
+	// Run binds, unbinds, rebinds or undoes, and looks at the folder again.
+	Run func(op bind.Op)
+	// OpenAccounts opens the accounts window on an identity; NewIdentity opens it on a new draft, and
+	// NewIdentityFor on a new draft that applies to a folder only.
+	OpenAccounts   func(id string)
+	NewIdentity    func()
+	NewIdentityFor func(folder string)
+	// Open opens a folder in the system's file manager.
+	Open     func(path string)
+	Reload   func()
+	Reveal   func(path string)
+	CopyText func(string)
+	Hide     func()
+	Quit     func()
 }
 
 // FilterThreshold is how many identities make the filter appear.
@@ -81,6 +91,8 @@ type Screen struct {
 	copiedUntil time.Time
 	now         func() time.Time
 	goos        string
+
+	binding
 }
 
 // New returns a panel that shows the loading state until SetAccounts.
@@ -102,6 +114,7 @@ func (s *Screen) Drop(dropped []string) {
 		return
 	}
 	s.checking, s.lastDir, s.result, s.resultErr = dropped[0], dropped[0], nil, nil
+	s.binding = binding{busy: s.busy}
 	s.act.Resolve(dropped[0])
 }
 
@@ -143,7 +156,10 @@ func (s *Screen) resultMessage() string {
 	return s.unresolved(s.result.Kind)
 }
 
-func (s *Screen) clear() { s.checking, s.result, s.resultErr = "", nil, nil }
+func (s *Screen) clear() {
+	s.checking, s.result, s.resultErr = "", nil, nil
+	s.binding = binding{busy: s.busy}
+}
 
 func (s *Screen) find(id string) (account.Account, bool) {
 	i := slices.IndexFunc(s.accounts, func(a account.Account) bool { return a.ID == id })

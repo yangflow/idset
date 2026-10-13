@@ -118,3 +118,31 @@ func TestMatchingReturnsWriteOrder(t *testing.T) {
 		t.Fatalf("matching: %+v", m)
 	}
 }
+
+func TestExactIsTheFolderItselfNotAParent(t *testing.T) {
+	for _, c := range []struct {
+		root, path string
+		want       bool
+	}{
+		{"/home/ada/work/api", "~/work/api/", true},
+		{"/home/ada/work/api", "~/work/api", true},
+		{"/home/ada/work/api", "/home/ada/work/api/", true},
+		{"/home/ada/work/api", "~/work/", false},
+		{"/home/ada/work", "~/work/api/", false},
+		{"/home/ada/work/api", "", false},
+		{"/home/ada/Work/api", "~/work/api/", false},
+	} {
+		if got := Exact(c.root, c.path, unix); got != c.want {
+			t.Errorf("Exact(%q, %q) = %v", c.root, c.path, got)
+		}
+	}
+	win := paths.Env{Home: `C:\Users\Ada`, Windows: true}
+	for _, path := range []string{"~/Work/API/", `C:\users\ada\work\api`, "c:/Users/Ada/work/api/"} {
+		if !Exact(`c:\users\ada\work\api`, path, win) {
+			t.Errorf("Windows ignores case and slash form: %q", path)
+		}
+	}
+	if Exact(`D:\work\api`, "~/work/api/", win) {
+		t.Error("another drive is another folder")
+	}
+}

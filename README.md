@@ -27,6 +27,9 @@ Working now:
   most recently used first, with a filter once there are three or more.
 - **Drop a folder to check it.** Drop a project folder into the panel, or choose one, to see which identity Git
   uses there.
+- **Bind from the result card.** Bind a folder to an identity, unbind it, move it to another one, or settle several
+  identities covering the same folder, all from the card for a dropped folder. Binding, rebinding and "Use only"
+  can be undone for five seconds.
 - **Manage identities in the app.** The accounts window creates, edits and deletes identities: signature, platform,
   SSH key and alias, the folders each one applies to, and URL rewrites. Deleting can remove the private key too, but
   only when you ask for it.
@@ -36,7 +39,6 @@ Working now:
 
 Planned:
 
-- **Bind in one click.** Bind a folder to another identity from the panel, with undo.
 - **Diagnostics.** Checks each identity with `ssh -T` and says what to do when a key is rejected, locked or
   missing, or when a repository would commit as one identity and push as another.
 - **Keys and import.** Generate a key, load it into ssh-agent, and import identities from an existing
@@ -62,7 +64,7 @@ go tool mygo build         # package it into build/
 2. Click the tray icon to open the panel, then choose "Add Identity" to open the accounts window and create one. Click
    an identity in the panel to edit or delete it. Identities are stored in `~/.config/idset/accounts.json` (on
    Windows `%USERPROFILE%\.config\idset\accounts.json`); the format is in [docs/product.md](docs/product.md).
-3. Drop a project folder into the panel, or choose one, to see which identity Git uses there.
+3. Drop a project folder into the panel, or choose one, to see which identity Git uses there, and bind it from the card if it should use another.
 
 ## Development
 

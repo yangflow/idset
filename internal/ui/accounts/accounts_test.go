@@ -13,6 +13,7 @@ import (
 	"github.com/egoist/mygo/ui"
 	"github.com/yangflow/idset/internal/account"
 	"github.com/yangflow/idset/internal/keyfile"
+	"github.com/yangflow/idset/internal/paths"
 	"github.com/yangflow/idset/internal/store"
 	"github.com/yangflow/idset/internal/ui/locale"
 )
@@ -111,7 +112,7 @@ func TestLoadingAndReadOnly(t *testing.T) {
 			t.Errorf("read-only: missing %q in %q", want, tt.Texts())
 		}
 	}
-	s.newDraft()
+	s.newDraft("")
 	if s.Draft() != "" || len(rec.prefilled) != 0 {
 		t.Error("no new identity while accounts.json cannot be read")
 	}
@@ -823,5 +824,66 @@ func TestBottomBarsLineUpAndFooterButtonsNeverResize(t *testing.T) {
 				t.Errorf("%s %s: Delete moved: %v %v", lang, name, got, del)
 			}
 		}
+	}
+}
+
+func TestNewDraftForAFolderIsScopedToIt(t *testing.T) {
+	r := open(t, "en", sample(), Request{New: true, Folder: "/home/ada/scratch/notes"})
+	id := r.s.Draft()
+	f := r.form()
+	if f.cur.global || !slices.Equal(f.cur.paths, []string{"~/scratch/notes/"}) || f.scope != 1 {
+		t.Fatalf("the draft applies to the folder only: %+v", f.cur)
+	}
+	if f.cur.color != "red" {
+		t.Errorf("the first unused preset, got %q", f.cur.color)
+	}
+	if !slices.Equal(r.rec.prefilled, []string{id}) {
+		t.Errorf("name and email are prefilled as usual: %v", r.rec.prefilled)
+	}
+	r.s.SetPrefill(id, "Ada", "ada@example.com")
+	if f := r.form(); f.cur.gitName != "Ada" || f.cur.email != "ada@example.com" {
+		t.Errorf("prefill: %+v", f.cur)
+	}
+	if r.s.DraftFolder(id) != "/home/ada/scratch/notes" || r.s.DraftFolder(workID) != "" || r.s.DraftFolder("") != "" {
+		t.Error("only the draft knows its folder")
+	}
+	r.tt.Frame()
+	r.want(t, "Folder path")
+	r.form().cur.label = "notes"
+	r.tt.Key(ui.Cmd, ui.KeyS)
+	if len(r.rec.saves) != 1 || !r.rec.saves[0].isNew || !slices.Equal(r.rec.saves[0].a.Scope.Paths, []string{"~/scratch/notes/"}) {
+		t.Fatalf("saves: %+v", r.rec.saves)
+	}
+	// The owner asks before the save is reported, and the folder is gone with the draft after it.
+	r.saveSucceeds(t, nil)
+	if r.s.DraftFolder(id) != "" {
+		t.Error("a saved identity is not a draft")
+	}
+}
+
+func TestFolderRequestOnAnOpenDraft(t *testing.T) {
+	r := open(t, "en", sample(), Request{New: true})
+	r.s.Open(Request{New: true, Folder: "/home/ada/scratch/a"})
+	if f := r.form(); f.cur.global || !slices.Equal(f.cur.paths, []string{"~/scratch/a/"}) {
+		t.Fatalf("a global draft becomes this folder's: %+v", f.cur)
+	}
+	r.s.Open(Request{New: true, Folder: "/home/ada/scratch/b"})
+	r.s.Open(Request{New: true, Folder: "/home/ada/scratch/b"})
+	if f := r.form(); !slices.Equal(f.cur.paths, []string{"~/scratch/a/", "~/scratch/b/"}) {
+		t.Fatalf("one more path, once: %+v", f.cur)
+	}
+	if len(r.rec.prefilled) != 1 {
+		t.Errorf("one draft: %v", r.rec.prefilled)
+	}
+	r.click(t, "Revert")
+	if r.s.DraftFolder(r.s.Draft()) != "" || r.s.draftFolder != "" {
+		t.Error("reverting forgets the folder")
+	}
+	win := paths.Env{Home: `C:\Users\Ada`, Windows: true}
+	s := New(Text("en"), win, (&recorder{}).actions())
+	s.SetAccounts(sample(), nil, "")
+	s.Open(Request{New: true, Folder: `c:\users\ada\Work\API`})
+	if got := s.forms[s.Draft()].cur.paths; !slices.Equal(got, []string{"~/Work/API/"}) {
+		t.Errorf("Windows folder: %v", got)
 	}
 }

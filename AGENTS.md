@@ -42,6 +42,8 @@ internal/include/        inserting, replacing and removing the Include marker bl
 internal/apply/          the only place that writes config files: managed files and the marker block in user files
 internal/keyfile/        whether a private key may be deleted with its identity (Lstat only, never opened), and deleting it
 internal/sysexec/        running system commands: timeout, no stdin, no shell (ADR 0004)
+internal/bind/           binding a folder to an identity, unbinding, rebinding and undo: pure plans, and a runner that
+                         writes one plan with one store write
 internal/match/          which identity a dropped folder uses; the `git` calls are injectable, tests use a fake
 internal/trayicon/       the tray icon, drawn in code, no image files
 resources/               shipped licenses and product assets
