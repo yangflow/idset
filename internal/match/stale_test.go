@@ -52,7 +52,7 @@ func TestFindStaleCandidateRules(t *testing.T) {
 		{"blank paths are skipped", []account.Account{named("work", "  ", "")}, root, nil, nil},
 	} {
 		t.Run(c.name, func(t *testing.T) {
-			got := FindStale(c.list, c.root, env, existing(c.present...))
+			got := FindStale(c.list, c.root, env, existing(c.present...), same)
 			if (got == nil) != (c.want == nil) || got != nil && *got != *c.want {
 				t.Fatalf("got %+v, want %+v", got, c.want)
 			}
@@ -75,7 +75,7 @@ func TestFindStaleOrder(t *testing.T) {
 		{"naming outranks the stored order only within a kind", []account.Account{named("api", "~/old/api/"), named("b", "~/projects/y/")}, Stale{"b", "~/projects/y/"}},
 	} {
 		t.Run(c.name, func(t *testing.T) {
-			if got := FindStale(c.list, root, env, existing()); got == nil || *got != c.want {
+			if got := FindStale(c.list, root, env, existing(), same); got == nil || *got != c.want {
 				t.Fatalf("got %+v, want %+v", got, c.want)
 			}
 		})
@@ -85,29 +85,29 @@ func TestFindStaleOrder(t *testing.T) {
 func TestFindStaleOnWindows(t *testing.T) {
 	env := paths.Env{Home: `C:\Users\Ada`, Windows: true}
 	list := []account.Account{named("work", "~/Projects/Api-Old/", "d:/code/API/")}
-	got := FindStale(list, `c:\users\ada\projects\api`, env, existing())
+	got := FindStale(list, `c:\users\ada\projects\api`, env, existing(), same)
 	if got == nil || got.Path != "~/Projects/Api-Old/" {
 		t.Fatalf("a rename is found with another case and backslashes: %+v", got)
 	}
-	got = FindStale(list[:1], `D:\work\web`, env, existing())
+	got = FindStale(list[:1], `D:\work\web`, env, existing(), same)
 	if got != nil {
 		t.Fatalf("another drive and another name: %+v", got)
 	}
-	got = FindStale([]account.Account{named("work", "d:/code/API/")}, `E:\src\api`, env, existing())
+	got = FindStale([]account.Account{named("work", "d:/code/API/")}, `E:\src\api`, env, existing(), same)
 	if got == nil || got.Path != "d:/code/API/" {
 		t.Fatalf("a move to another drive: %+v", got)
 	}
-	if got := FindStale([]account.Account{named("work", "d:/old/")}, `D:\proj`, env, existing()); got != nil {
+	if got := FindStale([]account.Account{named("work", "d:/old/")}, `D:\proj`, env, existing(), same); got != nil {
 		t.Fatalf("a folder directly under a drive has no candidate: %+v", got)
 	}
-	if got := FindStale([]account.Account{named("work", "~/x/")}, `C:\Users\Ada`, env, existing()); got != nil {
+	if got := FindStale([]account.Account{named("work", "~/x/")}, `C:\Users\Ada`, env, existing(), same); got != nil {
 		t.Fatalf("the home directory: %+v", got)
 	}
 }
 
 func TestFindStaleHomeThroughASymbolicLink(t *testing.T) {
 	env := paths.Env{Home: "/home/ada", RealHome: "/data/ada"}
-	if got := FindStale([]account.Account{named("work", "~/x/")}, "/data/ada", env, existing()); got != nil {
+	if got := FindStale([]account.Account{named("work", "~/x/")}, "/data/ada", env, existing(), same); got != nil {
 		t.Fatalf("the resolved home directory is the home directory: %+v", got)
 	}
 }
@@ -168,18 +168,18 @@ func TestFindStaleThroughASymbolicLinkedHome(t *testing.T) {
 		{"rename", "~/projects/api-old/"},
 		{"move", "~/archive/api/"},
 	} {
-		got := FindStale([]account.Account{named("work", c.stored)}, root, env, Gone)
+		got := FindStale([]account.Account{named("work", c.stored)}, root, env, Gone, Canon)
 		if got == nil || got.Path != c.stored {
 			t.Errorf("%s: %+v", c.name, got)
 		}
 	}
 	// The dropped folder in the form the user wrote it, through the link, matches the same way.
 	linked := paths.Slash(filepath.Join(env.Home, "projects", "api"))
-	if got := FindStale([]account.Account{named("work", "~/projects/api-old/")}, linked, env, Gone); got == nil {
+	if got := FindStale([]account.Account{named("work", "~/projects/api-old/")}, linked, env, Gone, Canon); got == nil {
 		t.Error("the folder through the link")
 	}
 	// A path that exists is never stale, through the link too.
-	if got := FindStale([]account.Account{named("work", "~/projects/api/")}, root, env, Gone); got != nil {
+	if got := FindStale([]account.Account{named("work", "~/projects/api/")}, root, env, Gone, Canon); got != nil {
 		t.Errorf("%+v", got)
 	}
 }
@@ -187,10 +187,24 @@ func TestFindStaleThroughASymbolicLinkedHome(t *testing.T) {
 func TestFindStaleHomeExclusionThroughASymbolicLink(t *testing.T) {
 	env, _, real := linkedHome(t)
 	list := []account.Account{named("work", "~/x/home/")}
-	if got := FindStale(list, paths.Slash(real), env, Gone); got != nil {
+	if got := FindStale(list, paths.Slash(real), env, Gone, Canon); got != nil {
 		t.Errorf("the resolved home directory: %+v", got)
 	}
-	if got := FindStale(list, paths.Slash(env.Home), env, Gone); got != nil {
+	if got := FindStale(list, paths.Slash(env.Home), env, Gone, Canon); got != nil {
 		t.Errorf("the home directory as written: %+v", got)
+	}
+}
+
+// same resolves nothing: paths that are not on the disk compare the same on every platform.
+func same(p string) string { return strings.TrimSuffix(paths.Slash(p), "/") }
+
+func TestIsTopRecognisesEveryRootForm(t *testing.T) {
+	for dir, want := range map[string]bool{
+		"/": true, "": true, "D:": true, "D:/": true, `d:\`: true, "c:": true, "//server/share": true, `\\server\share\`: true,
+		"/home": false, "D:/work": false, "//server/share/dir": false,
+	} {
+		if got := isTop(dir); got != want {
+			t.Errorf("%q: %v", dir, got)
+		}
 	}
 }

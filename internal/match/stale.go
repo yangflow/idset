@@ -32,12 +32,13 @@ type staleCandidate struct {
 // ends in the same folder name, ignoring case (a move). A folder directly under the file system root, and the
 // home directory, have no candidates, since neither is a project that was renamed. Of several candidates a rename
 // comes before a move, an identity named like the folder before others, then the stored order of identities, then
-// the path. gone answers for an absolute path in the platform's form and reads the disk, so this is for background
+// the path. resolve returns a path in slash form without a trailing slash, with symbolic links resolved (Canon, or
+// the identity in tests of paths that are not on the disk). gone answers for an absolute path in the platform's form and reads the disk, so this is for background
 // work.
-func FindStale(list []account.Account, root string, env paths.Env, gone func(path string) bool) *Stale {
-	root = canon(root)
+func FindStale(list []account.Account, root string, env paths.Env, gone func(path string) bool, resolve func(string) string) *Stale {
+	root = resolve(root)
 	parent, name := pathpkg.Split(root)
-	if name == "" || isTop(parent) || isHome(root, env) {
+	if name == "" || isTop(parent) || isHome(root, env, resolve) {
 		return nil
 	}
 	parent = strings.TrimSuffix(parent, "/")
@@ -51,7 +52,7 @@ func FindStale(list []account.Account, root string, env paths.Env, gone func(pat
 			if normal == "" {
 				continue
 			}
-			abs := canon(env.Expand(normal))
+			abs := resolve(env.Expand(normal))
 			oldParent, oldName := pathpkg.Split(abs)
 			oldParent = strings.TrimSuffix(oldParent, "/")
 			if env.Equal(abs, root) || oldName == "" {
@@ -93,10 +94,10 @@ func boolCmp(a, b bool) int {
 	return -1
 }
 
-// canon is p in slash form without a trailing slash, with symbolic links resolved as far as the path exists: the
+// Canon is p in slash form without a trailing slash, with symbolic links resolved as far as the path exists: the
 // nearest existing ancestor is resolved and the rest is appended, so that a path that is gone, such as a stale
 // one, compares equal to the resolved path git reports (/tmp and /private/tmp, /var and /private/var).
-func canon(p string) string {
+func Canon(p string) string {
 	p = strings.TrimSuffix(paths.Slash(p), "/")
 	if p == "" {
 		return p
@@ -111,23 +112,31 @@ func canon(p string) string {
 			return p
 		}
 		rest, cur = "/"+name+rest, strings.TrimSuffix(parent, "/")
-		if cur == "" {
-			cur = "/"
+		if cur == "" || len(cur) == 2 && cur[1] == ':' {
+			// The root of the file system or of a drive keeps its slash; "D:" alone names the drive's current folder.
+			cur += "/"
 		}
 	}
 }
 
-// isTop reports whether dir, in slash form, is the root of the file system or of a drive.
+// isTop reports whether dir is the root of the file system or of a drive.
 func isTop(dir string) bool {
-	if dir == "/" || dir == "" {
+	dir = strings.TrimSuffix(paths.Slash(dir), "/")
+	switch {
+	case dir == "":
 		return true
+	case len(dir) == 2 && dir[1] == ':':
+		return true
+	case strings.HasPrefix(dir, "//"):
+		// A share root: //server/share.
+		return strings.Count(strings.TrimPrefix(dir, "//"), "/") <= 1
 	}
-	return len(dir) == 3 && dir[1] == ':' && dir[2] == '/'
+	return false
 }
 
-func isHome(root string, env paths.Env) bool {
+func isHome(root string, env paths.Env, resolve func(string) string) bool {
 	for _, home := range []string{env.Home, env.RealHome} {
-		if home = canon(home); home != "" && env.Equal(root, home) {
+		if home = resolve(home); home != "" && env.Equal(root, home) {
 			return true
 		}
 	}

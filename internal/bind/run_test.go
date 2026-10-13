@@ -227,7 +227,7 @@ func TestRebindToAnIdentityThatOnlyCoversMakesItWinWithOneRegeneration(t *testin
 func TestFixPathWritesOnceAndMatchesTheFolderAgain(t *testing.T) {
 	r := newRig(t, scoped("work", "~/before/", "~/scratch/old/", "~/after/"), scoped("client", "~/c/"))
 	want := []string{"~/before/", "~/scratch/notes/", "~/after/"}
-	if match.FindStale(r.store.Accounts(), paths.Slash(r.dir), r.env, match.Gone) == nil {
+	if match.FindStale(r.store.Accounts(), paths.Slash(r.dir), r.env, match.Gone, match.Canon) == nil {
 		t.Fatal("the stale path is found on the disk")
 	}
 	out := r.run(Op{Kind: KindFixPath, From: "work", Path: "~/scratch/old/"})

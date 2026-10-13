@@ -88,7 +88,7 @@ func Resolve(ctx context.Context, git Git, dir string, list []account.Account, e
 	r.Kind, r.ID = Identity(list, r.Root, env)
 	r.Covering = Covering(list, r.Root, env)
 	if r.Kind == NoMatch {
-		r.Stale = FindStale(list, r.Root, env, Gone)
+		r.Stale = FindStale(list, r.Root, env, Gone, Canon)
 	}
 	for _, a := range list {
 		if a.ID == r.ID && !a.Scope.Global {
