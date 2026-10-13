@@ -45,7 +45,7 @@ Mockups show the 4 DIP unit and 13 px text.
 
 ## Color roles
 
-Values are the defaults of `ui.LightTheme()` and `ui.DarkTheme()` in MyGo v0.3.5. The app also follows the user's
+Values are the defaults of `ui.LightTheme()` and `ui.DarkTheme()` in MyGo v0.3.6. The app also follows the user's
 accent color and contrast settings, so mockups approximate it.
 
 | Role | Light | Dark | Used for |
