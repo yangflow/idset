@@ -28,27 +28,8 @@ type Plan struct {
 // Empty reports whether the plan changes nothing.
 func (p Plan) Empty() bool { return len(p.Changes) == 0 }
 
-// Hit is an identity whose gitdir path covers a folder, with the path that does.
-type Hit struct{ ID, Path string }
-
-// Overlap lists the identities whose gitdir paths cover the work tree at root, in the order git reads them. The
-// last one is what git uses. An identity with several paths covering the folder appears once, with the one that
-// is read last. A global identity covers nothing by path and is never listed.
-func Overlap(list []account.Account, root string, env paths.Env) []Hit {
-	matching := gitdir.Matching(gitdir.Blocks(list, env), root, env)
-	var hits []Hit
-	for i := len(matching) - 1; i >= 0; i-- {
-		id := list[matching[i].Index].ID
-		if !slices.ContainsFunc(hits, func(h Hit) bool { return h.ID == id }) {
-			hits = append(hits, Hit{ID: id, Path: matching[i].Path})
-		}
-	}
-	slices.Reverse(hits)
-	return hits
-}
-
-// HasExact reports whether the identity lists the work tree at root itself, so that it can be unbound.
-func HasExact(a account.Account, root string, env paths.Env) bool {
+// hasExact reports whether the identity lists the work tree at root itself, so that it can be unbound.
+func hasExact(a account.Account, root string, env paths.Env) bool {
 	return slices.ContainsFunc(a.Scope.Paths, func(p string) bool { return gitdir.Exact(root, p, env) })
 }
 
@@ -115,7 +96,7 @@ func Unbind(list []account.Account, id, root string, env paths.Env, now time.Tim
 		return Plan{}, err
 	}
 	a := list[i]
-	if !HasExact(a, root, env) {
+	if !hasExact(a, root, env) {
 		return Plan{}, nil
 	}
 	next := without(a, func(p string) bool { return gitdir.Exact(root, p, env) })
@@ -148,7 +129,7 @@ func UseOnly(list []account.Account, winner, root string, env paths.Env, now tim
 		return Plan{}, err
 	}
 	a := list[i]
-	if a.Scope.Global || HasExact(a, root, env) {
+	if a.Scope.Global || hasExact(a, root, env) {
 		return Plan{}, nil
 	}
 	return Plan{Changes: []account.Account{used(bound(a, root, env), now)}, Before: []account.Account{a}}, nil

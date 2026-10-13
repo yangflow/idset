@@ -107,10 +107,10 @@ func TestUnbindRemovesOnlyTheExactPath(t *testing.T) {
 	}
 }
 
-func TestHasExact(t *testing.T) {
+func TestHasExactListsTheFolderItself(t *testing.T) {
 	a := scoped("work", "~/work/", "~/work/api/")
-	if !HasExact(a, "/home/ada/work/api", unix) || HasExact(a, "/home/ada/work/web", unix) || HasExact(global("g"), "/home/ada", unix) {
-		t.Fatal("HasExact")
+	if !hasExact(a, "/home/ada/work/api", unix) || hasExact(a, "/home/ada/work/web", unix) || hasExact(global("g"), "/home/ada", unix) {
+		t.Fatal("hasExact")
 	}
 }
 
@@ -151,24 +151,6 @@ func TestRebindMovesTheFolderInOnePlan(t *testing.T) {
 	plan, _ = Rebind(list, "client", "work", "/home/ada/src/x", unix, now)
 	if !plan.Empty() || plan.CoveredID != "work" || plan.CoveredBy != "~/src/" {
 		t.Fatalf("%+v", plan)
-	}
-}
-
-func TestOverlapListsGitsReadOrderWithTheWinnerLast(t *testing.T) {
-	list := []account.Account{scoped("work", "~/work/"), scoped("client", "~/work/client/"), global("home"), scoped("misc", "~/misc/")}
-	hits := Overlap(list, "/home/ada/work/client/app", unix)
-	want := []Hit{{"work", "~/work/"}, {"client", "~/work/client/"}}
-	if !reflect.DeepEqual(hits, want) {
-		t.Fatalf("%+v", hits)
-	}
-	if got := Overlap(list, "/home/ada/work/web", unix); len(got) != 1 {
-		t.Fatalf("one identity is no overlap: %+v", got)
-	}
-	// One identity with two covering paths appears once, at its last position.
-	list = append(list, scoped("both", "~/", "~/work/client/app/"))
-	hits = Overlap(list, "/home/ada/work/client/app", unix)
-	if len(hits) != 3 || hits[2].ID != "both" || hits[2].Path != "~/work/client/app/" {
-		t.Fatalf("%+v", hits)
 	}
 }
 
@@ -220,9 +202,5 @@ func TestWindowsPathForms(t *testing.T) {
 	plan, _ = RemovePath(list, "work", `C:\Users\Ada\WORK\web`, win, now)
 	if plan.Empty() {
 		t.Fatal("remove by a Windows path form")
-	}
-	hits := Overlap([]account.Account{scoped("a", "~/work/"), scoped("b", "c:/users/ada/work/api/")}, `C:\Users\Ada\work\api`, win)
-	if len(hits) != 2 || hits[1].ID != "b" {
-		t.Fatalf("%+v", hits)
 	}
 }

@@ -111,7 +111,7 @@ type Screen struct {
 	// draftFolder is the folder the draft was opened for, "" when it was not opened for one.
 	draftFolder string
 	sel         string
-	splitW  float32
+	splitW      float32
 
 	busy bool
 	// problems are the checks the last save attempt failed, for the form they were made on, until it changes.

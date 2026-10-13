@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"os"
+	"slices"
 	"strings"
 	"time"
 
@@ -25,14 +26,21 @@ const (
 	NotFolder
 )
 
+// Cover is an identity whose gitdir path covers a folder, with the path that does.
+type Cover struct{ ID, Path string }
+
 // Result describes a dropped folder. Root is the work tree root and Origin the remote URL when there is one;
-// ID is the identity git uses when Kind is Matched.
+// ID is the identity git uses when Kind is Matched. Covering lists the identities whose gitdir paths cover Root
+// in the order git reads them, the last being ID, and Exact says whether ID has a path that is Root itself, so
+// that the folder can be unbound from it. Both are computed here because they read the disk.
 type Result struct {
-	Kind   Kind
-	Dir    string
-	Root   string
-	Origin string
-	ID     string
+	Kind     Kind
+	Dir      string
+	Root     string
+	Origin   string
+	ID       string
+	Covering []Cover
+	Exact    bool
 }
 
 // Git runs git with args in dir and returns its trimmed standard output and exit code.
@@ -76,6 +84,12 @@ func Resolve(ctx context.Context, git Git, dir string, list []account.Account, e
 		}
 	}
 	r.Kind, r.ID = Identity(list, r.Root, env)
+	r.Covering = Covering(list, r.Root, env)
+	for _, a := range list {
+		if a.ID == r.ID && !a.Scope.Global {
+			r.Exact = slices.ContainsFunc(a.Scope.Paths, func(p string) bool { return gitdir.Exact(r.Root, p, env) })
+		}
+	}
 	return r, nil
 }
 
@@ -91,4 +105,20 @@ func Identity(list []account.Account, root string, env paths.Env) (Kind, string)
 		}
 	}
 	return NoMatch, ""
+}
+
+// Covering lists the identities whose gitdir paths cover the work tree at root, in the order git reads them; the
+// last one is what git uses. An identity with several paths covering the folder appears once, with the one that
+// is read last. A global identity covers nothing by path and is never listed.
+func Covering(list []account.Account, root string, env paths.Env) []Cover {
+	matching := gitdir.Matching(gitdir.Blocks(list, env), root, env)
+	var out []Cover
+	for i := len(matching) - 1; i >= 0; i-- {
+		id := list[matching[i].Index].ID
+		if !slices.ContainsFunc(out, func(c Cover) bool { return c.ID == id }) {
+			out = append(out, Cover{ID: id, Path: matching[i].Path})
+		}
+	}
+	slices.Reverse(out)
+	return out
 }
