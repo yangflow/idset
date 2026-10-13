@@ -20,7 +20,7 @@ and no code yet. The settings and about windows get their mockups before their c
 
 Open a file in `screens/` in a browser. In `screens/panel.html` the buttons on the left switch state, light or dark
 scheme and language; the left and right arrow keys step through the states. The address bar follows as
-`?state=…&scheme=light|dark&lang=en|zh&height=fixed|full`, so a link opens a specific state; `full` lets the panel grow
+`?state=…&scheme=light|dark&lang=en|zh&chrome=compact|current|compare&icons=all|today&height=fixed|full`, so a link opens a specific state; `full` lets the panel grow
 past its 480 DIPs so a long card shows whole, since in the app it scrolls. New mockups work the same way and show
 every state. `screens/panel-appearance.html` needs no parameters.
 

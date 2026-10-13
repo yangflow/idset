@@ -5,8 +5,8 @@
 <title>Panel</title>
 <style>
 /* Colors are the MyGo default theme roles and sizes the 4 DIP spacing unit at 13 px text; see design/tokens.md. */
-:root { color-scheme:light; --background:#ffffff; --surface:#f4f4f5; --text:#18181b; --muted:#71717a; --border:#d9d9de; --accent:#2563eb; --accent-soft:rgba(37,99,235,.25); --danger:#dc2626; --warning:#d97706; --ghost-hover:#e9e9ec }
-:root[data-scheme=dark] { color-scheme:dark; --background:#18181b; --surface:#27272a; --text:#f4f4f5; --muted:#a1a1aa; --border:#3f3f46; --accent:#3b82f6; --accent-soft:rgba(59,130,246,.4); --danger:#ef4444; --warning:#f59e0b; --ghost-hover:#323236 }
+:root { color-scheme:light; --background:#ffffff; --surface:#f4f4f5; --text:#18181b; --muted:#71717a; --border:#d9d9de; --accent:#2563eb; --accent-soft:rgba(37,99,235,.25); --danger:#dc2626; --warning:#d97706; --ghost-hover:#e9e9ec; --pressed:#dddde1 }
+:root[data-scheme=dark] { color-scheme:dark; --background:#18181b; --surface:#27272a; --text:#f4f4f5; --muted:#a1a1aa; --border:#3f3f46; --accent:#3b82f6; --accent-soft:rgba(59,130,246,.4); --danger:#ef4444; --warning:#f59e0b; --ghost-hover:#323236; --pressed:#3c3c41 }
 * { box-sizing:border-box }
 body { margin:0; font-family:system-ui,sans-serif; font-size:13px; color:var(--text); background:#888; display:flex; gap:24px; padding:24px; align-items:flex-start }
 .controls { width:220px; flex:none; display:flex; flex-direction:column; gap:14px; padding:14px; border-radius:10px; background:#f4f4f4; color:#242424; font-size:12px }
@@ -17,10 +17,30 @@ body { margin:0; font-family:system-ui,sans-serif; font-size:13px; color:var(--t
 .controls .hint { color:#666; line-height:1.5 }
 .controls kbd { padding:0 4px; border:1px solid #ccc; border-radius:3px; background:#fff; font-size:11px }
 .panel { width:340px; height:480px; flex:none; display:flex; flex-direction:column; background:var(--background); border:1px solid var(--border); border-radius:10px; overflow:hidden }
-header, footer { display:flex; align-items:center; gap:8px; padding:12px 16px }
-header { border-bottom:1px solid var(--border) }
-footer { border-top:1px solid var(--border); justify-content:flex-end }
-h1 { flex:1; margin:0; font-size:15px }
+/* Chrome: the title row and the footer are 36 high (hairline included), the icon buttons 24 x 24 with 16 glyphs, 4 apart. */
+header, footer { display:flex; align-items:center; flex:none; height:36px }
+header { gap:8px; padding:0 8px 0 16px; border-bottom:1px solid var(--border) }
+footer { gap:4px; padding:0 8px; border-top:1px solid var(--border) }
+footer .spacer { flex:1 }
+h1 { flex:1; margin:0; font-size:13px; font-weight:600 }
+.panel button.tool { position:relative; width:24px; height:24px; padding:0; display:grid; place-items:center; border:0; border-radius:6px; background:transparent; color:var(--muted); cursor:pointer }
+.panel button.tool:hover { background:var(--ghost-hover) }
+.panel button.tool:active { background:var(--pressed) }
+.tool svg { width:16px; height:16px }
+/* Tooltip: Inverse fill, no shadow; shows on hover, or pinned with ?tip=<name>. */
+[data-tip]::after { content:attr(data-tip); position:absolute; z-index:2; display:none; padding:4px 8px; border-radius:6px; background:var(--text); color:var(--background); font-size:12px; line-height:16px; white-space:nowrap; pointer-events:none; bottom:calc(100% + 6px); left:50% ; transform:translateX(-50%) }
+[data-tip].tip-start::after { left:0; transform:none }
+[data-tip].tip-end::after { left:auto; right:0; transform:none }
+[data-tip].tip-below::after { bottom:auto; top:calc(100% + 6px) }
+[data-tip]:hover::after, [data-tip].pinned::after { display:block }
+/* The chrome the real app has today, kept only for the comparison. */
+.panel.old header, .panel.old footer { gap:8px; padding:0 16px }
+.panel.old header { height:42px }
+.panel.old footer { height:56px; justify-content:flex-end }
+.panel.old h1 { font-size:15px; font-weight:700 }
+.figure { display:flex; flex-direction:column; gap:8px; flex:none }
+.figure .cap { font-size:12px; line-height:1.5; color:#fff }
+.figure .cap b { font-weight:600 }
 .content { flex:1; overflow:auto; padding:16px; display:flex; flex-direction:column; gap:12px }
 .content > * { flex-shrink:0 }
 .panel button { padding:5px 10px; border:1px solid var(--border); border-radius:6px; background:var(--surface); color:var(--text); font:inherit }
@@ -120,6 +140,7 @@ h1 { flex:1; margin:0; font-size:15px }
 .result .path-row .mid { flex:1 }
 .result .overlap-hint { padding:0 12px 10px; font-size:12px; color:var(--muted) }
 .panel.full { height:auto; min-height:480px }
+.panel .content { min-height:0 }
 
 /* Identity list: a heading with the count, then one grouped list. */
 .section { display:flex; justify-content:space-between; padding:0 2px; margin-bottom:-6px; font-size:12px; font-weight:600; color:var(--muted) }
@@ -157,19 +178,17 @@ h1 { flex:1; margin:0; font-size:15px }
 <aside class="controls">
   <div><h2>State</h2><div class="group" id="states"></div></div>
   <div><h2>Scheme</h2><div class="group" id="schemes"></div></div>
+  <div><h2>Chrome</h2><div class="group" id="chromes"></div></div>
+  <div><h2>Footer icons</h2><div class="group" id="icons"></div></div>
   <div><h2>Height</h2><div class="group" id="heights"></div></div>
   <div><h2>Language</h2><div class="group" id="langs"></div></div>
-  <div class="hint">URL: <code>?state=…&amp;scheme=dark&amp;lang=zh&amp;height=full</code><br><kbd>←</kbd> <kbd>→</kbd> switch state.</div>
+  <div class="hint">URL: <code>?state=…&amp;scheme=dark&amp;lang=zh&amp;chrome=compare&amp;icons=today&amp;height=full</code><br><kbd>←</kbd> <kbd>→</kbd> switch state.<br>Pin a tooltip: <code>&amp;tip=quit</code> (settings, add, about, recheck, quit).</div>
 </aside>
-<div class="panel">
-  <header><h1>Idset</h1></header>
-  <div class="content" id="content"></div>
-  <footer><button class="text" id="add"></button><button id="quit"></button></footer>
-</div>
+<div id="stage" style="display:flex;gap:24px;align-items:flex-start"></div>
 <script>
 const TEXT = {
   zh: {
-    close:'隐藏', quit:'退出', loading:'正在读取配置…', dropTitle:'把项目文件夹拖到这里', dropHint:'看看这个目录会用哪个身份推送',
+    close:'隐藏', quit:'退出', settings:'设置', about:'关于 Idset', recheck:'重新检查', current:'现在', compact:'紧凑', contentH:n => `内容区 ${n} DIP`, loading:'正在读取配置…', dropTitle:'把项目文件夹拖到这里', dropHint:'看看这个目录会用哪个身份推送',
     choose:'选择文件夹…', dropAgain:'拖入另一个文件夹，或', empty:'还没有身份', emptyHint:'添加一个，让文件夹用上自己的 Git 署名、邮箱和 SSH 密钥。', add:'添加身份',
     filter:'筛选身份', none:'没有匹配的身份', unnamed:'（未命名）', readonly:'accounts.json 读不出来',
     readonlyHint:'修好文件或从备份恢复之前，Idset 不会写入它。', reload:'重新读取', reveal:'在 Finder 中显示', copy:'复制完整路径', copied:'已复制', clear:'清除结果',
@@ -184,7 +203,7 @@ const TEXT = {
     overlapTitle:n => `${n} 个身份覆盖这里`, onlyUse:n => `这里只用 ${n}`, removeFrom:(n, p) => `从 ${n} 去掉 ${p}`, boundTo:n => `已绑到 ${n}`,
   },
   en: {
-    close:'Hide', quit:'Quit', loading:'Reading configuration…', dropTitle:'Drop a project folder here', dropHint:'See which identity pushes from it',
+    close:'Hide', quit:'Quit', settings:'Settings', about:'About Idset', recheck:'Re-check', current:'Today', compact:'Compact', contentH:n => `Content area ${n} DIP`, loading:'Reading configuration…', dropTitle:'Drop a project folder here', dropHint:'See which identity pushes from it',
     choose:'Choose Folder…', dropAgain:'Drop another folder, or', empty:'No identities yet', emptyHint:'Add one to give a folder its own Git name, email and SSH key.', add:'Add Identity',
     filter:'Filter identities', none:'No matching identities', unnamed:'(unnamed)', readonly:'accounts.json cannot be read',
     readonlyHint:'Idset will not write to it until it is fixed or restored from a backup.', reload:'Read Again', reveal:'Show in Finder', copy:'Copy the full path', copied:'Copied', clear:'Clear result',
@@ -233,6 +252,11 @@ const icon = {
   warn:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2.5l6 11H2z"/><path d="M8 6.5v3M8 11.6v.1"/></svg>',
   chev:'<svg class="chev" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l4 4 4-4"/></svg>',
   plus:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M8 3v10M3 8h10"/></svg>',
+  // The chrome glyphs: 16 x 16 line drawings, 1.5 stroke, as ui.Icon SVGs (no icon set; named after the SF Symbols they stand for).
+  gear:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M6.91 3.12L7.14 1.46L8.86 1.46L9.09 3.12L10.68 3.78L12.02 2.77L13.23 3.98L12.22 5.32L12.88 6.91L14.54 7.14L14.54 8.86L12.88 9.09L12.22 10.68L13.23 12.02L12.02 13.23L10.68 12.22L9.09 12.88L8.86 14.54L7.14 14.54L6.91 12.88L5.32 12.22L3.98 13.23L2.77 12.02L3.78 10.68L3.12 9.09L1.46 8.86L1.46 7.14L3.12 6.91L3.78 5.32L2.77 3.98L3.98 2.77L5.32 3.78z"/><circle cx="8" cy="8" r="2"/></svg>',
+  info:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="8" cy="8" r="6.25"/><path d="M8 7.3v3.7"/><path d="M8 4.9v.1" stroke-width="1.8"/></svg>',
+  refresh:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13.25 8a5.25 5.25 0 1 1-1.54-3.71"/><path d="M12.9 1.9v2.8H10.1"/></svg>',
+  power:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M4.4 4.1a5.5 5.5 0 1 0 7.2 0"/><path d="M8 1.8v5.6"/></svg>',
 };
 const q = new URLSearchParams(location.search);
 const view = {
@@ -240,6 +264,9 @@ const view = {
   scheme: q.get('scheme') === 'dark' ? 'dark' : 'light',
   lang: q.get('lang') === 'zh' ? 'zh' : 'en',
   height: q.get('height') === 'full' ? 'full' : 'fixed',
+  chrome: ['current', 'compare'].includes(q.get('chrome')) ? q.get('chrome') : 'compact',
+  icons: q.get('icons') === 'today' ? 'today' : 'all',
+  tip: q.get('tip') || '',
 };
 
 function panel(state, T) {
@@ -327,21 +354,40 @@ function buttons(id, options, key) {
   document.getElementById(id).onclick = e => { const v = e.target.dataset.value; if (v) { view[key] = v; render(); } };
 }
 
+// The title row and footer. "Today" shows only the actions that work in the app now: add and quit (settings does not exist yet).
+function chrome(old, T) {
+  const bare = ['loading', 'readonly', 'empty'].includes(view.state), all = view.icons === 'all';
+  if (old) {
+    return { head:`<header><h1>Idset</h1></header>`,
+      foot:`<footer>${bare ? '' : `<button class="text" style="margin-right:auto">${icon.plus + T.add}</button>`}<button>${T.quit}</button></footer>` };
+  }
+  const tool = (name, glyph, label, pos = '') => `<button class="tool ${pos} ${view.tip === name ? 'pinned' : ''}" data-tip="${label}" aria-label="${label}">${icon[glyph]}</button>`;
+  // Add Identity lives in the fixed footer so it stays reachable however long the list is; the empty state has its own button.
+  // Re-check has nothing to check without identities, so it goes with Add in the states that have none.
+  return {
+    head:`<header><h1>Idset</h1>${all ? tool('settings', 'gear', T.settings, 'tip-end tip-below') : ''}</header>`,
+    foot:`<footer>${bare ? '' : tool('add', 'plus', T.add, 'tip-start')}<span class="spacer"></span>`
+      + (all ? tool('about', 'info', T.about) : '') + (all && !bare ? tool('recheck', 'refresh', T.recheck) : '') + tool('quit', 'power', T.quit, 'tip-end') + `</footer>` };
+}
+
 function render() {
   const T = TEXT[view.lang];
   document.documentElement.dataset.scheme = view.scheme;
-  document.querySelector('.panel').classList.toggle('full', view.height === 'full');
-  document.getElementById('quit').textContent = T.quit;
-  // Add Identity lives in the fixed footer, so it stays reachable however long the list is; the empty state has its own button.
-  const add = document.getElementById('add');
-  add.innerHTML = icon.plus + T.add;
-  add.hidden = ['loading', 'readonly', 'empty'].includes(view.state);
-  document.getElementById('content').innerHTML = panel(view.state, T);
+  const one = old => {
+    const c = chrome(old, T);
+    return `<div class="panel${old ? ' old' : ''}${view.height === 'full' ? ' full' : ''}">${c.head}<div class="content">${panel(view.state, T)}</div>${c.foot}</div>`;
+  };
+  const modes = view.chrome === 'compare' ? [true, false] : [view.chrome === 'current'];
+  document.getElementById('stage').innerHTML = modes.map(old => `<div class="figure">${view.chrome === 'compare' ? `<div class="cap"><b>${old ? T.current : T.compact}</b> · <span class="h"></span></div>` : ''}${one(old)}</div>`).join('');
+  const heights = [...document.querySelectorAll('.figure')].map(f => f.querySelector('.content').clientHeight);
+  document.querySelectorAll('.cap .h').forEach((h, n) => { h.textContent = T.contentH(heights[n]) + (n ? ` (+${heights[n] - heights[0]})` : ''); });
   buttons('states', STATES, 'state');
   buttons('schemes', { light:'浅色', dark:'深色' }, 'scheme');
+  buttons('chromes', { compact:'Compact', current:'Today', compare:'Compare' }, 'chrome');
+  buttons('icons', { all:'All planned', today:'Built today' }, 'icons');
   buttons('heights', { fixed:'480', full:'Full' }, 'height');
   buttons('langs', { zh:'中文', en:'English' }, 'lang');
-  history.replaceState(null, '', `?state=${view.state}&scheme=${view.scheme}&lang=${view.lang}&height=${view.height}`);
+  history.replaceState(null, '', `?state=${view.state}&scheme=${view.scheme}&lang=${view.lang}&chrome=${view.chrome}&icons=${view.icons}&height=${view.height}${view.tip ? `&tip=${view.tip}` : ''}`);
 }
 
 onkeydown = e => {

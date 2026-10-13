@@ -17,10 +17,15 @@ figcaption { margin:8px 0 0; font-size:12px; color:#52525b }
 .light { --background:#ffffff; --surface:#f4f4f5; --hover:#e9e9ec; --text:#18181b; --muted:#71717a; --border:#d9d9de; --accent:#2563eb; --selection:rgba(37,99,235,.25); --focus:rgba(37,99,235,.55); --warning:#d97706; --danger:#dc2626 }
 .dark { --background:#18181b; --surface:#27272a; --hover:#323236; --text:#f4f4f5; --muted:#a1a1aa; --border:#3f3f46; --accent:#3b82f6; --selection:rgba(59,130,246,.4); --focus:rgba(96,165,250,.6); --warning:#f59e0b; --danger:#ef4444 }
 .panel { width:340px; height:480px; display:flex; flex-direction:column; font-size:13px; background:var(--background); color:var(--text); border:1px solid #a1a1aa; border-radius:10px; overflow:hidden }
-header, footer { display:flex; align-items:center; padding:12px 16px; flex:none }
+header, footer { display:flex; align-items:center; flex:none; height:36px }
+header { padding:0 8px 0 16px }
+footer { padding:0 8px; gap:4px }
+.tool { width:24px; height:24px; padding:0; display:grid; place-items:center; border:0; background:transparent; color:var(--muted) }
+.tool svg { width:16px; height:16px }
+.spacer { flex:1 }
 header { border-bottom:1px solid var(--border) }
-footer { border-top:1px solid var(--border); justify-content:flex-end }
-h1 { margin:0; font-size:15px }
+footer { border-top:1px solid var(--border) }
+h1 { flex:1; margin:0; font-size:13px; font-weight:600 }
 .content { flex:1; padding:16px; display:flex; flex-direction:column; gap:12px; overflow:hidden }
 .content > * { flex-shrink:0 }
 button { padding:5px 10px; border:1px solid var(--border); border-radius:6px; background:var(--surface); color:var(--text); font:inherit }
@@ -58,16 +63,16 @@ button.focus { outline:2px solid var(--focus); outline-offset:1px }
 <p class="note">Top row: files dragged over the drop zone, then a matched folder with the keyboard focus on the copy
 button. Bottom row: the same states in dark, then a folder without a match.</p>
 <div class="row">
-  <figure><div class="panel light"><header><h1>Idset</h1></header><div class="content">
+  <figure><div class="panel light"><header><h1>Idset</h1><button class="tool" aria-label="Settings"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M6.91 3.12L7.14 1.46L8.86 1.46L9.09 3.12L10.68 3.78L12.02 2.77L13.23 3.98L12.22 5.32L12.88 6.91L14.54 7.14L14.54 8.86L12.88 9.09L12.22 10.68L13.23 12.02L12.02 13.23L10.68 12.22L9.09 12.88L8.86 14.54L7.14 14.54L6.91 12.88L5.32 12.22L3.98 13.23L2.77 12.02L3.78 10.68L3.12 9.09L1.46 8.86L1.46 7.14L3.12 6.91L3.78 5.32L2.77 3.98L3.98 2.77L5.32 3.78z"/><circle cx="8" cy="8" r="2"/></svg></button></header><div class="content">
     <div class="drop over"><strong>Drop a project folder here</strong><span class="muted small">See which identity pushes from it</span><button>Choose Folder…</button></div>
     <div class="section"><span>Identities</span><span>2</span></div>
     <div class="list">
       <div class="item"><div class="avatar" style="--c:58,123,213;--cl:120,170,240">W</div><div class="text"><span class="label">work</span><span class="muted small">bob@example.com</span></div><span class="tag">~/work/ +1</span></div>
       <div class="item"><div class="avatar" style="--c:46,158,91;--cl:95,200,135">P</div><div class="text"><span class="label">personal</span><span class="muted small">bob@example.net</span></div><span class="tag">Global</span></div>
     </div>
-  </div><footer><button>Quit</button></footer></div><figcaption>Light, dragging over</figcaption></figure>
+  </div><footer><button class="tool" aria-label="Add Identity"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M8 3v10M3 8h10"/></svg></button><span class="spacer"></span><button class="tool" aria-label="About Idset"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="8" cy="8" r="6.25"/><path d="M8 7.3v3.7"/><path d="M8 4.9v.1" stroke-width="1.8"/></svg></button><button class="tool" aria-label="Re-check"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13.25 8a5.25 5.25 0 1 1-1.54-3.71"/><path d="M12.9 1.9v2.8H10.1"/></svg></button><button class="tool" aria-label="Quit"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M4.4 4.1a5.5 5.5 0 1 0 7.2 0"/><path d="M8 1.8v5.6"/></svg></button></footer></div><figcaption>Light, dragging over</figcaption></figure>
 
-  <figure><div class="panel light"><header><h1>Idset</h1></header><div class="content">
+  <figure><div class="panel light"><header><h1>Idset</h1><button class="tool" aria-label="Settings"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M6.91 3.12L7.14 1.46L8.86 1.46L9.09 3.12L10.68 3.78L12.02 2.77L13.23 3.98L12.22 5.32L12.88 6.91L14.54 7.14L14.54 8.86L12.88 9.09L12.22 10.68L13.23 12.02L12.02 13.23L10.68 12.22L9.09 12.88L8.86 14.54L7.14 14.54L6.91 12.88L5.32 12.22L3.98 13.23L2.77 12.02L3.78 10.68L3.12 9.09L1.46 8.86L1.46 7.14L3.12 6.91L3.78 5.32L2.77 3.98L3.98 2.77L5.32 3.78z"/><circle cx="8" cy="8" r="2"/></svg></button></header><div class="content">
     <div class="result"><div class="top"><span class="mono">~/work/api</span>
       <button class="ghost focus" aria-label="Copy the full path"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="5.5" y="5.5" width="8" height="8" rx="1.5"/><path d="M10.5 3.5v-.5a1 1 0 0 0-1-1h-6a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h.5"/></svg></button>
       <button class="ghost" aria-label="Clear result"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M4 4l8 8M12 4l-8 8"/></svg></button></div>
@@ -76,19 +81,19 @@ button. Bottom row: the same states in dark, then a folder without a match.</p>
     <div class="drop compact"><span class="muted small">Drop another folder, or</span><button>Choose Folder…</button></div>
     <div class="section"><span>Identities</span><span>2</span></div>
     <div class="list"><div class="item"><div class="avatar" style="--c:58,123,213;--cl:120,170,240">W</div><div class="text"><span class="label">work</span><span class="muted small">bob@example.com</span></div><span class="tag">~/work/ +1</span></div></div>
-  </div><footer><button>Quit</button></footer></div><figcaption>Light, matched, focus ring</figcaption></figure>
+  </div><footer><button class="tool" aria-label="Add Identity"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M8 3v10M3 8h10"/></svg></button><span class="spacer"></span><button class="tool" aria-label="About Idset"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="8" cy="8" r="6.25"/><path d="M8 7.3v3.7"/><path d="M8 4.9v.1" stroke-width="1.8"/></svg></button><button class="tool" aria-label="Re-check"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13.25 8a5.25 5.25 0 1 1-1.54-3.71"/><path d="M12.9 1.9v2.8H10.1"/></svg></button><button class="tool" aria-label="Quit"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M4.4 4.1a5.5 5.5 0 1 0 7.2 0"/><path d="M8 1.8v5.6"/></svg></button></footer></div><figcaption>Light, matched, focus ring</figcaption></figure>
 </div>
 <div class="row" style="margin-top:24px">
-  <figure><div class="panel dark"><header><h1>Idset</h1></header><div class="content">
+  <figure><div class="panel dark"><header><h1>Idset</h1><button class="tool" aria-label="Settings"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M6.91 3.12L7.14 1.46L8.86 1.46L9.09 3.12L10.68 3.78L12.02 2.77L13.23 3.98L12.22 5.32L12.88 6.91L14.54 7.14L14.54 8.86L12.88 9.09L12.22 10.68L13.23 12.02L12.02 13.23L10.68 12.22L9.09 12.88L8.86 14.54L7.14 14.54L6.91 12.88L5.32 12.22L3.98 13.23L2.77 12.02L3.78 10.68L3.12 9.09L1.46 8.86L1.46 7.14L3.12 6.91L3.78 5.32L2.77 3.98L3.98 2.77L5.32 3.78z"/><circle cx="8" cy="8" r="2"/></svg></button></header><div class="content">
     <div class="drop over"><strong>Drop a project folder here</strong><span class="muted small">See which identity pushes from it</span><button>Choose Folder…</button></div>
     <div class="section"><span>Identities</span><span>2</span></div>
     <div class="list">
       <div class="item"><div class="avatar" style="--c:58,123,213;--cl:120,170,240">W</div><div class="text"><span class="label">work</span><span class="muted small">bob@example.com</span></div><span class="tag">~/work/ +1</span></div>
       <div class="item"><div class="avatar" style="--c:46,158,91;--cl:95,200,135">P</div><div class="text"><span class="label">personal</span><span class="muted small">bob@example.net</span></div><span class="tag">Global</span></div>
     </div>
-  </div><footer><button>Quit</button></footer></div><figcaption>Dark, dragging over</figcaption></figure>
+  </div><footer><button class="tool" aria-label="Add Identity"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M8 3v10M3 8h10"/></svg></button><span class="spacer"></span><button class="tool" aria-label="About Idset"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="8" cy="8" r="6.25"/><path d="M8 7.3v3.7"/><path d="M8 4.9v.1" stroke-width="1.8"/></svg></button><button class="tool" aria-label="Re-check"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13.25 8a5.25 5.25 0 1 1-1.54-3.71"/><path d="M12.9 1.9v2.8H10.1"/></svg></button><button class="tool" aria-label="Quit"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M4.4 4.1a5.5 5.5 0 1 0 7.2 0"/><path d="M8 1.8v5.6"/></svg></button></footer></div><figcaption>Dark, dragging over</figcaption></figure>
 
-  <figure><div class="panel dark"><header><h1>Idset</h1></header><div class="content">
+  <figure><div class="panel dark"><header><h1>Idset</h1><button class="tool" aria-label="Settings"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M6.91 3.12L7.14 1.46L8.86 1.46L9.09 3.12L10.68 3.78L12.02 2.77L13.23 3.98L12.22 5.32L12.88 6.91L14.54 7.14L14.54 8.86L12.88 9.09L12.22 10.68L13.23 12.02L12.02 13.23L10.68 12.22L9.09 12.88L8.86 14.54L7.14 14.54L6.91 12.88L5.32 12.22L3.98 13.23L2.77 12.02L3.78 10.68L3.12 9.09L1.46 8.86L1.46 7.14L3.12 6.91L3.78 5.32L2.77 3.98L3.98 2.77L5.32 3.78z"/><circle cx="8" cy="8" r="2"/></svg></button></header><div class="content">
     <div class="result"><div class="top"><span class="mono">~/work/api</span>
       <button class="ghost focus" aria-label="Copy the full path"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="5.5" y="5.5" width="8" height="8" rx="1.5"/><path d="M10.5 3.5v-.5a1 1 0 0 0-1-1h-6a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h.5"/></svg></button>
       <button class="ghost" aria-label="Clear result"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M4 4l8 8M12 4l-8 8"/></svg></button></div>
@@ -97,9 +102,9 @@ button. Bottom row: the same states in dark, then a folder without a match.</p>
     <div class="drop compact"><span class="muted small">Drop another folder, or</span><button>Choose Folder…</button></div>
     <div class="section"><span>Identities</span><span>2</span></div>
     <div class="list"><div class="item"><div class="avatar" style="--c:58,123,213;--cl:120,170,240">W</div><div class="text"><span class="label">work</span><span class="muted small">bob@example.com</span></div><span class="tag">~/work/ +1</span></div></div>
-  </div><footer><button>Quit</button></footer></div><figcaption>Dark, matched, focus ring</figcaption></figure>
+  </div><footer><button class="tool" aria-label="Add Identity"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M8 3v10M3 8h10"/></svg></button><span class="spacer"></span><button class="tool" aria-label="About Idset"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="8" cy="8" r="6.25"/><path d="M8 7.3v3.7"/><path d="M8 4.9v.1" stroke-width="1.8"/></svg></button><button class="tool" aria-label="Re-check"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13.25 8a5.25 5.25 0 1 1-1.54-3.71"/><path d="M12.9 1.9v2.8H10.1"/></svg></button><button class="tool" aria-label="Quit"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M4.4 4.1a5.5 5.5 0 1 0 7.2 0"/><path d="M8 1.8v5.6"/></svg></button></footer></div><figcaption>Dark, matched, focus ring</figcaption></figure>
 
-  <figure><div class="panel dark"><header><h1>Idset</h1></header><div class="content">
+  <figure><div class="panel dark"><header><h1>Idset</h1><button class="tool" aria-label="Settings"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M6.91 3.12L7.14 1.46L8.86 1.46L9.09 3.12L10.68 3.78L12.02 2.77L13.23 3.98L12.22 5.32L12.88 6.91L14.54 7.14L14.54 8.86L12.88 9.09L12.22 10.68L13.23 12.02L12.02 13.23L10.68 12.22L9.09 12.88L8.86 14.54L7.14 14.54L6.91 12.88L5.32 12.22L3.98 13.23L2.77 12.02L3.78 10.68L3.12 9.09L1.46 8.86L1.46 7.14L3.12 6.91L3.78 5.32L2.77 3.98L3.98 2.77L5.32 3.78z"/><circle cx="8" cy="8" r="2"/></svg></button></header><div class="content">
     <div class="result warning"><div class="top"><span class="mono">~/scratch/notes</span>
       <button class="ghost" aria-label="Clear result"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M4 4l8 8M12 4l-8 8"/></svg></button></div>
       <div class="say">No identity matches this folder</div></div>
@@ -109,6 +114,6 @@ button. Bottom row: the same states in dark, then a folder without a match.</p>
       <div class="item"><div class="avatar" style="--c:58,123,213;--cl:120,170,240">W</div><div class="text"><span class="label">work</span><span class="muted small">bob@example.com</span></div><span class="tag">~/work/ +1</span></div>
       <div class="item"><div class="avatar" style="--c:46,158,91;--cl:95,200,135">P</div><div class="text"><span class="label">personal</span><span class="muted small">bob@example.net</span></div><span class="tag">Global</span></div>
     </div>
-  </div><footer><button>Quit</button></footer></div><figcaption>Dark, no match</figcaption></figure>
+  </div><footer><button class="tool" aria-label="Add Identity"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M8 3v10M3 8h10"/></svg></button><span class="spacer"></span><button class="tool" aria-label="About Idset"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="8" cy="8" r="6.25"/><path d="M8 7.3v3.7"/><path d="M8 4.9v.1" stroke-width="1.8"/></svg></button><button class="tool" aria-label="Re-check"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13.25 8a5.25 5.25 0 1 1-1.54-3.71"/><path d="M12.9 1.9v2.8H10.1"/></svg></button><button class="tool" aria-label="Quit"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M4.4 4.1a5.5 5.5 0 1 0 7.2 0"/><path d="M8 1.8v5.6"/></svg></button></footer></div><figcaption>Dark, no match</figcaption></figure>
 </div>
 </html>

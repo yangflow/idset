@@ -19,10 +19,13 @@ Mockups show the 4 DIP unit and 13 px text.
 | space-2 | `t.Space(2)` | 8 | related controls, button rows, the context line's padding |
 | space-2.25 | `t.Space(2.25)` | 9 | vertical padding of a list row |
 | space-2.5 | `t.Space(2.5)` | 10 | badge to text in a list row; lines of the read-only state |
-| space-3 | `t.Space(3)` | 12 | between blocks of the panel; card padding; title bar and footer, vertical |
-| space-4 | `t.Space(4)` | 16 | panel content padding; title bar and footer, horizontal |
+| space-3 | `t.Space(3)` | 12 | between blocks of the panel; card padding |
+| space-4 | `t.Space(4)` | 16 | panel content padding; title bar, left inset |
 | space-5 | `t.Space(5)` | 20 | vertical padding of the idle drop zone |
-| symbol-button | `t.Space(6)` | 24 | borderless symbol buttons in cards |
+| symbol-button | `t.Space(6)` | 24 | borderless symbol buttons in cards, and the icon buttons of the title bar and footer (same size, 24 x 24) |
+| chrome-bar | `t.Space(9)` | 36 | title bar and footer of the panel, hairline included (each was 42 and 56 before) |
+| chrome-inset | `t.Space(2)` | 8 | the title bar's right inset and the footer's side insets, so the 24 DIP buttons sit 8 from the edge |
+| chrome-gap | `t.Space(1)` | 4 | between the footer's icon buttons |
 | menu-entry | `t.Space(8)` | 32 | entry of the rebind menu; the stacked actions of the overlap card |
 | bar-undo | `t.Space(9)` | 36 | undo bar of a result card |
 | bar-actions | `t.Space(10)` | 40 | card actions row, also the stale-path prompt's two buttons; the "New Identity and Bind Here" row |
@@ -40,12 +43,12 @@ Mockups show the 4 DIP unit and 13 px text.
 | radius-badge | 9 / 11 | 9 / 11 | result badge, warning badge |
 | radius-filter | 12 | 12 | platform filter buttons |
 | outline-drop | 1.5, dashed | 1.5 | drop zone outline |
-| title | `t.Rem(1.15)` bold | about 15 / 16 | panel title, a level 1 heading |
+| title | `t.Rem(1)`, 600 | 13 / 14 | panel title "Idset", a level 1 heading |
 | emphasis | `t.Rem(1.15)`, 600 | about 15 / 16 | identity name in a result card; read-only title |
 | secondary | `t.Rem(0.9)` | about 12 / 13 | hints, group heading, emails, paths in a result card |
 | small | `t.Rem(0.85)` | about 11 / 12 | folders in a list row, the read-only reason, "Copied" |
 | badge-letter | `t.Rem(1.25)` bold | 16 | initial in a result badge |
-| icon | `t.Rem(1.1)` / `t.Rem(1.7)` | about 14 / 22 | symbols in cards / the read-only warning |
+| icon | `t.Rem(1.1)` / `t.Rem(1.2)` / `t.Rem(1.7)` | about 14 / 16 / 22 | symbols in cards / glyphs of the title bar and footer buttons / the read-only warning |
 | body | theme `FontSize` | 13 / 14 | everything else, and all widget text |
 | accounts-list | `t.Space(58)` | 232 | source list of the accounts window |
 | accounts-row | `t.Space(8)` | 32 | height of a settings row |
@@ -67,11 +70,11 @@ accent color and contrast settings, so mockups approximate it.
 |---|---|---|---|
 | `Background` | `#ffffff` | `#18181b` | panel fill, read-only reason box |
 | `Surface` | `#f4f4f5` | `#27272a` | cards, the identity list, inputs, buttons |
-| `SurfaceHover` | `#e9e9ec` | `#323236` | hovered control, hovered symbol button |
-| `SurfacePressed` | `#dddde1` | `#3c3c41` | pressed control; selected list row; segmented control track; the row being confirmed in a result card |
+| `SurfaceHover` | `#e9e9ec` | `#323236` | hovered control, hovered symbol button and icon button |
+| `SurfacePressed` | `#dddde1` | `#3c3c41` | pressed control and icon button; selected list row; segmented control track; the row being confirmed in a result card |
 | `Border` | `#d9d9de` | `#3f3f46` | dividers, outlines, the drop zone's dashed outline |
 | `Text` | `#18181b` | `#f4f4f5` | primary text |
-| `TextMuted` | `#71717a` | `#a1a1aa` | hints, paths, group heading, symbols |
+| `TextMuted` | `#71717a` | `#a1a1aa` | hints, paths, group heading, symbols, the glyphs of the title bar and footer |
 | `Accent` | `#2563eb` | `#3b82f6` | drop zone outline while dragging over; selected platform filter, switch on, radio and checkbox, text buttons, Save, the confirm block's Rebind, the countdown line (at 45%), the overlap winner |
 | `AccentHover` | `#1d4ed8` | `#60a5fa` | hovered primary button |
 | `AccentPressed` | `#1e40af` | `#2563eb` | pressed primary button |
@@ -81,7 +84,7 @@ accent color and contrast settings, so mockups approximate it.
 | `Success` | `#16a34a` | `#22c55e` | not used yet |
 | `Selection` | `rgba(37, 99, 235, 0.25)` | `rgba(59, 130, 246, 0.4)` | drop zone fill while dragging over; selected text |
 | `Focus` | `rgba(37, 99, 235, 0.55)` | `rgba(96, 165, 250, 0.6)` | keyboard focus ring |
-| `Inverse` / `InverseText` | zero: `Text` / `Background` | zero: `Text` / `Background` | tooltips and toasts |
+| `Inverse` / `InverseText` | zero: `Text` / `Background` | zero: `Text` / `Background` | tooltips (every icon button has one) and toasts |
 | `Scrollbar` | `rgba(0, 0, 0, 0.32)` | `rgba(255, 255, 255, 0.35)` | scroll bar thumbs, 6 DIPs wide |
 
 ## Identity colors

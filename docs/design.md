@@ -84,8 +84,9 @@ Layout uses flexbox in device-independent pixels (DIPs); see
   [scroll view](https://github.com/egoist/mygo/blob/v0.3.6/docs/ui/scroll.md). The panel scrolls when it shows the
   identity list. The loading, read-only and no-identity states never need to scroll and are not in a scroll view, so
   their content can be centered vertically (centering only works in a container of fixed height).
-- **The panel.** Fixed 340×480. Title bar and footer padding `Space(3)`×`Space(4)` (12×16), each separated from the
-  content by a divider. Content padding `Space(4)` (16), gap between blocks `Space(3)` (12). Cards, the identity list
+- **The panel.** Fixed 340×480. Title bar and footer are `Space(9)` (36) high, hairline included, each separated from
+  the content by a divider; they are compact on purpose: the content is the point, and the chrome gives it 26 DIPs
+  more than the 42 and 56 DIP bars it replaced (406 instead of 380 inside the outline). Content padding `Space(4)` (16), gap between blocks `Space(3)` (12). Cards, the identity list
   and the drop zone have a 10 DIP corner radius. The full measurements are in [The panel](#the-panel) and
   [tokens.md](../design/tokens.md).
 
@@ -146,7 +147,7 @@ and carries the user's accent color and contrast settings. See
 
   | Text | Size | Weight |
   |---|---|---|
-  | Panel title "Idset" | `Rem(1.15)`, about 15 | bold |
+  | Panel title "Idset" | body, 13 | 600 |
   | Identity name in the result card; read-only title | `Rem(1.15)`, about 15 | 600 |
   | Identity name in the list; drop zone title; empty title | body | 600 / bold |
   | Secondary text, hints, group heading | `Rem(0.9)`, about 12 | 400 (group heading 600) |
@@ -166,14 +167,17 @@ and carries the user's accent color and contrast settings. See
 ## Icons and images
 
 - **Icons are SVG** shown with `ui.Icon`, which takes the text color and the font size: an icon follows theme colors
-  and the text size automatically. The panel's four symbols (clear, copy, check, warning) are 16×16 line drawings
-  defined in `internal/ui/panel/view.go` and parsed once at package level; there is no third-party icon set. If one
+  and the text size automatically. MyGo has no built-in icon set and no SF Symbols: `ui.Icon` draws an SVG. The panel's symbols are 16×16 line
+  drawings (1.5 stroke, round caps) defined in `internal/ui/panel/view.go` and parsed once at package level: clear,
+  copy, check, warning, and for the title bar and footer plus, gear (`gearshape`), info (`info.circle`), refresh
+  (`arrow.clockwise`) and power (`power`), named after the SF Symbols they follow; there is no third-party icon set. If one
   is adopted, use one set for the whole app and record it and its license in `THIRD_PARTY.md`. See
   [Icon](https://github.com/egoist/mygo/blob/v0.3.6/docs/ui/icon.md).
 - **An icon needs a name when it is alone.** Icons are decoration for assistive technology unless given a `Label`.
   A button that shows only an icon must get a readable name with `.Label()`; an icon next to a visible text label
   needs none.
-- **Size icons with the text.** Card symbols are `Rem(1.1)` (about 14) in `TextMuted`; the read-only warning is
+- **Size icons with the text.** Card symbols are `Rem(1.1)` (about 14) in `TextMuted`; the glyphs of the title bar and
+  footer buttons are `Rem(1.2)` (about 16); the read-only warning is
   `Rem(1.7)` (about 22) in `Danger`.
 - **The tray icon** is drawn in code by `internal/trayicon/`, so no image file is maintained by hand: a 32×32 PNG of
   an identity card. On macOS it is a template icon, black on transparent, that the system tints for the menu bar;
@@ -199,7 +203,8 @@ What Idset uses today:
 | `ui.Divider` | Between the title bar, content and footer; between the two parts of a result card; between list rows. |
 | Drop zone | A `ui.Column` with a 1.5 DIP dashed `Border` outline (`BorderStyle(ui.BorderDashed)`), taking files with `DroppedFiles`; while `FileDragOver`, the outline turns `Accent` and the fill `Selection`. See [Dropped files](https://github.com/egoist/mygo/blob/v0.3.6/docs/ui/input.md#dropped-files). |
 | Initial badge | A rounded square with the first letter of the identity's name ("?" without a name), in the identity's color (see [Color](#color-and-dark-mode)). |
-| Borderless symbol button | `Space(6)` square (24), transparent, icon `Rem(1.1)` in `TextMuted`, `SurfaceHover` fill on hover. Must have a `.Label()`. After the path is copied, the icon turns into a check mark with "Copied" before it for 1.2 seconds. |
+| Borderless symbol button | `Space(6)` square (24), transparent, icon `Rem(1.1)` in `TextMuted`, `SurfaceHover` fill on hover, `SurfacePressed` while pressed. Must have a `.Label()`. After the path is copied, the icon turns into a check mark with "Copied" before it for 1.2 seconds. |
+| Icon button (title bar, footer) | The same 24×24 button with a `Rem(1.2)` (about 16) glyph, radius `Theme.Radius`. Always has `.Label()` and a `.Tooltip()` with the same text, in both languages: Settings, Add Identity, About Idset, Re-check, Quit (设置 / 添加身份 / 关于 Idset / 重新检查 / 退出 in Chinese). The tooltip is the `Inverse` fill, no shadow, above the button (below the title bar's). Same size, 4 DIPs apart, so a missing button never moves another. |
 | Result card | A context line (the path in monospace `TextMuted`, then the copy and clear buttons) and below it the answer. `Surface` fill, `Border` outline; `Warning` for the cards without a match, `Danger` when `git` fails. |
 | Bind row | In a result card: color dot, name and one line of `TextMuted` (the email, or "Has <path> · adds another"), "Bind" in `Accent` at the end. 44 DIPs high, hairline above. The whole row is the target. |
 | Card actions | A 40 DIP row under the answer, hairline above: `Accent` text buttons, "Open in Finder" at the left, "Rebind to ▾" and "Unbind" at the right ("Unbind" only when the identity lists this very folder). |
@@ -226,7 +231,7 @@ The tables below say what to reach for as the accounts, settings and about windo
 | "Rebind to" another identity | [Popover](https://github.com/egoist/mygo/blob/v0.3.6/docs/ui/popover.md) (`PopoverBase`) with entries of our own: a menu button's menu is the system's and cannot show a color dot and a monospace folder at 224 wide |
 | Actions on a specific identity, on right click | [Context menu](https://github.com/egoist/mygo/blob/v0.3.6/docs/ui/context-menu.md) |
 | Choose one of a few modes (global or limited scope) | [Segmented control](https://github.com/egoist/mygo/blob/v0.3.6/docs/ui/segmented.md) |
-| Adding to a list ("Add Identity") | A symbol button in a bar at the bottom of the list; text button in the panel footer |
+| Adding to a list ("Add Identity") | A symbol button in a bar at the bottom of the list; icon button (plus) in the panel footer |
 
 ### Choices
 
@@ -293,8 +298,19 @@ Overlays share focus and Escape behavior; see
 Mockup: [design/screens/panel.html](../design/screens/panel.html), and both appearances side by side in
 [design/screens/panel-appearance.html](../design/screens/panel-appearance.html).
 
-From top to bottom: the title bar ("Idset", a level 1 heading; no close button: the tray icon and Escape hide the
-panel), the content, and the footer ("Quit", right-aligned). The content, in order:
+From top to bottom: the title bar ("Idset", 13 / 600, a level 1 heading, and the Settings icon button at the right; no
+close button: the tray icon and Escape hide the panel), the content, and the footer. Both bars are 36 DIPs high. The
+title bar has `Space(4)` left and `Space(2)` right padding; the footer has `Space(2)` at both sides. The footer is five
+icon buttons: "Add Identity" (plus) at the left, then at the right About (`info.circle`), Re-check (`arrow.clockwise`)
+and Quit (`power`). The footer after the content:
+
+- With identities, all of them. Without identities, loading or read-only: no Add (the empty state has its own button;
+  the other two cannot write) and no Re-check (nothing to check); About and Quit stay, so the footer still has a way
+  out when the read-only error takes the whole panel.
+- Only buttons that work are shown: Settings, About and Re-check join when they are built (the mockup's "Built today"
+  switch shows the footer without them).
+
+The content, in order:
 
 1. Loading: only a spinner and "Reading configuration…", centered.
 2. `accounts.json` cannot be read: nothing else can be done, so the error fills the content and is centered
@@ -361,12 +377,12 @@ A path on one line is shortened in the middle only, the same way everywhere (the
 as "C:/") and its last folder always stay, and what lies between gives way to an ellipsis, "~/…/payments-gateway/".
 Only when even those do not fit is the last folder cut at its end. The full path is in the tooltip.
 
-Identity rows open the accounts window on their identity. "Add Identity" (an `Accent` text button with a plus) sits at
-the left of the fixed footer, "Quit" at the right, so that it stays reachable however long the list is: the content
-between the title row and the footer is the scroll view. In the empty state the centered "Add Identity" button
+Identity rows open the accounts window on their identity. "Add Identity" (the plus icon button) sits at the left of the
+fixed footer, so that it stays reachable however long the list is: the content between the title row and the footer is
+the scroll view. In the empty state the centered "Add Identity" button
 replaces it. Both open the accounts window on a new draft.
 
-Planned (product.md): a settings button in the title bar; About and Recheck in the footer; "Import" when there are no
+Planned (product.md): the Settings, About and Re-check buttons (drawn in the mockup, shown once they work); "Import" when there are no
 identities; a connectivity dot, an expand arrow and problem bars on identity rows. Bind, unbind, rebind, "Use only" and undo on result
 cards are built as the mockup shows.
 
