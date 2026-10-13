@@ -201,6 +201,12 @@ What Idset uses today:
 | Initial badge | A rounded square with the first letter of the identity's name ("?" without a name), in the identity's color (see [Color](#color-and-dark-mode)). |
 | Borderless symbol button | `Space(6)` square (24), transparent, icon `Rem(1.1)` in `TextMuted`, `SurfaceHover` fill on hover. Must have a `.Label()`. After the path is copied, the icon turns into a check mark with "Copied" before it for 1.2 seconds. |
 | Result card | A context line (the path in monospace `TextMuted`, then the copy and clear buttons) and below it the answer. `Surface` fill, `Border` outline; `Warning` for the cards without a match, `Danger` when `git` fails. |
+| Bind row | In a result card: color dot, name and one line of `TextMuted` (the email, or "Has <path> · adds another"), "Bind" in `Accent` at the end. 44 DIPs high, hairline above. The whole row is the target. |
+| Card actions | A 40 DIP row under the answer, hairline above: `Accent` text buttons, "Open in Finder" at the left, "Rebind to ▾" and "Unbind" at the right ("Unbind" only when the identity lists this very folder). |
+| Rebind menu | A menu button's menu, 224 DIPs wide, opened under the card actions and right-aligned to them: `Background` fill, `Border` outline, radius 8, 4 DIPs of padding, 32 DIP entries (color dot, name, first folder or "Global" in monospace `Rem(0.85)`). No shadow. |
+| Confirm block | In a result card, under the chosen identity's row (`SurfacePressed`): one sentence and two 80×28 buttons at the right, the plain one first ("Cancel"), then the only filled button of the panel (`Accent`, "Rebind"). |
+| Overlap rows | In the overlap card: a row per identity in git's read order (dot, name, path in monospace `Rem(0.9)`), and at the end the verdict: "Used" in `Accent` 600 with a check mark for the winner, "Overridden" in `TextMuted` for the others, whose names also lose their weight. |
+| Undo bar | The last row of the result card, 36 DIPs high, hairline above: "Bound to <identity> ·" and an `Accent` "Undo" text button. A 2 DIP line on the bar's bottom edge, `Accent` at 45%, is as wide as the time left of the card's width, in fifths. |
 | Identity list | A group heading, then one `Surface` container with `Border` dividers between rows. |
 | Source list row | A color dot, name and email on two lines, an optional folder symbol; `SurfacePressed` fill when selected. |
 | Color choice | A 14 DIP dot in the preset color with its name as `Label`; the chosen one has a ring and a check mark. |
@@ -272,7 +278,9 @@ Overlays share focus and Escape behavior; see
 [Overlays](https://github.com/egoist/mygo/blob/v0.3.6/docs/ui/overlays.md). Rules of thumb:
 
 - Prefer undo over confirmation. Binding a folder needs no confirmation and can be undone. Confirm only what cannot
-  be undone, with a button named for the action ("Delete"), not "OK", and Cancel as the Escape action.
+  be undone, with a button named for the action ("Delete"), not "OK", and Cancel as the Escape action. The one
+  exception is giving a global identity a folder, which changes what every other folder uses: it asks first, inside
+  the result card, not in a dialog.
 - Do not stack dialogs, and do not use a dialog for an error.
 - Errors say what happened and what to do, on the card or form where they happened (`Error`, or a
   [form](https://github.com/egoist/mygo/blob/v0.3.6/docs/ui/form.md) field).
@@ -310,7 +318,27 @@ The result card has two parts with a divider between them:
   badge (radius 9), the identity's name and "Git uses this identity here", gap `Space(3)`; below them three rows,
   "Alias", "Email" and "Folders", with a label column `Space(14)` (56) wide, lined up with the name (left padding
   `Space(15)`, 60). Without a match: the sentence for the case, 600, on a `Warning` outline. `git` failed: "Could not
-  run git: <reason>" in `Danger`, on a `Danger` outline.
+  run git: <reason>" in `Danger`, on a `Danger` outline. In "Folders" each path has its own line.
+- Binding. Mockup states: no match, rebinding to a global identity (the confirmation), matched (by a parent folder, or by the folder itself
+  with "Unbind"), the rebind menu, already covered, overlap, the undo bar, and after undo.
+  - No match: the sentence, a "Bind to" heading (`Rem(0.9)`, 600, `TextMuted`) and one bind row per identity, then a
+    last 40 DIP row with "New Identity and Bind Here" (an `Accent` text button with a plus). One tap binds; there is
+    no confirmation. A folder has no match only when there is no global identity, so the list never has one.
+  - Rebinding to a global identity: choosing it in the "Rebind to" menu closes the menu and adds, under the card
+    actions, its row (marked with `SurfacePressed`) and the confirm block: "After binding, <name> applies only to
+    this folder, not globally." "Cancel" closes the block; "Rebind" does it.
+  - Matched: the card actions row under the details. "Unbind" is absent when only a parent folder covers the
+    folder; nothing else explains it, since "Folders" lists the covering path. "Rebind to" lists every other identity.
+  - Already covered: the bind did not change anything. The card keeps its answer and gains a note row (`Rem(0.9)`,
+    `TextMuted`, may wrap to two lines): "<name> already covers this folder with <path>. Nothing changed."
+  - Overlap: a card of its own above the matched one, with the folder in its context line, "<n> identities cover this
+    folder", one line of `TextMuted` ("Git reads them in this order; the last one wins."), the overlap rows, and the
+    two actions stacked under a hairline, `Accent` text buttons aligned left: "Use only <winner> here" and "Remove
+    <path> from <loser>". The card has the plain `Border`, since nothing is wrong.
+  - Undo: after a bind, rebind or "Use only", the undo bar is the last row of the matched card. The countdown line
+    shortens once a second (`c.After` from the absolute deadline), five steps; no animation. After "Undo" the card
+    returns to what it was, with "Undone" next to the clear button for 1.2 seconds, like "Copied". Unbinding shows
+    no bar.
 
 Identity list rows: padding `Space(2.25)`×`Space(3)` (9×12), a 10 DIP color dot (the same as in the accounts window's source list), gap
 `Space(2.5)` (10), the name and the email on two lines, and at the end the folders: the first one, "+N" when there
@@ -322,8 +350,8 @@ between the title row and the footer is the scroll view. In the empty state the 
 replaces it. Both open the accounts window on a new draft.
 
 Planned (product.md): a settings button in the title bar; About and Recheck in the footer; "Import" when there are no
-identities; a connectivity dot, an expand arrow and problem bars on identity rows; bind,
-unbind and rebind actions on result cards.
+identities; a connectivity dot, an expand arrow and problem bars on identity rows. Bind, unbind and rebind on result
+cards are designed in the mockup and not built yet.
 
 ## The accounts window
 
