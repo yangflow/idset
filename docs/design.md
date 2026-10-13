@@ -340,7 +340,7 @@ The result card has two parts with a divider between them:
     its own sits above the no-match card, the same way the overlap card sits above the matched one. The header is
     one line and the paths are middle-truncated, so the card's height never changes. The no-match card below is
     unchanged, so the bind list still works; in its "Has <path> · adds another" lines the middle of the path gives way to an
-    ellipsis and the rest stays. Mockup states: rename, move (a long old path), after "Change to This Path" and after
+    ellipsis and the rest stays: "Has ~/…/payments-gateway/ · adds another". Mockup states: rename, move (a long old path), after "Change to This Path" and after
     "Keep Old Path".
     - "Change to This Path": the card is gone and the folder matches, so the matched card shows with "Updated" next
       to the copy button for 1.2 seconds, like "Copied". There is no undo bar: only bind, rebind and "Use only" have
@@ -355,6 +355,11 @@ Identity list rows: padding `Space(2.25)`×`Space(3)` (9×12), a 10 DIP color do
 `Space(2.5)` (10), the name and the email on two lines, and at the end the folders: the first one, "+N" when there
 are more, "Global" for a global identity, "no folders" without any. A long first folder is middle-truncated (at
 most half the row) and " +N" always stays; the name and email are single lines too.
+
+A path on one line is shortened in the middle only, the same way everywhere (the stale-path prompt's rows, the "Has
+<path> · adds another" lines of the bind list, the folder of an identity row): its start ("~/", "/" or a drive such
+as "C:/") and its last folder always stay, and what lies between gives way to an ellipsis, "~/…/payments-gateway/".
+Only when even those do not fit is the last folder cut at its end. The full path is in the tooltip.
 
 Identity rows open the accounts window on their identity. "Add Identity" (an `Accent` text button with a plus) sits at
 the left of the fixed footer, "Quit" at the right, so that it stays reachable however long the list is: the content

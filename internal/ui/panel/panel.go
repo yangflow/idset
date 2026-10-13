@@ -29,7 +29,7 @@ type Copy struct {
 	NoFolders, Identities, Reload, RevealFinder, RevealExplorer, RevealFiles, AddIdentity,
 	OpenFinder, OpenExplorer, OpenFiles, BindTo, Bind, BindLabel, GlobalIdentity, NewBound, Cancel, Rebind, RebindTo,
 	Unbind, OverlapTitle, OverlapHint, Used, Overridden, OnlyUse, RemoveFrom, Has, ConfirmGlobal, Covered, BoundTo,
-	Undo, Undone, BindFailed, BindRegenFailed string
+	Undo, Undone, BindFailed, BindRegenFailed, StaleHead, StaleOld, StaleNew, StaleFix, StaleKeep, Updated string
 }
 
 var translations = func() map[string]Copy {
@@ -152,6 +152,9 @@ func (s *Screen) resultMessage() string {
 			return fmt.Sprintf(s.text.Matched, s.label(a))
 		}
 		return ""
+	}
+	if a, ok := s.stale(); ok {
+		return s.unresolved(s.result.Kind) + ". " + s.label(a) + " " + s.text.StaleHead
 	}
 	return s.unresolved(s.result.Kind)
 }

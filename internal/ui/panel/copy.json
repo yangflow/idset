@@ -68,7 +68,13 @@
     "Undo": "Undo",
     "Undone": "Undone",
     "BindFailed": "Could not change the bindings: %s",
-    "BindRegenFailed": "Saved, but the generated configuration could not be rewritten: %s."
+    "BindRegenFailed": "Saved, but the generated configuration could not be rewritten: %s.",
+    "StaleHead": "points to a folder that is gone",
+    "StaleOld": "Old",
+    "StaleNew": "New",
+    "StaleFix": "Change to This Path",
+    "StaleKeep": "Keep Old Path",
+    "Updated": "Updated"
   },
   "zh-Hans": {
     "Quit": "退出",
@@ -139,6 +145,12 @@
     "Undo": "撤销",
     "Undone": "已撤销",
     "BindFailed": "无法修改绑定：%s",
-    "BindRegenFailed": "已保存，但生成的配置没能重新写入：%s。"
+    "BindRegenFailed": "已保存，但生成的配置没能重新写入：%s。",
+    "StaleHead": "还指向一个已经不在的路径",
+    "StaleOld": "旧路径",
+    "StaleNew": "新路径",
+    "StaleFix": "改成这次的路径",
+    "StaleKeep": "保留旧路径",
+    "Updated": "已更新"
   }
 }

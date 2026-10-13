@@ -2,6 +2,7 @@ package panel
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/egoist/mygo/ui"
@@ -214,7 +215,7 @@ func (s *Screen) noMatchCard(c *ui.Context, r *match.Result) {
 				s.act.NewIdentityFor(r.Root)
 			}
 		})
-		if s.failure != "" {
+		if s.failure != "" && !s.staleShown() {
 			s.bar(c, s.failure, t.Danger)
 		}
 	})
@@ -236,11 +237,15 @@ func (s *Screen) bindRow(c *ui.Context, a account.Account) {
 		ui.Column(c).Grow(1).Gap(t.Space(0.25)).Children(func() {
 			// One line each, cut with an ellipsis, so that every row is as high as the others on any font.
 			ui.Text(c, s.label(a)).FontWeight(600).SingleLine().Tooltip(s.label(a))
-			note := orDefault(a.GitUserEmail, s.text.NoEmail)
+			face := pathFace{size: t.Rem(0.9), color: t.TextMuted}
 			if p := usablePaths(a); !a.Scope.Global && len(p) > 0 {
-				note = fmt.Sprintf(s.text.Has, p[0])
+				// The path gives way in the middle; "Has" and "adds another" stay.
+				before, after, _ := strings.Cut(s.text.Has, "%s")
+				pathLine(c, before, p[0], after, face)
+			} else {
+				note := orDefault(a.GitUserEmail, s.text.NoEmail)
+				face.apply(ui.Text(c, note)).SingleLine().Tooltip(note)
 			}
-			ui.Text(c, note).FontSize(t.Rem(0.9)).TextColor(t.TextMuted).SingleLine().Tooltip(note)
 		})
 		ui.Text(c, s.text.Bind).TextColor(t.Accent).Width(t.Space(11)).TextAlign(ui.End)
 	})
@@ -295,5 +300,49 @@ func (s *Screen) overlapCard(c *ui.Context, r *match.Result) {
 				}
 			}
 		})
+	})
+}
+
+// staleShown reports whether the stale path prompt is above the card.
+func (s *Screen) staleShown() bool {
+	_, ok := s.stale()
+	return ok
+}
+
+// staleCard offers to change an identity's gone path to the folder that replaced it. It is a card of its own above
+// the no-match card, and every line is one line, so its height is the same for any path: the header, the old and
+// new path, and the two buttons.
+func (s *Screen) staleCard(c *ui.Context, st *match.Stale, a account.Account, root string) {
+	t := c.Theme()
+	ui.Column(c).Key("stale").Radius(10).Background(t.Surface).Border(1, t.Border).Clip().Children(func() {
+		ui.Row(c).Height(t.Space(11)).PaddingX(t.Space(3)).Gap(t.Space(2.5)).AlignItems(ui.Center).Children(func() {
+			dot(c, a, t.Space(2.5))
+			ui.Text(c, s.label(a)).FontWeight(600).SingleLine().Shrink(0).MaxWidthPercent(50).Tooltip(s.label(a))
+			ui.Text(c, s.text.StaleHead).SingleLine().MinWidth(0).Grow(1)
+		})
+		face := pathFace{mono: true, size: t.Rem(0.85), color: t.Text}
+		for _, row := range []struct{ key, label, path string }{
+			{"old", s.text.StaleOld, s.env.Tilde(s.env.Expand(st.Path))},
+			{"new", s.text.StaleNew, s.env.Tilde(root)},
+		} {
+			ui.Divider(c)
+			ui.Row(c.Key("stale-" + row.key)).Height(t.Space(9)).PaddingX(t.Space(3)).Gap(t.Space(2)).AlignItems(ui.Center).Children(func() {
+				ui.Text(c, row.label).FontSize(t.Rem(0.85)).TextColor(t.TextMuted).Width(t.Space(10)).Shrink(0)
+				pathLine(c, "", strings.TrimSuffix(row.path, "/"), "", face).Grow(1)
+			})
+		}
+		ui.Divider(c)
+		ui.Row(c).Gap(t.Space(1)).PaddingX(t.Space(2)).Height(t.Space(10)).AlignItems(ui.Center).Children(func() {
+			if s.textButton(c, "stale-fix", s.text.StaleFix, nil, nil).Clicked() {
+				s.fixStale()
+			}
+			ui.Spacer(c)
+			if s.textButton(c, "stale-keep", s.text.StaleKeep, nil, nil).Clicked() {
+				s.keepStale()
+			}
+		})
+		if s.failure != "" {
+			s.bar(c, s.failure, t.Danger)
+		}
 	})
 }

@@ -20,6 +20,8 @@ const (
 	// undoSteps is how many steps the countdown line on the undo bar shortens in.
 	undoSteps = 5
 	undoneFor = 1200 * time.Millisecond
+	// updatedFor is how long "Updated" shows after a stale path was changed.
+	updatedFor = 1200 * time.Millisecond
 )
 
 // undoBar is what Undo puts back, and until when.
@@ -40,6 +42,9 @@ type binding struct {
 	note, failure string
 	undo          *undoBar
 	undoneUntil   time.Time
+	updatedUntil  time.Time
+	// staleKept hides the stale path prompt of the result on the card.
+	staleKept bool
 	// say is a sentence for screen readers, said once by the next frame.
 	say string
 }
@@ -50,7 +55,7 @@ func (s *Screen) run(op bind.Op) {
 		return
 	}
 	op.Dir, op.Root = s.lastDir, s.result.Root
-	s.binding = binding{busy: true}
+	s.binding = binding{busy: true, staleKept: s.staleKept}
 	s.act.Run(op)
 }
 
@@ -76,6 +81,26 @@ func (s *Screen) confirmRebind() {
 func (s *Screen) unbind() { s.run(bind.Op{Kind: bind.KindUnbind, From: s.result.ID}) }
 
 func (s *Screen) useOnly() { s.run(bind.Op{Kind: bind.KindUseOnly, To: s.result.ID}) }
+
+// stale is the identity whose gone path the folder on the card probably replaced, while the prompt shows.
+func (s *Screen) stale() (account.Account, bool) {
+	if s.staleKept || s.result == nil || s.result.Kind != match.NoMatch || s.result.Stale == nil {
+		return account.Account{}, false
+	}
+	return s.find(s.result.Stale.ID)
+}
+
+// fixStale changes the stale path to the folder on the card.
+func (s *Screen) fixStale() {
+	if _, ok := s.stale(); ok {
+		s.run(bind.Op{Kind: bind.KindFixPath, From: s.result.Stale.ID, Path: s.result.Stale.Path})
+	}
+}
+
+// keepStale hides the prompt for this result and changes nothing else.
+func (s *Screen) keepStale() {
+	s.staleKept, s.failure = true, ""
+}
 
 func (s *Screen) removePath(id, path string) {
 	s.run(bind.Op{Kind: bind.KindRemovePath, From: id, Path: path})
@@ -137,6 +162,9 @@ func (s *Screen) OpDone(o bind.Outcome) {
 	case o.Op.Kind == bind.KindUndo:
 		s.undoneUntil = s.now().Add(undoneFor)
 		s.say = s.text.Undone
+	case o.Op.Kind == bind.KindFixPath && o.Result.Kind == match.Matched:
+		s.updatedUntil = s.now().Add(updatedFor)
+		s.say = s.text.Updated
 	case o.Undo != nil:
 		if a, ok := s.find(o.Op.To); ok {
 			s.undo = &undoBar{before: o.Undo, who: s.label(a), until: s.now().Add(undoFor)}

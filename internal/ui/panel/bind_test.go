@@ -53,10 +53,17 @@ func matched(root, id string, exact bool, covering ...match.Cover) match.Result 
 	return match.Result{Kind: match.Matched, Root: root, ID: id, Exact: exact, Covering: covering}
 }
 
+// shows reports whether the frame shows text, either as one text or as the pieces of a path line side by side,
+// whose spaces are padding and not text.
+func shows(tt *ui.Tester, text string) bool {
+	flat := func(s string) string { return strings.ReplaceAll(s, " ", "") }
+	return tt.HasText(text) || strings.Contains(flat(strings.Join(tt.Texts(), "")), flat(text))
+}
+
 func want(t *testing.T, tt *ui.Tester, texts ...string) {
 	t.Helper()
 	for _, text := range texts {
-		if !tt.HasText(text) {
+		if !shows(tt, text) {
 			t.Errorf("missing %q in %q", text, tt.Texts())
 		}
 	}

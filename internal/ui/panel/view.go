@@ -246,18 +246,24 @@ func usablePaths(a account.Account) []string {
 	return out
 }
 
-// folders is the short scope at the end of a list row: the first folder and how many more.
-func (s *Screen) folders(a account.Account) string {
-	paths := usablePaths(a)
+// folderTag is the short scope at the end of a list row: the first folder and, after it, how many more. The
+// folder gives way in the middle before the row's name does, and " +N" always stays.
+func (s *Screen) folderTag(c *ui.Context, a account.Account) {
+	t := c.Theme()
+	face := pathFace{mono: true, size: t.Rem(0.85), color: t.TextMuted}
+	folders := usablePaths(a)
 	switch {
 	case a.Scope.Global:
-		return s.text.Global
-	case len(paths) == 0:
-		return s.text.NoFolders
-	case len(paths) == 1:
-		return paths[0]
+		face.apply(ui.Text(c, s.text.Global)).SingleLine()
+	case len(folders) == 0:
+		face.apply(ui.Text(c, s.text.NoFolders)).SingleLine()
+	default:
+		suffix := ""
+		if len(folders) > 1 {
+			suffix = fmt.Sprintf(" +%d", len(folders)-1)
+		}
+		pathLine(c, "", folders[0], suffix, face).MaxWidthPercent(50).Shrink(0)
 	}
-	return fmt.Sprintf("%s +%d", paths[0], len(paths)-1)
 }
 
 // folderLines are the folders an identity applies to, one per line: "Global" or "no folders" in a line of their own.
@@ -291,11 +297,11 @@ func (s *Screen) row(c *ui.Context, a account.Account) {
 	}
 	row.Children(func() {
 		dot(c, a, t.Space(2.5))
-		ui.Column(c).Grow(1).Gap(t.Space(0.25)).Children(func() {
-			ui.Text(c, s.label(a)).FontWeight(600)
-			ui.Text(c, orDefault(a.GitUserEmail, s.text.NoEmail)).FontSize(t.Rem(0.9)).TextColor(t.TextMuted)
+		ui.Column(c).Grow(1).MinWidth(0).Gap(t.Space(0.25)).Children(func() {
+			ui.Text(c, s.label(a)).FontWeight(600).SingleLine()
+			ui.Text(c, orDefault(a.GitUserEmail, s.text.NoEmail)).FontSize(t.Rem(0.9)).TextColor(t.TextMuted).SingleLine()
 		})
-		ui.Text(c, s.folders(a)).Font("monospace").FontSize(t.Rem(0.85)).TextColor(t.TextMuted)
+		s.folderTag(c, a)
 	})
 }
 
@@ -357,6 +363,9 @@ func (s *Screen) resultCard(c *ui.Context) {
 		}
 		s.matchedCard(c, r, a)
 	case r.Kind == match.NoMatch:
+		if a, ok := s.stale(); ok {
+			s.staleCard(c, r.Stale, a, r.Root)
+		}
 		s.noMatchCard(c, r)
 	default:
 		path := r.Root
@@ -374,9 +383,14 @@ func (s *Screen) frame(c *ui.Context, key string, border ui.Color, path string, 
 	ui.Column(c).Key(key).Radius(10).Background(t.Surface).Border(1, border).Clip().Children(func() {
 		ui.Row(c).Gap(t.Space(1)).Padding(t.Space(2), t.Space(2), t.Space(2), t.Space(3)).AlignItems(ui.Center).Children(func() {
 			ui.Text(c, s.env.Tilde(path)).Font("monospace").FontSize(t.Rem(0.9)).TextColor(t.TextMuted).Grow(1).Selectable()
-			if left := s.undoneUntil.Sub(s.now()); left > 0 {
-				ui.Text(c, s.text.Undone).FontSize(t.Rem(0.85)).TextColor(t.TextMuted)
-				c.After(left)
+			for _, ack := range []struct {
+				until time.Time
+				text  string
+			}{{s.undoneUntil, s.text.Undone}, {s.updatedUntil, s.text.Updated}} {
+				if left := ack.until.Sub(s.now()); left > 0 {
+					ui.Text(c, ack.text).FontSize(t.Rem(0.85)).TextColor(t.TextMuted)
+					c.After(left)
+				}
 			}
 			if copyable {
 				s.copyButton(c, path)

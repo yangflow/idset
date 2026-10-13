@@ -112,8 +112,9 @@ h1 { flex:1; margin:0; font-size:15px }
 .result .stale-head .rest { flex:1 1 auto; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
 .result .path-row { display:flex; align-items:center; gap:8px; height:36px; padding:0 12px; border-top:1px solid var(--border) }
 .result .path-row .key { flex:none; width:40px; font-size:12px; color:var(--muted) }
-/* Middle truncation: the head of a path takes an ellipsis, its last characters (and any suffix) never shrink. */
+/* Middle truncation: the start of a path ("~/", "/" or a drive) and its last folder (and any suffix) never shrink; what lies between takes the ellipsis. */
 .mid { display:flex; min-width:0; white-space:pre; font-family:ui-monospace,monospace; font-size:12px }
+.mid .ml { flex:none }
 .mid .mh { min-width:0; overflow:hidden; text-overflow:ellipsis }
 .mid .mt { flex:none }
 .result .path-row .mid { flex:1 }
@@ -210,8 +211,11 @@ const ids = [
   { label:'client', alias:'gitlab-client', email:'bob@client.example', c:'224,122,31', cl:'240,165,95', scope:['~/work/client/'] },
   { label:'', alias:'', email:'nobody@example.com', c:'142,68,173', cl:'190,130,215', scope:['~/misc/'] },
 ];
-// A path in one line: the last 14 characters stay, the rest before them gives way to an ellipsis; the title carries the full text.
-const mid = (p, suffix = '') => `<span class="mid" title="${p}"><span class="mh">${p.slice(0, -14)}</span><span class="mt">${p.slice(-14)}${suffix}</span></span>`;
+// A path in one line: its start ("~/", "/" or a drive) and its last folder stay, what lies between them gives way to an ellipsis; the title carries the full text.
+const mid = (p, suffix = '') => {
+  const [, lead = '', body = '', last = ''] = p.match(/^(~\/|[A-Za-z]:\/|\/)?(?:(.*?)\/)?([^/]+\/?)$/);
+  return `<span class="mid" title="${p}"><span class="ml">${lead}</span><span class="mh">${body}</span><span class="mt">${body ? '/' : ''}${last}${suffix}</span></span>`;
+};
 const [work, personal, client, unnamed] = ids;
 const workExact = { ...work, scope:['~/work/api/', '~/src/new/'] };
 const workBound = { ...work, scope:['~/work/', '~/src/new/', '~/scratch/notes/'] };
