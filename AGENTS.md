@@ -31,7 +31,8 @@ internal/ui/panel/       the panel
 internal/ui/accounts/    the account window: list, editor, delete confirmation; Backend holds the store, key and
                          `git config` work behind its actions
 internal/ui/locale/      system language to UI language (Simplified Chinese, English), shared by all catalogs
-internal/paths/          stored path form (forward slashes, `~`) to absolute and back; case-insensitive on Windows
+internal/paths/          stored path form (forward slashes, `~`) to absolute and back; case-insensitive on Windows;
+                         the split of a path for display (start, middle, last folder)
 internal/fsutil/         atomic writes, refusing symlinks, following symlinks to the real file
 internal/account/        identity fields, accounts.json encoding, validation before save; fields are sorted by
                          JSON key, enforced by a test
@@ -44,7 +45,8 @@ internal/keyfile/        whether a private key may be deleted with its identity 
 internal/sysexec/        running system commands: timeout, no stdin, no shell (ADR 0004)
 internal/bind/           binding a folder to an identity, unbinding, rebinding and undo: pure plans, and a runner that
                          writes one plan with one store write
-internal/match/          which identity a dropped folder uses; the `git` calls are injectable, tests use a fake
+internal/match/          which identity a dropped folder uses, or the gone gitdir path it replaced; the `git` calls are
+                         injectable, tests use a fake
 internal/trayicon/       the tray icon, drawn in code, no image files
 resources/               shipped licenses and product assets
 scripts/                 checks, version bump, secret scan, packaging
