@@ -36,14 +36,6 @@ h1 { flex:1; margin:0; font-size:13px; font-weight:600 }
 [data-tip].tip-below::after { bottom:auto; top:calc(100% + 6px) }
 [data-tip].tip-end::after { text-align:left }
 [data-tip]:hover::after, [data-tip].pinned::after { display:block }
-/* The chrome the real app has today, kept only for the comparison. */
-.panel.old header, .panel.old footer { gap:8px; padding:0 16px }
-.panel.old header { height:42px }
-.panel.old footer { height:56px; justify-content:flex-end }
-.panel.old h1 { font-size:15px; font-weight:700 }
-.figure { display:flex; flex-direction:column; gap:8px; flex:none }
-.figure .cap { font-size:12px; line-height:1.5; color:#fff }
-.figure .cap b { font-weight:600 }
 .content { flex:1; overflow:auto; padding:16px; display:flex; flex-direction:column; gap:12px }
 .content > * { flex-shrink:0 }
 .panel button { padding:5px 10px; border:1px solid var(--border); border-radius:6px; background:var(--surface); color:var(--text); font:inherit }
@@ -182,17 +174,16 @@ h1 { flex:1; margin:0; font-size:13px; font-weight:600 }
 <aside class="controls">
   <div><h2>State</h2><div class="group" id="states"></div></div>
   <div><h2>Scheme</h2><div class="group" id="schemes"></div></div>
-  <div><h2>Chrome</h2><div class="group" id="chromes"></div></div>
   <div><h2>Footer icons</h2><div class="group" id="icons"></div></div>
   <div><h2>Height</h2><div class="group" id="heights"></div></div>
   <div><h2>Language</h2><div class="group" id="langs"></div></div>
-  <div class="hint">URL: <code>?state=…&amp;scheme=dark&amp;lang=zh&amp;chrome=compare&amp;icons=today&amp;height=full</code><br><kbd>←</kbd> <kbd>→</kbd> switch state.<br>Pin a tooltip: <code>&amp;tip=quit</code> (settings, add, about, recheck, quit).</div>
+  <div class="hint">URL: <code>?state=…&amp;scheme=dark&amp;lang=zh&amp;icons=today&amp;height=full</code><br><kbd>←</kbd> <kbd>→</kbd> switch state.<br>Pin a tooltip: <code>&amp;tip=quit</code> (settings, add, about, recheck, quit).</div>
 </aside>
 <div id="stage" style="display:flex;gap:24px;align-items:flex-start"></div>
 <script>
 const TEXT = {
   zh: {
-    quit:'退出', settings:'设置', about:'关于 Idset', recheck:'重新检查', current:'现在', compact:'紧凑', contentH:n => `内容区 ${n} DIP`,
+    quit:'退出', settings:'设置', about:'关于 Idset', recheck:'重新检查',
     loading:'正在读取配置…', dropLine:'拖入文件夹，或', dropHint:'看看这个目录会用哪个身份推送', choose:'选择文件夹…', chooseShort:'选择…',
     empty:'还没有身份', emptyHint:'让每个文件夹用自己的 Git 和 SSH 身份。', add:'添加身份',
     filter:'筛选身份', none:'没有匹配的身份', unnamed:'（未命名）', readonly:'accounts.json 读不出来', readonlyShort:'修好前只读',
@@ -208,7 +199,7 @@ const TEXT = {
     overlapTitle:n => `${n} 个身份覆盖这里`, onlyUse:n => `这里只用 ${n}`, removeFrom:(n, p) => `从 ${n} 去掉 ${p}`, boundTo:n => `已绑到 ${n}`,
   },
   en: {
-    quit:'Quit', settings:'Settings', about:'About Idset', recheck:'Re-check', current:'Today', compact:'Compact', contentH:n => `Content area ${n} DIP`,
+    quit:'Quit', settings:'Settings', about:'About Idset', recheck:'Re-check',
     loading:'Reading configuration…', dropLine:'Drop a folder, or', dropHint:'See which identity pushes from it', choose:'Choose Folder…', chooseShort:'Choose…',
     empty:'No identities yet', emptyHint:'Give each folder its own Git and SSH identity.', add:'Add Identity',
     filter:'Filter identities', none:'No matching identities', unnamed:'(unnamed)', readonly:'accounts.json cannot be read', readonlyShort:'Read-only until fixed',
@@ -275,7 +266,6 @@ const view = {
   scheme: q.get('scheme') === 'dark' ? 'dark' : 'light',
   lang: q.get('lang') === 'zh' ? 'zh' : 'en',
   height: q.get('height') === 'full' ? 'full' : 'fixed',
-  chrome: ['current', 'compare'].includes(q.get('chrome')) ? q.get('chrome') : 'compact',
   icons: q.get('icons') === 'today' ? 'today' : 'all',
   tip: q.get('tip') || '',
 };
@@ -365,13 +355,9 @@ function buttons(id, options, key) {
   document.getElementById(id).onclick = e => { const v = e.target.dataset.value; if (v) { view[key] = v; render(); } };
 }
 
-// The title row and footer. "Today" shows only the actions that work in the app now: add and quit (settings does not exist yet).
-function chrome(old, T) {
+// The title row and footer. "Built today" shows only the actions that work in the app now: add and quit (settings does not exist yet).
+function chrome(T) {
   const bare = ['loading', 'readonly', 'empty'].includes(view.state), all = view.icons === 'all';
-  if (old) {
-    return { head:`<header><h1>Idset</h1></header>`,
-      foot:`<footer>${bare ? '' : `<button class="text" style="margin-right:auto">${icon.plus + T.add}</button>`}<button>${T.quit}</button></footer>` };
-  }
   const tool = (name, glyph, label, pos = '') => `<button class="tool ${pos} ${view.tip === name ? 'pinned' : ''}" data-tip="${label}" aria-label="${label}">${icon[glyph]}</button>`;
   // Add Identity lives in the fixed footer so it stays reachable however long the list is; the empty state has its own button.
   // Re-check has nothing to check without identities, so it goes with Add in the states that have none.
@@ -384,21 +370,14 @@ function chrome(old, T) {
 function render() {
   const T = TEXT[view.lang];
   document.documentElement.dataset.scheme = view.scheme;
-  const one = old => {
-    const c = chrome(old, T);
-    return `<div class="panel${old ? ' old' : ''}${view.height === 'full' ? ' full' : ''}">${c.head}<div class="content">${panel(view.state, T)}</div>${c.foot}</div>`;
-  };
-  const modes = view.chrome === 'compare' ? [true, false] : [view.chrome === 'current'];
-  document.getElementById('stage').innerHTML = modes.map(old => `<div class="figure">${view.chrome === 'compare' ? `<div class="cap"><b>${old ? T.current : T.compact}</b> · <span class="h"></span></div>` : ''}${one(old)}</div>`).join('');
-  const heights = [...document.querySelectorAll('.figure')].map(f => f.querySelector('.content').clientHeight);
-  document.querySelectorAll('.cap .h').forEach((h, n) => { h.textContent = T.contentH(heights[n]) + (n ? ` (+${heights[n] - heights[0]})` : ''); });
+  const c = chrome(T);
+  document.getElementById('stage').innerHTML = `<div class="panel${view.height === 'full' ? ' full' : ''}">${c.head}<div class="content">${panel(view.state, T)}</div>${c.foot}</div>`;
   buttons('states', STATES, 'state');
   buttons('schemes', { light:'浅色', dark:'深色' }, 'scheme');
-  buttons('chromes', { compact:'Compact', current:'Today', compare:'Compare' }, 'chrome');
   buttons('icons', { all:'All planned', today:'Built today' }, 'icons');
   buttons('heights', { fixed:'480', full:'Full' }, 'height');
   buttons('langs', { zh:'中文', en:'English' }, 'lang');
-  history.replaceState(null, '', `?state=${view.state}&scheme=${view.scheme}&lang=${view.lang}&chrome=${view.chrome}&icons=${view.icons}&height=${view.height}${view.tip ? `&tip=${view.tip}` : ''}`);
+  history.replaceState(null, '', `?state=${view.state}&scheme=${view.scheme}&lang=${view.lang}&icons=${view.icons}&height=${view.height}${view.tip ? `&tip=${view.tip}` : ''}`);
 }
 
 onkeydown = e => {

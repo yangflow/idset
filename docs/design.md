@@ -85,8 +85,8 @@ Layout uses flexbox in device-independent pixels (DIPs); see
   identity list. The loading, read-only and no-identity states never need to scroll and are not in a scroll view, so
   their content can be centered vertically (centering only works in a container of fixed height).
 - **The panel.** Fixed 340×480. Title bar and footer are `Space(9)` (36) high, hairline included, each separated from
-  the content by a divider; they are compact on purpose: the content is the point, and the chrome gives it 26 DIPs
-  more than the 42 and 56 DIP bars it replaced (406 instead of 380 inside the outline). Content padding `Space(4)` (16), gap between blocks `Space(3)` (12). Cards, the identity list
+  the content by a divider; they are compact on purpose: the content is the point, and the chrome takes 72 DIPs of the
+  480 and leaves 406 inside the outline. Content padding `Space(4)` (16), gap between blocks `Space(3)` (12). Cards, the identity list
   and the drop zone have a 10 DIP corner radius. The full measurements are in [The panel](#the-panel) and
   [tokens.md](../design/tokens.md).
 
