@@ -121,3 +121,9 @@ func Matching(blocks []Block, repoRoot string, env paths.Env) []Block {
 	}
 	return out
 }
+
+// Exact reports whether a gitdir path names the work tree root itself, not a parent folder of it.
+func Exact(repoRoot, stored string, env paths.Env) bool {
+	stored = Normalize(stored, env)
+	return stored != "" && env.Equal(resolve(stored, env), resolve(repoRoot, env))
+}

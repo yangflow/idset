@@ -4,6 +4,7 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"reflect"
 	"runtime"
 	"strings"
 	"testing"
@@ -285,5 +286,57 @@ func TestReloadSeesChangesMadeOutside(t *testing.T) {
 	s.Reload()
 	if s.ReadOnly() != nil {
 		t.Fatal("fixing the file lifts the read-only state")
+	}
+}
+
+func TestUpdateManyAndRestoreManyWriteAndRegenerateOnce(t *testing.T) {
+	calls := 0
+	clk := newClock()
+	s := Open(t.TempDir(), clk.now, WithRegenerate(func([]account.Account) error { calls++; return nil }))
+	work, home, other := identity("work", false), identity("home", true), identity("other", false)
+	for _, a := range []account.Account{work, home, other} {
+		if err := s.Add(a); err != nil {
+			t.Fatal(err)
+		}
+	}
+	before := s.Accounts()
+	calls = 0
+	moved, scoped := before[0], before[1]
+	moved.Scope.Paths = nil
+	scoped.Scope = account.Scope{Paths: []string{"~/scratch/"}}
+	if err := s.UpdateMany([]account.Account{moved, scoped}); err != nil {
+		t.Fatal(err)
+	}
+	if calls != 1 {
+		t.Fatalf("one regeneration for two identities, got %d", calls)
+	}
+	got := s.Accounts()
+	if len(got[0].Scope.Paths) != 0 || got[1].Scope.Global || got[1].Scope.Paths[0] != "~/scratch/" {
+		t.Fatalf("changes not stored: %+v", got)
+	}
+	if !got[0].UpdatedAt.After(before[0].UpdatedAt) || !got[1].UpdatedAt.After(before[1].UpdatedAt) || !got[2].UpdatedAt.Equal(before[2].UpdatedAt) {
+		t.Fatal("UpdatedAt is stamped on the changed identities only")
+	}
+	calls = 0
+	if err := s.RestoreMany([]account.Account{before[0], before[1]}); err != nil {
+		t.Fatal(err)
+	}
+	if calls != 1 {
+		t.Fatalf("one regeneration for the restore, got %d", calls)
+	}
+	if after := s.Accounts(); !reflect.DeepEqual(after, before) {
+		t.Fatalf("restore must give back the exact previous state:\n%+v\n%+v", after, before)
+	}
+	reopened := Open(s.path[:len(s.path)-len(FileName)], clk.now)
+	if !reflect.DeepEqual(reopened.Accounts(), before) {
+		t.Fatal("restore must be on disk")
+	}
+	calls = 0
+	ghost := identity("ghost", true)
+	if err := s.UpdateMany([]account.Account{moved, ghost}); !errors.Is(err, ErrNotFound) || calls != 0 {
+		t.Fatalf("an unknown identity writes nothing: %v %d", err, calls)
+	}
+	if !reflect.DeepEqual(s.Accounts(), before) {
+		t.Fatal("nothing may change when one is unknown")
 	}
 }
