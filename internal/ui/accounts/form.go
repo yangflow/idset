@@ -95,6 +95,18 @@ func (f *form) setScope(index int) {
 	}
 }
 
+// addFolder adds a stored path to the folders, switching a global identity to folders with that one path.
+func (f *form) addFolder(stored string) {
+	if f.cur.global {
+		f.setScope(1)
+		f.cur.paths = []string{stored}
+		return
+	}
+	if !slices.Contains(f.cur.paths, stored) {
+		f.cur.paths = append(f.cur.paths, stored)
+	}
+}
+
 // setProvider changes the platform and moves the port to one the platform accepts.
 func (f *form) setProvider(p account.Provider) {
 	old := f.cur.provider
