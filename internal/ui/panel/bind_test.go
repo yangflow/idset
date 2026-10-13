@@ -146,10 +146,10 @@ func TestNoMatchWithoutIdentitiesStillOffersANewOne(t *testing.T) {
 }
 
 func TestMatchedByAParentOffersRebindButNotUnbind(t *testing.T) {
-	_, tt, r := card(t, matched(api, "work", false), work(), client(), personal())
-	want(t, tt, "work", "Open in Finder", "Rebind to")
+	s, tt, r := card(t, matched(api, "work", false), work(), client(), personal())
+	want(t, tt, "work", s.openLabel(), "Rebind to")
 	wantNot(t, tt, "Unbind", "Undo")
-	click(t, tt, "Open in Finder")
+	click(t, tt, s.openLabel())
 	if !slices.Equal(r.folders, []string{api}) {
 		t.Fatalf("open: %v", r.folders)
 	}
@@ -157,7 +157,7 @@ func TestMatchedByAParentOffersRebindButNotUnbind(t *testing.T) {
 
 func TestExactMatchOffersUnbind(t *testing.T) {
 	s, tt, r := card(t, matched(api, "work", true), work(), client())
-	_, hOpen := size(t, tt, "Open in Finder")
+	_, hOpen := size(t, tt, s.openLabel())
 	_, hRebind := size(t, tt, "Rebind to")
 	_, hUnbind := size(t, tt, "Unbind")
 	if hOpen != hRebind || hRebind != hUnbind {
@@ -264,7 +264,7 @@ func TestOverlapListsGitsOrderAndOffersToSettleIt(t *testing.T) {
 	res := matched("/home/ada/work/client/app", "client", false, match.Cover{ID: "work", Path: "~/work/"}, match.Cover{ID: "client", Path: "~/work/client/"})
 	s, tt, r := card(t, res, work(), client())
 	want(t, tt, "2 identities cover this folder", "Git reads them in this order; the last one wins.", "Used", "Overridden",
-		"Use only client here", "Remove ~/work/ from work", "Open in Finder")
+		"Use only client here", "Remove ~/work/ from work", s.openLabel())
 	first, _ := tt.Find("~/work/")
 	second, _ := tt.Find("~/work/client/")
 	if first.Y >= second.Y {
@@ -289,7 +289,7 @@ func TestOverlapListsGitsOrderAndOffersToSettleIt(t *testing.T) {
 	res.Exact = true
 	_, tt, _ = card(t, res, work(), client())
 	wantNot(t, tt, "cover this folder", "Use only client here", "Remove ~/work/ from work")
-	want(t, tt, "Open in Finder")
+	want(t, tt, s.openLabel())
 	s.OpDone(bind.Outcome{Op: r.ran[1], Result: res})
 	tt.Frame()
 	wantNot(t, tt, "cover this folder")
@@ -504,5 +504,17 @@ func TestKeyboardReachesTheBindRows(t *testing.T) {
 	tt.Key(0, ui.KeyEnter)
 	if len(r.ran) != 1 || r.ran[0].To != "work" {
 		t.Fatalf("Enter binds: %+v", r.ran)
+	}
+}
+
+func TestBindRowsStayUniformWhateverTheyHoldToSay(t *testing.T) {
+	long := identity("a-very-long-identity-name-that-cannot-fit-in-one-line", "", "x@example.com", account.GitHub, 0,
+		"~/a/very/long/path/that/would/wrap/on/a/narrow/panel/with/any/font/at/all/")
+	_, tt, _ := card(t, noMatch(), work(), long, client())
+	_, h := size(t, tt, "Bind to work")
+	for _, name := range []string{"Bind to client", "Bind to " + long.Label} {
+		if _, got := size(t, tt, name); got != h {
+			t.Errorf("%s is %v high, the first row %v", name, got, h)
+		}
 	}
 }

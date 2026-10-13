@@ -234,12 +234,13 @@ func (s *Screen) bindRow(c *ui.Context, a account.Account) {
 	row.Children(func() {
 		dot(c, a, t.Space(2.5))
 		ui.Column(c).Grow(1).Gap(t.Space(0.25)).Children(func() {
-			ui.Text(c, s.label(a)).FontWeight(600)
+			// One line each, cut with an ellipsis, so that every row is as high as the others on any font.
+			ui.Text(c, s.label(a)).FontWeight(600).SingleLine().Tooltip(s.label(a))
 			note := orDefault(a.GitUserEmail, s.text.NoEmail)
 			if p := usablePaths(a); !a.Scope.Global && len(p) > 0 {
 				note = fmt.Sprintf(s.text.Has, p[0])
 			}
-			ui.Text(c, note).FontSize(t.Rem(0.9)).TextColor(t.TextMuted)
+			ui.Text(c, note).FontSize(t.Rem(0.9)).TextColor(t.TextMuted).SingleLine().Tooltip(note)
 		})
 		ui.Text(c, s.text.Bind).TextColor(t.Accent).Width(t.Space(11)).TextAlign(ui.End)
 	})
