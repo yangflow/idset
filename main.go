@@ -11,31 +11,36 @@ import (
 	"github.com/egoist/mygo/plugins/updater"
 	"github.com/egoist/mygo/plugins/updater/native"
 	"github.com/egoist/mygo/ui"
+	"github.com/yangflow/idset/internal/account"
 	"github.com/yangflow/idset/internal/apply"
 	"github.com/yangflow/idset/internal/match"
 	"github.com/yangflow/idset/internal/paths"
 	"github.com/yangflow/idset/internal/store"
 	"github.com/yangflow/idset/internal/trayicon"
+	"github.com/yangflow/idset/internal/ui/accounts"
 	"github.com/yangflow/idset/internal/ui/panel"
 )
 
 const gitTimeout = 10 * time.Second
 
-// app owns the tray, the panel window and the store. Its fields are touched on the main thread only; background
-// work reports back through win.Update.
+// app owns the tray, the panel window, the account window and the store. Its fields are touched on the main
+// thread only; background work reports back through post.
 type app struct {
-	env      paths.Env
-	dataDir  string
-	store    *store.Store
-	git      match.Git
-	text     panel.Copy
-	screen   *panel.Screen
-	win      *mygo.Window
-	tray     *mygo.Tray
-	menu     *mygo.Menu
-	openItem *mygo.MenuItem
-	hideItem *mygo.MenuItem
-	quitting bool
+	env       paths.Env
+	dataDir   string
+	store     *store.Store
+	git       match.Git
+	gitConfig accounts.GitConfig
+	text      panel.Copy
+	screen    *panel.Screen
+	win       *mygo.Window
+	tray      *mygo.Tray
+	menu      *mygo.Menu
+	openItem  *mygo.MenuItem
+	hideItem  *mygo.MenuItem
+	quitting  bool
+	// accounts is the account window while it is open, nil otherwise.
+	accounts *accountsWindow
 }
 
 func main() {
@@ -56,7 +61,8 @@ func main() {
 		slog.Error("No home directory", "error", err)
 		os.Exit(1)
 	}
-	a := &app{env: env, dataDir: apply.DefaultTarget(env).Dir, git: match.SystemGit(gitTimeout)}
+	a := &app{env: env, dataDir: apply.DefaultTarget(env).Dir, git: match.SystemGit(gitTimeout),
+		gitConfig: accounts.SystemGitConfig(gitTimeout)}
 	mygo.Use(native.Plugin)
 	mygo.App.SetActivationPolicy(mygo.ActivationPolicyAccessory)
 	mygo.App.OnBeforeQuit(func(*mygo.QuitEvent) { a.quitting = true })
@@ -78,6 +84,8 @@ func (a *app) ready() {
 		Quit:         mygo.App.Quit,
 		Reload:       func() { a.load() },
 		Reveal:       mygo.Shell.ShowItemInFolder,
+		OpenAccounts: a.openIdentity,
+		NewIdentity:  func() { a.openAccounts(accounts.Request{New: true}) },
 	})
 	// The application menu keeps the standard editing shortcuts working in text fields.
 	mygo.App.SetMenu(mygo.NewMenu([]*mygo.MenuItem{
@@ -85,6 +93,7 @@ func (a *app) ready() {
 			{Role: mygo.RoleAbout}, updater.MenuItem(), mygo.Separator(), {Role: mygo.RoleQuit},
 		}},
 		{Role: mygo.RoleEditMenu},
+		{Role: mygo.RoleWindowMenu},
 	}))
 	tray, err := mygo.NewTray(mygo.TrayOptions{
 		Icon: trayicon.PNG(runtime.GOOS == "darwin"), IconIsTemplate: runtime.GOOS == "darwin", ToolTip: a.text.TooltipIdle,
@@ -119,6 +128,7 @@ func (a *app) ready() {
 	a.hideItem = &mygo.MenuItem{Label: a.text.HidePanel, Hidden: true, Click: func(*mygo.MenuItem, *mygo.Window) { a.hide() }}
 	a.menu = mygo.NewMenu([]*mygo.MenuItem{
 		a.openItem, a.hideItem,
+		{Label: a.text.OpenAccounts, Click: func(*mygo.MenuItem, *mygo.Window) { a.openAccounts(accounts.Request{}) }},
 		mygo.Separator(),
 		{Label: a.text.Quit, Click: func(*mygo.MenuItem, *mygo.Window) { mygo.App.Quit() }},
 	})
@@ -137,16 +147,42 @@ func (a *app) ready() {
 	a.load()
 }
 
-// load reads accounts.json in the background, so that edits made outside the app show up each time.
+// load reads accounts.json in the background, so that edits made outside the app show up each time. The store
+// is opened once and read again afterwards, so that saves in the account window and loads never work on two
+// copies of the list.
 func (a *app) load() {
+	s := a.store
 	go func() {
-		s := store.Open(a.dataDir, time.Now, store.WithRegenerate(apply.Regenerate(a.env, apply.DefaultTarget(a.env), time.Now)))
-		a.win.Update(func() {
-			a.store = s
-			a.screen.SetAccounts(s.Accounts(), s.ReadOnly(), s.Path())
-			a.updateTooltip()
+		if s == nil {
+			s = store.Open(a.dataDir, time.Now, store.WithRegenerate(apply.Regenerate(a.env, apply.DefaultTarget(a.env), time.Now)))
+		} else {
+			s.Reload()
+		}
+		list, readErr, path := s.Accounts(), s.ReadOnly(), s.Path()
+		a.post(func() {
+			if a.store == nil {
+				a.store = s
+			}
+			a.showAccounts(list, readErr, path)
 		})
 	}()
+}
+
+// post runs fn on the UI thread and redraws the panel and the account window, if it is open.
+func (a *app) post(fn func()) {
+	a.win.Update(fn)
+	if a.accounts != nil {
+		a.accounts.win.Update(func() {})
+	}
+}
+
+// showAccounts gives the list to both screens and updates the tray tooltip.
+func (a *app) showAccounts(list []account.Account, readErr error, path string) {
+	a.screen.SetAccounts(list, readErr, path)
+	if a.accounts != nil {
+		a.accounts.screen.SetAccounts(list, readErr, path)
+	}
+	a.updateTooltip()
 }
 
 func (a *app) toggle() {
@@ -210,11 +246,11 @@ func (a *app) resolve(dir string) {
 				touched = true
 			}
 		}
-		a.win.Update(func() {
+		a.post(func() {
 			a.screen.SetResult(dir, r, err)
 			if touched {
 				// The use moves the identity up the list.
-				a.screen.SetAccounts(s.Accounts(), s.ReadOnly(), s.Path())
+				a.showAccounts(s.Accounts(), s.ReadOnly(), s.Path())
 			}
 			a.updateTooltip()
 		})
