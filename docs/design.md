@@ -10,9 +10,9 @@ of its [UI guides](https://github.com/egoist/mygo/blob/v0.3.6/docs/ui/README.md)
 stay the authority on API details. Links point to MyGo v0.3.6, the version pinned in `go.mod`. When the pin moves,
 check the pages again and update the links and this document together.
 
-The panel (`internal/ui/panel/`) is the reference the values below call "the panel". The accounts window has a
-mockup and no code yet. The settings and about windows, the problem bars of diagnostics and the panel's bind actions
-are described in product.md and are plans until their mockup and code are merged.
+The panel (`internal/ui/panel/`) is the reference the values below call "the panel". The settings and about
+windows and the problem bars of diagnostics are described in product.md and are plans until their mockup and code are
+merged.
 
 Related files: [design/README.md](../design/README.md) (mockups and how a UI change is made) and
 [design/tokens.md](../design/tokens.md) (spacing, size and color values in one table).
@@ -222,7 +222,7 @@ The tables below say what to reach for as the accounts, settings and about windo
 | The main action of a group, once (Save in the accounts window) | [Button](https://github.com/egoist/mygo/blob/v0.3.6/docs/ui/button.md) (`PrimaryButton`) |
 | Other actions | [Button](https://github.com/egoist/mygo/blob/v0.3.6/docs/ui/button.md) |
 | Open the GitHub page from the about window | [Link](https://github.com/egoist/mygo/blob/v0.3.6/docs/ui/link.md) |
-| "Rebind to" another identity | [Menu button](https://github.com/egoist/mygo/blob/v0.3.6/docs/ui/menu-button.md) |
+| "Rebind to" another identity | [Popover](https://github.com/egoist/mygo/blob/v0.3.6/docs/ui/popover.md) (`PopoverBase`) with entries of our own: a menu button's menu is the system's and cannot show a color dot and a monospace folder at 224 wide |
 | Actions on a specific identity, on right click | [Context menu](https://github.com/egoist/mygo/blob/v0.3.6/docs/ui/context-menu.md) |
 | Choose one of a few modes (global or limited scope) | [Segmented control](https://github.com/egoist/mygo/blob/v0.3.6/docs/ui/segmented.md) |
 | Adding to a list ("Add Identity") | A symbol button in a bar at the bottom of the list; text button in the panel footer |
@@ -350,8 +350,8 @@ between the title row and the footer is the scroll view. In the empty state the 
 replaces it. Both open the accounts window on a new draft.
 
 Planned (product.md): a settings button in the title bar; About and Recheck in the footer; "Import" when there are no
-identities; a connectivity dot, an expand arrow and problem bars on identity rows. Bind, unbind and rebind on result
-cards are designed in the mockup and not built yet.
+identities; a connectivity dot, an expand arrow and problem bars on identity rows. Bind, unbind, rebind, "Use only" and undo on result
+cards are built as the mockup shows.
 
 ## The accounts window
 
