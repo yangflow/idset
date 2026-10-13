@@ -1,0 +1,320 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Accounts window</title>
+<style>
+/* Colors are the MyGo default theme roles and sizes the 4 DIP spacing unit at 13 px text; see design/tokens.md.
+   No shadows, gradients or blur: everything is fills, hairlines and text. */
+:root { color-scheme:light; --background:#ffffff; --surface:#f4f4f5; --pressed:#dddde1; --text:#18181b; --muted:#71717a; --border:#d9d9de; --accent:#2563eb; --accent-text:#ffffff; --focus:rgba(37,99,235,.55); --danger:#dc2626; --scrim:rgba(0,0,0,.28) }
+:root[data-scheme=dark] { color-scheme:dark; --background:#18181b; --surface:#27272a; --pressed:#3c3c41; --text:#f4f4f5; --muted:#a1a1aa; --border:#3f3f46; --accent:#3b82f6; --focus:rgba(96,165,250,.6); --danger:#ef4444; --scrim:rgba(0,0,0,.5) }
+* { box-sizing:border-box }
+body { margin:0; font-family:system-ui,sans-serif; font-size:13px; color:var(--text); background:#888; display:flex; gap:24px; padding:24px; align-items:flex-start }
+.controls { width:220px; flex:none; display:flex; flex-direction:column; gap:14px; padding:14px; border-radius:10px; background:#f4f4f4; color:#242424; font-size:12px }
+.controls h2 { margin:0 0 6px; font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:.04em; color:#666 }
+.controls .group { display:flex; flex-wrap:wrap; gap:4px }
+.controls button { padding:4px 8px; border:1px solid #ccc; border-radius:5px; background:#fff; color:#242424; font:inherit; cursor:pointer }
+.controls button.on { background:#006fdf; border-color:#006fdf; color:#fff }
+.controls .hint { color:#666; line-height:1.5 }
+.controls kbd { padding:0 4px; border:1px solid #ccc; border-radius:3px; background:#fff; font-size:11px }
+
+/* Window: system title bar and toolbar in one Surface band, a source list, and a detail pane. 760x520. */
+.win { position:relative; width:760px; height:520px; flex:none; display:flex; flex-direction:column; background:var(--background); border:1px solid var(--border); border-radius:10px; overflow:hidden }
+.band { flex:none; background:var(--surface); border-bottom:1px solid var(--border) }
+.titlebar { height:28px; display:grid; place-items:center; font-size:11px; color:var(--muted) }
+.toolbar { display:flex; align-items:center; padding:0 8px 8px }
+.body { flex:1; min-height:0; display:flex }
+.side { width:232px; flex:none; overflow:auto; padding:12px 8px; display:flex; flex-direction:column; gap:2px; background:var(--surface); border-right:1px solid var(--border) }
+.detail { flex:1; min-width:0; display:flex; flex-direction:column }
+.scroll { flex:1; min-height:0; overflow:auto; padding:16px 20px 20px; display:flex; flex-direction:column; gap:20px }
+.scroll > * { flex-shrink:0 }
+.scroll.busy { opacity:.5; pointer-events:none }
+.foot { flex:none; display:flex; align-items:center; gap:8px; padding:12px 20px; border-top:1px solid var(--border) }
+.status { flex:1; min-width:0; font-size:11px; color:var(--muted); display:flex; align-items:center; gap:6px; overflow-wrap:anywhere }
+.status.error { color:var(--danger) }
+.status svg { width:12px; height:12px; flex:none }
+
+/* Buttons: bordered, primary (the only filled one), and text. */
+button { padding:0 12px; height:24px; border:1px solid var(--border); border-radius:6px; background:var(--background); color:var(--text); font:inherit; display:inline-flex; align-items:center; gap:4px; white-space:nowrap }
+button.primary { background:var(--accent); border-color:var(--accent); color:var(--accent-text) }
+button.destructive { background:var(--danger); border-color:var(--danger); color:#fff }
+button.text { border-color:transparent; background:transparent; padding:0 8px; color:var(--accent) }
+button.text.danger { color:var(--danger) }
+button:disabled { opacity:.4 }
+button svg { width:12px; height:12px }
+button.ghost { width:24px; padding:0; justify-content:center; border-color:transparent; background:transparent; color:var(--muted) }
+button.ghost svg { width:14px; height:14px }
+.muted { color:var(--muted) }
+.mono { font-family:ui-monospace,monospace; font-size:12px }
+.spinner { width:12px; height:12px; flex:none; border:2px solid var(--border); border-top-color:var(--accent); border-radius:50% }
+
+.dot { flex:none; width:10px; height:10px; border-radius:50%; background:rgb(var(--c)) }
+:root[data-scheme=dark] .dot { background:rgb(var(--cl)) }
+
+/* Source list: calm selection, a color dot, no tiles. */
+.section { padding:0 8px 4px; font-size:11px; color:var(--muted); display:flex; justify-content:space-between }
+.item { display:flex; align-items:center; gap:8px; padding:6px 8px; border-radius:6px }
+.item.sel { background:var(--pressed) }
+.item .text { flex:1; min-width:0; display:flex; flex-direction:column; gap:1px }
+.item .email { font-size:11px; color:var(--muted); overflow-wrap:anywhere }
+.item .new { font-size:11px; color:var(--muted) }
+.item .scope { width:14px; height:14px; flex:none; color:var(--muted) }
+
+/* Header. */
+.head { display:flex; align-items:center; gap:8px; flex-wrap:wrap }
+.head .dot { width:12px; height:12px }
+.head h2 { margin:0; font-size:15px; font-weight:600; overflow-wrap:anywhere }
+.head .mark { font-size:11px; color:var(--muted) }
+.head .sp { flex:1 }
+.choices { display:flex; align-items:center; gap:8px }
+.choice { width:14px; height:14px; border-radius:50%; background:rgb(var(--c)); display:grid; place-items:center; color:#fff }
+.choice.on { outline:1.5px solid rgb(var(--c)); outline-offset:2px }
+.choice svg { width:9px; height:9px }
+.choices .mono { margin-left:4px; color:var(--muted); font-size:11px }
+
+/* Inset groups: a title, then a Surface group of rows (label left, value right) with inset hairlines, then a footnote. */
+.g > h3 { margin:0 0 4px 12px; font-size:11px; font-weight:400; color:var(--muted) }
+.rows { background:var(--surface); border-radius:10px }
+.r { position:relative; display:flex; align-items:center; gap:12px; min-height:32px; padding:4px 12px }
+.r + .r::before { content:""; position:absolute; top:0; left:12px; right:0; height:1px; background:color-mix(in srgb, var(--border) 70%, transparent) }
+.r .k { flex:none; width:168px }
+.r .k.wide { width:auto; flex:1 }
+.r .k small { display:block; font-size:11px; color:var(--muted) }
+.r .v { flex:1; min-width:0; text-align:right; overflow-wrap:anywhere }
+.r .v.ph { color:var(--muted) }
+.r .v.left { text-align:left }
+.r .v.focus { outline:2px solid var(--focus); outline-offset:1px; border-radius:4px }
+.r .v.sel { display:flex; align-items:center; justify-content:flex-end; gap:4px }
+.r .v.sel svg { width:10px; height:10px; color:var(--muted) }
+.r .tail { flex:none; display:flex; align-items:center; gap:4px }
+.r.add { padding-left:4px }
+.note { margin:4px 12px 0; font-size:11px; line-height:1.4; color:var(--muted) }
+.note.err { color:var(--danger); display:flex; gap:4px }
+.note.err svg { width:12px; height:12px; flex:none; margin-top:1px }
+.seg { display:inline-flex; padding:2px; gap:2px; border-radius:7px; background:var(--pressed) }
+.seg span { padding:2px 12px; border-radius:5px; font-size:12px }
+.seg span.on { background:var(--background) }
+.radios { display:inline-flex; gap:16px }
+.radio { display:inline-flex; align-items:center; gap:6px }
+.radio i { width:14px; height:14px; border:1.5px solid var(--muted); border-radius:50%; display:grid; place-items:center }
+.radio.on i { border-color:var(--accent) }
+.radio.on i::after { content:""; width:6px; height:6px; border-radius:50%; background:var(--accent) }
+.check { display:inline-flex; align-items:center; gap:8px }
+.check i { width:14px; height:14px; border:1.5px solid var(--muted); border-radius:4px; display:grid; place-items:center; color:var(--accent-text) }
+.check.on i { background:var(--accent); border-color:var(--accent) }
+.check i svg { width:10px; height:10px }
+.check.off { opacity:.45 }
+.switch { flex:none; width:28px; height:16px; border-radius:8px; background:var(--pressed); position:relative }
+.switch::after { content:""; position:absolute; top:2px; left:2px; width:12px; height:12px; border-radius:50%; background:var(--background) }
+.switch.on { background:var(--accent) }
+.switch.on::after { left:14px }
+.rw { flex:1; min-width:0; display:flex; flex-direction:column; gap:1px }
+.rw .to { color:var(--muted) }
+.push { font-size:11px; color:var(--muted) }
+
+.center { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; text-align:center; padding:0 24px }
+.center strong { font-size:15px; font-weight:600 }
+.center .acts { display:flex; gap:8px; margin-top:16px }
+
+/* Delete confirmation: an alert over the dimmed window. */
+.scrim { position:absolute; left:0; right:0; top:28px; bottom:0; background:var(--scrim); display:flex; align-items:center; justify-content:center }
+.dialog { width:360px; display:flex; flex-direction:column; gap:12px; padding:20px; background:var(--background); border:1px solid var(--border); border-radius:10px }
+.dialog h2 { margin:0; font-size:15px; font-weight:600; overflow-wrap:anywhere }
+.dialog p { margin:0; line-height:1.45 }
+.dialog .kv { display:grid; grid-template-columns:64px 1fr; gap:4px 8px; padding:8px 0; border-top:1px solid var(--border); border-bottom:1px solid var(--border); font-size:12px }
+.dialog .kv > :nth-child(odd) { color:var(--muted) }
+.dialog .kv .paths { display:flex; flex-direction:column; gap:2px }
+.dialog .small { font-size:11px; color:var(--muted) }
+.dialog .opt { display:flex; flex-direction:column; gap:4px }
+.dialog .opt .small { padding-left:22px }
+.dialog .buttons { display:flex; justify-content:flex-end; gap:8px; margin-top:4px }
+</style>
+<aside class="controls">
+  <div><h2>State</h2><div class="group" id="states"></div></div>
+  <div><h2>Scheme</h2><div class="group" id="schemes"></div></div>
+  <div><h2>Language</h2><div class="group" id="langs"></div></div>
+  <div class="hint">URL: <code>?state=…&amp;scheme=dark&amp;lang=zh</code><br><kbd>←</kbd> <kbd>→</kbd> switch state.</div>
+</aside>
+<div class="win" id="win"></div>
+<script>
+const TEXT = {
+  zh: {
+    window:'Idset · 账户', applies:'适用于', add:'添加身份', identities:'身份', scoped:'限定', global:'全局', unnamed:'（未命名）', newTag:'新建',
+    noneTitle:'还没有身份', noneHint:'可以导入现有的 SSH 和 Git 配置，也可以新建一个。', import:'导入现有配置', create:'新建',
+    gIdentity:'身份', gSsh:'SSH', gScope:'范围', gRewrites:'地址改写', gNotes:'备注', gTimes:'时间',
+    name:'名称', platform:'平台', username:'用户名', gitName:'署名', email:'邮箱', alias:'别名', key:'私钥', port:'端口', host:'主机名',
+    chooseFile:'选择文件…', chooseFolder:'选择文件夹', removePath:'删除这条路径', removeRewrite:'删除这条改写', color:'颜色', hex:'十六进制颜色',
+    scope:'范围', scopeGlobal:'全局', scopeGitdir:'gitdir 限定', scopeHint:'没有 gitdir 规则命中时生效。', addPath:'添加路径',
+    from:'来自', to:'改写为', pushOnly:'仅推送', addRewrite:'添加改写', addDefault:'添加平台默认改写', needAlias:'先填别名，才能添加平台默认改写。',
+    fromGit:'来自 git config --global', created:'创建', updated:'更新', used:'最近使用',
+    del:'删除', revert:'还原', save:'保存', saving:'保存中', saved:'已写入',
+    dirty:'有未保存的修改', draftStatus:'新身份，还没有保存', writing:'正在写入…', failed:'无法写入 ~/.config/idset/accounts.json：permission denied',
+    errGlobal:'已有全局身份。先把 personal 改成限定。', errCount:'有 1 处需要先改正',
+    delTitle:'删除身份 work？', delBody:'身份会从列表和生成的配置里移除。下面这些不会自动删除：', privateKey:'私钥', folders:'目录', noKey:'没有',
+    delNote:'磁盘上的项目文件夹不会被改动。', alsoKey:'同时删除私钥', keyNote:'只删私钥，保留 .pub 文件。', cancel:'取消',
+    r_nokey:'这个身份没有私钥路径。', r_shared:'其他身份（personal）也在用这个私钥。', r_symlink:'私钥路径是符号链接，Idset 不会删除。',
+    r_missing:'私钥文件不存在。', r_notfile:'私钥路径不是普通文件。',
+  },
+  en: {
+    window:'Idset · Accounts', applies:'Applies to', add:'Add Identity', identities:'Identities', scoped:'Scoped', global:'Global', unnamed:'(unnamed)', newTag:'New',
+    noneTitle:'No identities yet', noneHint:'Import your existing SSH and Git configuration, or create one.', import:'Import Existing Configuration', create:'New',
+    gIdentity:'Identity', gSsh:'SSH', gScope:'Scope', gRewrites:'URL rewrites', gNotes:'Notes', gTimes:'Times',
+    name:'Name', platform:'Platform', username:'Username', gitName:'Git name', email:'Email', alias:'Alias', key:'Private key', port:'Port', host:'Host name',
+    chooseFile:'Choose File…', chooseFolder:'Choose folder', removePath:'Remove this path', removeRewrite:'Remove this rewrite', color:'Color', hex:'Hex color',
+    scope:'Scope', scopeGlobal:'Global', scopeGitdir:'Limited to folders', scopeHint:'Used when no folder rule matches.', addPath:'Add Path',
+    from:'From', to:'Rewrite to', pushOnly:'Push only', addRewrite:'Add Rewrite', addDefault:'Add Platform Default Rewrite', needAlias:'Enter an alias to add the platform default rewrite.',
+    fromGit:'From git config --global', created:'Created', updated:'Updated', used:'Last used',
+    del:'Delete', revert:'Revert', save:'Save', saving:'Saving', saved:'Written',
+    dirty:'Unsaved changes', draftStatus:'New identity, not saved yet', writing:'Writing…', failed:'Could not write ~/.config/idset/accounts.json: permission denied',
+    errGlobal:'There is already a global identity. Change personal to limited first.', errCount:'1 problem to fix first',
+    delTitle:'Delete identity work?', delBody:'The identity is removed from the list and the generated configuration. These are not deleted automatically:', privateKey:'Private key', folders:'Folders', noKey:'none',
+    delNote:'Project folders on disk are never touched.', alsoKey:'Also delete the private key', keyNote:'Only the private key is deleted; the .pub file stays.', cancel:'Cancel',
+    r_nokey:'This identity has no key path.', r_shared:'Another identity (personal) uses the same key.', r_symlink:'The key path is a symbolic link; Idset will not delete it.',
+    r_missing:'The key file does not exist.', r_notfile:'The key path is not a regular file.',
+  },
+};
+const STATES = {
+  empty:'没有身份', global:'全局身份', scoped:'限定身份', custom:'自定义平台', dirty:'有修改', draft:'新建草稿', rewrites:'地址改写', invalid:'校验失败',
+  saving:'保存中', saved:'已写入', failed:'保存失败',
+  del:'删除确认', delon:'删除并勾选私钥', delnokey:'不可勾：无私钥', delshared:'不可勾：共用', delsymlink:'不可勾：符号链接', delmissing:'不可勾：不存在', delnotfile:'不可勾：非普通文件',
+};
+const COLORS = { blue:'58,123,213', green:'46,158,91', orange:'224,122,31', red:'214,69,69', purple:'142,68,173', yellow:'212,160,23' };
+const LIGHT = { '58,123,213':'120,170,240', '46,158,91':'95,200,135', '224,122,31':'240,165,95', '214,69,69':'232,140,140', '142,68,173':'190,130,215', '212,160,23':'235,200,100' };
+const HEX = { blue:'#3A7BD5', green:'#2E9E5B', orange:'#E07A1F', red:'#D64545', purple:'#8E44AD', yellow:'#D4A017' };
+const ID = {
+  work: { label:'work', color:'blue', provider:'GitHub', username:'bob-work', gitName:'Bob', email:'bob@example.com', alias:'github-work', key:'~/.ssh/id_ed25519_work', port:443,
+    paths:['~/work/', '~/src/new/', '~/clients/acme/'], rewrites:[{ from:'https://github.com/', to:'git@github-work:', push:false }, { from:'https://github.com/acme/', to:'git@github-work:acme/', push:true }],
+    notes:'Employer repositories.', times:['2026-08-01 10:00', '2026-09-14 16:32', '2026-10-12 09:07'] },
+  personal: { label:'personal', color:'green', provider:'GitHub', username:'bob-example', gitName:'Bob', email:'bob@example.net', alias:'github-personal', key:'~/.ssh/id_ed25519', port:443,
+    paths:null, rewrites:[], notes:'', times:['2026-08-01 10:00', '2026-08-01 10:00', '2026-10-11 20:15'] },
+  client: { label:'client', color:'orange', provider:'Custom', host:'git.client.example', username:'bob', gitName:'Bob Example', email:'bob@client.example', alias:'client-git', key:'~/.ssh/id_client', port:22,
+    paths:['~/work/client/'], rewrites:[{ from:'https://git.client.example/', to:'git@client-git:', push:false }], notes:'', times:['2026-08-20 08:45', '2026-08-20 08:45', '2026-10-02 14:10'] },
+  misc: { label:'', color:'purple', provider:'GitLab', username:'', gitName:'', email:'nobody@example.com', alias:'', key:'', port:443, paths:['~/misc/'], rewrites:[], notes:'',
+    times:['2026-09-30 12:00', '2026-09-30 12:00', '—'] },
+  draft: { label:'', color:'red', provider:'GitHub', username:'', gitName:'Bob', email:'bob@example.com', alias:'', key:'', port:443, paths:['~/work/api/'], rewrites:[], notes:'', times:null },
+};
+const icon = {
+  check:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 8.5l3 3 6-7"/></svg>',
+  x:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M4 4l8 8M12 4l-8 8"/></svg>',
+  warn:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2.5l6 11H2z"/><path d="M8 6.5v3M8 11.6v.1"/></svg>',
+  folder:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"><path d="M2 4.5a1 1 0 0 1 1-1h3l1.5 1.5H13a1 1 0 0 1 1 1V12a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1z"/></svg>',
+  chev:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l4 4 4-4"/></svg>',
+  minus:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M3 8h10"/></svg>',
+  plus:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M8 3v10M3 8h10"/></svg>',
+};
+icon.updown = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 6.5L8 3l3.5 3.5M4.5 9.5L8 13l3.5-3.5"/></svg>';
+const q = new URLSearchParams(location.search);
+const view = {
+  state: STATES[q.get('state')] ? q.get('state') : 'scoped',
+  scheme: q.get('scheme') === 'dark' ? 'dark' : 'light',
+  lang: q.get('lang') === 'zh' ? 'zh' : 'en',
+};
+
+function render() {
+  const T = TEXT[view.lang], s = view.state;
+  const dot = i => { const c = COLORS[i.color]; return `<span class="dot" style="--c:${c};--cl:${LIGHT[c]}"></span>`; };
+  const name = i => i.label || T.unnamed;
+  const ghost = (ic, label, off) => `<button class="ghost" title="${label}" aria-label="${label}"${off ? ' disabled' : ''}>${icon[ic]}</button>`;
+  // A row: label left, value right.
+  const row = (k, v, o = {}) => `<div class="r"><div class="k">${k}${o.hint ? `<small>${o.hint}</small>` : ''}</div><div class="v${o.mono ? ' mono' : ''}${o.ph ? ' ph' : ''}${o.focus ? ' focus' : ''}">${v}</div>${o.tail ? `<div class="tail">${o.tail}</div>` : ''}</div>`;
+  const group = (title, rows, note = '') => `<div class="g"${title.id ? ` id="${title.id}"` : ''}><h3>${title.text || title}</h3><div class="rows">${rows}</div>${note}</div>`;
+  const addRow = (label, off) => `<div class="r add"><button class="text"${off ? ' disabled' : ''}>${icon.plus}${label}</button></div>`;
+  const fromGit = T.fromGit;
+
+  const cfg = {
+    empty: { id:'work' }, global: { id:'personal' }, scoped: { id:'work', scroll:'sec-scope' }, custom: { id:'client' },
+    dirty: { id:'work', dirty:true, focus:true }, draft: { id:'draft', draft:true }, rewrites: { id:'work', scroll:'sec-rewrites' },
+    invalid: { id:'work', dirty:true, invalid:true, scroll:'sec-scope' }, saving: { id:'work', saving:true }, saved: { id:'work', saved:true }, failed: { id:'work', dirty:true, failed:true },
+  }[s] || { id:'work', dialog:s };
+  const a = cfg.invalid ? { ...ID.work, paths:null } : ID[cfg.id];
+  const isDraft = !!cfg.draft;
+  const custom = a.provider === 'Custom';
+
+  // Source list, sorted by last use; the draft sits on top while it exists.
+  const items = [];
+  if (isDraft) items.push({ i:ID.draft, sel:true });
+  [ID.work, ID.personal, ID.client, ID.misc].forEach(i => items.push({ i, sel:!isDraft && (cfg.invalid ? i === ID.work : i === a) }));
+  const list = `<div class="section"><span>${T.identities}</span><span>${items.length}</span></div>` + items.map(r =>
+    `<div class="item${r.sel ? ' sel' : ''}">${dot(r.i)}<div class="text"><span>${name(r.i)}</span><span class="email">${r.i.email}</span></div>` +
+    (r.i === ID.draft ? `<span class="new">${T.newTag}</span>` : r.i.paths ? `<span class="scope" title="${T.scoped}" aria-label="${T.scoped}">${icon.folder}</span>` : '') + `</div>`).join('');
+
+  // Header: color dot, title, scope mark, and the color choices.
+  const choices = Object.keys(COLORS).map(n => `<span class="choice${a.color === n ? ' on' : ''}" style="--c:${COLORS[n]}" title="${n}" aria-label="${n}">${a.color === n ? icon.check : ''}</span>`).join('');
+  const head = `<div class="head">${dot(a)}<h2>${name(a)}</h2><span class="mark">${a.paths ? T.scoped : T.global}</span><span class="sp"></span><div class="choices">${choices}<span class="mono" aria-label="${T.hex}">${HEX[a.color]}</span></div></div>`;
+
+  const gIdentity = group(T.gIdentity,
+    row(T.name, a.label || T.unnamed, { ph:!a.label }) +
+    row(T.platform, `${a.provider}${icon.updown}`).replace('class="v"', 'class="v sel"') +
+    row(T.username, a.username || '', { ph:!a.username }) +
+    row(T.gitName, a.gitName, { hint:isDraft ? fromGit : '' }) +
+    row(T.email, a.email, { hint:isDraft ? fromGit : '', focus:cfg.focus }));
+  const radio = (n, on) => `<span class="radio${on ? ' on' : ''}"><i></i>${n}</span>`;
+  const gSsh = group(T.gSsh,
+    (custom ? row(T.host, a.host, { mono:true }) : '') +
+    row(T.alias, a.alias, { mono:true, ph:!a.alias }) +
+    row(T.key, a.key || '', { mono:true, tail:`<button class="text">${T.chooseFile}</button>` }) +
+    (custom ? row(T.port, a.port, { mono:true }) : row(T.port, `<span class="radios">${radio(22, a.port === 22)}${radio(443, a.port === 443)}</span>`)));
+
+  const seg = `<span class="seg"><span${a.paths ? '' : ' class="on"'}>${T.scopeGlobal}</span><span${a.paths ? ' class="on"' : ''}>${T.scopeGitdir}</span></span>`;
+  const pathRows = a.paths ? a.paths.map(p => `<div class="r"><div class="v mono left">${p}</div><div class="tail">${ghost('folder', T.chooseFolder)}${ghost('minus', T.removePath, a.paths.length === 1)}</div></div>`).join('') + addRow(T.addPath) : '';
+  const scopeNote = cfg.invalid ? `<div class="note err">${icon.warn}<span>${T.errGlobal}</span></div>` : (a.paths ? '' : `<div class="note">${T.scopeHint}</div>`);
+  const gScope = group({ text:T.gScope, id:'sec-scope' }, `<div class="r"><div class="k wide">${T.applies}</div>${seg}</div>` + pathRows, scopeNote);
+
+  const rwRows = a.rewrites.map(r => `<div class="r"><div class="rw"><span class="mono">${r.from}</span><span class="mono to">→ ${r.to}</span></div><span class="push">${T.pushOnly}</span><span class="switch${r.push ? ' on' : ''}"></span>${ghost('minus', T.removeRewrite)}</div>`).join('');
+  const noAlias = !a.alias;
+  const gRewrites = group({ text:T.gRewrites, id:'sec-rewrites' }, rwRows + addRow(T.addRewrite) + (custom ? '' : addRow(T.addDefault, noAlias)),
+    custom || !noAlias ? '' : `<div class="note">${T.needAlias}</div>`);
+  const gNotes = group(T.gNotes, `<div class="r"><div class="v left${a.notes ? '' : ' ph'}">${a.notes || '&nbsp;'}</div></div>`);
+  const gTimes = a.times ? group(T.gTimes, row(T.created, a.times[0]) + row(T.updated, a.times[1]) + row(T.used, a.times[2])).replace(/class="v"/g, 'class="v muted"') : '';
+
+  // Footer: Delete (text, left), status, Revert, Save (the only filled button).
+  let status = '', save = `<button class="primary" disabled>${T.save}</button>`, dirty = false;
+  if (cfg.dirty || isDraft) { dirty = true; save = `<button class="primary">${T.save}</button>`; status = isDraft ? T.draftStatus : T.dirty; }
+  if (cfg.invalid) status = T.errCount;
+  if (cfg.saving) { dirty = true; status = `<div class="spinner"></div>${T.writing}`; save = `<button class="primary" disabled>${T.saving}</button>`; }
+  if (cfg.saved) save = `<button class="primary" disabled>${icon.check}${T.saved}</button>`;
+  if (cfg.failed) status = `${icon.warn}<span>${T.failed}</span>`;
+  const foot = `<div class="foot">${isDraft ? '' : `<button class="text danger"${cfg.saving ? ' disabled' : ''}>${T.del}</button>`}<div class="status${cfg.failed || cfg.invalid ? ' error' : ''}">${status}</div>
+    <button${dirty && !cfg.saving ? '' : ' disabled'}>${T.revert}</button>${save}</div>`;
+  const detail = `<div class="detail"><div class="scroll${cfg.saving ? ' busy' : ''}" id="scroll">${head}${gIdentity}${gSsh}${gScope}${gRewrites}${gNotes}${gTimes}</div>${foot}</div>`;
+
+  // Delete confirmation. The checkbox is disabled, with the reason below it, whenever the key cannot be removed.
+  let dialog = '';
+  if (cfg.dialog) {
+    const reason = { delnokey:'r_nokey', delshared:'r_shared', delsymlink:'r_symlink', delmissing:'r_missing', delnotfile:'r_notfile' }[s];
+    const checked = s === 'delon', noKey = s === 'delnokey';
+    dialog = `<div class="scrim"><div class="dialog" role="alertdialog"><h2>${T.delTitle}</h2><p>${T.delBody}</p>
+      <div class="kv"><span>${T.privateKey}</span><span class="mono">${noKey ? T.noKey : ID.work.key}</span><span>${T.folders}</span><div class="paths">${ID.work.paths.map(p => `<span class="mono">${p}</span>`).join('')}</div></div>
+      <div class="small">${T.delNote}</div>
+      <div class="opt"><span class="check${checked ? ' on' : ''}${reason ? ' off' : ''}"><i>${checked ? icon.check : ''}</i>${T.alsoKey}</span>
+        ${reason ? `<span class="small">${T[reason]}</span>` : checked ? `<span class="small">${T.keyNote}</span>` : ''}</div>
+      <div class="buttons"><button>${T.cancel}</button><button class="destructive">${T.del}</button></div></div></div>`;
+  }
+
+  const empty = `<div class="center"><strong>${T.noneTitle}</strong><span class="muted">${T.noneHint}</span><div class="acts"><button>${T.import}</button><button class="primary">${T.create}</button></div></div>`;
+  document.documentElement.dataset.scheme = view.scheme;
+  document.getElementById('win').innerHTML = `<div class="band"><div class="titlebar">${T.window}</div><div class="toolbar"><button class="text">${icon.plus}${T.add}</button></div></div>
+    <div class="body">${s === 'empty' ? empty : `<div class="side">${list}</div>${detail}`}</div>${dialog}`;
+  const sc = document.getElementById('scroll');
+  if (sc && cfg.scroll) sc.scrollTop += document.getElementById(cfg.scroll).getBoundingClientRect().top - sc.getBoundingClientRect().top - 12;
+
+  const buttons = (id, options, key) => {
+    document.getElementById(id).innerHTML = Object.entries(options)
+      .map(([value, label]) => `<button data-value="${value}" class="${view[key] === value ? 'on' : ''}">${label}</button>`).join('');
+    document.getElementById(id).onclick = e => { const v = e.target.dataset.value; if (v) { view[key] = v; render(); } };
+  };
+  buttons('states', STATES, 'state');
+  buttons('schemes', { light:'浅色', dark:'深色' }, 'scheme');
+  buttons('langs', { zh:'中文', en:'English' }, 'lang');
+  history.replaceState(null, '', `?state=${view.state}&scheme=${view.scheme}&lang=${view.lang}`);
+}
+
+onkeydown = e => {
+  if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+  const keys = Object.keys(STATES), i = keys.indexOf(view.state);
+  view.state = keys[(i + (e.key === 'ArrowRight' ? 1 : keys.length - 1)) % keys.length];
+  render();
+};
+render();
+</script>
+</html>

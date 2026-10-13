@@ -10,9 +10,9 @@ of its [UI guides](https://github.com/egoist/mygo/blob/v0.3.6/docs/ui/README.md)
 stay the authority on API details. Links point to MyGo v0.3.6, the version pinned in `go.mod`. When the pin moves,
 check the pages again and update the links and this document together.
 
-The panel (`internal/ui/panel/`) is the reference the values below call "the panel". The accounts, settings and
-about windows, the problem bars of diagnostics and the panel's bind actions are described in product.md and are
-plans until their mockup and code are merged.
+The panel (`internal/ui/panel/`) is the reference the values below call "the panel". The accounts window has a
+mockup and no code yet. The settings and about windows, the problem bars of diagnostics and the panel's bind actions
+are described in product.md and are plans until their mockup and code are merged.
 
 Related files: [design/README.md](../design/README.md) (mockups and how a UI change is made) and
 [design/tokens.md](../design/tokens.md) (spacing, size and color values in one table).
@@ -26,12 +26,13 @@ Related files: [design/README.md](../design/README.md) (mockups and how a UI cha
 5. [Icons and images](#icons-and-images)
 6. [Component guide](#component-guide)
 7. [The panel](#the-panel)
-8. [Windows, menus and the tray](#windows-menus-and-the-tray)
-9. [Accessibility checklist](#accessibility-checklist)
-10. [Motion](#motion)
-11. [Localization](#localization)
-12. [Design acceptance checklist](#design-acceptance-checklist)
-13. [References](#references)
+8. [The accounts window](#the-accounts-window)
+9. [Windows, menus and the tray](#windows-menus-and-the-tray)
+10. [Accessibility checklist](#accessibility-checklist)
+11. [Motion](#motion)
+12. [Localization](#localization)
+13. [Design acceptance checklist](#design-acceptance-checklist)
+14. [References](#references)
 
 ## Principles
 
@@ -116,12 +117,14 @@ and carries the user's accent color and contrast settings. See
 
 - **Identity colors.** An identity's color is data the user chose, not a theme role. The six preset names map to
   fixed values (blue `#3A7BD5`, green `#2E9E5B`, orange `#E07A1F`, red `#D64545`, purple `#8E44AD`, yellow
-  `#D4A017`); any other value is its own `#RRGGBB`. Identity colors appear only on the initial badge: the fill is the
+  `#D4A017`); any other value is its own `#RRGGBB`. Identity colors appear on the initial badge and, in the accounts
+  window, as dots (list, header, color choices; the choices are named, the chosen one ticked). On the badge the fill is the
   color at 16% opacity (24% in dark), and the letter is the color itself (in dark, mixed 40% towards white for
   contrast).
 - **Appearance.** Do not implement your own dark mode switch; the theme follows the system. If a screen draws custom
   elements, use only theme colors, or read `c.Theme().Dark` where a choice cannot be expressed with them, as the
   initial badge does. For derived colors use `Mix` and `Alpha` on theme colors rather than new constants.
+- **Selection.** A selected list row (the accounts window) is filled with `SurfacePressed`, its text stays `Text`.
 - **Accent.** One primary action per group uses `PrimaryButton`; the panel has none. Idset has no brand color and
   does not recolor the accent; it is the user's system accent.
 - **Contrast.** Text and meaningful graphics should meet WCAG 2.1 AA: 4.5:1 for body text, 3:1 for large text and
@@ -199,6 +202,9 @@ What Idset uses today:
 | Borderless symbol button | `Space(6)` square (24), transparent, icon `Rem(1.1)` in `TextMuted`, `SurfaceHover` fill on hover. Must have a `.Label()`. After the path is copied, the icon turns into a check mark with "Copied" before it for 1.2 seconds. |
 | Result card | A context line (the path in monospace `TextMuted`, then the copy and clear buttons) and below it the answer. `Surface` fill, `Border` outline; `Warning` for the cards without a match, `Danger` when `git` fails. |
 | Identity list | A group heading, then one `Surface` container with `Border` dividers between rows. |
+| Source list row | A color dot, name and email on two lines, an optional folder symbol; `SurfacePressed` fill when selected. |
+| Color choice | A 14 DIP dot in the preset color with its name as `Label`; the chosen one has a ring and a check mark. |
+| Settings row | Label left, value right, 32 DIPs high, hairline between rows inside a `Surface` group with radius 10. |
 | Platform filter | A row of `ui.Button`s, one per platform in use when more than one is; the selected ones are `Accent` with `AccentText` and are `Selected(true)` so screen readers read them as selected. |
 
 The tables below say what to reach for as the accounts, settings and about windows are added.
@@ -313,6 +319,57 @@ are more, "Global" for a global identity, "no folders" without any. Text is not 
 Planned (product.md): a settings button in the title bar; About and Recheck in the footer; "Add identity" and
 "Import" when there are no identities; a connectivity dot, an expand arrow and problem bars on identity rows; bind,
 unbind and rebind actions on result cards.
+
+## The accounts window
+
+Mockup: [design/screens/accounts.html](../design/screens/accounts.html), every state in light and dark and in both
+languages. Behavior is in product.md, "账户窗口" and "删除确认". The model is a native grouped-settings window
+(System Settings, Mail accounts): few borders, one hairline between rows, hierarchy from position and the muted
+color rather than from boxes. Everything is a fill, a hairline or text: no shadow, gradient or blur.
+
+The window is 760×520. The system title bar and the toolbar form one `Surface` band over a hairline; the toolbar
+holds only "Add Identity", a text button with a plus. Below it, a source list and a detail pane.
+
+- **Source list** (left, `Space(58)`, 232, `Surface` fill, hairline to the detail). Group heading "Identities" with the
+  count (11, `TextMuted`), then rows in the panel's order: `Space(1.5)`×`Space(2)` padding, radius 6, a 10 DIP color
+  dot, the name (13, regular) and the email (11, `TextMuted`) below. Text wraps. An identity limited to folders has
+  a folder symbol at the end of its row, named "Scoped" for assistive technology; a draft shows "New" there. The
+  selected row is filled with `SurfacePressed` and keeps `Text`: calm, not an accent slab.
+- **Detail** (right, scrolls on `Background`). Padding `Space(4)`×`Space(5)` (16×20), `Space(5)` (20) between groups.
+  Header: a 12 DIP color dot, the title (`Rem(1.15)`, 600, level 1), "Global" or "Scoped" (11, `TextMuted`), and at the
+  end the six preset colors as 14 DIP dots (the chosen one ringed and ticked, each named for assistive technology)
+  and the hex value.
+- **Groups.** A section title (11, `TextMuted`, regular, level 2) over an inset `Surface` group with radius 10: Identity,
+  SSH, Scope, URL rewrites, Notes, Times (not for a draft). A row is 32 DIPs high with `Space(3)` (12) side padding:
+  the label on the left (a fixed label column, so rows line up), the value on the right, right-aligned. Rows are
+  separated by a hairline inset 12 from the left. Values are plain text, not boxed text fields; a focused one shows
+  the focus ring around its text. Paths, aliases, host names, ports and URLs are monospace 12 and are sized to fit
+  one line. A footnote under a group (11, `TextMuted`) carries help; an error there is `Danger` with the warning
+  symbol.
+- **Controls in rows.** Platform is a select (value and an up-down symbol). Port is two radios (22, 443); Custom shows a
+  host name and a port value. Scope is a row "Applies to" with a segmented control, "Global" and "Limited to
+  folders"; its footnote says when a global identity applies. A limited identity lists one row per folder (path,
+  choose-folder button, a minus button, disabled for the last one) and a text row "+ Add Path". A URL rewrite is one
+  row: the `from` URL, and under it `→` and the `to` URL, then "Push only" with a switch and a minus button; then the
+  text rows "+ Add Rewrite" and "+ Add Platform Default Rewrite" (disabled without an alias, the reason in the
+  footnote). Text rows are `Accent` text with a leading plus, never boxed.
+- **Hints.** A prefilled signature name and email carry "From git config --global" (11, `TextMuted`) under their label.
+- **Footer.** Hairline above, padding `Space(3)`×`Space(5)`. At the left "Delete" as plain `Danger` text (existing
+  identities only), then the status (11, `TextMuted`), then "Revert" (bordered) and "Save", the only filled button.
+  Status: "Unsaved changes", or "New identity, not saved yet" for a draft; a spinner with "Writing…" while saving,
+  when the form is dimmed and disabled; "Written" with a check mark on the Save button for 1.2 seconds after
+  success; the reason in `Danger` with the warning symbol, wrapping, when the write failed (Save stays available).
+  Save and Revert are disabled while there is nothing to save.
+- **Empty.** No list and no footer: "No identities yet" (`Rem(1.15)`, 600), one sentence, "Import Existing
+  Configuration" and "New" (primary), centered. "Add Identity" stays in the toolbar.
+- **Delete confirmation.** An alert over the dimmed window, 360 wide, `Space(5)` padding, an outline and no shadow:
+  "Delete identity <name>?" (`Rem(1.15)`, 600), a sentence, the private key path and the folders that are not
+  deleted automatically between two hairlines (no box), a line that project folders are never touched, the "Also
+  delete the private key" checkbox (unchecked by default) and the buttons Cancel (bordered; the Escape action and
+  initial focus) and Delete (`Danger` fill, white text). When the key cannot be deleted (no key path, another
+  identity uses it, a symbolic link, missing, not a regular file) the checkbox is disabled and the reason is
+  written under it; when checked, a line says that only the private key is deleted and `.pub` stays.
+- **Type.** 13 body, 11 secondary and footnotes, one larger size (`Rem(1.15)`, 600) for titles; nothing else is bold.
 
 ## Windows, menus and the tray
 
