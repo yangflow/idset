@@ -70,7 +70,9 @@ h1 { flex:1; margin:0; font-size:15px }
 :root[data-scheme=dark] .result .row .dot { background:rgb(var(--cl)) }
 .result .row .lines { flex:1; min-width:0; display:flex; flex-direction:column; gap:1px }
 .result .row .label { font-weight:600 }
-.result .row .note { font-size:12px; color:var(--muted); overflow-wrap:anywhere }
+.result .row .note { display:flex; font-size:12px; color:var(--muted) }
+.result .row .note > span { white-space:pre }
+.result .row .label { overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
 .result .row .go { flex:none; width:44px; text-align:right; color:var(--accent) }
 .result .row.lost .label { color:var(--muted); font-weight:400 }
 .result .row .verdict { flex:none; display:flex; align-items:center; gap:4px; font-size:12px; color:var(--muted) }
@@ -102,6 +104,19 @@ h1 { flex:1; margin:0; font-size:15px }
 /* The countdown: a 2 DIP line on the bottom edge of the bar, as wide as the time left of the card's width (here 3 of 5 seconds), Accent at 45%. */
 .result .bar.timed::after { content:""; position:absolute; left:0; bottom:0; height:2px; width:var(--left); background:color-mix(in srgb, var(--accent) 45%, transparent) }
 .result .bar button.text { padding:5px 4px }
+/* Stale path prompt: a card of its own above the no-match card; the sentence may wrap, the path inside it breaks anywhere. */
+.result .stale-head { display:flex; align-items:center; gap:10px; height:44px; padding:0 12px }
+.result .stale-head .dot { flex:none; width:10px; height:10px; border-radius:50%; background:rgb(var(--c)) }
+:root[data-scheme=dark] .result .stale-head .dot { background:rgb(var(--cl)) }
+.result .stale-head .name { flex:0 1 auto; min-width:0; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
+.result .stale-head .rest { flex:1 1 auto; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
+.result .path-row { display:flex; align-items:center; gap:8px; height:36px; padding:0 12px; border-top:1px solid var(--border) }
+.result .path-row .key { flex:none; width:40px; font-size:12px; color:var(--muted) }
+/* Middle truncation: the head of a path takes an ellipsis, its last characters (and any suffix) never shrink. */
+.mid { display:flex; min-width:0; white-space:pre; font-family:ui-monospace,monospace; font-size:12px }
+.mid .mh { min-width:0; overflow:hidden; text-overflow:ellipsis }
+.mid .mt { flex:none }
+.result .path-row .mid { flex:1 }
 .result .overlap-hint { padding:0 12px 10px; font-size:12px; color:var(--muted) }
 .panel.full { height:auto; min-height:480px }
 
@@ -114,8 +129,12 @@ h1 { flex:1; margin:0; font-size:15px }
 :root[data-scheme=dark] .item .dot { background:rgb(var(--cl)) }
 .item .text { flex:1; min-width:0; display:flex; flex-direction:column; gap:1px }
 .item .label { font-weight:600 }
+.item .label, .item .email { overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
 .item .email { font-size:12px; color:var(--muted) }
-.item .tag { flex:none; font-family:ui-monospace,monospace; font-size:11px; color:var(--muted) }
+.item .tag { flex:none; max-width:50%; display:flex; font-family:ui-monospace,monospace; font-size:11px; color:var(--muted) }
+.item .tag .mid { font-size:inherit }
+.result .row .note .mid { font:inherit }
+.item .tag .mid { min-width:0 }
 
 .search { width:100%; padding:6px 8px; border:1px solid var(--border); border-radius:6px; background:var(--surface); color:var(--text); font:inherit }
 .chips { display:flex; gap:6px }
@@ -158,7 +177,9 @@ const TEXT = {
     gitFailed:'无法运行 git：exec: "git": executable file not found in $PATH', identities:'身份',
     bindTo:'绑定到', bind:'绑定', globalId:'全局身份', newId:'新建身份并绑到这里', cancel:'取消', rebindDo:'改绑', unbind:'解绑', rebind:'改绑到', openFinder:'在 Finder 中打开',
     overlapHint:'Git 按这个顺序读取，后面的覆盖前面的', used:'生效', overridden:'被覆盖', undo:'撤销', undone:'已撤销',
-    has:p => `已有 ${p} · 会再加一条`, confirmGlobal:n => `绑定后 ${n} 只在这个文件夹生效，不再全局生效。`, coveredNote:(n, p) => `${n} 的 ${p} 已经覆盖这里，没有改动`,
+    confirmGlobal:n => `绑定后 ${n} 只在这个文件夹生效，不再全局生效。`, coveredNote:(n, p) => `${n} 的 ${p} 已经覆盖这里，没有改动`,
+    staleKeep:'保留旧路径', staleFix:'改成这次的路径', updated:'已更新', hasPre:'已有 ', hasSuf:' · 会再加一条',
+    staleHead:' 还指向一个已经不在的路径', staleOld:'旧路径', staleNew:'新路径',
     overlapTitle:n => `${n} 个身份覆盖这里`, onlyUse:n => `这里只用 ${n}`, removeFrom:(n, p) => `从 ${n} 去掉 ${p}`, boundTo:n => `已绑到 ${n}`,
   },
   en: {
@@ -171,13 +192,16 @@ const TEXT = {
     gitFailed:'Could not run git: exec: "git": executable file not found in $PATH', identities:'Identities',
     bindTo:'Bind to', bind:'Bind', globalId:'Global identity', newId:'New Identity and Bind Here', cancel:'Cancel', rebindDo:'Rebind', unbind:'Unbind', rebind:'Rebind to', openFinder:'Open in Finder',
     overlapHint:'Git reads them in this order; the last one wins.', used:'Used', overridden:'Overridden', undo:'Undo', undone:'Undone',
-    has:p => `Has ${p} · adds another`, confirmGlobal:n => `After binding, ${n} applies only to this folder, not globally.`, coveredNote:(n, p) => `${n} already covers this folder with ${p}. Nothing changed.`,
+    confirmGlobal:n => `After binding, ${n} applies only to this folder, not globally.`, coveredNote:(n, p) => `${n} already covers this folder with ${p}. Nothing changed.`,
+    staleKeep:'Keep Old Path', staleFix:'Change to This Path', updated:'Updated', hasPre:'Has ', hasSuf:' · adds another',
+    staleHead:' points to a folder that is gone', staleOld:'Old', staleNew:'New',
     overlapTitle:n => `${n} identities cover this folder`, onlyUse:n => `Use only ${n} here`, removeFrom:(n, p) => `Remove ${p} from ${n}`, boundTo:n => `Bound to ${n}`,
   },
 };
 const STATES = {
   list:'有身份', over:'拖着经过', filter:'筛选', nofilter:'筛选无结果', checking:'正在查看', matched:'已匹配（父目录）', exact:'已匹配（可解绑）', rebind:'改绑菜单', copied:'已复制',
   overlap:'多个身份覆盖', covered:'已覆盖，没改', undo:'撤销条', undone:'撤销之后',
+  stale:'旧路径失效（改名）', 'stale-moved':'旧路径失效（挪位置）', 'stale-fixed':'改成这次的路径之后', 'stale-kept':'保留旧路径之后',
   nomatch:'没有匹配', confirm:'改绑到全局身份', notrepo:'不是仓库', notfolder:'不是文件夹', giterror:'git 失败', empty:'没有身份', loading:'读取中', readonly:'读不出来',
 };
 const ids = [
@@ -186,12 +210,17 @@ const ids = [
   { label:'client', alias:'gitlab-client', email:'bob@client.example', c:'224,122,31', cl:'240,165,95', scope:['~/work/client/'] },
   { label:'', alias:'', email:'nobody@example.com', c:'142,68,173', cl:'190,130,215', scope:['~/misc/'] },
 ];
+// A path in one line: the last 14 characters stay, the rest before them gives way to an ellipsis; the title carries the full text.
+const mid = (p, suffix = '') => `<span class="mid" title="${p}"><span class="mh">${p.slice(0, -14)}</span><span class="mt">${p.slice(-14)}${suffix}</span></span>`;
 const [work, personal, client, unnamed] = ids;
 const workExact = { ...work, scope:['~/work/api/', '~/src/new/'] };
 const workBound = { ...work, scope:['~/work/', '~/src/new/', '~/scratch/notes/'] };
 // Two sample sets: with a global identity, and without one (the only case that can have no match).
 const withGlobal = [work, personal, client, unnamed];
 const noGlobal = [work, client, unnamed];
+const staleRename = { ...work, scope:['~/projects/api-old/', '~/src/new/'] };
+const staleFixed = { ...work, scope:['~/projects/api/', '~/src/new/'] };
+const staleMoved = { ...work, scope:['~/Documents/archive/2023/legacy-services/payments-gateway/', '~/src/new/'] };
 const swap = (set, from, to) => set.map(i => i === from ? to : i);
 const icon = {
   copy:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="5.5" y="5.5" width="8" height="8" rx="1.5"/><path d="M10.5 3.5v-.5a1 1 0 0 0-1-1h-6a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h.5"/></svg>',
@@ -212,7 +241,7 @@ const view = {
 function panel(state, T) {
   const ghost = (name, label) => `<button class="ghost" title="${label}" aria-label="${label}">${icon[name]}</button>`;
   const avatar = i => `<div class="avatar" style="--c:${i.c};--cl:${i.cl}">${(i.label || '?').slice(0, 1).toUpperCase()}</div>`;
-  const tag = i => i.scope ? i.scope[0] + (i.scope.length > 1 ? ` +${i.scope.length - 1}` : '') : T.global;
+  const tag = i => i.scope ? mid(i.scope[0], i.scope.length > 1 ? ` +${i.scope.length - 1}` : '') : T.global;
   const rows = set => set.map(i => `<div class="item"><span class="dot" style="--c:${i.c};--cl:${i.cl}"></span><div class="text"><span class="label">${i.label || T.unnamed}</span><span class="email">${i.email || T.noEmail}</span></div><span class="tag">${tag(i)}</span></div>`).join('');
   // The filter shows from three identities on; the platform buttons only in the filter state.
   const list = (set = withGlobal, chips = false) => `<div class="section"><span>${T.identities}</span><span>${set.length}</span></div>` +
@@ -240,12 +269,17 @@ function panel(state, T) {
       <div class="kv"><span>${T.alias}</span><span class="mono">${i.alias}</span><span>${T.email}</span><span>${i.email}</span><span>${T.folders}</span><span class="mono paths">${i.scope ? i.scope.map(p => `<span>${p}</span>`).join('') : T.global}</span></div>
       <div class="actions">${btn(T.openFinder)}<span class="gap"></span>
         <span class="menuwrap">${btn(T.rebind + icon.chev)}${o.menu ? menu : ''}</span>${o.exact ? btn(T.unbind) : ''}</div>${o.confirm ? confirmBlock : ''}${o.foot || ''}`,
-      (o.copied ? ack(T.copied) + ghost('check', T.copy) : ghost('copy', T.copy)) + ghost('x', T.clear));
+      (o.ack ? ack(T.updated) : '') + (o.copied ? ack(T.copied) + ghost('check', T.copy) : ghost('copy', T.copy)) + ghost('x', T.clear));
   };
-  const bindRow = (i, note, pick) => `<div class="row${pick ? ' pick' : ''}">${dot(i)}<div class="lines"><span class="label">${name(i)}</span><span class="note">${note}</span></div>${pick ? '' : `<span class="go">${T.bind}</span>`}</div>`;
-  const noMatch = undone => result('warning', '~/scratch/notes', `<div class="say tight">${T.noMatch}</div><div class="head">${T.bindTo}</div>`
-    + bindRow(work, T.has('~/work/')) + bindRow(client, T.has('~/work/client/')) + bindRow(unnamed, T.has('~/misc/'))
+  // "Has <path> · adds another": the path gives way to an ellipsis, the rest of the sentence stays.
+  const has = i => `<span>${T.hasPre}</span>${mid(i.scope[0])}<span>${T.hasSuf}</span>`;
+  const bindRow = (i, pick) => `<div class="row${pick ? ' pick' : ''}">${dot(i)}<div class="lines"><span class="label">${name(i)}</span><span class="note">${has(i)}</span></div>${pick ? '' : `<span class="go">${T.bind}</span>`}</div>`;
+  const noMatch = (undone, o = {}) => result('warning', o.path || '~/scratch/notes', `<div class="say tight">${T.noMatch}</div><div class="head">${T.bindTo}</div>`
+    + bindRow(o.work || work) + bindRow(client) + bindRow(unnamed)
     + `<div class="row short">${btn(icon.plus + T.newId)}</div>`, (undone ? ack(T.undone) : '') + ghost('x', T.clear));
+  const stale = (old, now) => `<div class="result"><div class="stale-head">${dot(work)}<span class="name">${name(work)}</span><span class="rest">${T.staleHead}</span></div>`
+    + `<div class="path-row"><span class="key">${T.staleOld}</span>${mid(old)}</div><div class="path-row"><span class="key">${T.staleNew}</span>${mid(now)}</div>`
+    + `<div class="actions">${btn(T.staleFix)}<span class="gap"></span>${btn(T.staleKeep)}</div></div>`;
   const verdict = (win, label) => `<span class="verdict${win ? ' win' : ''}">${win ? icon.check : ''}${label}</span>`;
   const overlap = () => result('', '~/work/client/app', `<div class="say tight">${T.overlapTitle(2)}</div><div class="overlap-hint">${T.overlapHint}</div>`
     + `<div class="row lost">${dot(work)}<div class="lines"><span class="label">${name(work)}</span><span class="note mono">~/work/</span></div>${verdict(false, T.overridden)}</div>`
@@ -271,6 +305,10 @@ function panel(state, T) {
     overlap: overlap() + matched({ id:client, path:'~/work/client/app' }) + drop(true) + list(),
     covered: matched({ foot:`<div class="bar note">${T.coveredNote(name(work), '~/work/')}</div>` }) + drop(true) + list(),
     undo: matched({ id:workBound, path:'~/scratch/notes', exact:true, foot:undoBar(work) }) + drop(true) + list(swap(noGlobal, work, workBound)),
+    stale: stale('~/projects/api-old', '~/projects/api') + noMatch(false, { path:'~/projects/api', work:staleRename }) + drop(true) + list(swap(noGlobal, work, staleRename)),
+    'stale-moved': stale(staleMoved.scope[0].slice(0, -1), '~/projects/payments-gateway') + noMatch(false, { path:'~/projects/payments-gateway', work:staleMoved }) + drop(true) + list(swap(noGlobal, work, staleMoved)),
+    'stale-fixed': matched({ id:staleFixed, path:'~/projects/api', exact:true, copied:false, ack:true }) + drop(true) + list(swap(noGlobal, work, staleFixed)),
+    'stale-kept': noMatch(false, { path:'~/projects/api', work:staleRename }) + drop(true) + list(swap(noGlobal, work, staleRename)),
     undone: noMatch(true) + drop(true) + list(noGlobal),
     nomatch: noMatch(false) + drop(true) + list(noGlobal),
     notrepo: result('warning', '~/scratch/notes', `<div class="say">${T.notRepo}</div>`) + drop(true) + list(),
