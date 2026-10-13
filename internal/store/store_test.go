@@ -253,3 +253,37 @@ func TestBackupsRefuseSymlinks(t *testing.T) {
 		t.Fatalf("delete a link: %v", err)
 	}
 }
+
+func TestReloadSeesChangesMadeOutside(t *testing.T) {
+	dir := t.TempDir()
+	s := Open(dir, newClock().now)
+	other := Open(dir, newClock().now)
+	if err := other.Add(identity("work", false)); err != nil {
+		t.Fatal(err)
+	}
+	if len(s.Accounts()) != 0 {
+		t.Fatal("the first store has not read the file again")
+	}
+	s.Reload()
+	if len(s.Accounts()) != 1 || s.ReadOnly() != nil {
+		t.Fatalf("reload: %v %v", s.Accounts(), s.ReadOnly())
+	}
+	if err := os.WriteFile(s.Path(), []byte("{"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	s.Reload()
+	var readOnly *ReadOnlyError
+	if !errors.As(s.ReadOnly(), &readOnly) || len(s.Accounts()) != 0 {
+		t.Fatalf("a damaged file makes the store read-only: %v", s.ReadOnly())
+	}
+	if err := s.Add(identity("home", true)); !errors.As(err, &readOnly) {
+		t.Fatalf("no writes while read-only: %v", err)
+	}
+	if err := os.WriteFile(s.Path(), []byte(`{"accounts":[],"version":1}`), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	s.Reload()
+	if s.ReadOnly() != nil {
+		t.Fatal("fixing the file lifts the read-only state")
+	}
+}

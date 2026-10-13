@@ -90,6 +90,13 @@ func (s *Store) load() {
 	}
 }
 
+// Reload reads accounts.json again, so that changes made outside the app show up. It never writes.
+func (s *Store) Reload() {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.load()
+}
+
 // Path is the location of accounts.json.
 func (s *Store) Path() string { return s.path }
 
