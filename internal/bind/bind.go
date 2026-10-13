@@ -165,3 +165,30 @@ func RemovePath(list []account.Account, id, path string, env paths.Env, now time
 	}
 	return Plan{Changes: []account.Account{used(without(a, drop), now)}, Before: []account.Account{a}}, nil
 }
+
+// FixPath replaces the identity's stale path with the folder at root, where the stale path stands, so that the
+// other paths and their order stay. When the identity lists the folder already, the stale path is only removed.
+// An identity without the stale path gives a plan that changes nothing.
+func FixPath(list []account.Account, id, stale, root string, env paths.Env, now time.Time) (Plan, error) {
+	i, err := find(list, id)
+	if err != nil {
+		return Plan{}, err
+	}
+	a := list[i]
+	old, fresh := gitdir.Normalize(stale, env), gitdir.Normalize(root, env)
+	same := func(p, target string) bool { return target != "" && env.Equal(gitdir.Normalize(p, env), target) }
+	if !slices.ContainsFunc(a.Scope.Paths, func(p string) bool { return same(p, old) }) {
+		return Plan{}, nil
+	}
+	have := slices.ContainsFunc(a.Scope.Paths, func(p string) bool { return same(p, fresh) })
+	var next []string
+	for _, p := range a.Scope.Paths {
+		switch {
+		case !same(p, old):
+			next = append(next, p)
+		case !have:
+			next, have = append(next, fresh), true
+		}
+	}
+	return Plan{Changes: []account.Account{used(withPaths(a, next), now)}, Before: []account.Account{a}}, nil
+}

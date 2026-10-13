@@ -27,6 +27,8 @@ const (
 	KindRemovePath
 	// KindUndo puts Before back.
 	KindUndo
+	// KindFixPath replaces Path of From, a gitdir path that is gone, with the folder itself.
+	KindFixPath
 )
 
 // Op is a request. Dir is the folder as it was dropped and Root its work tree root; both are looked at again
@@ -92,6 +94,8 @@ func (r Runner) Run(ctx context.Context, op Op) Outcome {
 		plan, err = UseOnly(list, op.To, op.Root, r.Env, now)
 	case KindRemovePath:
 		plan, err = RemovePath(list, op.From, op.Path, r.Env, now)
+	case KindFixPath:
+		plan, err = FixPath(list, op.From, op.Path, op.Root, r.Env, now)
 	case KindUndo:
 		err = r.Store.RestoreMany(op.Before)
 	}
