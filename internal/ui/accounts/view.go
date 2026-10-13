@@ -262,24 +262,17 @@ func (r *rows) next() {
 	r.n++
 }
 
-// field is a row with its label on the left and the value, drawn by value, filling the rest. hint is a line
-// under the label.
+// field is a row with its label on the left and the value, drawn by value, filling the rest. hint is a small
+// muted note at the end of the row, after the value; the value gives way to it and never overlaps it.
 func (r *rows) field(label, hint string, value func()) {
 	r.next()
 	t := r.c.Theme()
-	pad := t.Space(0.5)
-	if hint != "" {
-		// A hint under the label needs room above and below it.
-		pad = t.Space(2)
-	}
-	ui.Row(r.c).MinHeight(t.Space(8)).PaddingX(t.Space(3)).PaddingY(pad).Gap(t.Space(2)).AlignItems(ui.Center).Children(func() {
-		ui.Column(r.c).Width(t.Space(42)).Children(func() {
-			ui.Text(r.c, label).Role(ui.RoleText)
-			if hint != "" {
-				ui.Text(r.c, hint).FontSize(t.Rem(0.85)).TextColor(t.TextMuted)
-			}
-		})
+	ui.Row(r.c).MinHeight(t.Space(8)).PaddingX(t.Space(3)).PaddingY(t.Space(0.5)).Gap(t.Space(2)).AlignItems(ui.Center).Children(func() {
+		ui.Text(r.c, label).Role(ui.RoleText).Width(t.Space(42))
 		value()
+		if hint != "" {
+			ui.Text(r.c, hint).FontSize(t.Rem(0.85)).TextColor(t.TextMuted).SingleLine().Shrink(0)
+		}
 	})
 }
 
@@ -340,7 +333,7 @@ func (s *Screen) identityGroup(c *ui.Context, f *form) {
 	})
 }
 
-// fromGit is the hint under a field that still holds what git config gave.
+// fromGit is the hint at the end of a field that still holds what git config gave.
 func (s *Screen) fromGit(value, prefilled string) string {
 	if prefilled != "" && value == prefilled {
 		return s.text.FromGit

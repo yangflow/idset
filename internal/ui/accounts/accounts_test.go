@@ -744,19 +744,40 @@ func TestLongKeyPathIsShortenedInTheMiddleUntilEdited(t *testing.T) {
 	}
 }
 
-func TestHintRowsGrowTallEnoughForTheHint(t *testing.T) {
-	r := open(t, "en", sample(), Request{New: true})
-	r.s.SetPrefill(r.s.Draft(), "Ada", "ada@example.com")
-	r.tt.SetSize(760, 1500)
-	r.tt.Frame()
-	name, _ := r.tt.Find("Git name")
-	email, _ := r.tt.Find("Email")
-	hint, _ := r.tt.Find("From git config --global")
-	if gap := email.Y - name.Y; gap < 44 {
-		t.Errorf("the rows with a hint are taller than plain rows (32): label to label %v", gap)
-	}
-	if hint.Y < name.Y+name.H-1 {
-		t.Errorf("the hint is under its label: %v %v", hint, name)
+func TestPrefillHintSitsAtTheEndOfAStandardRow(t *testing.T) {
+	for _, lang := range []string{"en", "zh-Hans"} {
+		r := open(t, lang, sample(), Request{New: true})
+		x := r.s.text
+		r.s.SetPrefill(r.s.Draft(), "Ada", "ada@example.com")
+		r.tt.SetSize(760, 1500)
+		r.tt.Frame()
+		user, _ := r.tt.Find(x.Username)
+		name, _ := r.tt.Find(x.GitName)
+		email, _ := r.tt.Find(x.Email)
+		if a, b := name.Y-user.Y, email.Y-name.Y; a < 31 || a > 34 || b < 31 || b > 34 {
+			t.Errorf("%s: rows with a hint are as high as the others (32): %v %v", lang, a, b)
+		}
+		hint, ok := r.tt.Find(x.FromGit)
+		if !ok || hint.X < 500 || hint.Y < name.Y-8 || hint.Y > name.Y+16 {
+			t.Errorf("%s: the hint is at the end of the Git name row: %v %v", lang, hint, name)
+		}
+		// A long value gives way to the hint instead of overlapping it.
+		r.form().cur.gitName = strings.Repeat("Ada Lovelace ", 20)
+		r.form().prefName = r.form().cur.gitName
+		r.tt.Frame()
+		long, _ := r.tt.Find(x.FromGit)
+		if long.X < 500 || long.W != hint.W {
+			t.Errorf("%s: the hint keeps its place and size: %v %v", lang, long, hint)
+		}
+		// Editing takes the hint away, from that field only.
+		r.form().cur.gitName = "Ada L"
+		r.tt.Frame()
+		if n := strings.Count(strings.Join(r.tt.Texts(), "|"), x.FromGit); n != 1 {
+			t.Errorf("%s: one hint left, for the email: %d", lang, n)
+		}
+		r.form().cur.email = "other@example.com"
+		r.tt.Frame()
+		r.wantNot(t, x.FromGit)
 	}
 }
 

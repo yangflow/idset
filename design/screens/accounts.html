@@ -83,8 +83,7 @@ button.ghost svg { width:14px; height:14px }
 .r + .r::before { content:""; position:absolute; top:0; left:12px; right:0; height:1px; background:color-mix(in srgb, var(--border) 70%, transparent) }
 .r .k { flex:none; width:168px }
 .r .k.wide { width:auto; flex:1 }
-.r.hint { padding-top:8px; padding-bottom:8px }
-.r .k small { display:block; font-size:11px; color:var(--muted) }
+.r .hint-end { flex:none; font-size:11px; color:var(--muted) }
 .r .v { flex:1; min-width:0; text-align:right; overflow-wrap:anywhere }
 .r .v.ph { color:var(--muted) }
 .r .v.left { text-align:left }
@@ -221,7 +220,7 @@ function render() {
   const name = i => i.label || T.unnamed;
   const ghost = (ic, label, off) => `<button class="ghost" title="${label}" aria-label="${label}"${off ? ' disabled' : ''}>${icon[ic]}</button>`;
   // A row: label left, value right.
-  const row = (k, v, o = {}) => `<div class="r${o.hint ? ' hint' : ''}"><div class="k">${k}${o.hint ? `<small>${o.hint}</small>` : ''}</div><div class="v${o.mono ? ' mono' : ''}${o.ph ? ' ph' : ''}${o.focus ? ' focus' : ''}">${v}</div>${o.tail ? `<div class="tail">${o.tail}</div>` : ''}</div>`;
+  const row = (k, v, o = {}) => `<div class="r"><div class="k">${k}</div><div class="v${o.mono ? ' mono' : ''}${o.ph ? ' ph' : ''}${o.focus ? ' focus' : ''}">${v}</div>${o.hint ? `<span class="hint-end">${o.hint}</span>` : ''}${o.tail ? `<div class="tail">${o.tail}</div>` : ''}</div>`;
   const group = (title, rows, note = '') => `<div class="g"${title.id ? ` id="${title.id}"` : ''}><h3>${title.text || title}</h3><div class="rows">${rows}</div>${note}</div>`;
   const addRow = (label, off) => `<div class="r add"><button class="text"${off ? ' disabled' : ''}>${icon.plus}${label}</button></div>`;
   const fromGit = T.fromGit;

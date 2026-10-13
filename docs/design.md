@@ -362,8 +362,9 @@ pane.
   row: the `from` URL, and under it `→` and the `to` URL, then "Push only" with a switch and a minus button; then the
   text rows "+ Add Rewrite" and "+ Add Platform Default Rewrite" (disabled without an alias, the reason in the
   footnote). Text rows are `Accent` text with a leading plus, never boxed.
-- **Hints.** A prefilled signature name and email carry "From git config --global" (11, `TextMuted`) under their label;
-  a row with a hint has `Space(2)` (8) padding above and below, so it grows past 32.
+- **Hints.** A prefilled signature name and email carry "From git config --global" (11, `TextMuted`) at the end of their
+  row, right of the value; the row keeps the standard 32 height. A long value is cut before it reaches the hint. The
+  hint goes as soon as the field is edited.
 - **Scrolling.** The detail is a scroll view above the fixed footer; the header scrolls with the groups. The source
   list scrolls above its add bar.
 - **Footer.** Hairline above, `Space(11)` (44) high like the sidebar's add bar so the two hairlines are one line, side padding
