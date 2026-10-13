@@ -6,6 +6,7 @@ import (
 	"io/fs"
 	"os"
 	pathpkg "path"
+	"path/filepath"
 	"slices"
 	"strings"
 
@@ -34,7 +35,7 @@ type staleCandidate struct {
 // the path. gone answers for an absolute path in the platform's form and reads the disk, so this is for background
 // work.
 func FindStale(list []account.Account, root string, env paths.Env, gone func(path string) bool) *Stale {
-	root = strings.TrimSuffix(paths.Slash(root), "/")
+	root = canon(root)
 	parent, name := pathpkg.Split(root)
 	if name == "" || isTop(parent) || isHome(root, env) {
 		return nil
@@ -50,7 +51,7 @@ func FindStale(list []account.Account, root string, env paths.Env, gone func(pat
 			if normal == "" {
 				continue
 			}
-			abs := strings.TrimSuffix(env.Expand(normal), "/")
+			abs := canon(env.Expand(normal))
 			oldParent, oldName := pathpkg.Split(abs)
 			oldParent = strings.TrimSuffix(oldParent, "/")
 			if env.Equal(abs, root) || oldName == "" {
@@ -92,6 +93,30 @@ func boolCmp(a, b bool) int {
 	return -1
 }
 
+// canon is p in slash form without a trailing slash, with symbolic links resolved as far as the path exists: the
+// nearest existing ancestor is resolved and the rest is appended, so that a path that is gone, such as a stale
+// one, compares equal to the resolved path git reports (/tmp and /private/tmp, /var and /private/var).
+func canon(p string) string {
+	p = strings.TrimSuffix(paths.Slash(p), "/")
+	if p == "" {
+		return p
+	}
+	rest := ""
+	for cur := p; ; {
+		if real, err := filepath.EvalSymlinks(filepath.FromSlash(cur)); err == nil {
+			return strings.TrimSuffix(paths.Slash(real), "/") + rest
+		}
+		parent, name := pathpkg.Split(cur)
+		if name == "" || parent == "" {
+			return p
+		}
+		rest, cur = "/"+name+rest, strings.TrimSuffix(parent, "/")
+		if cur == "" {
+			cur = "/"
+		}
+	}
+}
+
 // isTop reports whether dir, in slash form, is the root of the file system or of a drive.
 func isTop(dir string) bool {
 	if dir == "/" || dir == "" {
@@ -102,7 +127,7 @@ func isTop(dir string) bool {
 
 func isHome(root string, env paths.Env) bool {
 	for _, home := range []string{env.Home, env.RealHome} {
-		if home = strings.TrimSuffix(paths.Slash(home), "/"); home != "" && env.Equal(root, home) {
+		if home = canon(home); home != "" && env.Equal(root, home) {
 			return true
 		}
 	}

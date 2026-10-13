@@ -141,3 +141,56 @@ func TestGoneAndResolveReadTheDisk(t *testing.T) {
 		t.Fatalf("only a result without a match asks: %+v", r)
 	}
 }
+
+// linkedHome is a home directory reached through a symbolic link, as /tmp is on macOS, and its resolved form.
+func linkedHome(t *testing.T) (env paths.Env, link, real string) {
+	t.Helper()
+	base, err := filepath.EvalSymlinks(t.TempDir())
+	if err != nil {
+		t.Fatal(err)
+	}
+	real = filepath.Join(base, "real", "home")
+	if err := os.MkdirAll(filepath.Join(real, "projects", "api"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	link = filepath.Join(base, "link")
+	if err := os.Symlink(filepath.Join(base, "real"), link); err != nil {
+		t.Skip("symbolic links are not available:", err)
+	}
+	link = filepath.Join(link, "home")
+	return paths.Env{Home: link, Windows: runtime.GOOS == "windows"}, link, real
+}
+
+func TestFindStaleThroughASymbolicLinkedHome(t *testing.T) {
+	env, _, real := linkedHome(t)
+	root := paths.Slash(filepath.Join(real, "projects", "api"))
+	for _, c := range []struct{ name, stored string }{
+		{"rename", "~/projects/api-old/"},
+		{"move", "~/archive/api/"},
+	} {
+		got := FindStale([]account.Account{named("work", c.stored)}, root, env, Gone)
+		if got == nil || got.Path != c.stored {
+			t.Errorf("%s: %+v", c.name, got)
+		}
+	}
+	// The dropped folder in the form the user wrote it, through the link, matches the same way.
+	linked := paths.Slash(filepath.Join(env.Home, "projects", "api"))
+	if got := FindStale([]account.Account{named("work", "~/projects/api-old/")}, linked, env, Gone); got == nil {
+		t.Error("the folder through the link")
+	}
+	// A path that exists is never stale, through the link too.
+	if got := FindStale([]account.Account{named("work", "~/projects/api/")}, root, env, Gone); got != nil {
+		t.Errorf("%+v", got)
+	}
+}
+
+func TestFindStaleHomeExclusionThroughASymbolicLink(t *testing.T) {
+	env, _, real := linkedHome(t)
+	list := []account.Account{named("work", "~/x/home/")}
+	if got := FindStale(list, paths.Slash(real), env, Gone); got != nil {
+		t.Errorf("the resolved home directory: %+v", got)
+	}
+	if got := FindStale(list, paths.Slash(env.Home), env, Gone); got != nil {
+		t.Errorf("the home directory as written: %+v", got)
+	}
+}
