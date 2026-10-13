@@ -13,7 +13,7 @@ All notable user-facing changes are recorded here, following [Keep a Changelog](
 - Every change to the identity list now regenerates the managed SSH and Git files and keeps the `Include` blocks in
   `~/.ssh/config` and `~/.gitconfig` current. Recording a use does not regenerate.
 - The accounts window creates, edits and deletes identities. Click an identity in the panel to open it, or "Add
-  Identity" for a new one; the tray menu opens the window too. Saving (Ctrl or Command+S) checks the identity first,
+  Identity" for a new one. Saving (Ctrl or Command+S) checks the identity first,
   writes it in the background and regenerates the configuration, and says "Written" or why it could not. A new
   identity starts with the name and email from `git config --global`.
 - Deleting an identity asks first and lists what stays. "Also delete the private key" is off by default and cannot be

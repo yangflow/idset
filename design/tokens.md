@@ -23,27 +23,26 @@ Mockups show the 4 DIP unit and 13 px text.
 | space-4 | `t.Space(4)` | 16 | panel content padding; title bar and footer, horizontal |
 | space-5 | `t.Space(5)` | 20 | vertical padding of the idle drop zone |
 | symbol-button | `t.Space(6)` | 24 | borderless symbol buttons in cards |
-| badge-row | `t.Space(7)` | 28 | initial badge in a list row |
 | badge-result | `t.Space(9)` | 36 | initial badge in a result card |
 | badge-warning | `t.Space(11)` | 44 | warning badge of the read-only state |
 | detail-label | `t.Space(14)` | 56 | label column of the result card's details |
 | detail-inset | `t.Space(15)` | 60 | details lined up with the identity name |
 | radius | `Theme.Radius` | 6 | controls, symbol buttons, the read-only reason box |
 | radius-card | 10 | 10 | result cards, the identity list, the drop zone |
-| radius-badge | 7 / 9 / 11 | 7 / 9 / 11 | row badge, result badge, warning badge |
+| radius-badge | 9 / 11 | 9 / 11 | result badge, warning badge |
 | radius-filter | 12 | 12 | platform filter buttons |
 | outline-drop | 1.5, dashed | 1.5 | drop zone outline |
 | title | `t.Rem(1.15)` bold | about 15 / 16 | panel title, a level 1 heading |
 | emphasis | `t.Rem(1.15)`, 600 | about 15 / 16 | identity name in a result card; read-only title |
 | secondary | `t.Rem(0.9)` | about 12 / 13 | hints, group heading, emails, paths in a result card |
 | small | `t.Rem(0.85)` | about 11 / 12 | folders in a list row, the read-only reason, "Copied" |
-| badge-letter | `t.Rem(1)` / `t.Rem(1.25)` bold | 13 / 16 | initial in a row badge / result badge |
+| badge-letter | `t.Rem(1.25)` bold | 16 | initial in a result badge |
 | icon | `t.Rem(1.1)` / `t.Rem(1.7)` | about 14 / 22 | symbols in cards / the read-only warning |
 | body | theme `FontSize` | 13 / 14 | everything else, and all widget text |
 | accounts-list | `t.Space(58)` | 232 | source list of the accounts window |
 | accounts-row | `t.Space(8)` | 32 | height of a settings row |
 | accounts-label | `t.Space(42)` | 168 | label column of a settings row |
-| dot | `t.Space(2.5)` / `t.Space(3)` / `t.Space(3.5)` | 10 / 12 / 14 | color dot in the list / header / color choices |
+| dot | `t.Space(2.5)` / `t.Space(3)` / `t.Space(3.5)` | 10 / 12 / 14 | color dot in the panel and account lists / header / color choices |
 | accounts-dialog | `t.Space(90)` | 360 | width of the delete confirmation |
 | panel | `Width`, `Height` | 340 x 480 | the panel window, fixed |
 | accounts | `Width`, `Height` | 760 x 520 | the accounts window; resizable, with a minimum size |
