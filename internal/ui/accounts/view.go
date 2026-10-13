@@ -31,8 +31,6 @@ func (s *Screen) View(c *ui.Context) {
 		s.save()
 	}
 	ui.Column(c).Fill().Children(func() {
-		s.toolbar(c)
-		ui.Divider(c)
 		switch {
 		case s.loading:
 			ui.Column(c).Grow(1).Gap(t.Space(2)).AlignItems(ui.Center).Justify(ui.Center).Children(func() {
@@ -52,21 +50,6 @@ func (s *Screen) View(c *ui.Context) {
 		c.Announce(s.announce)
 		s.announce = ""
 	}
-}
-
-func (s *Screen) toolbar(c *ui.Context) {
-	t := c.Theme()
-	ui.Row(c).Background(t.Surface).PaddingX(t.Space(3)).PaddingY(t.Space(1.5)).Children(func() {
-		ui.Toolbar(c, func() {
-			b := ui.Button(c, "").Label(s.text.AddIdentity).Disabled(s.readErr != nil || s.loading).Children(func() {
-				ui.Icon(c, plusIcon).FontSize(t.Rem(1.1))
-				ui.Text(c, s.text.AddIdentity).SingleLine()
-			})
-			if b.Clicked() {
-				s.newDraft()
-			}
-		}).Label(s.text.Window)
-	})
 }
 
 func (s *Screen) readOnly(c *ui.Context) {
@@ -119,6 +102,7 @@ func (s *Screen) sidebar(c *ui.Context) {
 			}
 			ui.Textf(c, "%d", n).FontSize(t.Rem(0.85)).TextColor(t.TextMuted)
 		})
+		// The list scrolls above the add bar, which stays at the bottom edge of the sidebar.
 		ui.Scroll(c).Grow(1).Padding(0, t.Space(2), t.Space(2), t.Space(2)).Gap(t.Space(0.5)).Children(func() {
 			if f := s.forms[s.draftID]; f != nil {
 				s.item(c, f.id, f.cur.label, f.cur.email, f.cur.color, false, true)
@@ -130,6 +114,12 @@ func (s *Screen) sidebar(c *ui.Context) {
 					label, email, color = f.cur.label, f.cur.email, f.cur.color
 				}
 				s.item(c, a.ID, label, email, color, !a.Scope.Global, false)
+			}
+		})
+		ui.Divider(c)
+		ui.Row(c).Padding(t.Space(1), t.Space(2)).Children(func() {
+			if ghost(c, s.text.AddIdentity, plusIcon).Disabled(s.readErr != nil).Clicked() {
+				s.newDraft()
 			}
 		})
 	})
@@ -277,7 +267,12 @@ func (r *rows) next() {
 func (r *rows) field(label, hint string, value func()) {
 	r.next()
 	t := r.c.Theme()
-	ui.Row(r.c).MinHeight(t.Space(8)).PaddingX(t.Space(3)).PaddingY(t.Space(0.5)).Gap(t.Space(2)).AlignItems(ui.Center).Children(func() {
+	pad := t.Space(0.5)
+	if hint != "" {
+		// A hint under the label needs room above and below it.
+		pad = t.Space(2)
+	}
+	ui.Row(r.c).MinHeight(t.Space(8)).PaddingX(t.Space(3)).PaddingY(pad).Gap(t.Space(2)).AlignItems(ui.Center).Children(func() {
 		ui.Column(r.c).Width(t.Space(42)).Children(func() {
 			ui.Text(r.c, label).Role(ui.RoleText)
 			if hint != "" {
@@ -361,8 +356,8 @@ func (s *Screen) sshGroup(c *ui.Context, f *form) {
 		}
 		r.field(s.text.Alias, "", func() { s.input(c, "alias", &f.cur.alias, s.text.Alias).Font("monospace").FontSize(t.Rem(0.9)) })
 		r.field(s.text.Key, "", func() {
-			s.input(c, "key", &f.cur.keyPath, s.text.Key).Font("monospace").FontSize(t.Rem(0.9))
-			if ui.Button(c, s.text.ChooseFile).Disabled(s.busy).Background(ui.Color{}).Border(0, ui.Color{}).TextColor(t.Accent).Clicked() {
+			s.keyValue(c, f)
+			if ghost(c, s.text.ChooseFile, folderIcon).Disabled(s.busy).Clicked() {
 				s.act.ChooseKey(f.id)
 			}
 		})
@@ -377,6 +372,49 @@ func (s *Screen) sshGroup(c *ui.Context, f *form) {
 			}).Row().Gap(t.Space(4)).Label(s.text.Port)
 		})
 	})
+}
+
+// keyShown is how many characters of a private key path fit the value field; a longer path is shown shortened
+// in the middle, so that the file name stays visible, until the field is clicked.
+const keyShown = 34
+
+// middle shortens text to n runes by replacing the middle with an ellipsis.
+func middle(text string, n int) string {
+	runes := []rune(text)
+	if len(runes) <= n || n < 3 {
+		return text
+	}
+	head := (n - 1) / 3
+	tail := n - 1 - head
+	return string(runes[:head]) + "…" + string(runes[len(runes)-tail:])
+}
+
+// keyValue is the private key path: a text input, or for a long path that is not being edited the path
+// shortened in the middle. Either way the tooltip and the focused input show all of it.
+func (s *Screen) keyValue(c *ui.Context, f *form) {
+	t := c.Theme()
+	long := len([]rune(f.cur.keyPath)) > keyShown
+	if long && !f.keyEditing {
+		short := ui.Text(c.Key("key-short"), middle(f.cur.keyPath, keyShown)).Font("monospace").FontSize(t.Rem(0.9)).Grow(1).
+			Tooltip(f.cur.keyPath).Focusable()
+		if short.Clicked() && !s.busy {
+			f.keyEditing, f.keyFrames = true, 0
+		}
+		return
+	}
+	in := s.input(c, "key", &f.cur.keyPath, s.text.Key).Font("monospace").FontSize(t.Rem(0.9)).Tooltip(f.cur.keyPath)
+	if f.keyEditing {
+		in.AutoFocus()
+	}
+	switch {
+	case in.Focused():
+		f.keyEditing, f.keyFrames = true, 1
+	case f.keyEditing && f.keyFrames > 0:
+		// It had the focus and lost it.
+		f.keyEditing, f.keyFrames = false, 0
+	case f.keyEditing:
+		f.keyFrames++
+	}
 }
 
 func (s *Screen) scopeGroup(c *ui.Context, f *form) {

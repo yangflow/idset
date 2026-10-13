@@ -54,6 +54,9 @@ type form struct {
 	hexShown string
 	// The signature read from git config, while the fields still hold it.
 	prefName, prefEmail string
+	// keyEditing is set while a long key path is shown as the input; keyFrames counts the frames since the click.
+	keyEditing bool
+	keyFrames  int
 }
 
 func newForm(a account.Account, isNew bool) *form {

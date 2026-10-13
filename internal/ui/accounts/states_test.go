@@ -20,7 +20,7 @@ func TestMockupStates(t *testing.T) {
 		texts texts
 	}{
 		{"empty", []account.Account{}, Request{}, nil, texts{
-			[]string{"No identities yet", "New", "Add Identity"}, []string{"还没有身份", "新建", "添加身份"}}},
+			[]string{"No identities yet", "New"}, []string{"还没有身份", "新建"}}},
 		{"global", sample(), Request{ID: personalID}, nil, texts{
 			[]string{"Global", "Used when no folder rule matches.", "Last used"}, []string{"全局", "没有 gitdir 规则命中时生效。", "最近使用"}}},
 		{"scoped", sample(), Request{ID: workID}, nil, texts{

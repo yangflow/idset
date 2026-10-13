@@ -176,8 +176,9 @@ func TestListShowsEveryIdentityInPanelOrder(t *testing.T) {
 
 func TestEmptyStateOffersNewOnly(t *testing.T) {
 	r := open(t, "en", []account.Account{}, Request{})
-	r.want(t, "No identities yet", "New", "Add Identity")
-	r.wantNot(t, "Import", "Revert", "Save")
+	r.want(t, "No identities yet", "New")
+	// No toolbar and no sidebar: the centered button is the only way to add.
+	r.wantNot(t, "Import", "Revert", "Save", "Add Identity")
 	r.click(t, "New")
 	if r.s.Draft() == "" || !slices.Equal(r.rec.prefilled, []string{r.s.Draft()}) {
 		t.Fatalf("the draft must ask for the signature: %v", r.rec.prefilled)
@@ -648,5 +649,113 @@ func TestKeyReasonsTextsExist(t *testing.T) {
 		if got := s.keyReason(&confirm{reason: reason, other: "x"}); got != want {
 			t.Errorf("%d: %q", reason, got)
 		}
+	}
+}
+
+func TestAddIdentityIsAtTheBottomOfTheSidebar(t *testing.T) {
+	r := open(t, "en", sample(), Request{ID: workID})
+	r.tt.SetSize(760, 520)
+	r.tt.Frame()
+	add, ok := r.tt.Find("Add Identity")
+	if !ok {
+		t.Fatalf("no add button in %q", r.tt.Texts())
+	}
+	if add.X > 232 || add.Y < 520-60 {
+		t.Errorf("the add button sits at the bottom of the source list (232 wide): %v", add)
+	}
+	r.click(t, "Add Identity")
+	if r.s.Draft() == "" || r.s.Selected() != r.s.Draft() {
+		t.Fatal("the bar adds a draft")
+	}
+	// A long list scrolls above the bar, which does not move.
+	var many []account.Account
+	for i := range 20 {
+		a := sample()[0]
+		a.ID = fmt.Sprintf("00000000-0000-0000-0000-%012d", i)
+		a.Label, a.SSHAlias = fmt.Sprintf("many-%d", i), fmt.Sprintf("alias-%d", i)
+		many = append(many, a)
+	}
+	r = open(t, "en", many, Request{})
+	r.tt.SetSize(760, 520)
+	r.tt.Frame()
+	before, _ := r.tt.Find("Add Identity")
+	r.tt.Scroll(100, 200, 0, 3000)
+	after, _ := r.tt.Find("Add Identity")
+	if before != after || before.Y < 520-60 {
+		t.Errorf("the add bar is fixed: %v %v", before, after)
+	}
+}
+
+func TestDetailScrollsUnderAFixedFooterAtTheDefaultSize(t *testing.T) {
+	r := open(t, "en", sample(), Request{ID: workID})
+	r.tt.SetSize(760, 520)
+	r.tt.Frame()
+	notes, ok := r.tt.Find("Notes")
+	if !ok || notes.Y < 520 {
+		t.Fatalf("the Notes group starts below the fold at 760x520: %v %v", notes, ok)
+	}
+	revert, _ := r.tt.Find("Revert")
+	delBefore, _ := r.tt.Find("Delete")
+	if revert.Y+revert.H > 520 || delBefore.Y+delBefore.H > 520 {
+		t.Fatalf("the footer is inside the window: %v %v", revert, delBefore)
+	}
+	header, _ := r.tt.Find("Identity")
+	for i := 0; i < 3; i++ {
+		r.tt.Scroll(500, 250, 0, 2000)
+	}
+	notes, _ = r.tt.Find("Notes")
+	if notes.Y > 520-40 {
+		t.Errorf("scrolling brings the last groups into view: %v", notes)
+	}
+	if got, _ := r.tt.Find("Revert"); got != revert {
+		t.Errorf("the footer stays: %v %v", got, revert)
+	}
+	// The header is the first thing in the scrolling content, so it scrolls away with it, as in the mockup.
+	if got, ok := r.tt.Find("Identity"); ok && got.Y >= header.Y {
+		t.Errorf("the header scrolls with the content: %v %v", got, header)
+	}
+}
+
+func TestLongKeyPathIsShortenedInTheMiddleUntilEdited(t *testing.T) {
+	long := "~/.ssh/keys/projects/example/id_ed25519_personal_laptop"
+	if got := middle(long, keyShown); len([]rune(got)) != keyShown || !strings.HasSuffix(got, "personal_laptop") || !strings.Contains(got, "…") {
+		t.Fatalf("middle: %q", got)
+	}
+	if middle("~/.ssh/id_work", keyShown) != "~/.ssh/id_work" {
+		t.Error("a short path is left alone")
+	}
+	list := sample()
+	list[0].KeyPath = long
+	r := open(t, "en", list, Request{ID: workID})
+	// The tooltip carries the whole path.
+	r.want(t, middle(long, keyShown))
+	r.click(t, middle(long, keyShown))
+	r.tt.Frame()
+	r.wantNot(t, middle(long, keyShown))
+	if !r.form().keyEditing {
+		t.Fatal("clicking the shortened path edits it")
+	}
+	// Typing keeps the input, even while the text is short again.
+	r.tt.Key(ui.Cmd, ui.KeyA)
+	r.tt.Type("~/.ssh/id_short")
+	r.tt.Frame()
+	if r.form().cur.keyPath != "~/.ssh/id_short" || !r.form().keyEditing {
+		t.Errorf("typed %q editing %v", r.form().cur.keyPath, r.form().keyEditing)
+	}
+}
+
+func TestHintRowsGrowTallEnoughForTheHint(t *testing.T) {
+	r := open(t, "en", sample(), Request{New: true})
+	r.s.SetPrefill(r.s.Draft(), "Ada", "ada@example.com")
+	r.tt.SetSize(760, 1500)
+	r.tt.Frame()
+	name, _ := r.tt.Find("Git name")
+	email, _ := r.tt.Find("Email")
+	hint, _ := r.tt.Find("From git config --global")
+	if gap := email.Y - name.Y; gap < 44 {
+		t.Errorf("the rows with a hint are taller than plain rows (32): label to label %v", gap)
+	}
+	if hint.Y < name.Y+name.H-1 {
+		t.Errorf("the hint is under its label: %v %v", hint, name)
 	}
 }
