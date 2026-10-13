@@ -285,11 +285,14 @@ func TestOverlapListsGitsOrderAndOffersToSettleIt(t *testing.T) {
 	if len(r.ran) != 2 || r.ran[1].Kind != bind.KindRemovePath || r.ran[1].From != "work" || r.ran[1].Path != "~/work/" {
 		t.Fatalf("ran %+v", r.ran)
 	}
-	// The winner with its own path needs no "Use only".
+	// The winner with its own path is an explicit choice: no overlap card, and after "Use only" it goes away.
 	res.Exact = true
 	_, tt, _ = card(t, res, work(), client())
-	wantNot(t, tt, "Use only client here")
-	want(t, tt, "Remove ~/work/ from work")
+	wantNot(t, tt, "cover this folder", "Use only client here", "Remove ~/work/ from work")
+	want(t, tt, "Open in Finder")
+	s.OpDone(bind.Outcome{Op: r.ran[1], Result: res})
+	tt.Frame()
+	wantNot(t, tt, "cover this folder")
 	// One identity covering is no overlap.
 	_, tt, _ = card(t, matched(api, "work", false, match.Cover{ID: "work", Path: "~/work/"}), work(), client())
 	wantNot(t, tt, "Overridden", "Used")

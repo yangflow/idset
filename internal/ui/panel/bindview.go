@@ -282,7 +282,7 @@ func (s *Screen) overlapCard(c *ui.Context, r *match.Result) {
 		}
 		ui.Divider(c)
 		ui.Column(c).Padding(t.Space(1), t.Space(2)).AlignItems(ui.Start).Children(func() {
-			if winner, ok := s.find(r.ID); ok && !r.Exact && s.textButton(c, "only", fmt.Sprintf(s.text.OnlyUse, s.label(winner)), nil, nil).
+			if winner, ok := s.find(r.ID); ok && s.textButton(c, "only", fmt.Sprintf(s.text.OnlyUse, s.label(winner)), nil, nil).
 				Height(t.Space(8)).Clicked() {
 				s.useOnly()
 			}

@@ -351,7 +351,8 @@ func (s *Screen) resultCard(c *ui.Context) {
 		if !ok {
 			return
 		}
-		if len(r.Covering) >= 2 {
+		// Once the winner has the folder's own path the choice is explicit, and nothing is offered.
+		if len(r.Covering) >= 2 && !r.Exact {
 			s.overlapCard(c, r)
 		}
 		s.matchedCard(c, r, a)

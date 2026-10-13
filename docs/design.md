@@ -334,7 +334,7 @@ The result card has two parts with a divider between them:
   - Overlap: a card of its own above the matched one, with the folder in its context line, "<n> identities cover this
     folder", one line of `TextMuted` ("Git reads them in this order; the last one wins."), the overlap rows, and the
     two actions stacked under a hairline, `Accent` text buttons aligned left: "Use only <winner> here" and "Remove
-    <path> from <loser>". The card has the plain `Border`, since nothing is wrong.
+    <path> from <loser>". The card has the plain `Border`, since nothing is wrong. It shows only while the winner has no path of the folder's own; once it has one (after "Use only" or a rebind) the choice is explicit and the card is gone.
   - Undo: after a bind, rebind or "Use only", the undo bar is the last row of the matched card. The countdown line
     shortens once a second (`c.After` from the absolute deadline), five steps; no animation. After "Undo" the card
     returns to what it was, with "Undone" next to the clear button for 1.2 seconds, like "Copied". Unbinding shows
