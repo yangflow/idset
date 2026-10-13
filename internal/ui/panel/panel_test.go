@@ -26,6 +26,8 @@ type recorder struct {
 	quit     int
 	reloaded int
 	revealed []string
+	opened   []string
+	newDraft int
 }
 
 func (r *recorder) actions() Actions {
@@ -37,6 +39,8 @@ func (r *recorder) actions() Actions {
 		Quit:         func() { r.quit++ },
 		Reload:       func() { r.reloaded++ },
 		Reveal:       func(p string) { r.revealed = append(r.revealed, p) },
+		OpenAccounts: func(id string) { r.opened = append(r.opened, id) },
+		NewIdentity:  func() { r.newDraft++ },
 	}
 }
 
@@ -126,6 +130,36 @@ func TestEmpty(t *testing.T) {
 	}
 	if err := tt.Click("Choose Folder…"); err != nil || r.chosen != 1 {
 		t.Fatalf("choose: %v %d", err, r.chosen)
+	}
+	if err := tt.Click("Add Identity"); err != nil || r.newDraft != 1 {
+		t.Fatalf("add: %v %d", err, r.newDraft)
+	}
+	if tt.HasText("Import") {
+		t.Error("importing is not offered yet")
+	}
+}
+
+func TestIdentityRowsAndAddButtonOpenTheAccountsWindow(t *testing.T) {
+	work := identity("work", "github-work", "bob@example.com", account.GitHub, 2, "~/work/")
+	home := identity("home", "", "", account.GitHub, 5)
+	_, tt, r := screen(t, work, home)
+	if err := tt.Click("work"); err != nil {
+		t.Fatal(err)
+	}
+	if !slices.Equal(r.opened, []string{"work"}) || r.newDraft != 0 {
+		t.Fatalf("a row opens its identity: %v %d", r.opened, r.newDraft)
+	}
+	if err := tt.Click("home"); err != nil {
+		t.Fatal(err)
+	}
+	if !slices.Equal(r.opened, []string{"work", "home"}) {
+		t.Fatalf("opened %v", r.opened)
+	}
+	if err := tt.Click("Add Identity"); err != nil {
+		t.Fatal(err)
+	}
+	if r.newDraft != 1 || len(r.opened) != 2 {
+		t.Fatalf("Add Identity opens a new draft: %v %d", r.opened, r.newDraft)
 	}
 }
 
@@ -287,9 +321,41 @@ func TestChineseCopy(t *testing.T) {
 	s := New(Text("zh-Hans"), env, r.actions())
 	s.SetAccounts([]account.Account{identity("", "", "", account.Custom, 0)}, nil, "")
 	tt := ui.NewTester(s.View, 340, 480)
-	for _, want := range []string{"把项目文件夹拖到这里", "（未命名）", "?", "没有邮箱", "全局", "身份", "退出"} {
+	for _, want := range []string{"把项目文件夹拖到这里", "（未命名）", "没有邮箱", "全局", "身份", "退出", "添加身份"} {
 		if !tt.HasText(want) {
 			t.Errorf("missing %q: %v", want, tt.Texts())
 		}
+	}
+}
+
+func TestManyIdentitiesScrollAndKeepTheFooterReachable(t *testing.T) {
+	var list []account.Account
+	for i := range 9 {
+		list = append(list, identity(fmt.Sprintf("id%d", i), "", "a@example.com", account.GitHub, i+1))
+	}
+	_, tt, r := screen(t, list...)
+	quit, ok := tt.Find("Quit")
+	if !ok || quit.Y+quit.H > 480 {
+		t.Fatalf("the footer stays inside the panel: %v %v", quit, ok)
+	}
+	// The footer holds Add Identity, so it is on screen without scrolling, and so is Quit.
+	add, ok := tt.Find("Add Identity")
+	if !ok || add.Y+add.H > 480 {
+		t.Fatalf("Add Identity must not scroll away: %v %v", add, ok)
+	}
+	if err := tt.Click("Add Identity"); err != nil || r.newDraft != 1 {
+		t.Fatalf("add: %v %d", err, r.newDraft)
+	}
+	// The list is longer than the panel and scrolls under the fixed footer.
+	last, _ := tt.Find("id0")
+	if last.Y < 480 {
+		t.Fatalf("expected the oldest identity below the fold, at %v", last)
+	}
+	tt.Scroll(170, 240, 0, 2000)
+	if got, _ := tt.Find("id0"); got.Y >= 480 {
+		t.Fatalf("scrolling brings the last identity into view: %v", got)
+	}
+	if got, _ := tt.Find("Quit"); got != quit {
+		t.Fatalf("the footer does not move: %v %v", got, quit)
 	}
 }

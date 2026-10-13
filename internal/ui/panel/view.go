@@ -22,6 +22,7 @@ var (
 	closeIcon = svg(`<path d="M4 4l8 8M12 4l-8 8" stroke-width="1.6"/>`)
 	copyIcon  = svg(`<rect x="5.5" y="5.5" width="8" height="8" rx="1.5" stroke-width="1.4"/><path d="M10.5 3.5v-.5a1 1 0 0 0-1-1h-6a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h.5" stroke-width="1.4"/>`)
 	checkIcon = svg(`<path d="M3.5 8.5l3 3 6-7" stroke-width="1.6"/>`)
+	plusIcon  = svg(`<path d="M8 3v10M3 8h10" stroke-width="1.6"/>`)
 	warnIcon  = svg(`<path d="M8 2.5l6 11H2z" stroke-width="1.6"/><path d="M8 6.5v3M8 11.6v.1" stroke-width="1.6"/>`)
 )
 
@@ -45,7 +46,18 @@ func (s *Screen) View(c *ui.Context) {
 			ui.Scroll(c).Grow(1).Padding(t.Space(4)).Gap(t.Space(3)).Children(func() { s.content(c) })
 		}
 		ui.Divider(c)
-		ui.Row(c).PaddingY(t.Space(3)).PaddingX(t.Space(4)).Children(func() {
+		ui.Row(c).PaddingY(t.Space(3)).PaddingX(t.Space(4)).AlignItems(ui.Center).Children(func() {
+			// Add Identity stays in the fixed footer, reachable however long the list is. Without a list the
+			// empty state has its own button.
+			if !s.loading && s.readErr == nil && len(s.accounts) > 0 {
+				if ui.Button(c, "").Label(s.text.AddIdentity).Background(ui.Color{}).Border(0, ui.Color{}).TextColor(t.Accent).
+					Children(func() {
+						ui.Icon(c, plusIcon).FontSize(t.Rem(1.1))
+						ui.Text(c, s.text.AddIdentity).SingleLine()
+					}).Clicked() {
+					s.act.NewIdentity()
+				}
+			}
 			ui.Spacer(c)
 			if ui.Button(c, s.text.Quit).Clicked() {
 				s.act.Quit()
@@ -90,7 +102,12 @@ func (s *Screen) content(c *ui.Context) {
 	if len(s.accounts) == 0 {
 		ui.Column(c).Grow(1).Gap(t.Space(1.5)).AlignItems(ui.Center).Justify(ui.Center).Children(func() {
 			ui.Text(c, s.text.Empty).Bold().Role(ui.RoleHeading).Level(2)
-			ui.Text(c, s.text.EmptyHint).FontSize(t.Rem(0.9)).TextColor(t.TextMuted)
+			ui.Text(c, s.text.EmptyHint).FontSize(t.Rem(0.9)).TextColor(t.TextMuted).TextAlign(ui.Center)
+			ui.Row(c).PaddingY(t.Space(1)).Children(func() {
+				if ui.Button(c, s.text.AddIdentity).Clicked() {
+					s.act.NewIdentity()
+				}
+			})
 		})
 		return
 	}
@@ -176,6 +193,18 @@ func (s *Screen) providerChip(c *ui.Context, p account.Provider) {
 	}
 }
 
+// dot is the identity's color as a small round mark, lighter on a dark theme for contrast; the account window's
+// source list uses the same one.
+func dot(c *ui.Context, a account.Account, size float32) {
+	r, g, b := a.RGB()
+	fill := ui.RGB(r, g, b)
+	if c.Theme().Dark {
+		light := func(v uint8) uint8 { return v + uint8(float32(255-v)*0.4) }
+		fill = ui.RGB(light(r), light(g), light(b))
+	}
+	ui.Column(c).Size(size, size).Radius(size / 2).Background(fill)
+}
+
 // initial is the first letter of the label in upper case, or "?" without a label.
 func initial(a account.Account) string {
 	for _, r := range strings.TrimSpace(a.Label) {
@@ -239,10 +268,18 @@ func orDefault(v, fallback string) string {
 	return v
 }
 
+// row is one identity; a click opens it in the accounts window.
 func (s *Screen) row(c *ui.Context, a account.Account) {
 	t := c.Theme()
-	ui.Row(c).Gap(t.Space(2.5)).PaddingY(t.Space(2.25)).PaddingX(t.Space(3)).AlignItems(ui.Center).Children(func() {
-		badge(c, a, t.Space(7), 7, t.Rem(1))
+	row := ui.Row(c).Focusable().Gap(t.Space(2.5)).PaddingY(t.Space(2.25)).PaddingX(t.Space(3)).AlignItems(ui.Center)
+	if row.Hovered() {
+		row.Background(t.SurfaceHover)
+	}
+	if row.Clicked() {
+		s.act.OpenAccounts(a.ID)
+	}
+	row.Children(func() {
+		dot(c, a, t.Space(2.5))
 		ui.Column(c).Grow(1).Gap(t.Space(0.25)).Children(func() {
 			ui.Text(c, s.label(a)).FontWeight(600)
 			ui.Text(c, orDefault(a.GitUserEmail, s.text.NoEmail)).FontSize(t.Rem(0.9)).TextColor(t.TextMuted)

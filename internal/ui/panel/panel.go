@@ -25,7 +25,7 @@ type Copy struct {
 	HidePanel, Quit, Loading, DropTitle, DropHint, DropAgain, Choose, ChooseTitle, Empty, EmptyHint, Filter, NoneMatch,
 	Unnamed, NoAlias, NoEmail, ReadOnly, ReadOnlyHint, CopyPath, Copied, Clear, Checking, NoMatch, NotRepo, NotFolder,
 	GitFailed, Matched, TooltipIdle, TooltipMatch, TooltipNoMatch, Open, Custom, UsesHere, Alias, Email, Folders, Global,
-	NoFolders, Identities, Reload, RevealFinder, RevealExplorer, RevealFiles string
+	NoFolders, Identities, Reload, RevealFinder, RevealExplorer, RevealFiles, AddIdentity string
 }
 
 var translations = func() map[string]Copy {
@@ -44,6 +44,9 @@ func Text(systemLocale string) Copy { return translations[locale.Language(system
 type Actions struct {
 	Resolve      func(dir string)
 	ChooseFolder func()
+	// OpenAccounts opens the accounts window on an identity; NewIdentity opens it on a new draft.
+	OpenAccounts func(id string)
+	NewIdentity  func()
 	Reload       func()
 	Reveal       func(path string)
 	CopyText     func(string)

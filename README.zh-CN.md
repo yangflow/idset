@@ -19,11 +19,12 @@ Idset 把身份放在一个列表里，替你生成配置。它不改写你自�
 
 - **托盘里的身份列表。** 点托盘图标打开面板，列出 `~/.config/idset/accounts.json` 里的身份，最近用过的排在前面；三个及以上时可以筛选。
 - **拖入文件夹查看身份。** 把项目文件夹拖进面板，或者选择一个，看 Git 在这里会用哪个身份。
+- **在应用里管理身份。** 账户窗口可以新建、修改和删除身份：署名、平台、SSH 密钥和别名、各自生效的文件夹、地址改写。删除时可以连私钥一起删，但只在你勾选时才会删。
+- **生成配置。** SSH Host 别名、`includeIf` 规则和 `insteadOf` 地址改写都从列表生成，每次修改后重新生成，新增身份前先备份。你自己的 `~/.ssh/config` 和 `~/.gitconfig` 里只多一个带标记的 `Include` 块，别的都不动。
 
 计划中：
 
 - **一键绑定。** 在面板里把文件夹绑到另一个身份，可以撤销。
-- **生成配置。** SSH Host 别名、`includeIf` 规则和 `insteadOf` 地址改写都从列表生成，每次修改前先备份。写入链路已经接好：保存任何修改都会重新生成这些文件和 `Include` 标记块，但目前还没有界面能修改身份，所以实际上不会写出任何东西。
 - **诊断。** 用 `ssh -T` 检查每个身份。密钥被拒、被锁或缺失，或者仓库会用一个身份提交、用另一个身份推送时，告诉你下一步怎么做。
 - **密钥和导入。** 生成密钥、加载到 ssh-agent，从已有的 `~/.ssh/config` 和 `~/.gitconfig` 导入身份。
 
@@ -43,8 +44,8 @@ go tool mygo build         # 打包到 build/
 ## 使用
 
 1. 启动 Idset，它常驻在托盘里（macOS 是菜单栏，Windows 是通知区域）。
-2. 还不能在应用里添加身份，要等账户窗口。在那之前，身份从 `~/.config/idset/accounts.json` 读取（Windows 上是 `%USERPROFILE%\.config\idset\accounts.json`），格式见 [docs/product.md](docs/product.md)。
-3. 点托盘图标打开面板，把项目文件夹拖进去，或者选择一个，看 Git 在这里会用哪个身份。
+2. 点托盘图标打开面板，选「添加身份」打开账户窗口新建一个；点面板里的身份可以修改或删除。身份保存在 `~/.config/idset/accounts.json`（Windows 上是 `%USERPROFILE%\.config\idset\accounts.json`），格式见 [docs/product.md](docs/product.md)。
+3. 把项目文件夹拖进面板，或者选择一个，看 Git 在这里会用哪个身份。
 
 ## 开发
 

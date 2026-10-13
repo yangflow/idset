@@ -117,8 +117,8 @@ and carries the user's accent color and contrast settings. See
 
 - **Identity colors.** An identity's color is data the user chose, not a theme role. The six preset names map to
   fixed values (blue `#3A7BD5`, green `#2E9E5B`, orange `#E07A1F`, red `#D64545`, purple `#8E44AD`, yellow
-  `#D4A017`); any other value is its own `#RRGGBB`. Identity colors appear on the initial badge and, in the accounts
-  window, as dots (list, header, color choices; the choices are named, the chosen one ticked). On the badge the fill is the
+  `#D4A017`); any other value is its own `#RRGGBB`. Identity colors appear on the initial badge of a result card and, as dots, in the panel list and the accounts
+  window (list, header, color choices; the choices are named, the chosen one ticked). On the badge the fill is the
   color at 16% opacity (24% in dark), and the letter is the color itself (in dark, mixed 40% towards white for
   contrast).
 - **Appearance.** Do not implement your own dark mode switch; the theme follows the system. If a screen draws custom
@@ -219,7 +219,7 @@ The tables below say what to reach for as the accounts, settings and about windo
 | "Rebind to" another identity | [Menu button](https://github.com/egoist/mygo/blob/v0.3.6/docs/ui/menu-button.md) |
 | Actions on a specific identity, on right click | [Context menu](https://github.com/egoist/mygo/blob/v0.3.6/docs/ui/context-menu.md) |
 | Choose one of a few modes (global or limited scope) | [Segmented control](https://github.com/egoist/mygo/blob/v0.3.6/docs/ui/segmented.md) |
-| Window-level commands ("Add identity") | [Toolbar](https://github.com/egoist/mygo/blob/v0.3.6/docs/ui/toolbar.md) |
+| Adding to a list ("Add Identity") | A symbol button in a bar at the bottom of the list; text button in the panel footer |
 
 ### Choices
 
@@ -312,12 +312,17 @@ The result card has two parts with a divider between them:
   `Space(15)`, 60). Without a match: the sentence for the case, 600, on a `Warning` outline. `git` failed: "Could not
   run git: <reason>" in `Danger`, on a `Danger` outline.
 
-Identity list rows: padding `Space(2.25)`×`Space(3)` (9×12), a `Space(7)` (28) initial badge (radius 7), gap
+Identity list rows: padding `Space(2.25)`×`Space(3)` (9×12), a 10 DIP color dot (the same as in the accounts window's source list), gap
 `Space(2.5)` (10), the name and the email on two lines, and at the end the folders: the first one, "+N" when there
 are more, "Global" for a global identity, "no folders" without any. Text is not truncated.
 
-Planned (product.md): a settings button in the title bar; About and Recheck in the footer; "Add identity" and
-"Import" when there are no identities; a connectivity dot, an expand arrow and problem bars on identity rows; bind,
+Identity rows open the accounts window on their identity. "Add Identity" (an `Accent` text button with a plus) sits at
+the left of the fixed footer, "Quit" at the right, so that it stays reachable however long the list is: the content
+between the title row and the footer is the scroll view. In the empty state the centered "Add Identity" button
+replaces it. Both open the accounts window on a new draft.
+
+Planned (product.md): a settings button in the title bar; About and Recheck in the footer; "Import" when there are no
+identities; a connectivity dot, an expand arrow and problem bars on identity rows; bind,
 unbind and rebind actions on result cards.
 
 ## The accounts window
@@ -327,14 +332,16 @@ languages. Behavior is in product.md, "账户窗口" and "删除确认". The mod
 (System Settings, Mail accounts): few borders, one hairline between rows, hierarchy from position and the muted
 color rather than from boxes. Everything is a fill, a hairline or text: no shadow, gradient or blur.
 
-The window is 760×520. The system title bar and the toolbar form one `Surface` band over a hairline; the toolbar
-holds only "Add Identity", a text button with a plus. Below it, a source list and a detail pane.
+The window is 760×520. It has the system title bar and no toolbar: below the title bar, a source list and a detail
+pane.
 
 - **Source list** (left, `Space(58)`, 232, `Surface` fill, hairline to the detail). Group heading "Identities" with the
   count (11, `TextMuted`), then rows in the panel's order: `Space(1.5)`×`Space(2)` padding, radius 6, a 10 DIP color
   dot, the name (13, regular) and the email (11, `TextMuted`) below. Text wraps. An identity limited to folders has
   a folder symbol at the end of its row, named "Scoped" for assistive technology; a draft shows "New" there. The
-  selected row is filled with `SurfacePressed` and keeps `Text`: calm, not an accent slab.
+  selected row is filled with `SurfacePressed` and keeps `Text`: calm, not an accent slab. The list scrolls above an
+  add bar fixed to the bottom edge of the sidebar: a hairline, then a borderless "+" symbol button named "Add
+  Identity" (also its tooltip), `Space(11)` (44) high with the button centered.
 - **Detail** (right, scrolls on `Background`). Padding `Space(4)`×`Space(5)` (16×20), `Space(5)` (20) between groups.
   Header: a 12 DIP color dot, the title (`Rem(1.15)`, 600, level 1), "Global" or "Scoped" (11, `TextMuted`), and at the
   end the six preset colors as 14 DIP dots (the chosen one ringed and ticked, each named for assistive technology)
@@ -348,20 +355,28 @@ holds only "Add Identity", a text button with a plus. Below it, a source list an
   symbol.
 - **Controls in rows.** Platform is a select (value and an up-down symbol). Port is two radios (22, 443); Custom shows a
   host name and a port value. Scope is a row "Applies to" with a segmented control, "Global" and "Limited to
-  folders"; its footnote says when a global identity applies. A limited identity lists one row per folder (path,
+  folders"; its footnote says when a global identity applies. The private key row is the path in monospace and a folder symbol button that opens the file picker; a path too long for the
+  field is shown shortened in the middle ("~/.ssh/keys…_personal_laptop") until it is clicked, and its tooltip
+  holds all of it. A limited identity lists one row per folder (path,
   choose-folder button, a minus button, disabled for the last one) and a text row "+ Add Path". A URL rewrite is one
   row: the `from` URL, and under it `→` and the `to` URL, then "Push only" with a switch and a minus button; then the
   text rows "+ Add Rewrite" and "+ Add Platform Default Rewrite" (disabled without an alias, the reason in the
   footnote). Text rows are `Accent` text with a leading plus, never boxed.
-- **Hints.** A prefilled signature name and email carry "From git config --global" (11, `TextMuted`) under their label.
-- **Footer.** Hairline above, padding `Space(3)`×`Space(5)`. At the left "Delete" as plain `Danger` text (existing
+- **Hints.** A prefilled signature name and email carry "From git config --global" (11, `TextMuted`) at the end of their
+  row, right of the value; the row keeps the standard 32 height. A long value is cut before it reaches the hint. The
+  hint goes as soon as the field is edited.
+- **Scrolling.** The detail is a scroll view above the fixed footer; the header scrolls with the groups. The source
+  list scrolls above its add bar.
+- **Footer.** Hairline above, `Space(11)` (44) high like the sidebar's add bar so the two hairlines are one line, side padding
+  `Space(5)`, everything centered vertically. Delete, Revert and Save are `Space(7)` (28) high; Revert and Save are `Space(25)`
+  (100) wide, enough for "✓ Written", "Saving", "已写入" and "保存中", so no label change resizes or moves anything. At the left "Delete" as plain `Danger` text (existing
   identities only), then the status (11, `TextMuted`), then "Revert" (bordered) and "Save", the only filled button.
   Status: "Unsaved changes", or "New identity, not saved yet" for a draft; a spinner with "Writing…" while saving,
   when the form is dimmed and disabled; "Written" with a check mark on the Save button for 1.2 seconds after
   success; the reason in `Danger` with the warning symbol, wrapping, when the write failed (Save stays available).
   Save and Revert are disabled while there is nothing to save.
 - **Empty.** No list and no footer: "No identities yet" (`Rem(1.15)`, 600), one sentence, "Import Existing
-  Configuration" and "New" (primary), centered. "Add Identity" stays in the toolbar.
+  Configuration" and "New" (primary), centered, with no add bar: "New" is the only way to add.
 - **Delete confirmation.** An alert over the dimmed window, 360 wide, `Space(5)` padding, an outline and no shadow:
   "Delete identity <name>?" (`Rem(1.15)`, 600), a sentence, the private key path and the folders that are not
   deleted automatically between two hairlines (no box), a line that project folders are never touched, the "Also

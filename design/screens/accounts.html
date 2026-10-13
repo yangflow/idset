@@ -18,24 +18,28 @@ body { margin:0; font-family:system-ui,sans-serif; font-size:13px; color:var(--t
 .controls .hint { color:#666; line-height:1.5 }
 .controls kbd { padding:0 4px; border:1px solid #ccc; border-radius:3px; background:#fff; font-size:11px }
 
-/* Window: system title bar and toolbar in one Surface band, a source list, and a detail pane. 760x520. */
+/* Window: the system title bar, then a source list with its add bar at the bottom, and a detail pane. 760x520. */
 .win { position:relative; width:760px; height:520px; flex:none; display:flex; flex-direction:column; background:var(--background); border:1px solid var(--border); border-radius:10px; overflow:hidden }
 .band { flex:none; background:var(--surface); border-bottom:1px solid var(--border) }
 .titlebar { height:28px; display:grid; place-items:center; font-size:11px; color:var(--muted) }
-.toolbar { display:flex; align-items:center; padding:0 8px 8px }
 .body { flex:1; min-height:0; display:flex }
-.side { width:232px; flex:none; overflow:auto; padding:12px 8px; display:flex; flex-direction:column; gap:2px; background:var(--surface); border-right:1px solid var(--border) }
+.side { width:232px; flex:none; display:flex; flex-direction:column; background:var(--surface); border-right:1px solid var(--border) }
+.side .items { flex:1; min-height:0; overflow:auto; padding:12px 8px; display:flex; flex-direction:column; gap:2px }
+.side .bar { flex:none; display:flex; align-items:center; height:44px; box-sizing:border-box; padding:0 8px; border-top:1px solid var(--border) }
 .detail { flex:1; min-width:0; display:flex; flex-direction:column }
 .scroll { flex:1; min-height:0; overflow:auto; padding:16px 20px 20px; display:flex; flex-direction:column; gap:20px }
 .scroll > * { flex-shrink:0 }
 .scroll.busy { opacity:.5; pointer-events:none }
-.foot { flex:none; display:flex; align-items:center; gap:8px; padding:12px 20px; border-top:1px solid var(--border) }
+.foot { flex:none; display:flex; align-items:center; gap:8px; min-height:44px; box-sizing:border-box; padding:0 20px; border-top:1px solid var(--border) }
 .status { flex:1; min-width:0; font-size:11px; color:var(--muted); display:flex; align-items:center; gap:6px; overflow-wrap:anywhere }
 .status.error { color:var(--danger) }
 .status svg { width:12px; height:12px; flex:none }
 
 /* Buttons: bordered, primary (the only filled one), and text. */
 button { padding:0 12px; height:24px; border:1px solid var(--border); border-radius:6px; background:var(--background); color:var(--text); font:inherit; display:inline-flex; align-items:center; gap:4px; white-space:nowrap }
+/* Footer buttons: one height, and Revert and Save one width, so a label change moves nothing. */
+.foot button { height:28px }
+.foot button:not(.text) { width:100px; justify-content:center }
 button.primary { background:var(--accent); border-color:var(--accent); color:var(--accent-text) }
 button.destructive { background:var(--danger); border-color:var(--danger); color:#fff }
 button.text { border-color:transparent; background:transparent; padding:0 8px; color:var(--accent) }
@@ -79,7 +83,7 @@ button.ghost svg { width:14px; height:14px }
 .r + .r::before { content:""; position:absolute; top:0; left:12px; right:0; height:1px; background:color-mix(in srgb, var(--border) 70%, transparent) }
 .r .k { flex:none; width:168px }
 .r .k.wide { width:auto; flex:1 }
-.r .k small { display:block; font-size:11px; color:var(--muted) }
+.r .hint-end { flex:none; font-size:11px; color:var(--muted) }
 .r .v { flex:1; min-width:0; text-align:right; overflow-wrap:anywhere }
 .r .v.ph { color:var(--muted) }
 .r .v.left { text-align:left }
@@ -216,7 +220,7 @@ function render() {
   const name = i => i.label || T.unnamed;
   const ghost = (ic, label, off) => `<button class="ghost" title="${label}" aria-label="${label}"${off ? ' disabled' : ''}>${icon[ic]}</button>`;
   // A row: label left, value right.
-  const row = (k, v, o = {}) => `<div class="r"><div class="k">${k}${o.hint ? `<small>${o.hint}</small>` : ''}</div><div class="v${o.mono ? ' mono' : ''}${o.ph ? ' ph' : ''}${o.focus ? ' focus' : ''}">${v}</div>${o.tail ? `<div class="tail">${o.tail}</div>` : ''}</div>`;
+  const row = (k, v, o = {}) => `<div class="r"><div class="k">${k}</div><div class="v${o.mono ? ' mono' : ''}${o.ph ? ' ph' : ''}${o.focus ? ' focus' : ''}">${v}</div>${o.hint ? `<span class="hint-end">${o.hint}</span>` : ''}${o.tail ? `<div class="tail">${o.tail}</div>` : ''}</div>`;
   const group = (title, rows, note = '') => `<div class="g"${title.id ? ` id="${title.id}"` : ''}><h3>${title.text || title}</h3><div class="rows">${rows}</div>${note}</div>`;
   const addRow = (label, off) => `<div class="r add"><button class="text"${off ? ' disabled' : ''}>${icon.plus}${label}</button></div>`;
   const fromGit = T.fromGit;
@@ -252,7 +256,7 @@ function render() {
   const gSsh = group(T.gSsh,
     (custom ? row(T.host, a.host, { mono:true }) : '') +
     row(T.alias, a.alias, { mono:true, ph:!a.alias }) +
-    row(T.key, a.key || '', { mono:true, tail:`<button class="text">${T.chooseFile}</button>` }) +
+    row(T.key, a.key || '', { mono:true, tail:ghost('folder', T.chooseFile) }) +
     (custom ? row(T.port, a.port, { mono:true }) : row(T.port, `<span class="radios">${radio(22, a.port === 22)}${radio(443, a.port === 443)}</span>`)));
 
   const seg = `<span class="seg"><span${a.paths ? '' : ' class="on"'}>${T.scopeGlobal}</span><span${a.paths ? ' class="on"' : ''}>${T.scopeGitdir}</span></span>`;
@@ -293,8 +297,8 @@ function render() {
 
   const empty = `<div class="center"><strong>${T.noneTitle}</strong><span class="muted">${T.noneHint}</span><div class="acts"><button>${T.import}</button><button class="primary">${T.create}</button></div></div>`;
   document.documentElement.dataset.scheme = view.scheme;
-  document.getElementById('win').innerHTML = `<div class="band"><div class="titlebar">${T.window}</div><div class="toolbar"><button class="text">${icon.plus}${T.add}</button></div></div>
-    <div class="body">${s === 'empty' ? empty : `<div class="side">${list}</div>${detail}`}</div>${dialog}`;
+  document.getElementById('win').innerHTML = `<div class="band"><div class="titlebar">${T.window}</div></div>
+    <div class="body">${s === 'empty' ? empty : `<div class="side"><div class="items">${list}</div><div class="bar">${ghost('plus', T.add)}</div></div>${detail}`}</div>${dialog}`;
   const sc = document.getElementById('scroll');
   if (sc && cfg.scroll) sc.scrollTop += document.getElementById(cfg.scroll).getBoundingClientRect().top - sc.getBoundingClientRect().top - 12;
 
