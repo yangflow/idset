@@ -117,7 +117,7 @@ func (s *Screen) sidebar(c *ui.Context) {
 			}
 		})
 		ui.Divider(c)
-		ui.Row(c).Padding(t.Space(1), t.Space(2)).Children(func() {
+		ui.Row(c).Height(barHeight(t)).PaddingX(t.Space(2)).AlignItems(ui.Center).Children(func() {
 			if ghost(c, s.text.AddIdentity, plusIcon).Disabled(s.readErr != nil).Clicked() {
 				s.newDraft()
 			}
@@ -544,6 +544,14 @@ func textButton(c *ui.Context, label string, color ui.Color, icon *ui.SVG) ui.El
 	})
 }
 
+// barHeight is the height of the sidebar's add bar and of the detail's footer, so their hairlines are one line.
+func barHeight(t *ui.Theme) float32 { return t.Space(11) }
+
+// buttonHeight is the height of every footer button; buttonWidth is the width of Revert and Save, wide enough
+// for the longest label of either language, so that a label change moves nothing.
+func buttonHeight(t *ui.Theme) float32 { return t.Space(7) }
+func buttonWidth(t *ui.Theme) float32  { return t.Space(25) }
+
 // footer holds Delete, the status, Revert and Save.
 func (s *Screen) footer(c *ui.Context, f *form) {
 	t := c.Theme()
@@ -552,25 +560,26 @@ func (s *Screen) footer(c *ui.Context, f *form) {
 	if flash {
 		c.After(s.savedUntil.Sub(s.now()))
 	}
-	ui.Row(c).Padding(t.Space(3), t.Space(5)).Gap(t.Space(2)).AlignItems(ui.Center).Children(func() {
-		if !f.isNew && textButton(c, s.text.Delete, t.Danger, nil).Disabled(s.busy).Clicked() {
+	bw, bh := buttonWidth(t), buttonHeight(t)
+	ui.Row(c).MinHeight(barHeight(t)).PaddingX(t.Space(5)).Gap(t.Space(2)).AlignItems(ui.Center).Children(func() {
+		if !f.isNew && textButton(c, s.text.Delete, t.Danger, nil).Height(bh).Disabled(s.busy).Clicked() {
 			s.askDelete()
 		}
 		ui.Row(c).Grow(1).Gap(t.Space(1.5)).AlignItems(ui.Center).Children(func() { s.status(c, f, dirty) })
-		if ui.Button(c, s.text.Revert).Disabled(!dirty || s.busy).Clicked() {
+		if ui.Button(c, s.text.Revert).Size(bw, bh).Disabled(!dirty || s.busy).Clicked() {
 			s.revert()
 		}
 		var save ui.Element
 		switch {
 		case flash:
-			save = ui.PrimaryButton(c, "").Label(s.text.Saved).Children(func() {
+			save = ui.PrimaryButton(c, "").Label(s.text.Saved).Size(bw, bh).Children(func() {
 				ui.Icon(c, checkIcon).FontSize(t.Rem(1.1))
 				ui.Text(c, s.text.Saved).SingleLine()
 			}).Disabled(true)
 		case s.busy:
-			save = ui.PrimaryButton(c, s.text.Saving).Disabled(true)
+			save = ui.PrimaryButton(c, s.text.Saving).Size(bw, bh).Disabled(true)
 		default:
-			save = ui.PrimaryButton(c, s.text.Save).Disabled(!dirty)
+			save = ui.PrimaryButton(c, s.text.Save).Size(bw, bh).Disabled(!dirty)
 		}
 		if save.Clicked() {
 			s.save()

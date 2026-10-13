@@ -759,3 +759,41 @@ func TestHintRowsGrowTallEnoughForTheHint(t *testing.T) {
 		t.Errorf("the hint is under its label: %v %v", hint, name)
 	}
 }
+
+func TestBottomBarsLineUpAndFooterButtonsNeverResize(t *testing.T) {
+	for _, lang := range []string{"en", "zh-Hans"} {
+		r := open(t, lang, sample(), Request{ID: workID})
+		r.tt.SetSize(760, 520)
+		x := r.s.text
+		r.tt.Frame()
+		add, _ := r.tt.Find(x.AddIdentity)
+		del, _ := r.tt.Find(x.Delete)
+		// The add bar's button is 24 high, centered in the bar; the footer's Delete text in its own bar.
+		if got, want := add.Y+12, del.Y+del.H/2; got < want-1 || got > want+1 {
+			t.Errorf("%s: the bars' centers differ: %v vs %v", lang, got, want)
+		}
+		r.typeInto(t, x.Username, "bob-new")
+		revert, _ := r.tt.Find(x.Revert)
+		if got, _ := r.tt.Find(x.Delete); got != del {
+			t.Errorf("%s: Delete moved: %v %v", lang, got, del)
+		}
+		r.click(t, x.Save)
+		r.tt.Frame()
+		for _, name := range []string{"saving", "written"} {
+			want := x.Saving
+			if name == "written" {
+				r.saveSucceeds(t, nil)
+				want = x.Saved
+			}
+			if !r.tt.HasText(want) {
+				t.Fatalf("%s %s: missing %q in %q", lang, name, want, r.tt.Texts())
+			}
+			if got, _ := r.tt.Find(x.Revert); got != revert {
+				t.Errorf("%s %s: Revert moved: %v %v", lang, name, got, revert)
+			}
+			if got, _ := r.tt.Find(x.Delete); got != del {
+				t.Errorf("%s %s: Delete moved: %v %v", lang, name, got, del)
+			}
+		}
+	}
+}

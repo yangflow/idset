@@ -43,6 +43,8 @@ Mockups show the 4 DIP unit and 13 px text.
 | accounts-row | `t.Space(8)` | 32 | height of a settings row |
 | accounts-label | `t.Space(42)` | 168 | label column of a settings row |
 | dot | `t.Space(2.5)` / `t.Space(3)` / `t.Space(3.5)` | 10 / 12 / 14 | color dot in the panel and account lists / header / color choices |
+| accounts-bar | `t.Space(11)` | 44 | height of the sidebar's add bar and of the detail's footer; their hairlines are one line |
+| accounts-button | `t.Space(7)` high, `t.Space(25)` wide | 28 x 100 | footer buttons; Revert and Save share the width, Delete is a text button of the same height |
 | accounts-dialog | `t.Space(90)` | 360 | width of the delete confirmation |
 | panel | `Width`, `Height` | 340 x 480 | the panel window, fixed |
 | accounts | `Width`, `Height` | 760 x 520 | the accounts window; resizable, with a minimum size |

@@ -341,7 +341,7 @@ pane.
   a folder symbol at the end of its row, named "Scoped" for assistive technology; a draft shows "New" there. The
   selected row is filled with `SurfacePressed` and keeps `Text`: calm, not an accent slab. The list scrolls above an
   add bar fixed to the bottom edge of the sidebar: a hairline, then a borderless "+" symbol button named "Add
-  Identity" (also its tooltip), `Space(1)`×`Space(2)` padding.
+  Identity" (also its tooltip), `Space(11)` (44) high with the button centered.
 - **Detail** (right, scrolls on `Background`). Padding `Space(4)`×`Space(5)` (16×20), `Space(5)` (20) between groups.
   Header: a 12 DIP color dot, the title (`Rem(1.15)`, 600, level 1), "Global" or "Scoped" (11, `TextMuted`), and at the
   end the six preset colors as 14 DIP dots (the chosen one ringed and ticked, each named for assistive technology)
@@ -366,7 +366,9 @@ pane.
   a row with a hint has `Space(2)` (8) padding above and below, so it grows past 32.
 - **Scrolling.** The detail is a scroll view above the fixed footer; the header scrolls with the groups. The source
   list scrolls above its add bar.
-- **Footer.** Hairline above, padding `Space(3)`×`Space(5)`. At the left "Delete" as plain `Danger` text (existing
+- **Footer.** Hairline above, `Space(11)` (44) high like the sidebar's add bar so the two hairlines are one line, side padding
+  `Space(5)`, everything centered vertically. Delete, Revert and Save are `Space(7)` (28) high; Revert and Save are `Space(25)`
+  (100) wide, enough for "✓ Written", "Saving", "已写入" and "保存中", so no label change resizes or moves anything. At the left "Delete" as plain `Danger` text (existing
   identities only), then the status (11, `TextMuted`), then "Revert" (bordered) and "Save", the only filled button.
   Status: "Unsaved changes", or "New identity, not saved yet" for a draft; a spinner with "Writing…" while saving,
   when the form is dimmed and disabled; "Written" with a check mark on the Save button for 1.2 seconds after
