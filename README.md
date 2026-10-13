@@ -32,7 +32,8 @@ Planned:
 
 - **Bind in one click.** Bind a folder to another identity from the panel, with undo.
 - **Generated configuration.** SSH host aliases, `includeIf` rules and `insteadOf` URL rewrites are generated
-  from the list and backed up before each change.
+  from the list and backed up before each change. The write path is in place: every saved change regenerates the
+  files and the `Include` blocks, but no screen edits identities yet, so nothing is written in practice.
 - **Diagnostics.** Checks each identity with `ssh -T` and says what to do when a key is rejected, locked or
   missing, or when a repository would commit as one identity and push as another.
 - **Keys and import.** Generate a key, load it into ssh-agent, and import identities from an existing

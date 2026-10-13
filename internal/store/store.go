@@ -1,6 +1,9 @@
 // Package store keeps accounts.json: it loads the list once, validates every change against the whole list,
 // writes atomically and backs up before additions and restores. A file that cannot be read makes the store
 // read-only, so that a damaged file is never overwritten.
+//
+// After every change to the list (not after Touch) the store calls the regenerate function given to Open, which
+// rewrites the managed configuration. Every method blocks on disk work, so callers run them off the UI thread.
 package store
 
 import (
@@ -31,11 +34,31 @@ type ReadOnlyError struct{ Err error }
 func (e *ReadOnlyError) Error() string { return "accounts.json cannot be read: " + e.Err.Error() }
 func (e *ReadOnlyError) Unwrap() error { return e.Err }
 
+// RegenerateError reports that the list was saved but the managed configuration could not be rewritten. The
+// change itself stands; the next change retries the regeneration.
+type RegenerateError struct{ Err error }
+
+func (e *RegenerateError) Error() string {
+	return "regenerating the managed configuration: " + e.Err.Error()
+}
+func (e *RegenerateError) Unwrap() error { return e.Err }
+
+// Regenerate rewrites the managed configuration from list; see apply.Regenerate.
+type Regenerate func(list []account.Account) error
+
+// Option configures Open.
+type Option func(*Store)
+
+// WithRegenerate sets the function called after each change to the list. Without it nothing is regenerated.
+func WithRegenerate(r Regenerate) Option { return func(s *Store) { s.regenerate = r } }
+
 // Store is safe for concurrent use.
 type Store struct {
 	path      string
 	backupDir string
 	now       func() time.Time
+
+	regenerate Regenerate
 
 	mu       sync.Mutex
 	accounts []account.Account
@@ -44,8 +67,11 @@ type Store struct {
 
 // Open loads the list from dir/accounts.json; backups go to dir/backups. A missing file is an empty list and is
 // not created until the first change.
-func Open(dir string, now func() time.Time) *Store {
+func Open(dir string, now func() time.Time, opts ...Option) *Store {
 	s := &Store{path: filepath.Join(dir, FileName), backupDir: filepath.Join(dir, "backups"), now: now}
+	for _, opt := range opts {
+		opt(s)
+	}
 	s.load()
 	return s
 }
@@ -88,8 +114,20 @@ func (s *Store) index(id string) int {
 	return slices.IndexFunc(s.accounts, func(a account.Account) bool { return a.ID == id })
 }
 
-// commit validates next, writes it and makes it the list. backup is taken first when the file exists.
-func (s *Store) commit(next []account.Account, backup bool) error {
+// regenerateNow rewrites the managed configuration from the current list; the caller holds s.mu.
+func (s *Store) regenerateNow() error {
+	if s.regenerate == nil {
+		return nil
+	}
+	if err := s.regenerate(slices.Clone(s.accounts)); err != nil {
+		return &RegenerateError{Err: err}
+	}
+	return nil
+}
+
+// commit validates next, writes it and makes it the list, then regenerates when regen is set. backup is taken
+// first when the file exists. A *RegenerateError means the list was saved but the configuration was not.
+func (s *Store) commit(next []account.Account, backup, regen bool) error {
 	if s.readErr != nil {
 		return s.readErr
 	}
@@ -111,6 +149,9 @@ func (s *Store) commit(next []account.Account, backup bool) error {
 		return err
 	}
 	s.accounts = next
+	if regen {
+		return s.regenerateNow()
+	}
 	return nil
 }
 
@@ -137,7 +178,7 @@ func (s *Store) Add(a account.Account) error {
 	if s.index(a.ID) >= 0 {
 		return ErrDuplicate
 	}
-	return s.commit(append(slices.Clone(s.accounts), a), true)
+	return s.commit(append(slices.Clone(s.accounts), a), true, true)
 }
 
 // Update replaces the identity with the same ID in place and stamps UpdatedAt.
@@ -151,7 +192,7 @@ func (s *Store) Update(a account.Account) error {
 	a.UpdatedAt = s.now()
 	next := slices.Clone(s.accounts)
 	next[i] = a
-	return s.commit(next, false)
+	return s.commit(next, false, true)
 }
 
 // Delete removes an identity.
@@ -162,7 +203,7 @@ func (s *Store) Delete(id string) error {
 	if i < 0 {
 		return ErrNotFound
 	}
-	return s.commit(slices.Delete(slices.Clone(s.accounts), i, i+1), false)
+	return s.commit(slices.Delete(slices.Clone(s.accounts), i, i+1), false, true)
 }
 
 // Touch records a use of an identity for sorting; it does not change UpdatedAt. An unknown ID is ignored.
@@ -179,14 +220,14 @@ func (s *Store) Touch(id string) error {
 	next := slices.Clone(s.accounts)
 	t := s.now()
 	next[i].LastUsedAt = &t
-	return s.commit(next, false)
+	return s.commit(next, false, false)
 }
 
 // ReplaceAll writes a whole new list, for undo.
 func (s *Store) ReplaceAll(list []account.Account) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	return s.commit(slices.Clone(list), false)
+	return s.commit(slices.Clone(list), false, true)
 }
 
 // Backups lists the backups of accounts.json, newest first.
@@ -206,5 +247,8 @@ func (s *Store) Restore(backup string) error {
 		return err
 	}
 	s.load()
-	return s.readErr
+	if s.readErr != nil {
+		return s.readErr
+	}
+	return s.regenerateNow()
 }
