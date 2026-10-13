@@ -23,6 +23,7 @@ var (
 	copyIcon  = svg(`<rect x="5.5" y="5.5" width="8" height="8" rx="1.5" stroke-width="1.4"/><path d="M10.5 3.5v-.5a1 1 0 0 0-1-1h-6a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h.5" stroke-width="1.4"/>`)
 	checkIcon = svg(`<path d="M3.5 8.5l3 3 6-7" stroke-width="1.6"/>`)
 	plusIcon  = svg(`<path d="M8 3v10M3 8h10" stroke-width="1.6"/>`)
+	chevIcon  = svg(`<path d="M4 6l4 4 4-4" stroke-width="1.6"/>`)
 	warnIcon  = svg(`<path d="M8 2.5l6 11H2z" stroke-width="1.6"/><path d="M8 6.5v3M8 11.6v.1" stroke-width="1.6"/>`)
 )
 
@@ -31,7 +32,12 @@ var (
 func (s *Screen) View(c *ui.Context) {
 	t := c.Theme()
 	if c.Shortcut(0, ui.KeyEscape) {
-		s.act.Hide()
+		if s.confirmTo != "" {
+			// Cancel is the Escape action of the confirmation.
+			s.confirmTo = ""
+		} else {
+			s.act.Hide()
+		}
 	}
 	ui.Column(c).Fill().Children(func() {
 		// No hide button: the tray icon and Escape hide the panel, as with other tray panels.
@@ -64,6 +70,10 @@ func (s *Screen) View(c *ui.Context) {
 			}
 		})
 	})
+	if s.say != "" {
+		c.Announce(s.say)
+		s.say = ""
+	}
 	if s.announcedSeq != s.resultSeq {
 		// The result card is not focusable, so tell screen readers what the dropped folder resolved to.
 		s.announcedSeq = s.resultSeq
@@ -250,15 +260,16 @@ func (s *Screen) folders(a account.Account) string {
 	return fmt.Sprintf("%s +%d", paths[0], len(paths)-1)
 }
 
-func (s *Screen) allFolders(a account.Account) string {
+// folderLines are the folders an identity applies to, one per line: "Global" or "no folders" in a line of their own.
+func (s *Screen) folderLines(a account.Account) []string {
 	paths := usablePaths(a)
 	switch {
 	case a.Scope.Global:
-		return s.text.Global
+		return []string{s.text.Global}
 	case len(paths) == 0:
-		return s.text.NoFolders
+		return []string{s.text.NoFolders}
 	}
-	return strings.Join(paths, " · ")
+	return paths
 }
 
 func orDefault(v, fallback string) string {
@@ -321,72 +332,61 @@ func (s *Screen) resultCard(c *ui.Context) {
 	t := c.Theme()
 	// Clearing happens inside the card, so the rest of this frame works on the state it started with.
 	r, checking, resultErr, dir := s.result, s.checking, s.resultErr, s.lastDir
-	card := func(border ui.Color, path string, copyable bool, body func()) {
-		ui.Column(c).Key("result").Radius(10).Background(t.Surface).Border(1, border).Clip().Children(func() {
-			ui.Row(c).Gap(t.Space(1)).Padding(t.Space(2), t.Space(2), t.Space(2), t.Space(3)).AlignItems(ui.Center).Children(func() {
-				ui.Text(c, s.env.Tilde(path)).Font("monospace").FontSize(t.Rem(0.9)).TextColor(t.TextMuted).Grow(1).Selectable()
-				if copyable {
-					s.copyButton(c, path)
-				}
-				if checking == "" && ghost(c, s.text.Clear, closeIcon).Clicked() {
-					s.clear()
-				}
-			})
-			ui.Divider(c)
-			body()
-		})
-	}
 	say := func(text string, color ui.Color, weight int) func() {
 		return func() { ui.Text(c, text).TextColor(color).FontWeight(weight).Padding(t.Space(3)) }
 	}
 	switch {
 	case checking != "":
-		card(t.Border, checking, false, func() {
+		s.frame(c, "result", t.Border, checking, false, func() {
 			ui.Row(c).Gap(t.Space(2)).Padding(t.Space(3)).AlignItems(ui.Center).Children(func() {
 				ui.Spinner(c)
 				ui.Text(c, s.text.Checking)
 			})
 		})
 	case resultErr != nil:
-		card(t.Danger, dir, false, say(fmt.Sprintf(s.text.GitFailed, resultErr), t.Danger, 400))
+		s.frame(c, "result", t.Danger, dir, false, say(fmt.Sprintf(s.text.GitFailed, resultErr), t.Danger, 400))
 	case r == nil:
 	case r.Kind == match.Matched:
 		a, ok := s.find(r.ID)
 		if !ok {
 			return
 		}
-		card(t.Border, r.Root, true, func() {
-			ui.Row(c).Gap(t.Space(3)).Padding(t.Space(3.5), t.Space(3), t.Space(2.5), t.Space(3)).AlignItems(ui.Center).Children(func() {
-				badge(c, a, t.Space(9), 9, t.Rem(1.25))
-				ui.Column(c).Gap(t.Space(0.25)).Children(func() {
-					ui.Text(c, s.label(a)).FontSize(t.Rem(1.15)).FontWeight(600)
-					ui.Text(c, s.text.UsesHere).FontSize(t.Rem(0.9)).TextColor(t.TextMuted)
-				})
-			})
-			// The left padding lines the details up with the identity name: badge plus gap.
-			ui.Column(c).Gap(t.Space(1)).Padding(0, t.Space(3), t.Space(3), t.Space(15)).Children(func() {
-				detail := func(label, value string, mono bool) {
-					ui.Row(c).Gap(t.Space(2)).Children(func() {
-						ui.Text(c, label).FontSize(t.Rem(0.9)).TextColor(t.TextMuted).Width(t.Space(14))
-						v := ui.Text(c, value).FontSize(t.Rem(0.9)).Grow(1)
-						if mono {
-							v.Font("monospace")
-						}
-					})
-				}
-				detail(s.text.Alias, orDefault(a.SSHAlias, s.text.NoAlias), a.SSHAlias != "")
-				detail(s.text.Email, orDefault(a.GitUserEmail, s.text.NoEmail), false)
-				detail(s.text.Folders, s.allFolders(a), !a.Scope.Global)
-			})
-		})
+		if len(r.Covering) >= 2 {
+			s.overlapCard(c, r)
+		}
+		s.matchedCard(c, r, a)
+	case r.Kind == match.NoMatch:
+		s.noMatchCard(c, r)
 	default:
-		msg := s.unresolved(r.Kind)
 		path := r.Root
 		if path == "" {
 			path = r.Dir
 		}
-		card(t.Warning, path, false, say(msg, t.Text, 600))
+		s.frame(c, "result", t.Warning, path, false, say(s.unresolved(r.Kind), t.Text, 600))
 	}
+}
+
+// frame is a result card: the folder with its acknowledgements and buttons, a hairline, then the body.
+func (s *Screen) frame(c *ui.Context, key string, border ui.Color, path string, copyable bool, body func()) {
+	t := c.Theme()
+	checking := s.checking
+	ui.Column(c).Key(key).Radius(10).Background(t.Surface).Border(1, border).Clip().Children(func() {
+		ui.Row(c).Gap(t.Space(1)).Padding(t.Space(2), t.Space(2), t.Space(2), t.Space(3)).AlignItems(ui.Center).Children(func() {
+			ui.Text(c, s.env.Tilde(path)).Font("monospace").FontSize(t.Rem(0.9)).TextColor(t.TextMuted).Grow(1).Selectable()
+			if left := s.undoneUntil.Sub(s.now()); left > 0 {
+				ui.Text(c, s.text.Undone).FontSize(t.Rem(0.85)).TextColor(t.TextMuted)
+				c.After(left)
+			}
+			if copyable {
+				s.copyButton(c, path)
+			}
+			if checking == "" && ghost(c, s.text.Clear, closeIcon).Clicked() {
+				s.clear()
+			}
+		})
+		ui.Divider(c)
+		body()
+	})
 }
 
 // copyButton copies the full path; for a moment afterwards it shows a check mark and "Copied".

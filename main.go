@@ -13,6 +13,7 @@ import (
 	"github.com/egoist/mygo/ui"
 	"github.com/yangflow/idset/internal/account"
 	"github.com/yangflow/idset/internal/apply"
+	"github.com/yangflow/idset/internal/bind"
 	"github.com/yangflow/idset/internal/match"
 	"github.com/yangflow/idset/internal/paths"
 	"github.com/yangflow/idset/internal/store"
@@ -84,8 +85,13 @@ func (a *app) ready() {
 		Quit:         mygo.App.Quit,
 		Reload:       func() { a.load() },
 		Reveal:       mygo.Shell.ShowItemInFolder,
+		Open:         a.openFolder,
+		Run:          a.runBind,
 		OpenAccounts: a.openIdentity,
 		NewIdentity:  func() { a.openAccounts(accounts.Request{New: true}) },
+		NewIdentityFor: func(folder string) {
+			a.openAccounts(accounts.Request{New: true, Folder: folder})
+		},
 	})
 	// The application menu keeps the standard editing shortcuts working in text fields.
 	mygo.App.SetMenu(mygo.NewMenu([]*mygo.MenuItem{
@@ -254,6 +260,33 @@ func (a *app) resolve(dir string) {
 			a.updateTooltip()
 		})
 	}()
+}
+
+// runBind does a request of the result card in the background: one store write for everything it changes, then
+// the folder looked at again. The list and the card are updated together, so that the card finds the identities
+// it names.
+func (a *app) runBind(op bind.Op) {
+	s := a.store
+	if s == nil {
+		return
+	}
+	runner := bind.Runner{Store: s, Env: a.env, Git: a.git, Now: time.Now}
+	go func() {
+		out := runner.Run(context.Background(), op)
+		list, readErr, path := s.Accounts(), s.ReadOnly(), s.Path()
+		a.post(func() {
+			a.showAccounts(list, readErr, path)
+			a.screen.OpDone(out)
+			a.updateTooltip()
+		})
+	}()
+}
+
+// openFolder shows a folder of the result card in the system's file manager.
+func (a *app) openFolder(path string) {
+	if err := mygo.Shell.OpenPath(a.env.Native(path)); err != nil {
+		slog.Warn("Could not open the folder", "error", err)
+	}
 }
 
 func (a *app) chooseFolder() {

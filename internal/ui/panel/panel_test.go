@@ -11,6 +11,7 @@ import (
 
 	"github.com/egoist/mygo/ui"
 	"github.com/yangflow/idset/internal/account"
+	"github.com/yangflow/idset/internal/bind"
 	"github.com/yangflow/idset/internal/match"
 	"github.com/yangflow/idset/internal/paths"
 	"github.com/yangflow/idset/internal/ui/locale"
@@ -28,19 +29,25 @@ type recorder struct {
 	revealed []string
 	opened   []string
 	newDraft int
+	ran      []bind.Op
+	folders  []string
+	boundNew []string
 }
 
 func (r *recorder) actions() Actions {
 	return Actions{
-		Resolve:      func(d string) { r.resolved = append(r.resolved, d) },
-		ChooseFolder: func() { r.chosen++ },
-		CopyText:     func(s string) { r.copied = append(r.copied, s) },
-		Hide:         func() { r.hidden++ },
-		Quit:         func() { r.quit++ },
-		Reload:       func() { r.reloaded++ },
-		Reveal:       func(p string) { r.revealed = append(r.revealed, p) },
-		OpenAccounts: func(id string) { r.opened = append(r.opened, id) },
-		NewIdentity:  func() { r.newDraft++ },
+		Resolve:        func(d string) { r.resolved = append(r.resolved, d) },
+		ChooseFolder:   func() { r.chosen++ },
+		CopyText:       func(s string) { r.copied = append(r.copied, s) },
+		Hide:           func() { r.hidden++ },
+		Quit:           func() { r.quit++ },
+		Reload:         func() { r.reloaded++ },
+		Reveal:         func(p string) { r.revealed = append(r.revealed, p) },
+		OpenAccounts:   func(id string) { r.opened = append(r.opened, id) },
+		NewIdentity:    func() { r.newDraft++ },
+		Run:            func(op bind.Op) { r.ran = append(r.ran, op) },
+		NewIdentityFor: func(f string) { r.boundNew = append(r.boundNew, f) },
+		Open:           func(p string) { r.folders = append(r.folders, p) },
 	}
 }
 
@@ -232,7 +239,7 @@ func TestDropAndMatchedResult(t *testing.T) {
 	s.SetResult("/home/ada/work/api", match.Result{Kind: match.Matched, Root: "/home/ada/work/api", ID: "work"}, nil)
 	tt.Frame()
 	for _, want := range []string{"W", "work", "Git uses this identity here", "Alias", "github-work", "Email", "bob@example.com",
-		"Folders", "~/work/ · ~/src/new/", "~/work/api", "~/work/ +1"} {
+		"Folders", "~/work/", "~/src/new/", "~/work/api", "~/work/ +1"} {
 		if !tt.HasText(want) {
 			t.Fatalf("missing %q: %v", want, tt.Texts())
 		}
