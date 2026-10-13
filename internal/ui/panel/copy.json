@@ -42,8 +42,7 @@
     "RevealExplorer": "Show in Explorer",
     "RevealFiles": "Show in File Manager",
     "HidePanel": "Hide Idset",
-    "AddIdentity": "Add Identity",
-    "OpenAccounts": "Open Accounts Window"
+    "AddIdentity": "Add Identity"
   },
   "zh-Hans": {
     "Quit": "退出",
@@ -88,7 +87,6 @@
     "RevealExplorer": "在资源管理器中显示",
     "RevealFiles": "在文件管理器中显示",
     "HidePanel": "隐藏 Idset",
-    "AddIdentity": "添加身份",
-    "OpenAccounts": "打开账户窗口"
+    "AddIdentity": "添加身份"
   }
 }

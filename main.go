@@ -128,7 +128,6 @@ func (a *app) ready() {
 	a.hideItem = &mygo.MenuItem{Label: a.text.HidePanel, Hidden: true, Click: func(*mygo.MenuItem, *mygo.Window) { a.hide() }}
 	a.menu = mygo.NewMenu([]*mygo.MenuItem{
 		a.openItem, a.hideItem,
-		{Label: a.text.OpenAccounts, Click: func(*mygo.MenuItem, *mygo.Window) { a.openAccounts(accounts.Request{}) }},
 		mygo.Separator(),
 		{Label: a.text.Quit, Click: func(*mygo.MenuItem, *mygo.Window) { mygo.App.Quit() }},
 	})

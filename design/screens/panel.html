@@ -25,6 +25,7 @@ h1 { flex:1; margin:0; font-size:15px }
 .content > * { flex-shrink:0 }
 .panel button { padding:5px 10px; border:1px solid var(--border); border-radius:6px; background:var(--surface); color:var(--text); font:inherit }
 .panel button.icon { width:28px; padding:5px 0 }
+.panel footer button.text { margin-right:auto }
 .panel button.text { border-color:transparent; background:transparent; padding:5px 4px; color:var(--accent); display:inline-flex; align-items:center; gap:4px; align-self:flex-start }
 .panel button.text svg { width:14px; height:14px }
 .panel button.ghost { width:24px; height:24px; padding:0; display:grid; place-items:center; border:0; background:transparent; color:var(--muted); cursor:pointer }
@@ -61,7 +62,8 @@ h1 { flex:1; margin:0; font-size:15px }
 .list { border:1px solid var(--border); border-radius:10px; background:var(--surface); overflow:hidden }
 .item { display:flex; align-items:center; gap:10px; padding:9px 12px }
 .item + .item { border-top:1px solid var(--border) }
-.item .avatar { width:28px; height:28px; border-radius:7px; font-size:13px }
+.item .dot { flex:none; width:10px; height:10px; border-radius:50%; background:rgb(var(--c)) }
+:root[data-scheme=dark] .item .dot { background:rgb(var(--cl)) }
 .item .text { flex:1; min-width:0; display:flex; flex-direction:column; gap:1px }
 .item .label { font-weight:600 }
 .item .email { font-size:12px; color:var(--muted) }
@@ -93,7 +95,7 @@ h1 { flex:1; margin:0; font-size:15px }
 <div class="panel">
   <header><h1>Idset</h1></header>
   <div class="content" id="content"></div>
-  <footer><button id="quit"></button></footer>
+  <footer><button class="text" id="add"></button><button id="quit"></button></footer>
 </div>
 <script>
 const TEXT = {
@@ -145,7 +147,7 @@ function panel(state, T) {
   const avatar = i => `<div class="avatar" style="--c:${i.c};--cl:${i.cl}">${(i.label || '?').slice(0, 1).toUpperCase()}</div>`;
   const tag = i => i.scope ? i.scope[0] + (i.scope.length > 1 ? ` +${i.scope.length - 1}` : '') : T.global;
   const list = n => `<div class="section"><span>${T.identities}</span><span>${n}</span></div>` +
-    `<div class="list">${ids.slice(0, n).map(i => `<div class="item">${avatar(i)}<div class="text"><span class="label">${i.label || T.unnamed}</span><span class="email">${i.email || T.noEmail}</span></div><span class="tag">${tag(i)}</span></div>`).join('')}</div><button class="text">${icon.plus}${T.add}</button>`;
+    `<div class="list">${ids.slice(0, n).map(i => `<div class="item"><span class="dot" style="--c:${i.c};--cl:${i.cl}"></span><div class="text"><span class="label">${i.label || T.unnamed}</span><span class="email">${i.email || T.noEmail}</span></div><span class="tag">${tag(i)}</span></div>`).join('')}</div>`;
   const drop = (compact, over) => compact
     ? `<div class="drop compact"><span class="muted small">${T.dropAgain}</span><button>${T.choose}</button></div>`
     : `<div class="drop${over ? ' over' : ''}"><strong>${T.dropTitle}</strong><span class="muted small">${T.dropHint}</span><button>${T.choose}</button></div>`;
@@ -187,6 +189,10 @@ function render() {
   const T = TEXT[view.lang];
   document.documentElement.dataset.scheme = view.scheme;
   document.getElementById('quit').textContent = T.quit;
+  // Add Identity lives in the fixed footer, so it stays reachable however long the list is; the empty state has its own button.
+  const add = document.getElementById('add');
+  add.innerHTML = icon.plus + T.add;
+  add.hidden = ['loading', 'readonly', 'empty'].includes(view.state);
   document.getElementById('content').innerHTML = panel(view.state, T);
   buttons('states', STATES, 'state');
   buttons('schemes', { light:'浅色', dark:'深色' }, 'scheme');

@@ -25,7 +25,7 @@ type Copy struct {
 	HidePanel, Quit, Loading, DropTitle, DropHint, DropAgain, Choose, ChooseTitle, Empty, EmptyHint, Filter, NoneMatch,
 	Unnamed, NoAlias, NoEmail, ReadOnly, ReadOnlyHint, CopyPath, Copied, Clear, Checking, NoMatch, NotRepo, NotFolder,
 	GitFailed, Matched, TooltipIdle, TooltipMatch, TooltipNoMatch, Open, Custom, UsesHere, Alias, Email, Folders, Global,
-	NoFolders, Identities, Reload, RevealFinder, RevealExplorer, RevealFiles, AddIdentity, OpenAccounts string
+	NoFolders, Identities, Reload, RevealFinder, RevealExplorer, RevealFiles, AddIdentity string
 }
 
 var translations = func() map[string]Copy {
