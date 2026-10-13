@@ -169,7 +169,7 @@ and carries the user's accent color and contrast settings. See
 - **Icons are SVG** shown with `ui.Icon`, which takes the text color and the font size: an icon follows theme colors
   and the text size automatically. MyGo has no built-in icon set and no SF Symbols: `ui.Icon` draws an SVG. The panel's symbols are 16×16 line
   drawings (1.5 stroke, round caps) defined in `internal/ui/panel/view.go` and parsed once at package level: clear,
-  copy, check, warning, and for the title bar and footer plus, gear (`gearshape`), info (`info.circle`), refresh
+  copy, check, warning, folder, more (three dots), arrow, minus, pin, and for the title bar and footer plus, gear (`gearshape`), info (`info.circle`), refresh
   (`arrow.clockwise`) and power (`power`), named after the SF Symbols they follow; there is no third-party icon set. If one
   is adopted, use one set for the whole app and record it and its license in `THIRD_PARTY.md`. See
   [Icon](https://github.com/egoist/mygo/blob/v0.3.6/docs/ui/icon.md).
@@ -196,7 +196,7 @@ What Idset uses today:
 | Component | Use |
 |---|---|
 | `ui.Button` | Secondary actions. A button that shows only a symbol must give a readable name with `.Label()`. |
-| `ui.PrimaryButton` | The main action of a group of buttons; at most one. The panel has no main action. |
+| `ui.PrimaryButton` | The main action of a group of buttons; at most one. In the panel: "Add Identity" of the empty state, and "Rebind" of the confirm block (never on screen together). |
 | `ui.Text` | Text. Secondary explanations use `TextMuted`. |
 | `ui.TextInput` | The identity filter, shown from three identities on, with the placeholder "Filter identities". Not `ui.SearchField`: its placeholder ("Search") is fixed English. |
 | `ui.Spinner` | Reading the configuration and checking a folder. |
@@ -206,12 +206,11 @@ What Idset uses today:
 | Borderless symbol button | `Space(6)` square (24), transparent, icon `Rem(1.1)` in `TextMuted`, `SurfaceHover` fill on hover, `SurfacePressed` while pressed. Must have a `.Label()`. After the path is copied, the icon turns into a check mark with "Copied" before it for 1.2 seconds. |
 | Icon button (title bar, footer) | The same 24×24 button with a `Rem(1.2)` (about 16) glyph, radius `Theme.Radius`. Always has `.Label()` and a `.Tooltip()` with the same text, in both languages: Settings, Add Identity, About Idset, Re-check, Quit (设置 / 添加身份 / 关于 Idset / 重新检查 / 退出 in Chinese). The tooltip is the `Inverse` fill, no shadow, above the button (below the title bar's). Same size, 4 DIPs apart, so a missing button never moves another. |
 | Result card | A context line (the path in monospace `TextMuted`, then the copy and clear buttons) and below it the answer. `Surface` fill, `Border` outline; `Warning` for the cards without a match, `Danger` when `git` fails. |
-| Bind row | In a result card: color dot, name and one line of `TextMuted` (the email, or "Has <path> · adds another"), "Bind" in `Accent` at the end. 44 DIPs high, hairline above. The whole row is the target. |
-| Card actions | A 40 DIP row under the answer, hairline above: `Accent` text buttons, "Open in Finder" at the left, "Rebind to ▾" and "Unbind" at the right ("Unbind" only when the identity lists this very folder). |
-| Rebind menu | A menu button's menu, 224 DIPs wide, opened under the card actions and right-aligned to them: `Background` fill, `Border` outline, radius 8, 4 DIPs of padding, 32 DIP entries (color dot, name, first folder or "Global" in monospace `Rem(0.85)`). No shadow. |
-| Confirm block | In a result card, under the chosen identity's row (`SurfacePressed`): one sentence and two 80×28 buttons at the right, the plain one first ("Cancel"), then the only filled button of the panel (`Accent`, "Rebind"). |
-| Overlap rows | In the overlap card: a row per identity in git's read order (dot, name, path in monospace `Rem(0.9)`), and at the end the verdict: "Used" in `Accent` 600 with a check mark for the winner, "Overridden" in `TextMuted` for the others, whose names also lose their weight. |
-| Stale-path prompt | A card of its own above the no-match card, built like the overlap card: a 44 DIP header (color dot, the identity's name in 600, then "points to a folder that is gone" / 「还指向一个已经不在的路径」, one line, ending in an ellipsis), two 36 DIP path rows under hairlines (a 40 DIP `TextMuted` key, "Old" and "New", then the path in monospace, one line, middle-truncated, full text in the tooltip), and a 40 DIP card actions row with two `Accent` text buttons, "Change to This Path" at the left and "Keep Old Path" at the right. The height is the same for any path. Plain `Border` outline, no filled button, no clear button. |
+| Bind row | In a result card: color dot, name and one line of `TextMuted` (the identity's first folder, middle-truncated; "Has <path> · adds another" is its tooltip), "Bind" in `Accent` at the end. 44 DIPs high, hairline above. The whole row is the target. |
+| Card menu | The "⋯" icon button's menu in a matched card, 224 DIPs wide, opened under the button and ending 32 DIPs past its right edge: `Background` fill, `Border` outline, radius 8, 4 DIPs of padding, a 28 DIP heading "Rebind to" (`Rem(0.9)`, `TextMuted`), 32 DIP entries (color dot, name, first folder or "Global" in monospace `Rem(0.85)`), and under a hairline "Unbind" (only when the identity lists this very folder). No shadow. There is no actions row: open, copy, the menu and clear are icon buttons in the context line, in that order. |
+| Confirm block | In a matched card, under the details, hairline above: one line ("<name> will apply only here") and two 80×28 buttons at the right, the plain one first ("Cancel"), then the filled one (`Accent`, "Rebind"). No extra identity row. |
+| Overlap rows | In the overlap card: a row per identity in git's read order (dot, name, path in monospace `Rem(0.9)`), then the verdict: "Used" in `Accent` 600 with a check mark for the winner, "Overridden" in `TextMuted` for the others, whose names also lose their weight; and at the very end an icon button: a pin on the winner ("Use only <name> here"), a minus on each loser ("Remove <path> from <name>"). Title row: "<n> identities cover this folder" and an info icon button whose tooltip is "Git reads them in this order; the last one wins." |
+| Stale-path prompt | A card of its own above the no-match card: a 40 DIP header (color dot, "<name>'s folder is gone" / 「<name> 的路径已不在」, the name in 600, one line), two 28 DIP path rows under hairlines with no labels (the old path in `TextMuted`, then the new path after an arrow, monospace, one line, middle-truncated, full text in the tooltip), and a 36 DIP row with two text buttons at the right, "Update" in `Accent` and "Ignore" in `TextMuted`; their tooltips are "Change to This Path" and "Keep Old Path". The height is the same for any path. Plain `Border` outline, no clear button. |
 | Undo bar | The last row of the result card, 36 DIPs high, hairline above: "Bound to <identity> ·" and an `Accent` "Undo" text button. A 2 DIP line on the bar's bottom edge, `Accent` at 45%, is as wide as the time left of the card's width, in fifths. |
 | Identity list | A group heading, then one `Surface` container with `Border` dividers between rows. |
 | Source list row | A color dot, name and email on two lines, an optional folder symbol; `SurfacePressed` fill when selected. |
@@ -314,17 +313,20 @@ The content, in order:
 
 1. Loading: only a spinner and "Reading configuration…", centered.
 2. `accounts.json` cannot be read: nothing else can be done, so the error fills the content and is centered
-   vertically: a `Space(11)` (44) warning badge (radius 11), the title (`Rem(1.15)`, 600), one sentence of
-   explanation, the reason box (`Background` fill, `Border` outline, `Theme.Radius` corners, the file path and the
-   error in monospace `Rem(0.85)`), and two buttons, "Show in Finder" (Explorer on Windows, the file manager on
-   Linux) and "Read Again".
-3. Otherwise: the result card (when there is a result), the drop zone, the group heading "Identities" with the count,
-   the filter (from three identities on) and the identity list. Without identities the list is replaced by "No
-   identities yet" and one sentence of explanation, centered.
+   vertically: a `Space(11)` (44) warning badge (radius 11), the title (`Rem(1.15)`, 600), the file path in
+   monospace `Rem(0.9)` `TextMuted`, the parser error in monospace `Rem(0.85)` `TextMuted`, at most two lines (the full
+   text is its tooltip), one short line "Read-only until fixed" (the sentence "Idset will not write to it until it is
+   fixed or restored from a backup." is its tooltip), and two 28×120 buttons, "Show in Finder" (Explorer on Windows,
+   the file manager on Linux) and "Read Again". There is no reason box.
+3. Otherwise: the result card (when there is a result), the one-line drop zone, the group heading "Identities" with the
+   count, the filter (from three identities on) and the identity list. Without identities there is one centered block
+   instead: "No identities yet" (`Rem(1.15)`, 600), one short line ("Give each folder its own Git and SSH identity.")
+   and the filled "Add Identity" button (28 high); the drop zone sits under it, at the bottom of the content.
 
-The drop zone has two forms. Without a result it is a large dashed box with "Drop a project folder here", "See which
-identity pushes from it" and "Choose Folder…", padding `Space(5)`×`Space(4)` (20×16), centered. With a result it
-shrinks to one line, "Drop another folder, or" and "Choose Folder…", padding `Space(2)`×`Space(3)`.
+The drop zone is always one line, with or without a result: a dashed box with "Drop a folder, or" and "Choose…",
+padding `Space(2)`×`Space(3)` (about 46 DIPs high). "See which identity pushes from it" is the tooltip of the text
+and "Choose Folder…" that of the button. Words that only explain are tooltips throughout the panel: the full sentence of
+"Covered by …", the reason of "Read-only until fixed", the "adds another" of a bind row.
 
 The result card has two parts with a divider between them:
 
@@ -344,24 +346,26 @@ The result card has two parts with a divider between them:
   - Rebinding to a global identity: choosing it in the "Rebind to" menu closes the menu and adds, under the card
     actions, its row (marked with `SurfacePressed`) and the confirm block: "After binding, <name> applies only to
     this folder, not globally." "Cancel" closes the block; "Rebind" does it.
-  - Matched: the card actions row under the details. "Unbind" is absent when only a parent folder covers the
-    folder; nothing else explains it, since "Folders" lists the covering path. "Rebind to" lists every other identity.
-  - Already covered: the bind did not change anything. The card keeps its answer and gains a note row (`Rem(0.9)`,
-    `TextMuted`, may wrap to two lines): "<name> already covers this folder with <path>. Nothing changed."
+  - Matched: the actions are icon buttons in the context line (open, copy, "⋯", clear). "Unbind" is absent from the menu
+    when only a parent folder covers the folder; nothing else explains it, since "Folders" lists the covering path. "Rebind
+    to" lists every other identity.
+  - Already covered: the bind did not change anything. The card keeps its answer and its context line shows "Covered by
+    <path>" (`Rem(0.85)`, `TextMuted`, one line, ending in an ellipsis when short of room) before the buttons for 1.2 seconds,
+    like "Copied"; the full sentence "<name> already covers this folder with <path>.
+    Nothing changed." is its tooltip. The path keeps at least 80 DIPs; the status shortens first.
   - Overlap: a card of its own above the matched one, with the folder in its context line, "<n> identities cover this
-    folder", one line of `TextMuted` ("Git reads them in this order; the last one wins."), the overlap rows, and the
-    two actions stacked under a hairline, `Accent` text buttons aligned left: "Use only <winner> here" and "Remove
-    <path> from <loser>". The card has the plain `Border`, since nothing is wrong. It shows only while the winner has no path of the folder's own; once it has one (after "Use only" or a rebind) the choice is explicit and the card is gone.
+    folder" with an info icon (the order sentence is its tooltip), and the overlap rows with their pin and minus buttons.
+    The card has the plain `Border`, since nothing is wrong. It shows only while the winner has no path of the folder's own; once it has one (after "Use only" or a rebind) the choice is explicit and the card is gone.
   - Stale path: when the dropped folder looks like a renamed or moved `gitdir` path that no longer exists, a card of
     its own sits above the no-match card, the same way the overlap card sits above the matched one. The header is
     one line and the paths are middle-truncated, so the card's height never changes. The no-match card below is
     unchanged, so the bind list still works; in its "Has <path> · adds another" lines the middle of the path gives way to an
     ellipsis and the rest stays: "Has ~/…/payments-gateway/ · adds another". Mockup states: rename, move (a long old path), after "Change to This Path" and after
     "Keep Old Path".
-    - "Change to This Path": the card is gone and the folder matches, so the matched card shows with "Updated" next
+    - "Update" (tooltip "Change to This Path"): the card is gone and the folder matches, so the matched card shows with "Updated" next
       to the copy button for 1.2 seconds, like "Copied". There is no undo bar: only bind, rebind and "Use only" have
       one (docs/product.md), and the old path is gone from disk anyway.
-    - "Keep Old Path": only the prompt goes; the plain no-match card stays and shows no acknowledgement.
+    - "Ignore" (tooltip "Keep Old Path"): only the prompt goes; the plain no-match card stays and shows no acknowledgement.
   - Undo: after a bind, rebind or "Use only", the undo bar is the last row of the matched card. The countdown line
     shortens once a second (`c.After` from the absolute deadline), five steps; no animation. After "Undo" the card
     returns to what it was, with "Undone" next to the clear button for 1.2 seconds, like "Copied". Unbinding shows
