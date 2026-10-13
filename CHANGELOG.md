@@ -11,5 +11,13 @@ All notable user-facing changes are recorded here, following [Keep a Changelog](
 - Screen readers announce the result for a dropped folder and a copied path, and can navigate the panel by its
   headings. Spacing and text sizes in the panel follow the theme and the desktop's text size.
 - Every change to the identity list now regenerates the managed SSH and Git files and keeps the `Include` blocks in
-  `~/.ssh/config` and `~/.gitconfig` current. Recording a use does not regenerate. No screen edits identities yet,
-  so this takes effect with the screens that follow.
+  `~/.ssh/config` and `~/.gitconfig` current. Recording a use does not regenerate.
+- The accounts window creates, edits and deletes identities. Click an identity in the panel to open it, or "Add
+  Identity" for a new one; the tray menu opens the window too. Saving (Ctrl or Command+S) checks the identity first,
+  writes it in the background and regenerates the configuration, and says "Written" or why it could not. A new
+  identity starts with the name and email from `git config --global`.
+- Deleting an identity asks first and lists what stays. "Also delete the private key" is off by default and cannot be
+  checked when the identity has no key path, another identity uses the key, or the path is a symbolic link, is
+  missing or is not a regular file. The identity goes first; only the key file is removed, never its `.pub` file,
+  and a key that cannot be removed is reported without bringing the identity back.
+- On macOS the Dock icon shows while the accounts window is open; closing the window does not quit Idset.

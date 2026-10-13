@@ -27,13 +27,16 @@ Working now:
   most recently used first, with a filter once there are three or more.
 - **Drop a folder to check it.** Drop a project folder into the panel, or choose one, to see which identity Git
   uses there.
+- **Manage identities in the app.** The accounts window creates, edits and deletes identities: signature, platform,
+  SSH key and alias, the folders each one applies to, and URL rewrites. Deleting can remove the private key too, but
+  only when you ask for it.
+- **Generated configuration.** SSH host aliases, `includeIf` rules and `insteadOf` URL rewrites are generated
+  from the list after every change, and the list is backed up before a new identity is added. Your own
+  `~/.ssh/config` and `~/.gitconfig` get one marked `Include` block and nothing else.
 
 Planned:
 
 - **Bind in one click.** Bind a folder to another identity from the panel, with undo.
-- **Generated configuration.** SSH host aliases, `includeIf` rules and `insteadOf` URL rewrites are generated
-  from the list and backed up before each change. The write path is in place: every saved change regenerates the
-  files and the `Include` blocks, but no screen edits identities yet, so nothing is written in practice.
 - **Diagnostics.** Checks each identity with `ssh -T` and says what to do when a key is rejected, locked or
   missing, or when a repository would commit as one identity and push as another.
 - **Keys and import.** Generate a key, load it into ssh-agent, and import identities from an existing
@@ -56,11 +59,10 @@ go tool mygo build         # package it into build/
 ## Usage
 
 1. Start Idset; it lives in the tray (menu bar on macOS, notification area on Windows).
-2. Identities cannot be added in the app yet; that comes with the accounts window. Until then they are read from
-   `~/.config/idset/accounts.json` (on Windows `%USERPROFILE%\.config\idset\accounts.json`); the format is in
-   [docs/product.md](docs/product.md).
-3. Click the tray icon to open the panel, then drop a project folder into it, or choose one, to see which identity
-   Git uses there.
+2. Click the tray icon to open the panel, then choose "Add Identity" to open the accounts window and create one. Click
+   an identity in the panel to edit or delete it. Identities are stored in `~/.config/idset/accounts.json` (on
+   Windows `%USERPROFILE%\.config\idset\accounts.json`); the format is in [docs/product.md](docs/product.md).
+3. Drop a project folder into the panel, or choose one, to see which identity Git uses there.
 
 ## Development
 

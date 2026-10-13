@@ -24,9 +24,12 @@ document only when following it would lead someone to do the wrong thing.
 ```
 main.go                  lifecycle, single instance, tray, panel window position and visibility,
                          background loading and matching, native updater plugin
+accounts_window.go       opening the account window, Dock icon on macOS, its background work (save, delete, pickers)
 internal/ui/<screen>/    one package per screen: state, copy.json catalog, headless interaction tests;
                          the name matches design/screens/<screen>.html
 internal/ui/panel/       the panel
+internal/ui/accounts/    the account window: list, editor, delete confirmation; Backend holds the store, key and
+                         `git config` work behind its actions
 internal/ui/locale/      system language to UI language (Simplified Chinese, English), shared by all catalogs
 internal/paths/          stored path form (forward slashes, `~`) to absolute and back; case-insensitive on Windows
 internal/fsutil/         atomic writes, refusing symlinks, following symlinks to the real file
@@ -37,6 +40,7 @@ internal/gitdir/         normalizing `gitdir` paths, includeIf write order and m
 internal/project/        managed file contents generated from the identity list; pure, no disk access
 internal/include/        inserting, replacing and removing the Include marker block; pure
 internal/apply/          the only place that writes config files: managed files and the marker block in user files
+internal/keyfile/        whether a private key may be deleted with its identity (Lstat only, never opened), and deleting it
 internal/sysexec/        running system commands: timeout, no stdin, no shell (ADR 0004)
 internal/match/          which identity a dropped folder uses; the `git` calls are injectable, tests use a fake
 internal/trayicon/       the tray icon, drawn in code, no image files
