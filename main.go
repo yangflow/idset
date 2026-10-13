@@ -140,7 +140,7 @@ func (a *app) ready() {
 // load reads accounts.json in the background, so that edits made outside the app show up each time.
 func (a *app) load() {
 	go func() {
-		s := store.Open(a.dataDir, time.Now)
+		s := store.Open(a.dataDir, time.Now, store.WithRegenerate(apply.Regenerate(a.env, apply.DefaultTarget(a.env), time.Now)))
 		a.win.Update(func() {
 			a.store = s
 			a.screen.SetAccounts(s.Accounts(), s.ReadOnly(), s.Path())

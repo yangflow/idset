@@ -8,7 +8,9 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
+	"github.com/yangflow/idset/internal/account"
 	"github.com/yangflow/idset/internal/fsutil"
 	"github.com/yangflow/idset/internal/include"
 	"github.com/yangflow/idset/internal/paths"
@@ -28,6 +30,14 @@ func DefaultTarget(env paths.Env) Target {
 		Dir:       env.Native(project.Dir),
 		SSHConfig: env.Native("~/.ssh/config"),
 		GitConfig: env.Native("~/.gitconfig"),
+	}
+}
+
+// Regenerate returns the function a store calls after each change: it projects the list at the time now reports
+// and writes it to t. Nothing runs until the function is called.
+func Regenerate(env paths.Env, t Target, now func() time.Time) func([]account.Account) error {
+	return func(list []account.Account) error {
+		return Write(project.Project(list, env, now()), t)
 	}
 }
 
