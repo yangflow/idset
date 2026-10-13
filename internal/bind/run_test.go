@@ -205,3 +205,21 @@ func TestReadOnlyStoreRefuses(t *testing.T) {
 		t.Fatalf("%+v", out)
 	}
 }
+
+func TestRebindToAnIdentityThatOnlyCoversMakesItWinWithOneRegeneration(t *testing.T) {
+	r := newRig(t, scoped("work", "~/"), scoped("client", "~/scratch/"))
+	original := r.store.Accounts()
+	out := r.run(Op{Kind: KindRebind, From: "client", To: "work"})
+	if out.Err != nil || r.regenerated != 1 || out.CoveredBy != "" {
+		t.Fatalf("%+v regenerated %d", out, r.regenerated)
+	}
+	if out.Result.ID != uid("work") {
+		t.Fatalf("git uses %+v", out.Result)
+	}
+	if undo := r.run(Op{Kind: KindUndo, Before: out.Undo}); undo.Err != nil || r.regenerated != 2 || undo.Result.ID != uid("client") {
+		t.Fatalf("%+v", undo)
+	}
+	if !reflect.DeepEqual(r.store.Accounts(), original) {
+		t.Fatal("undo restores every touched identity")
+	}
+}

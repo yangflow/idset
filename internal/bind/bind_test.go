@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/yangflow/idset/internal/account"
+	"github.com/yangflow/idset/internal/match"
 	"github.com/yangflow/idset/internal/paths"
 )
 
@@ -147,11 +148,6 @@ func TestRebindMovesTheFolderInOnePlan(t *testing.T) {
 	if len(plan.Changes) != 2 || paths_(t, plan.Changes, "home")[0] != "~/work/api/" {
 		t.Fatalf("%+v", plan)
 	}
-	// A target that covers the folder already changes nothing, the origin included.
-	plan, _ = Rebind(list, "client", "work", "/home/ada/src/x", unix, now)
-	if !plan.Empty() || plan.CoveredID != "work" || plan.CoveredBy != "~/src/" {
-		t.Fatalf("%+v", plan)
-	}
 }
 
 func TestUseOnlyAddsTheExactPathToTheWinner(t *testing.T) {
@@ -202,5 +198,52 @@ func TestWindowsPathForms(t *testing.T) {
 	plan, _ = RemovePath(list, "work", `C:\Users\Ada\WORK\web`, win, now)
 	if plan.Empty() {
 		t.Fatal("remove by a Windows path form")
+	}
+}
+
+func effective(list []account.Account, plan Plan, root string) string {
+	next := append([]account.Account{}, list...)
+	for _, c := range plan.Changes {
+		for i := range next {
+			if next[i].ID == c.ID {
+				next[i] = c
+			}
+		}
+	}
+	_, id := match.Identity(next, root, unix)
+	return id
+}
+
+func TestRebindMakesTheTargetEffectiveEvenWhenItCoversThroughAParent(t *testing.T) {
+	root := "/home/ada/work/client/app"
+	list := []account.Account{scoped("work", "~/work/"), scoped("client", "~/work/client/"), global("home")}
+	plan, err := Rebind(list, "client", "work", root, unix, now)
+	if err != nil || plan.Empty() || len(plan.Changes) != 1 || plan.Changes[0].ID != "work" {
+		t.Fatalf("%+v %v", plan, err)
+	}
+	if got := effective(list, plan, root); got != "work" {
+		t.Fatalf("git uses %q", got)
+	}
+	// The current identity matched through a parent: it keeps its path, the target wins with the exact one.
+	plan, err = Rebind(list, "client", "work", "/home/ada/work/client", unix, now)
+	if err != nil || effective(list, plan, "/home/ada/work/client") != "work" {
+		t.Fatalf("exact path of the other identity is removed: %+v %v", plan, err)
+	}
+	// A tie with a third identity holding the exact path, later in storage order.
+	tie := []account.Account{scoped("a", "~/p/x/"), scoped("b", "~/p/x/"), scoped("c", "~/p/")}
+	plan, err = Rebind(tie, "b", "a", "/home/ada/p/x", unix, now)
+	if err != nil || effective(tie, plan, "/home/ada/p/x") != "a" || len(plan.Changes) != 1 || plan.Changes[0].ID != "b" {
+		t.Fatalf("the target already has the path, only b changes: %+v %v", plan, err)
+	}
+	// The tie loser must lose the path.
+	tie = []account.Account{scoped("a", "~/p/x/"), scoped("b", "~/p/x/")}
+	plan, _ = Rebind(tie, "b", "a", "/home/ada/p/x", unix, now)
+	if len(plan.Changes) != 1 || plan.Changes[0].ID != "b" {
+		t.Fatalf("b gives the path up: %+v", plan)
+	}
+	// From a global match to a scoped target.
+	plan, err = Rebind(list, "home", "work", "/home/ada/src/x", unix, now)
+	if err != nil || effective(list, plan, "/home/ada/src/x") != "work" {
+		t.Fatalf("%+v %v", plan, err)
 	}
 }

@@ -103,22 +103,38 @@ func Unbind(list []account.Account, id, root string, env paths.Env, now time.Tim
 	return Plan{Changes: []account.Account{used(next, now)}, Before: []account.Account{a}}, nil
 }
 
-// Rebind unbinds the folder from one identity and binds it to another, as one plan. When the target covers the
-// folder already nothing changes at all.
+// ErrNotEffective means a plan would not make the target the identity git uses; it guards an invariant.
+var ErrNotEffective = errors.New("the target would not be the identity git uses")
+
+// Rebind makes the target the identity git uses for the folder: every other identity loses the folder's own path,
+// and the target gets it unless it has it already, a global one becoming limited to this folder. The target
+// covering the folder through a parent path is not enough, since a more specific path of another identity would
+// still win. It is one plan.
 func Rebind(list []account.Account, from, to, root string, env paths.Env, now time.Time) (Plan, error) {
-	bind, err := Bind(list, to, root, env, now)
-	if err != nil || bind.Empty() {
-		return bind, err
+	if _, err := find(list, from); err != nil {
+		return Plan{}, err
 	}
-	unbind, err := Unbind(list, from, root, env, now)
+	ti, err := find(list, to)
 	if err != nil {
 		return Plan{}, err
 	}
-	// The identity left only gets a different path list: it is not used.
-	for i := range unbind.Changes {
-		unbind.Changes[i].LastUsedAt = unbind.Before[i].LastUsedAt
+	var plan Plan
+	next := slices.Clone(list)
+	for i, a := range list {
+		if i != ti && hasExact(a, root, env) {
+			next[i] = without(a, func(p string) bool { return gitdir.Exact(root, p, env) })
+			plan.Changes, plan.Before = append(plan.Changes, next[i]), append(plan.Before, a)
+		}
 	}
-	return Plan{Changes: append(unbind.Changes, bind.Changes...), Before: append(unbind.Before, bind.Before...)}, nil
+	if t := list[ti]; t.Scope.Global || !hasExact(t, root, env) {
+		next[ti] = used(bound(t, root, env), now)
+		plan.Changes, plan.Before = append(plan.Changes, next[ti]), append(plan.Before, t)
+	}
+	matching := gitdir.Matching(gitdir.Blocks(next, env), root, env)
+	if len(matching) == 0 || next[matching[len(matching)-1].Index].ID != to {
+		return Plan{}, ErrNotEffective
+	}
+	return plan, nil
 }
 
 // UseOnly adds the folder's own path to the identity git uses there, so that the choice no longer rests on the
