@@ -3,6 +3,7 @@ package accounts
 import (
 	"errors"
 	"fmt"
+	"math"
 	"reflect"
 	"slices"
 	"strings"
@@ -748,14 +749,20 @@ func TestPrefillHintSitsAtTheEndOfAStandardRow(t *testing.T) {
 	for _, lang := range []string{"en", "zh-Hans"} {
 		r := open(t, lang, sample(), Request{New: true})
 		x := r.s.text
-		r.s.SetPrefill(r.s.Draft(), "Ada", "ada@example.com")
 		r.tt.SetSize(760, 1500)
 		r.tt.Frame()
+		// Row heights depend on the platform's fonts, so compare with the same rows before the prefill.
 		user, _ := r.tt.Find(x.Username)
 		name, _ := r.tt.Find(x.GitName)
 		email, _ := r.tt.Find(x.Email)
-		if a, b := name.Y-user.Y, email.Y-name.Y; a < 31 || a > 34 || b < 31 || b > 34 {
-			t.Errorf("%s: rows with a hint are as high as the others (32): %v %v", lang, a, b)
+		plainName, plainEmail := name.Y-user.Y, email.Y-name.Y
+		r.s.SetPrefill(r.s.Draft(), "Ada", "ada@example.com")
+		r.tt.Frame()
+		user, _ = r.tt.Find(x.Username)
+		name, _ = r.tt.Find(x.GitName)
+		email, _ = r.tt.Find(x.Email)
+		if a, b := name.Y-user.Y, email.Y-name.Y; math.Abs(float64(a-plainName)) > 0.5 || math.Abs(float64(b-plainEmail)) > 0.5 {
+			t.Errorf("%s: rows with a hint are as high as without it: %v %v, want %v %v", lang, a, b, plainName, plainEmail)
 		}
 		hint, ok := r.tt.Find(x.FromGit)
 		if !ok || hint.X < 500 || hint.Y < name.Y-8 || hint.Y > name.Y+16 {
