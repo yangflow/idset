@@ -109,8 +109,8 @@ and carries the user's accent color and contrast settings. See
   | `Text`, `TextMuted` | primary text; secondary text, hints, group headings, paths |
   | `Accent`, `AccentText` | the drop zone's outline while files are dragged over it; a selected platform filter, with its text in `AccentText` |
   | `Selection` | the drop zone's fill while files are dragged over it |
-  | `Warning` | the outline of the "no match", "not a Git repository" and "not a folder" cards |
-  | `Danger` | outline and text of the card when `git` cannot run; the warning symbol of the read-only state, on a 14% `Danger` fill |
+  | `Warning` | the outline of the "no match", "not a Git repository" and "not a folder" cards; the warning glyph of an identity-check finding, and the matched card's outline when its worst finding is a warning |
+  | `Danger` | outline and text of the card when `git` cannot run; the warning symbol of the read-only state, on a 14% `Danger` fill; the error glyph of an identity-check finding, and the matched card's outline when a finding is an error |
   | `Success` | not used yet; planned for a passing connectivity check, always with text |
   | `Focus` | the keyboard focus ring |
   | `Inverse`, `InverseText` | tooltips and toasts (left zero, they are `Text` and `Background`) |
@@ -169,7 +169,8 @@ and carries the user's accent color and contrast settings. See
 - **Icons are SVG** shown with `ui.Icon`, which takes the text color and the font size: an icon follows theme colors
   and the text size automatically. MyGo has no built-in icon set and no SF Symbols: `ui.Icon` draws an SVG. The panel's symbols are 16×16 line
   drawings (1.5 stroke, round caps) defined in `internal/ui/panel/view.go` and parsed once at package level: clear,
-  copy, check, warning, folder, more (three dots), arrow, minus, pin, and for the title bar and footer plus, gear (`gearshape`), info (`info.circle`), refresh
+  copy, check, warning, error (`exclamationmark.circle`: the info circle with its strokes turned upside down), folder,
+  more (three dots), arrow, minus, pin, and for the title bar and footer plus, gear (`gearshape`), info (`info.circle`), refresh
   (`arrow.clockwise`) and power (`power`), named after the SF Symbols they follow; there is no third-party icon set. If one
   is adopted, use one set for the whole app and record it and its license in `THIRD_PARTY.md`. See
   [Icon](https://github.com/egoist/mygo/blob/v0.3.6/docs/ui/icon.md).
@@ -205,12 +206,13 @@ What Idset uses today:
 | Initial badge | A rounded square with the first letter of the identity's name ("?" without a name), in the identity's color (see [Color](#color-and-dark-mode)). |
 | Borderless symbol button | `Space(6)` square (24), transparent, icon `Rem(1.1)` in `TextMuted`, `SurfaceHover` fill on hover, `SurfacePressed` while pressed. Must have a `.Label()`. After the path is copied, the icon turns into a check mark with "Copied" before it for 1.2 seconds. |
 | Icon button (title bar, footer) | The same 24×24 button with a `Rem(1.2)` (about 16) glyph, radius `Theme.Radius`. Always has `.Label()` and a `.Tooltip()` with the same text, in both languages: Settings, Add Identity, About Idset, Re-check, Quit (设置 / 添加身份 / 关于 Idset / 重新检查 / 退出 in Chinese). The tooltip is the `Inverse` fill, no shadow, above the button (below the title bar's). Same size, 4 DIPs apart, so a missing button never moves another. |
-| Result card | A context line (the path in monospace `TextMuted`, then the copy and clear buttons) and below it the answer. `Surface` fill, `Border` outline; `Warning` for the cards without a match, `Danger` when `git` fails. |
+| Result card | A context line (the path in monospace `TextMuted`, then the copy and clear buttons) and below it the answer. `Surface` fill, `Border` outline; `Warning` for the cards without a match, `Danger` when `git` fails; a matched card with findings takes the color of the worst one. |
 | Bind row | In a result card: color dot, name and one line of `TextMuted` (the identity's first folder in monospace `Rem(0.85)`, like the identity list's folders, middle-truncated; "Has <path> · adds another" is its tooltip), "Bind" in `Accent` at the end. 44 DIPs high, hairline above. The whole row is the target. |
 | Card menu | The "⋯" icon button's menu in a matched card, 224 DIPs wide, anchored to the button: its right edge is the button's, and it opens 4 DIPs below the card's context line: `Background` fill, `Border` outline, radius 8, 4 DIPs of padding, a 28 DIP heading "Rebind to" (`Rem(0.9)`, `TextMuted`, centered in its row and inset 8 DIPs like the entries), 32 DIP entries (color dot, name, first folder or "Global" in monospace `Rem(0.85)`), and under a hairline "Unbind" (only when the identity lists this very folder). No shadow. There is no actions row: open, copy, the menu and clear are icon buttons in the context line, in that order. |
 | Confirm block | In a matched card, under the details, hairline above: one line ("<name> will apply only here") and two 80×28 buttons at the right, the plain one first ("Cancel"), then the filled one (`Accent`, "Rebind"). No extra identity row. |
 | Overlap rows | In the overlap card: a row per identity in git's read order (dot, name, path in monospace `Rem(0.9)`), then the verdict: "Used" in `Accent` 600 with a check mark for the winner, "Overridden" in `TextMuted` for the others, whose names also lose their weight; and at the very end an icon button: a pin on the winner ("Use only <name> here"), a minus on each loser ("Remove <path> from <name>"). Title row: "<n> identities cover this folder" and an info icon button whose tooltip is "Git reads them in this order; the last one wins." |
 | Stale-path prompt | A card of its own above the no-match card: a 40 DIP header (color dot, "<name>'s folder is gone" / 「<name> 的路径已不在」, the name in 600, one line), two 28 DIP path rows under hairlines with no labels (the old path in `TextMuted`, then the new path after an arrow, monospace, one line, middle-truncated, full text in the tooltip), and a 36 DIP row with two text buttons at the right, "Update" in `Accent` and "Ignore" in `TextMuted`; their tooltips are "Change to This Path" and "Keep Old Path". The height is the same for any path. Plain `Border` outline, no clear button. |
+| Finding rows | In a matched card, under the details, in a section of their own: a hairline above, `Space(1)` (4) above and below the rows. One 28 DIP row per identity-check finding, email first, then key, like a path row: padding `Space(3)` (12), a `Rem(1.1)` (about 14) glyph, the warning triangle in `Warning` or the error circle in `Danger`, gap `Space(1.5)` (6), and one line of `Rem(0.9)` (about 12) `Text`: "Commits have no author", "Commits use <email> (<name>)", "Commits use <email>", "Pushes use <path>" (「提交没有作者」「提交会署名为 <邮箱>（<身份>）」「提交会署名为 <邮箱>」「推送会用 <路径>」). A long email gives way before its "@", so the domain and the identity name stay; a key path is middle-truncated in monospace like any path. The row's tooltip says why, with the full value. No buttons: fixes belong to the diagnostics. The card's outline is `Danger` when any finding is an error, else `Warning`. |
 | Undo bar | The last row of the result card, 36 DIPs high, hairline above: "Bound to <identity> ·" and an `Accent` "Undo" text button. A 2 DIP line on the bar's bottom edge, `Accent` at 45%, is as wide as the time left of the card's width, in fifths. |
 | Identity list | A group heading, then one `Surface` container with `Border` dividers between rows. |
 | Source list row | A color dot, name and email on two lines, an optional folder symbol; `SurfacePressed` fill when selected. |
@@ -326,7 +328,7 @@ The content, in order:
 The drop zone is always one line, with or without a result: a dashed box with "Drop a folder, or" and "Choose…",
 padding `Space(2)`×`Space(3)` (about 46 DIPs high). "See which identity pushes from it" is the tooltip of the text
 and "Choose Folder…" that of the button. Words that only explain are tooltips throughout the panel: the full sentence of
-"Covered by …", the reason of "Read-only until fixed", the "adds another" of a bind row.
+"Covered by …", the reason of "Read-only until fixed", the "adds another" of a bind row, the why of a finding.
 
 The result card has two parts with a divider between them:
 
@@ -341,6 +343,11 @@ The result card has two parts with a divider between them:
   folder however many follow. Without a match: the sentence for the case, 600, on a `Warning` outline. `git` failed: "Could not
   run git" in `Danger`, then the reason in monospace `Rem(0.85)` `TextMuted`, at most two lines (the full text is its
   tooltip), on a `Danger` outline. In "Folders" each path has its own line.
+- Identity check (docs/product.md): when the repository's own `user.email` or `core.sshCommand` disagrees with the
+  matched identity, the finding rows follow the details inside the same card, and the outline takes the worst
+  severity. Without findings the card is exactly the plain matched card. Mockup states: no email, another identity's
+  email, an email no identity has, another key, and two findings with long values; `&tip=finding` pins the first
+  row's tooltip.
 - Binding. Mockup states: no match, rebinding to a global identity (the confirmation), matched (by a parent folder, or by the folder itself
   with "Unbind"), the rebind menu, already covered, overlap, the undo bar, and after undo.
   - No match: the sentence, a "Bind to" heading (`Rem(0.9)`, 600, `TextMuted`) and one bind row per identity, then a
