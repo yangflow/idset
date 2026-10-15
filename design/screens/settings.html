@@ -142,7 +142,9 @@ button.ghost svg { width:14px; height:14px }
 .r.idr { min-height:32px; padding-left:44px; gap:8px }
 .r.idr .nm { flex:none }
 .r.idr .em { flex:1; min-width:0; font-size:11px; color:var(--muted); overflow-wrap:anywhere }
-.r.idr .scope { width:14px; height:14px; flex:none; color:var(--muted) }
+.r.idr .trail { flex:none; min-width:24px; display:flex; justify-content:center; color:var(--muted) }
+.r.idr .trail.txt { justify-content:flex-end; padding-right:5px; font-size:11px }
+.r.idr .trail svg { width:14px; height:14px }
 .r.err { display:block; min-height:0; padding:6px 12px 8px 44px }
 .banner { display:flex; gap:8px; align-items:flex-start; padding:10px 12px; border-radius:10px; background:color-mix(in srgb, var(--danger) 12%, transparent); line-height:1.4 }
 .banner svg { width:14px; height:14px; flex:none; margin-top:2px; color:var(--danger) }
@@ -277,7 +279,7 @@ function render() {
     if (working) acts = `${spinner}<span class="muted">${T.restoring}</span>`;
     if (s === 'restored' && i === target) acts = `<button class="text" disabled>${icon.check}${T.restored}</button>${ghost('trash', T.del)}`;
     let out = `<div class="r bk${idle ? ' busy' : ''}">${ghost(open ? 'down' : 'right', open ? T.collapse : T.expand, b.bad)}<div class="t"><span>${b.time}</span>${sub}</div><div class="acts">${acts}</div></div>`;
-    if (open) out += b.ids.map(k => { const d = IDS[k]; return `<div class="r idr">${dot(d)}<span class="nm">${d.label}</span><span class="em">${d.email}</span>${d.scoped ? `<span class="scope" title="${T.scoped}" aria-label="${T.scoped}">${icon.folder}</span>` : `<span class="muted" style="font-size:11px">${T.global}</span>`}</div>`; }).join('');
+    if (open) out += b.ids.map(k => { const d = IDS[k]; return `<div class="r idr">${dot(d)}<span class="nm">${d.label}</span><span class="em">${d.email}</span>${d.scoped ? `<span class="trail" title="${T.scoped}" aria-label="${T.scoped}">${icon.folder}</span>` : `<span class="trail txt">${T.global}</span>`}</div>`; }).join('');
     if (s === 'failed' && i === target) out += `<div class="r err">${note('err', 'warn', T.failed)}</div>`;
     return out;
   }).join('');
