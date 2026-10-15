@@ -74,10 +74,16 @@ func ghost(c *ui.Context, label string, icon *ui.SVG) ui.Element {
 
 // tooltipGhost is a ghost button whose tooltip says more than its label.
 func tooltipGhost(c *ui.Context, key, label, tip string, icon *ui.SVG) ui.Element {
+	return symbolButton(c, key, label, icon, false).Tooltip(tip)
+}
+
+// symbolButton is the ghost button without a tooltip. A done button, one that shows the check mark of a copy, keeps
+// its plain look even while the pointer is still over it.
+func symbolButton(c *ui.Context, key, label string, icon *ui.SVG, done bool) ui.Element {
 	t := c.Theme()
 	b := ui.Button(c.Key(key), "").Label(label).Size(t.Space(6), t.Space(6)).Padding(0).Radius(t.Radius).Border(0, ui.Color{}).
-		Background(ui.Color{}).TextColor(t.TextMuted).Tooltip(tip).Children(func() { ui.Icon(c, icon).FontSize(t.Rem(1.2)) })
-	if b.Hovered() {
+		Background(ui.Color{}).TextColor(t.TextMuted).Children(func() { ui.Icon(c, icon).FontSize(t.Rem(1.2)) })
+	if b.Hovered() && !done {
 		b.Background(t.SurfaceHover)
 	}
 	return b
@@ -304,7 +310,9 @@ func (s *Screen) row(c *ui.Context, a account.Account) {
 			if open {
 				icon = icons.ChevronDown
 			}
-			if tooltipGhost(c, "clone-"+a.ID, s.text.CloneToggle, s.text.CloneToggle, icon).Expanded(open).Clicked() {
+			toggle := symbolButton(c, "clone-"+a.ID, s.text.CloneToggle, icon, false).Expanded(open)
+			tipAboveEnd(c, toggle, s.text.CloneToggle)
+			if toggle.Clicked() {
 				s.toggleRow(a.ID)
 			}
 		})

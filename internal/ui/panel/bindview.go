@@ -486,6 +486,16 @@ func (s *Screen) findingLine(c *ui.Context, d said) {
 // tipAbove is the tooltip of anchor placed as the mockup has it: above it, 6 DIPs away, its start under the anchor's
 // start, at most 240 DIPs wide, which Element.Tooltip does not offer (it goes by the pointer, below it, 320 wide).
 func tipAbove(c *ui.Context, anchor ui.Element, text string) {
+	tipPlaced(c, anchor, text, false)
+}
+
+// tipAboveEnd is tipAbove for a button at the end of a line: the tooltip ends where the button ends, so that it
+// stays inside the panel.
+func tipAboveEnd(c *ui.Context, anchor ui.Element, text string) {
+	tipPlaced(c, anchor, text, true)
+}
+
+func tipPlaced(c *ui.Context, anchor ui.Element, text string, end bool) {
 	t := c.Theme()
 	fill, ink := t.Inverse, t.InverseText
 	if fill == (ui.Color{}) {
@@ -495,7 +505,11 @@ func tipAbove(c *ui.Context, anchor ui.Element, text string) {
 		ink = t.Background
 	}
 	ui.TooltipBase(c, anchor, func(tip ui.Element) {
-		tip.AttachTo(anchor, ui.AnchorTopLeft, ui.AnchorBottomLeft).Margin(t.Space(1.5), 0, 0, 0)
+		if end {
+			tip.AttachTo(anchor, ui.AnchorTopRight, ui.AnchorBottomRight).Margin(t.Space(1.5), 0, 0, 0)
+		} else {
+			tip.AttachTo(anchor, ui.AnchorTopLeft, ui.AnchorBottomLeft).Margin(t.Space(1.5), 0, 0, 0)
+		}
 		tip.MaxWidth(t.Space(60)).Padding(t.Space(1), t.Space(2)).Radius(t.Space(1.5)).
 			Background(fill).TextColor(ink).FontSize(t.Rem(0.75))
 		tip.Children(func() { ui.Text(c, text) })

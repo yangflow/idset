@@ -29,7 +29,7 @@ Mockups show the 4 DIP unit and 13 px text.
 | bar-undo | `t.Space(9)` | 36 | undo bar of a result card; the stale-path prompt's Update and Ignore row |
 | bar-actions | `t.Space(10)` | 40 | the stale-path prompt's header; the "New Identity" row of the bind list |
 | path-row | `t.Space(7)` | 28 | the two path rows of the stale-path prompt; a finding row of the identity check; the HTTPS row (8 right inset, its icon button 24) |
-| clone-input | `t.Space(7)` | 28 | the clone helper's input; its copy button is a 24 symbol-button; padding `Space(2)` x `Space(3)`, bottom `Space(2.5)`; `Space(1)` between input and output |
+| clone-input | `t.Space(7)` | 28 | the clone helper's input, filled with the `Background` role; its copy button is a 24 symbol-button; padding `Space(2)` x `Space(3)`, bottom `Space(2.5)`; `Space(1)` between input and output |
 | clone-output | `t.Space(4)` | 16 | the clone helper's output or hint line (`small`, monospace for the command) |
 | row-disclosure | `t.Space(6)` | 24 | the identity row's disclosure button (a 24 gap without an alias); the open helper is indented `Space(8)` (32) |
 | finding-section | `t.Space(1)` | 4 | above and below the finding rows, under their hairline |

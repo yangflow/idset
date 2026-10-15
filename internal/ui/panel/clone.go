@@ -2,7 +2,6 @@ package panel
 
 import (
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/egoist/mygo/ui"
@@ -30,17 +29,14 @@ func cloneSeed(r match.Result, prefix string) string {
 	return prefix
 }
 
-// copied shows the check mark and "Copied" before a button, for the time that is left after a copy.
+// copied says "Copied" before a button, for the time that is left after a copy; the button shows the check mark.
 func (s *Screen) copied(c *ui.Context, until time.Time) bool {
 	left := until.Sub(s.now())
 	if left <= 0 {
 		return false
 	}
 	t := c.Theme()
-	ui.Row(c).Gap(t.Space(1)).AlignItems(ui.Center).Shrink(0).Children(func() {
-		ui.Icon(c, icons.Check).FontSize(t.Rem(1.1)).TextColor(t.TextMuted)
-		ui.Text(c, s.text.Copied).FontSize(t.Rem(0.85)).TextColor(t.TextMuted).SingleLine()
-	})
+	ui.Text(c, s.text.Copied).FontSize(t.Rem(0.85)).TextColor(t.TextMuted).SingleLine().Shrink(0)
 	c.After(left)
 	return true
 }
@@ -59,11 +55,13 @@ func (s *Screen) remoteRow(c *ui.Context, r *match.Result, a account.Account) {
 		text := ui.Text(c, s.text.HTTPSRow).FontSize(t.Rem(0.9)).SingleLine().Grow(1).MinWidth(0)
 		tipAbove(c, text, s.text.HTTPSTip)
 		s.copied(c, s.httpsUntil)
-		icon := icons.Terminal
-		if s.now().Before(s.httpsUntil) {
+		icon, done := icons.Terminal, s.now().Before(s.httpsUntil)
+		if done {
 			icon = icons.Check
 		}
-		if tooltipGhost(c, "https-copy", s.text.CopyCmd, fmt.Sprintf(s.text.CopyCmdTip, cmd), icon).Clicked() {
+		button := symbolButton(c, "https-copy", s.text.CopyCmd, icon, done)
+		tipAboveEnd(c, button, fmt.Sprintf(s.text.CopyCmdTip, cmd))
+		if button.Clicked() {
 			s.act.CopyText(cmd)
 			s.httpsUntil = s.now().Add(copiedFor)
 			c.After(copiedFor)
@@ -83,17 +81,18 @@ func (s *Screen) cloneBlock(c *ui.Context, key string, a account.Account, f *clo
 	ui.Column(c.Key(key)).Gap(t.Space(1)).Padding(t.Space(2), t.Space(3), t.Space(2.5), left).Children(func() {
 		ui.Row(c).Gap(t.Space(1.5)).AlignItems(ui.Center).Children(func() {
 			in := ui.TextInput(c.Key(key+"-input"), &f.value).Label(s.text.CloneLabel).Placeholder(repoPlaceholder).
-				Tooltip(s.text.CloneTip).Font("monospace").FontSize(t.Rem(0.9)).Height(t.Space(7)).Grow(1).MinWidth(0)
+				Tooltip(s.text.CloneTip).Font("monospace").FontSize(t.Rem(0.9)).Height(t.Space(7)).Background(t.Background).Grow(1).MinWidth(0)
 			if focus {
 				in.AutoFocus()
 			}
 			enter := in.Submitted()
 			s.copied(c, f.until)
-			icon := icons.Terminal
-			if s.now().Before(f.until) {
+			icon, done := icons.Terminal, s.now().Before(f.until)
+			if done {
 				icon = icons.Check
 			}
-			button := tooltipGhost(c, key+"-copy", s.text.CloneCopy, s.text.CloneCopy, icon).Disabled(!ok)
+			button := symbolButton(c, key+"-copy", s.text.CloneCopy, icon, done).Disabled(!ok)
+			tipAboveEnd(c, button, s.text.CloneCopy)
 			if ok && (button.Clicked() || enter) {
 				s.act.CopyText(cmd)
 				f.until = s.now().Add(copiedFor)
@@ -102,17 +101,13 @@ func (s *Screen) cloneBlock(c *ui.Context, key string, a account.Account, f *clo
 				s.act.CloneCopied(a.ID, remote.Prefix(f.value))
 			}
 		})
-		ui.Row(c).Height(t.Space(4)).AlignItems(ui.Center).MinWidth(0).Children(func() {
+		ui.Row(c).Height(t.Space(4)).PaddingX(t.Space(0.5)).AlignItems(ui.Center).MinWidth(0).Children(func() {
 			if !ok {
 				ui.Text(c, s.text.CloneHint).FontSize(t.Rem(0.85)).TextColor(t.TextMuted).SingleLine().MinWidth(0)
 				return
 			}
-			tail := ""
-			if i := strings.LastIndex(cmd, "/"); i >= 0 {
-				tail = cmd[i:]
-			}
-			ui.Text(c, cmd).Font("monospace").FontSize(t.Rem(0.85)).TextColor(t.TextMuted).SingleLine().Ellipsis("…" + tail).
-				MinWidth(0).Tooltip(cmd)
+			// Only the middle gives way: "git clone git@alias:" and the last segment stay.
+			pathLine(c, cmd, "", cmd, pathFace{mono: true, size: t.Rem(0.85), color: t.TextMuted})
 		})
 	})
 }

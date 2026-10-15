@@ -232,3 +232,43 @@ func TestCloneTextsInChinese(t *testing.T) {
 	tt.Frame()
 	want(t, tt, "远程地址是 HTTPS", "复制改地址命令", "要克隆的仓库", "复制克隆命令", "用这个身份克隆")
 }
+
+func TestCopiedIsSaidOnceAndTheButtonKeepsItsPlainLook(t *testing.T) {
+	s, tt, _ := card(t, httpsResult(httpsURL), cloneList()...)
+	clock(s)
+	click(t, tt, "Copy command to use SSH")
+	tt.Frame()
+	if n := count(tt, "Copied"); n != 1 {
+		t.Fatalf("one acknowledgment: %d in %q", n, tt.Texts())
+	}
+	// The pointer is still on the button: it shows the check mark without a hover fill.
+	r, _ := tt.Find("Copy command to use SSH")
+	img := tt.Image()
+	x, y := int(r.X+r.W/2), int(r.Y+2)
+	if got, plain := img.RGBAAt(x, y), img.RGBAAt(x, int(r.Y)-3); got != plain {
+		t.Errorf("the button has a fill after the copy: %v on %v", got, plain)
+	}
+}
+
+func TestLongCloneCommandGivesWayInTheMiddle(t *testing.T) {
+	_, tt, _ := card(t, httpsResult(""), cloneList()...)
+	click(t, tt, "Repository to clone")
+	tt.Type("acme/platform/payments/api")
+	tt.SetSize(260, 480)
+	tt.Frame()
+	// The whole command is the text; the tooltip and the accessible name have it all.
+	const full = "git clone git@github-work:acme/platform/payments/api.git"
+	r, ok := tt.Find(full)
+	if !ok {
+		t.Fatalf("no command in %q", tt.Texts())
+	}
+	in, _ := tt.Find("Repository to clone")
+	if r.X < in.X || r.X+r.W > 260-12 {
+		t.Errorf("the line keeps inside the card's insets: %v, input %v", r, in)
+	}
+	// The cut is in the middle: the start and "/api.git" are what the frame shows, so more than the head of the
+	// command is on screen: its last glyphs are within the line's right end.
+	if r.W < 100 {
+		t.Errorf("the line has room for its start and its end: %v", r)
+	}
+}
