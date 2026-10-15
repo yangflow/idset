@@ -10,18 +10,7 @@ import (
 	"github.com/egoist/mygo/ui"
 	"github.com/yangflow/idset/internal/account"
 	"github.com/yangflow/idset/internal/keyfile"
-)
-
-func svg(paths string) *ui.SVG {
-	return ui.MustParseSVG([]byte(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="none" stroke="#000" stroke-linecap="round" stroke-linejoin="round">` + paths + `</svg>`))
-}
-
-var (
-	plusIcon   = svg(`<path d="M8 3v10M3 8h10" stroke-width="1.6"/>`)
-	minusIcon  = svg(`<path d="M3.5 8h9" stroke-width="1.6"/>`)
-	checkIcon  = svg(`<path d="M3.5 8.5l3 3 6-7" stroke-width="1.6"/>`)
-	warnIcon   = svg(`<path d="M8 2.5l6 11H2z" stroke-width="1.6"/><path d="M8 6.5v3M8 11.6v.1" stroke-width="1.6"/>`)
-	folderIcon = svg(`<path d="M2 4.5a1 1 0 0 1 1-1h3l1.5 1.5H13a1 1 0 0 1 1 1V12a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1z" stroke-width="1.4"/>`)
+	"github.com/yangflow/idset/internal/ui/icons"
 )
 
 // View draws the window. It reads state only; clicks go to the owner through Actions.
@@ -55,7 +44,7 @@ func (s *Screen) View(c *ui.Context) {
 func (s *Screen) readOnly(c *ui.Context) {
 	t := c.Theme()
 	ui.Column(c).Grow(1).Gap(t.Space(2)).PaddingX(t.Space(6)).AlignItems(ui.Center).Justify(ui.Center).Children(func() {
-		ui.Icon(c, warnIcon).FontSize(t.Rem(1.7)).TextColor(t.Danger)
+		ui.Icon(c, icons.Warn).FontSize(t.Rem(1.7)).TextColor(t.Danger)
 		ui.Text(c, s.text.ReadOnly).FontSize(t.Rem(1.15)).FontWeight(600).Role(ui.RoleHeading).Level(2)
 		ui.Text(c, s.text.ReadOnlyHint).TextColor(t.TextMuted).TextAlign(ui.Center)
 		ui.Text(c, s.env.Tilde(s.dataPath)).Font("monospace").FontSize(t.Rem(0.85)).TextColor(t.TextMuted).Selectable()
@@ -118,7 +107,7 @@ func (s *Screen) sidebar(c *ui.Context) {
 		})
 		ui.Divider(c)
 		ui.Row(c).Height(barHeight(t)).PaddingX(t.Space(2)).AlignItems(ui.Center).Children(func() {
-			if ghost(c, s.text.AddIdentity, plusIcon).Disabled(s.readErr != nil).Clicked() {
+			if ghost(c, s.text.AddIdentity, icons.Plus).Disabled(s.readErr != nil).Clicked() {
 				s.newDraft("")
 			}
 		})
@@ -149,7 +138,7 @@ func (s *Screen) item(c *ui.Context, id, label, email, color string, scoped, dra
 		case draft:
 			ui.Text(c, s.text.NewTag).FontSize(t.Rem(0.85)).TextColor(t.TextMuted)
 		case scoped:
-			ui.Icon(c, folderIcon).FontSize(t.Rem(1.1)).TextColor(t.TextMuted).Label(s.text.Scoped)
+			ui.Icon(c, icons.Folder).FontSize(t.Rem(1.1)).TextColor(t.TextMuted).Label(s.text.Scoped)
 		}
 	})
 }
@@ -241,7 +230,7 @@ func (s *Screen) colorChoice(c *ui.Context, f *form, name string) {
 	}
 	b.Children(func() {
 		if on {
-			ui.Icon(c, checkIcon).FontSize(t.Rem(0.8)).TextColor(ui.RGB(255, 255, 255))
+			ui.Icon(c, icons.Check).FontSize(t.Rem(0.8)).TextColor(ui.RGB(255, 255, 255))
 		}
 	})
 	if b.Clicked() {
@@ -300,7 +289,7 @@ func (s *Screen) notes(c *ui.Context, errs []string) {
 	t := c.Theme()
 	for _, e := range errs {
 		ui.Row(c).Gap(t.Space(1.5)).PaddingX(t.Space(0.5)).Children(func() {
-			ui.Icon(c, warnIcon).FontSize(t.Rem(1)).TextColor(t.Danger)
+			ui.Icon(c, icons.Warn).FontSize(t.Rem(1)).TextColor(t.Danger)
 			ui.Text(c, e).FontSize(t.Rem(0.85)).TextColor(t.Danger).Grow(1)
 		})
 	}
@@ -350,7 +339,7 @@ func (s *Screen) sshGroup(c *ui.Context, f *form) {
 		r.field(s.text.Alias, "", func() { s.input(c, "alias", &f.cur.alias, s.text.Alias).Font("monospace").FontSize(t.Rem(0.9)) })
 		r.field(s.text.Key, "", func() {
 			s.keyValue(c, f)
-			if ghost(c, s.text.ChooseFile, folderIcon).Disabled(s.busy).Clicked() {
+			if ghost(c, s.text.ChooseFile, icons.Folder).Disabled(s.busy).Clicked() {
 				s.act.ChooseKey(f.id)
 			}
 		})
@@ -428,10 +417,10 @@ func (s *Screen) scopeGroup(c *ui.Context, f *form) {
 		for i := range f.cur.paths {
 			r.line(func() {
 				s.input(c, fmt.Sprint("path-", i), &f.cur.paths[i], s.text.Path).Font("monospace").FontSize(t.Rem(0.9))
-				if ghost(c, s.text.ChooseFolder, folderIcon).Disabled(s.busy).Clicked() {
+				if ghost(c, s.text.ChooseFolder, icons.Folder).Disabled(s.busy).Clicked() {
 					s.act.ChooseFolder(f.id, i)
 				}
-				if ghost(c, s.text.RemovePath, minusIcon).Disabled(s.busy || len(f.cur.paths) == 1).Clicked() {
+				if ghost(c, s.text.RemovePath, icons.Minus).Disabled(s.busy || len(f.cur.paths) == 1).Clicked() {
 					remove = i
 				}
 			})
@@ -440,7 +429,7 @@ func (s *Screen) scopeGroup(c *ui.Context, f *form) {
 			f.cur.paths = slices.Delete(f.cur.paths, remove, remove+1)
 		}
 		r.line(func() {
-			if textButton(c, s.text.AddPath, t.Accent, plusIcon).Disabled(s.busy).Clicked() {
+			if textButton(c, s.text.AddPath, t.Accent, icons.Plus).Disabled(s.busy).Clicked() {
 				f.cur.paths = append(f.cur.paths, "")
 			}
 		})
@@ -466,7 +455,7 @@ func (s *Screen) rewriteGroup(c *ui.Context, f *form) {
 				})
 				ui.Text(c, s.text.PushOnly).FontSize(t.Rem(0.85)).TextColor(t.TextMuted)
 				ui.Switch(c.Key(fmt.Sprint("push-", i)), &f.cur.rewrites[i].Push).Label(s.text.PushOnly).Disabled(s.busy)
-				if ghost(c, s.text.RemoveRewrite, minusIcon).Disabled(s.busy).Clicked() {
+				if ghost(c, s.text.RemoveRewrite, icons.Minus).Disabled(s.busy).Clicked() {
 					remove = i
 				}
 			})
@@ -475,7 +464,7 @@ func (s *Screen) rewriteGroup(c *ui.Context, f *form) {
 			f.cur.rewrites = slices.Delete(f.cur.rewrites, remove, remove+1)
 		}
 		r.line(func() {
-			if textButton(c, s.text.AddRewrite, t.Accent, plusIcon).Disabled(s.busy).Clicked() {
+			if textButton(c, s.text.AddRewrite, t.Accent, icons.Plus).Disabled(s.busy).Clicked() {
 				f.cur.rewrites = append(f.cur.rewrites, account.Rewrite{})
 			}
 		})
@@ -484,7 +473,7 @@ func (s *Screen) rewriteGroup(c *ui.Context, f *form) {
 		}
 		next, ok := f.nextDefaultRewrite()
 		r.line(func() {
-			if textButton(c, s.text.AddDefault, t.Accent, plusIcon).Disabled(s.busy || !ok).Clicked() {
+			if textButton(c, s.text.AddDefault, t.Accent, icons.Plus).Disabled(s.busy || !ok).Clicked() {
 				f.cur.rewrites = append(f.cur.rewrites, next)
 			}
 		})
@@ -566,7 +555,7 @@ func (s *Screen) footer(c *ui.Context, f *form) {
 		switch {
 		case flash:
 			save = ui.PrimaryButton(c, "").Label(s.text.Saved).Size(bw, bh).Children(func() {
-				ui.Icon(c, checkIcon).FontSize(t.Rem(1.1))
+				ui.Icon(c, icons.Check).FontSize(t.Rem(1.1))
 				ui.Text(c, s.text.Saved).SingleLine()
 			}).Disabled(true)
 		case s.busy:
@@ -591,7 +580,7 @@ func (s *Screen) status(c *ui.Context, f *form, dirty bool) {
 		ui.Spinner(c)
 		small(s.text.Writing, t.TextMuted)
 	case s.notice != "":
-		ui.Icon(c, warnIcon).FontSize(t.Rem(1)).TextColor(t.Danger)
+		ui.Icon(c, icons.Warn).FontSize(t.Rem(1)).TextColor(t.Danger)
 		small(s.notice, t.Danger)
 	case len(s.problems) > 0 && s.problemsID == f.id:
 		format := s.text.ProblemsMany
