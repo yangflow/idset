@@ -55,7 +55,8 @@ h1 { flex:1; margin:0; font-size:13px; font-weight:600 }
 .result { border:1px solid var(--border); border-radius:10px; background:var(--surface) }
 .result.warning { border-color:var(--warning) }
 .result.danger { border-color:var(--danger) }
-.result .top { display:flex; align-items:center; gap:4px; padding:8px 8px 8px 12px; border-bottom:1px solid var(--border) }
+/* The context line is 36 high, hairline included, like the title row and the footer. */
+.result .top { display:flex; align-items:center; gap:4px; height:36px; padding:0 8px 0 12px; border-bottom:1px solid var(--border) }
 .result .top .cluster { flex:0 1 auto; min-width:0; display:flex; align-items:center; gap:4px }
 .result .top .mid { flex:1 0 80px; color:var(--muted) }
 .result .copied { flex:0 1 auto; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:11px; color:var(--muted); margin-right:2px }
@@ -63,7 +64,7 @@ h1 { flex:1; margin:0; font-size:13px; font-weight:600 }
 .result .avatar { width:36px; height:36px; border-radius:9px; font-size:16px }
 .result .name { font-size:15px; font-weight:600 }
 .result .uses { font-size:12px; color:var(--muted) }
-.result .kv { display:grid; grid-template-columns:56px 1fr; gap:4px 8px; padding:0 12px 12px 60px; font-size:12px }
+.result .kv { display:grid; grid-template-columns:56px 1fr; align-items:start; gap:4px 8px; padding:0 12px 12px 60px; font-size:12px }
 .result .kv > :nth-child(odd) { color:var(--muted) }
 .result .say { padding:12px; display:flex; align-items:center; gap:8px; font-weight:600 }
 .result .say.plain { font-weight:400 }
@@ -101,7 +102,8 @@ h1 { flex:1; margin:0; font-size:13px; font-weight:600 }
 .result .actions { display:flex; align-items:center; justify-content:flex-end; gap:4px; height:36px; padding:0 8px; border-top:1px solid var(--border) }
 .result .menuwrap { position:relative; display:flex }
 .panel button.text.quiet { color:var(--muted) }
-.menu { position:absolute; z-index:4; top:calc(100% + 4px); right:-32px; width:224px; padding:4px; border:1px solid var(--border); border-radius:8px; background:var(--background) }
+/* The menu ends with the "⋯" button and opens 4 below the context line (the button sits 6 above its bottom). */
+.menu { position:absolute; z-index:4; top:calc(100% + 10px); right:0; width:224px; padding:4px; border:1px solid var(--border); border-radius:8px; background:var(--background) }
 .menu .mhead { height:28px; padding:0 8px; display:flex; align-items:center; font-size:12px; color:var(--muted) }
 .menu .msep { height:1px; margin:4px 0; background:var(--border) }
 .menu .entry { display:flex; align-items:center; gap:8px; height:32px; padding:0 8px; border-radius:6px }
@@ -147,7 +149,7 @@ h1 { flex:1; margin:0; font-size:13px; font-weight:600 }
 .item .email { font-size:12px; color:var(--muted) }
 .item .tag { flex:none; max-width:50%; display:flex; font-family:ui-monospace,monospace; font-size:11px; color:var(--muted) }
 .item .tag .mid { font-size:inherit }
-.result .row .note .mid { font:inherit }
+.result .row .note .mid { font-family:ui-monospace,monospace; font-size:11px }
 .item .tag .mid { min-width:0 }
 
 .search { width:100%; padding:6px 8px; border:1px solid var(--border); border-radius:6px; background:var(--surface); color:var(--text); font:inherit }
@@ -312,9 +314,10 @@ function panel(state, T) {
     + `<div class="actions">${btn(T.staleUpdate, T.staleFix)}${btn(T.staleIgnore, T.staleKeep).replace('class="text"', 'class="text quiet"')}</div></div>`;
   const verdict = (win, label) => `<span class="verdict${win ? ' win' : ''}">${win ? icon.check : ''}${label}</span>`;
   // Overlap: the winner's pin ("use only it here") and each loser's minus ("remove the path from it") are icon buttons at the end of their rows.
-  const overlap = () => result('', '~/work/client/app', `<div class="say tight">${T.overlapTitle(2)}<button class="tool tip-below${view.tip === 'info' ? ' pinned' : ''}" data-tip="${T.overlapHint}" aria-label="${T.overlapHint}">${icon.info}</button></div>`
+  // It has no context line of its own: the matched card under it shows the folder, and its one clear button clears both.
+  const overlap = () => `<div class="result"><div class="say tight">${T.overlapTitle(2)}<button class="tool tip-below${view.tip === 'info' ? ' pinned' : ''}" data-tip="${T.overlapHint}" aria-label="${T.overlapHint}">${icon.info}</button></div>`
     + `<div class="row lost">${dot(work)}<div class="lines"><span class="label">${name(work)}</span><span class="note mono">~/work/</span></div>${verdict(false, T.overridden)}${ghost('minus', T.removeFrom(name(work), '~/work/'), true)}</div>`
-    + `<div class="row">${dot(client)}<div class="lines"><span class="label">${name(client)}</span><span class="note mono">~/work/client/</span></div>${verdict(true, T.used)}${ghost('pin', T.onlyUse(name(client)), true)}</div>`);
+    + `<div class="row">${dot(client)}<div class="lines"><span class="label">${name(client)}</span><span class="note mono">~/work/client/</span></div>${verdict(true, T.used)}${ghost('pin', T.onlyUse(name(client)), true)}</div></div>`;
   const undoBar = who => `<div class="bar timed" style="--left:60%"><span>${T.boundTo(name(who))} ·</span>${btn(T.undo)}</div>`;
   const clamp = (text, full, cls) => `<div class="${cls}" data-tip="${full}"><span>${text}</span></div>`;
   const jsonError = `invalid character '}' looking for beginning of object key string`;

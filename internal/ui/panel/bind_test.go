@@ -595,3 +595,83 @@ func TestBindRowsStayUniformWhateverTheyHoldToSay(t *testing.T) {
 		}
 	}
 }
+
+// band is how high the plain band around y is at x in the last frame: from the first row above y of another color
+// (a border or hairline) to the first such row below it, or to the bottom of the window.
+func band(tt *ui.Tester, x, y int) int {
+	img := tt.Image()
+	ref := img.RGBAAt(x, y)
+	top, bottom := y, y
+	for top > 0 && img.RGBAAt(x, top) == ref {
+		top--
+	}
+	for bottom < img.Bounds().Max.Y && img.RGBAAt(x, bottom) == ref {
+		bottom++
+	}
+	return bottom - top
+}
+
+func TestCardHeaderIsAsHighAsTheFooter(t *testing.T) {
+	_, tt, _ := card(t, matched(api, "work", true), work(), client())
+	clear, _ := tt.Find("Clear result")
+	quit, _ := tt.Find("Quit")
+	// Between the buttons, from the card's top edge to its hairline, and from the footer's hairline to the bottom.
+	header := band(tt, int(clear.X)-2, int(clear.Y+clear.H/2))
+	footer := band(tt, int(quit.X)-4, int(quit.Y+quit.H/2))
+	if d := header - footer; d > 1 || d < -1 {
+		t.Errorf("the card header is %d high, the footer %d", header, footer)
+	}
+}
+
+func TestDetailLabelsStandByTheFirstLineOfTheirValue(t *testing.T) {
+	_, tt, _ := card(t, matched(api, "work", false), work(), client())
+	mid := func(name string) float32 {
+		r, ok := tt.Find(name)
+		if !ok {
+			t.Fatalf("no %q in %q", name, tt.Texts())
+		}
+		return r.Y + r.H/2
+	}
+	label, first, second := mid("Folders"), mid("~/work/"), mid("~/src/new/")
+	if d := label - first; d > 2 || d < -2 || second-label < first-label+1 {
+		t.Errorf("Folders at %v, its lines at %v and %v", label, first, second)
+	}
+}
+
+func TestOverlapShowsTheFolderOnce(t *testing.T) {
+	res := matched("/home/ada/work/client/app", "client", false, match.Cover{ID: "work", Path: "~/work/"}, match.Cover{ID: "client", Path: "~/work/client/"})
+	s, tt, _ := card(t, res, work(), client())
+	if n := count(tt, "Clear result"); n != 1 {
+		t.Errorf("%d clear buttons", n)
+	}
+	if n := count(tt, "app"); n != 1 {
+		t.Errorf("the folder shows %d times: %q", n, tt.Texts())
+	}
+	// The overlap card comes first and starts with its title; the matched card's context line is under it.
+	title, _ := tt.Find("2 identities cover this folder")
+	path, _ := tt.Find("app")
+	if title.Y >= path.Y {
+		t.Errorf("title %v, path %v", title, path)
+	}
+	click(t, tt, "Clear result")
+	if s.Result() != nil {
+		t.Error("the one clear button clears both cards")
+	}
+	wantNot(t, tt, "cover this folder")
+}
+
+func TestMenuOpensUnderItsButton(t *testing.T) {
+	s, tt, _ := card(t, matched(api, "work", true), work(), client(), personal())
+	more, _ := tt.Find(s.text.More)
+	openMenu(t, s, tt)
+	entry, _ := tt.Find("Rebind to client")
+	unbind, _ := tt.Find("Unbind")
+	// Right-aligned with the button, inset by the menu's padding only, and below the card's context line.
+	inset := more.X + more.W - (entry.X + entry.W)
+	if inset < 0 || inset > more.W/2 {
+		t.Errorf("the menu ends with the button: %v %v", more, entry)
+	}
+	if entry.Y <= more.Y+more.H || !same(entry.W, unbind.W) {
+		t.Errorf("entries under the button, equally wide: %v %v %v", more, entry, unbind)
+	}
+}

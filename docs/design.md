@@ -206,8 +206,8 @@ What Idset uses today:
 | Borderless symbol button | `Space(6)` square (24), transparent, icon `Rem(1.1)` in `TextMuted`, `SurfaceHover` fill on hover, `SurfacePressed` while pressed. Must have a `.Label()`. After the path is copied, the icon turns into a check mark with "Copied" before it for 1.2 seconds. |
 | Icon button (title bar, footer) | The same 24×24 button with a `Rem(1.2)` (about 16) glyph, radius `Theme.Radius`. Always has `.Label()` and a `.Tooltip()` with the same text, in both languages: Settings, Add Identity, About Idset, Re-check, Quit (设置 / 添加身份 / 关于 Idset / 重新检查 / 退出 in Chinese). The tooltip is the `Inverse` fill, no shadow, above the button (below the title bar's). Same size, 4 DIPs apart, so a missing button never moves another. |
 | Result card | A context line (the path in monospace `TextMuted`, then the copy and clear buttons) and below it the answer. `Surface` fill, `Border` outline; `Warning` for the cards without a match, `Danger` when `git` fails. |
-| Bind row | In a result card: color dot, name and one line of `TextMuted` (the identity's first folder, middle-truncated; "Has <path> · adds another" is its tooltip), "Bind" in `Accent` at the end. 44 DIPs high, hairline above. The whole row is the target. |
-| Card menu | The "⋯" icon button's menu in a matched card, 224 DIPs wide, opened under the button and ending 32 DIPs past its right edge: `Background` fill, `Border` outline, radius 8, 4 DIPs of padding, a 28 DIP heading "Rebind to" (`Rem(0.9)`, `TextMuted`), 32 DIP entries (color dot, name, first folder or "Global" in monospace `Rem(0.85)`), and under a hairline "Unbind" (only when the identity lists this very folder). No shadow. There is no actions row: open, copy, the menu and clear are icon buttons in the context line, in that order. |
+| Bind row | In a result card: color dot, name and one line of `TextMuted` (the identity's first folder in monospace `Rem(0.85)`, like the identity list's folders, middle-truncated; "Has <path> · adds another" is its tooltip), "Bind" in `Accent` at the end. 44 DIPs high, hairline above. The whole row is the target. |
+| Card menu | The "⋯" icon button's menu in a matched card, 224 DIPs wide, anchored to the button: its right edge is the button's, and it opens 4 DIPs below the card's context line: `Background` fill, `Border` outline, radius 8, 4 DIPs of padding, a 28 DIP heading "Rebind to" (`Rem(0.9)`, `TextMuted`, centered in its row and inset 8 DIPs like the entries), 32 DIP entries (color dot, name, first folder or "Global" in monospace `Rem(0.85)`), and under a hairline "Unbind" (only when the identity lists this very folder). No shadow. There is no actions row: open, copy, the menu and clear are icon buttons in the context line, in that order. |
 | Confirm block | In a matched card, under the details, hairline above: one line ("<name> will apply only here") and two 80×28 buttons at the right, the plain one first ("Cancel"), then the filled one (`Accent`, "Rebind"). No extra identity row. |
 | Overlap rows | In the overlap card: a row per identity in git's read order (dot, name, path in monospace `Rem(0.9)`), then the verdict: "Used" in `Accent` 600 with a check mark for the winner, "Overridden" in `TextMuted` for the others, whose names also lose their weight; and at the very end an icon button: a pin on the winner ("Use only <name> here"), a minus on each loser ("Remove <path> from <name>"). Title row: "<n> identities cover this folder" and an info icon button whose tooltip is "Git reads them in this order; the last one wins." |
 | Stale-path prompt | A card of its own above the no-match card: a 40 DIP header (color dot, "<name>'s folder is gone" / 「<name> 的路径已不在」, the name in 600, one line), two 28 DIP path rows under hairlines with no labels (the old path in `TextMuted`, then the new path after an arrow, monospace, one line, middle-truncated, full text in the tooltip), and a 36 DIP row with two text buttons at the right, "Update" in `Accent` and "Ignore" in `TextMuted`; their tooltips are "Change to This Path" and "Keep Old Path". The height is the same for any path. Plain `Border` outline, no clear button. |
@@ -332,12 +332,13 @@ The result card has two parts with a divider between them:
 
 - The context line: the folder (the repository root, or the dropped path when it is not a repository) in monospace,
   middle-truncated, then a short transient status ("Copied", "Updated", "Undone", "Covered by …"), the icon buttons of
-  a matched card (open, copy, "⋯") and the clear button (not while checking). Padding `Space(2)`, left `Space(3)`
-  (8, left 12).
+  a matched card (open, copy, "⋯") and the clear button (not while checking). 36 DIPs high with its hairline, like
+  the title row and the footer; padding `Space(2)` right, `Space(3)` left (8, 12).
 - The answer, padding `Space(3)` (12). Checking: a spinner and "Checking…". Matched: a `Space(9)` (36) initial
   badge (radius 9), the identity's name and "Git uses this identity here", gap `Space(3)`; below them three rows,
   "Alias", "Email" and "Folders", with a label column `Space(14)` (56) wide, lined up with the name (left padding
-  `Space(15)`, 60). Without a match: the sentence for the case, 600, on a `Warning` outline. `git` failed: "Could not
+  `Space(15)`, 60). Each label is top-aligned with the first line of its value, so "Folders" stays by the first
+  folder however many follow. Without a match: the sentence for the case, 600, on a `Warning` outline. `git` failed: "Could not
   run git" in `Danger`, then the reason in monospace `Rem(0.85)` `TextMuted`, at most two lines (the full text is its
   tooltip), on a `Danger` outline. In "Folders" each path has its own line.
 - Binding. Mockup states: no match, rebinding to a global identity (the confirmation), matched (by a parent folder, or by the folder itself
@@ -356,7 +357,8 @@ The result card has two parts with a divider between them:
     <path>" (`Rem(0.85)`, `TextMuted`, one line, ending in an ellipsis when short of room) before the buttons for 1.2 seconds,
     like "Copied"; the full sentence "<name> already covers this folder with <path>.
     Nothing changed." is its tooltip. The path keeps at least 80 DIPs; the status shortens first.
-  - Overlap: a card of its own above the matched one, with the folder in its context line, "<n> identities cover this
+  - Overlap: a card of its own above the matched one, without a context line (the matched card under it shows the
+    folder, and its one clear button clears both); its first row is "<n> identities cover this
     folder" with an info icon (the order sentence is its tooltip), and the overlap rows with their pin and minus buttons.
     The card has the plain `Border`, since nothing is wrong. It shows only while the winner has no path of the folder's own; once it has one (after "Use only" or a rebind) the choice is explicit and the card is gone.
   - Stale path: when the dropped folder looks like a renamed or moved `gitdir` path that no longer exists, a card of

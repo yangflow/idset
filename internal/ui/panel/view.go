@@ -362,8 +362,8 @@ func (s *Screen) resultCard(c *ui.Context) {
 type head struct {
 	// actions are the icon buttons before the clear button; a card with them can be copied from.
 	actions func()
-	// menu is called with the context line, to attach a menu to it.
-	menu func(line ui.Element)
+	// menu is called after the context line, to attach a menu to one of its buttons.
+	menu func()
 }
 
 // frame is a result card: the folder with its status and icon buttons, a hairline, then the body.
@@ -371,7 +371,8 @@ func (s *Screen) frame(c *ui.Context, key string, border ui.Color, path string, 
 	t := c.Theme()
 	checking := s.checking
 	ui.Column(c).Key(key).Radius(10).Background(t.Surface).Border(1, border).Clip().Children(func() {
-		line := ui.Row(c).Gap(t.Space(1)).Padding(t.Space(2), t.Space(2), t.Space(2), t.Space(3)).AlignItems(ui.Center).Children(func() {
+		// The context line is as high as the title row and the footer, hairline included.
+		ui.Row(c).Height(t.Space(9)-1).Gap(t.Space(1)).Padding(0, t.Space(2), 0, t.Space(3)).AlignItems(ui.Center).Children(func() {
 			face := pathFace{mono: true, size: t.Rem(0.9), color: t.TextMuted}
 			// The folder keeps at least 80 DIPs; the status gives way first.
 			pathLine(c, s.env.Tilde(path), "", "", face).Grow(1).MinWidth(t.Space(20)).Shrink(0)
@@ -384,7 +385,7 @@ func (s *Screen) frame(c *ui.Context, key string, border ui.Color, path string, 
 			}
 		})
 		if h.menu != nil {
-			h.menu(line)
+			h.menu()
 		}
 		ui.Divider(c)
 		body()

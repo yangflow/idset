@@ -22,14 +22,13 @@ Mockups show the 4 DIP unit and 13 px text.
 | space-3 | `t.Space(3)` | 12 | between blocks of the panel; card padding |
 | space-4 | `t.Space(4)` | 16 | panel content padding; title bar, left inset |
 | symbol-button | `t.Space(6)` | 24 | borderless icon buttons: in the context line of a card (open, copy, menu, clear), at the end of an overlap row (pin, minus), the title bar and the footer; always 24 x 24 with a 16 glyph, 4 apart |
-| chrome-bar | `t.Space(9)` | 36 | title bar and footer of the panel, hairline included (each was 42 and 56 before) |
+| chrome-bar | `t.Space(9)` | 36 | title bar and footer of the panel and the context line of a result card, hairline included (they were 42, 56 and 41 before) |
 | chrome-inset | `t.Space(2)` | 8 | the title bar's right inset and the footer's side insets, so the 24 DIP buttons sit 8 from the edge |
 | chrome-gap | `t.Space(1)` | 4 | between the footer's icon buttons |
 | menu-entry | `t.Space(8)` | 32 | entry of the rebind menu; the stacked actions of the overlap card |
 | bar-undo | `t.Space(9)` | 36 | undo bar of a result card; the stale-path prompt's Update and Ignore row |
 | bar-actions | `t.Space(10)` | 40 | the stale-path prompt's header; the "New Identity" row of the bind list |
 | path-row | `t.Space(7)` | 28 | the two path rows of the stale-path prompt |
-| header-card | `t.Space(2)` padding around a 24 button | 40 | context line of a result card |
 | row-bind | `t.Space(11)` | 44 | bind row, overlap row |
 | button-confirm | `t.Space(7)` high, `t.Space(20)` wide | 28 x 80 | Cancel and Bind of the confirm block; both the same size |
 | menu-width | `t.Space(56)` | 224 | the card menu ("Rebind to", identities, "Unbind"); its heading is 28 high |

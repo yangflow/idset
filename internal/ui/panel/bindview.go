@@ -70,17 +70,28 @@ func (s *Screen) bar(c *ui.Context, text string, color ui.Color) {
 func (s *Screen) matchedCard(c *ui.Context, r *match.Result, a account.Account) {
 	t := c.Theme()
 	others := s.others(r)
+	var (
+		more    ui.Element
+		hasMore bool
+	)
 	h := head{
 		actions: func() {
 			if ghost(c, s.openLabel(), icons.Folder).Clicked() {
 				s.act.Open(r.Root)
 			}
 			s.copyButton(c, r.Root)
-			if (len(others) > 0 || r.Exact) && ghost(c, s.text.More, icons.More).Disabled(s.busy).Clicked() {
-				s.menuOpen = !s.menuOpen
+			if len(others) > 0 || r.Exact {
+				more, hasMore = ghost(c, s.text.More, icons.More).Disabled(s.busy), true
+				if more.Clicked() {
+					s.menuOpen = !s.menuOpen
+				}
 			}
 		},
-		menu: func(line ui.Element) { s.rebindMenu(c, line, r, others) },
+		menu: func() {
+			if hasMore {
+				s.rebindMenu(c, more, r, others)
+			}
+		},
 	}
 	s.frame(c, "result", t.Border, r.Root, h, func() {
 		ui.Row(c).Gap(t.Space(3)).Padding(t.Space(3.5), t.Space(3), t.Space(2.5), t.Space(3)).AlignItems(ui.Center).Children(func() {
@@ -93,7 +104,8 @@ func (s *Screen) matchedCard(c *ui.Context, r *match.Result, a account.Account) 
 		// The left padding lines the details up with the identity name: badge plus gap.
 		ui.Column(c).Gap(t.Space(1)).Padding(0, t.Space(3), t.Space(3), t.Space(15)).Children(func() {
 			detail := func(label string, values []string, mono bool) {
-				ui.Row(c).Gap(t.Space(2)).Children(func() {
+				// Each label stands by the first line of its value, however many lines follow.
+				ui.Row(c).Gap(t.Space(2)).AlignItems(ui.Start).Children(func() {
 					ui.Text(c, label).FontSize(t.Rem(0.9)).TextColor(t.TextMuted).Width(t.Space(14))
 					ui.Column(c).Grow(1).Gap(t.Space(0.5)).Children(func() {
 						for _, value := range values {
@@ -120,17 +132,20 @@ func (s *Screen) matchedCard(c *ui.Context, r *match.Result, a account.Account) 
 	})
 }
 
-// rebindMenu lists under the context line the identities to rebind to, each with its color and first folder, and
-// "Unbind" when the identity lists this very folder. It is right-aligned to the line.
-func (s *Screen) rebindMenu(c *ui.Context, line ui.Element, r *match.Result, others []account.Account) {
+// rebindMenu lists under the "⋯" button the identities to rebind to, each with its color and first folder, and
+// "Unbind" when the identity lists this very folder. Its right edge is the button's, and it opens just below the
+// card's context line: the button is centered in the 36 DIP line, so 6 DIPs above its bottom, plus a 4 DIP gap.
+func (s *Screen) rebindMenu(c *ui.Context, more ui.Element, r *match.Result, others []account.Account) {
 	t := c.Theme()
-	ui.PopoverBase(c, line, &s.menuOpen, func(panel ui.Element) {
-		panel.AttachTo(line, ui.AnchorBottomRight, ui.AnchorTopRight).Margin(t.Space(1), 0, 0, 0).Right(t.Space(2)).
+	ui.PopoverBase(c, more, &s.menuOpen, func(panel ui.Element) {
+		panel.AttachTo(more, ui.AnchorBottomRight, ui.AnchorTopRight).Margin(t.Space(2.5), 0, 0, 0).
 			Width(t.Space(56)).Padding(t.Space(1)).Radius(8).Background(t.Background).Border(1, t.Border).
 			Role(ui.RoleMenu).Label(s.text.RebindTo)
 		if len(others) > 0 {
-			ui.Text(c, s.text.RebindTo).FontSize(t.Rem(0.9)).TextColor(t.TextMuted).Height(t.Space(7)).PaddingX(t.Space(2)).
-				AlignItems(ui.Center)
+			// The heading is as high as it needs and inset like the entries, so the space above and below it is even.
+			ui.Row(c).Height(t.Space(7)).PaddingX(t.Space(2)).AlignItems(ui.Center).Children(func() {
+				ui.Text(c, s.text.RebindTo).FontSize(t.Rem(0.9)).TextColor(t.TextMuted).SingleLine()
+			})
 		}
 		entry := func(key, label string, children func()) ui.Element {
 			e := ui.Row(c.Key(key)).Focusable().Role(ui.RoleMenuItem).Label(label).Gap(t.Space(2)).
@@ -254,6 +269,8 @@ func (s *Screen) bindRow(c *ui.Context, a account.Account) {
 			ui.Text(c, s.label(a)).FontWeight(600).SingleLine().Tooltip(s.label(a))
 			face := pathFace{size: t.Rem(0.9), color: t.TextMuted}
 			if p := usablePaths(a); !a.Scope.Global && len(p) > 0 {
+				// A path is monospace, as everywhere in the panel, at the size of the identity list's folders.
+				face.mono, face.size = true, t.Rem(0.85)
 				// Only the first folder; "has it, and adds another" is the tooltip.
 				pathLine(c, p[0], "", fmt.Sprintf(s.text.Has, p[0]), face)
 			} else {
@@ -266,10 +283,11 @@ func (s *Screen) bindRow(c *ui.Context, a account.Account) {
 }
 
 // overlapCard lists the identities that cover the folder in the order git reads them. The winner's row ends in a pin
-// ("use only it here"), each overridden row in a minus ("remove the path from it").
+// ("use only it here"), each overridden row in a minus ("remove the path from it"). It has no context line: the
+// matched card under it shows the folder, and its clear button clears both.
 func (s *Screen) overlapCard(c *ui.Context, r *match.Result) {
 	t := c.Theme()
-	s.frame(c, "overlap", t.Border, r.Root, head{}, func() {
+	ui.Column(c).Key("overlap").Radius(10).Background(t.Surface).Border(1, t.Border).Clip().Children(func() {
 		ui.Row(c).Gap(t.Space(1)).Padding(t.Space(3), t.Space(2), t.Space(2), t.Space(3)).AlignItems(ui.Center).Children(func() {
 			ui.Text(c, fmt.Sprintf(s.text.OverlapTitle, len(r.Covering))).FontWeight(600).Grow(1).MinWidth(0)
 			// The sentence about Git's order is the tooltip of the info icon.
