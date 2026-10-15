@@ -69,9 +69,14 @@ func (s *Screen) View(c *ui.Context) {
 // ghost is a borderless square symbol button, 24 DIPs at the default spacing, with a 16 DIP glyph. Its label is
 // its accessible name and its tooltip.
 func ghost(c *ui.Context, label string, icon *ui.SVG) ui.Element {
+	return tooltipGhost(c, "ghost-"+label, label, label, icon)
+}
+
+// tooltipGhost is a ghost button whose tooltip says more than its label.
+func tooltipGhost(c *ui.Context, key, label, tip string, icon *ui.SVG) ui.Element {
 	t := c.Theme()
-	b := ui.Button(c.Key("ghost-"+label), "").Label(label).Size(t.Space(6), t.Space(6)).Padding(0).Radius(t.Radius).Border(0, ui.Color{}).
-		Background(ui.Color{}).TextColor(t.TextMuted).Tooltip(label).Children(func() { ui.Icon(c, icon).FontSize(t.Rem(1.2)) })
+	b := ui.Button(c.Key(key), "").Label(label).Size(t.Space(6), t.Space(6)).Padding(0).Radius(t.Radius).Border(0, ui.Color{}).
+		Background(ui.Color{}).TextColor(t.TextMuted).Tooltip(tip).Children(func() { ui.Icon(c, icon).FontSize(t.Rem(1.2)) })
 	if b.Hovered() {
 		b.Background(t.SurfaceHover)
 	}
@@ -270,23 +275,42 @@ func orDefault(v, fallback string) string {
 	return v
 }
 
-// row is one identity; a click opens it in the accounts window.
+// row is one identity; a click opens it in the accounts window. One with an alias ends in a disclosure button
+// that opens the clone helper under it.
 func (s *Screen) row(c *ui.Context, a account.Account) {
 	t := c.Theme()
-	row := ui.Row(c).Focusable().Gap(t.Space(2.5)).PaddingY(t.Space(2.25)).PaddingX(t.Space(3)).AlignItems(ui.Center)
-	if row.Hovered() {
-		row.Background(t.SurfaceHover)
-	}
-	if row.Clicked() {
-		s.act.OpenAccounts(a.ID)
-	}
-	row.Children(func() {
-		dot(c, a, t.Space(2.5))
-		ui.Column(c).Grow(1).MinWidth(0).Gap(t.Space(0.25)).Children(func() {
-			ui.Text(c, s.label(a)).FontWeight(600).SingleLine()
-			ui.Text(c, orDefault(a.GitUserEmail, s.text.NoEmail)).FontSize(t.Rem(0.9)).TextColor(t.TextMuted).SingleLine()
+	open := s.openRow == a.ID && a.SSHAlias != ""
+	ui.Column(c).Children(func() {
+		row := ui.Row(c).Focusable().Gap(t.Space(2.5)).Padding(t.Space(2.25), t.Space(2), t.Space(2.25), t.Space(3)).AlignItems(ui.Center)
+		if row.Hovered() {
+			row.Background(t.SurfaceHover)
+		}
+		if row.Clicked() {
+			s.act.OpenAccounts(a.ID)
+		}
+		row.Children(func() {
+			dot(c, a, t.Space(2.5))
+			ui.Column(c).Grow(1).MinWidth(0).Gap(t.Space(0.25)).Children(func() {
+				ui.Text(c, s.label(a)).FontWeight(600).SingleLine()
+				ui.Text(c, orDefault(a.GitUserEmail, s.text.NoEmail)).FontSize(t.Rem(0.9)).TextColor(t.TextMuted).SingleLine()
+			})
+			s.folderTag(c, a)
+			if a.SSHAlias == "" {
+				// The space stays, so that the folders line up.
+				ui.Column(c).Size(t.Space(6), t.Space(6)).Shrink(0)
+				return
+			}
+			icon := icons.ChevronRight
+			if open {
+				icon = icons.ChevronDown
+			}
+			if tooltipGhost(c, "clone-"+a.ID, s.text.CloneToggle, s.text.CloneToggle, icon).Expanded(open).Clicked() {
+				s.toggleRow(a.ID)
+			}
 		})
-		s.folderTag(c, a)
+		if open {
+			s.openRowClone(c, a)
+		}
 	})
 }
 

@@ -8,6 +8,7 @@ import (
 	"github.com/egoist/mygo/ui"
 	"github.com/yangflow/idset/internal/account"
 	"github.com/yangflow/idset/internal/match"
+	"github.com/yangflow/idset/internal/remote"
 	"github.com/yangflow/idset/internal/ui/icons"
 )
 
@@ -131,6 +132,7 @@ func (s *Screen) matchedCard(c *ui.Context, r *match.Result, a account.Account) 
 		})
 		s.findings(c, r, a)
 		s.confirmBlock(c)
+		s.cardClone(c, a)
 		if s.failure != "" {
 			s.bar(c, s.failure, t.Danger)
 		}
@@ -423,7 +425,7 @@ func (s *Screen) describe(f match.Finding, a account.Account) said {
 // findings is the identity check under the details of the matched card: a hairline, then a row for each
 // disagreement between the repository and the identity. There are no buttons; the reason is the tooltip.
 func (s *Screen) findings(c *ui.Context, r *match.Result, a account.Account) {
-	if len(r.Findings) == 0 {
+	if _, https := remote.RemoteCommand(a, r.Origin); len(r.Findings) == 0 && !https {
 		return
 	}
 	t := c.Theme()
@@ -442,6 +444,7 @@ func (s *Screen) findings(c *ui.Context, r *match.Result, a account.Account) {
 			})
 			tipAbove(c, row, d.why)
 		}
+		s.remoteRow(c, r, a)
 	})
 }
 

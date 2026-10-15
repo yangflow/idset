@@ -16,6 +16,7 @@ import (
 	"github.com/yangflow/idset/internal/bind"
 	"github.com/yangflow/idset/internal/match"
 	"github.com/yangflow/idset/internal/paths"
+	"github.com/yangflow/idset/internal/settings"
 	"github.com/yangflow/idset/internal/store"
 	"github.com/yangflow/idset/internal/trayicon"
 	"github.com/yangflow/idset/internal/ui/accounts"
@@ -81,6 +82,7 @@ func (a *app) ready() {
 		Resolve:      a.resolve,
 		ChooseFolder: a.chooseFolder,
 		CopyText:     func(s string) { mygo.Clipboard.WriteText(s) },
+		CloneCopied:  a.cloneCopied,
 		Hide:         a.hide,
 		Quit:         mygo.App.Quit,
 		Reload:       func() { a.load() },
@@ -164,11 +166,13 @@ func (a *app) load() {
 			s.Reload()
 		}
 		list, readErr, path := s.Accounts(), s.ReadOnly(), s.Path()
+		prefixes := settings.Open(a.dataDir).Prefixes()
 		a.post(func() {
 			if a.store == nil {
 				a.store = s
 			}
 			a.showAccounts(list, readErr, path)
+			a.screen.SetPrefixes(prefixes)
 		})
 	}()
 }
@@ -258,6 +262,31 @@ func (a *app) resolve(dir string) {
 				a.showAccounts(s.Accounts(), s.ReadOnly(), s.Path())
 			}
 			a.updateTooltip()
+		})
+	}()
+}
+
+// cloneCopied remembers the owner prefix of a copied clone command and records a use of the identity, in the
+// background; the list is shown again because the use moves the identity up.
+func (a *app) cloneCopied(id, prefix string) {
+	s := a.store
+	if s == nil {
+		return
+	}
+	go func() {
+		prefixes := settings.Open(a.dataDir)
+		if prefix != "" && prefixes.Prefixes()[id] != prefix {
+			if err := prefixes.SetPrefix(id, prefix); err != nil {
+				slog.Warn("Could not remember the owner prefix", "error", err)
+			}
+		}
+		if err := s.Touch(id); err != nil {
+			slog.Warn("Could not record the use of an identity", "error", err)
+		}
+		list, readErr, path, remembered := s.Accounts(), s.ReadOnly(), s.Path(), prefixes.Prefixes()
+		a.post(func() {
+			a.showAccounts(list, readErr, path)
+			a.screen.SetPrefixes(remembered)
 		})
 	}()
 }

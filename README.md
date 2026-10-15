@@ -41,6 +41,9 @@ Working now:
 - **Generated configuration.** SSH host aliases, `includeIf` rules and `insteadOf` URL rewrites are generated
   from the list after every change, and the list is backed up before a new identity is added. Your own
   `~/.ssh/config` and `~/.gitconfig` get one marked `Include` block and nothing else.
+- **Use the SSH alias for clones and remotes.** When a repository's origin is an HTTPS address, the card copies the
+  command that switches it to the identity's SSH alias. A clone helper turns `owner/repo`, an address or a
+  `git clone` command into the clone command for that identity.
 
 Planned:
 

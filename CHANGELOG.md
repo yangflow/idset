@@ -37,6 +37,13 @@ All notable user-facing changes are recorded here, following [Keep a Changelog](
   identity (error), an email no identity has (warning), or a `-i` key other than the identity's (error). The card's
   outline takes the worst severity and the reason is in the row's tooltip. Nothing is checked for an identity
   without an email or a key path.
+- When the repository's origin is an HTTPS address, the matched card has a quiet "Remote is HTTPS" row with a button
+  that copies `git remote set-url origin git@<alias>:<path>.git`. A clone helper at the bottom of the card, and under
+  an identity row opened with its arrow (one at a time), takes `owner/repo`, an address or a whole `git clone`
+  command and copies `git clone git@<alias>:<path>.git`; Enter copies too, and a copy counts as a use. The helper
+  starts with the origin's `owner/repo`, else the owner prefix last copied for that identity, which is kept in
+  `settings.json`. A prefix alone (`acme/`) cannot be copied and shows a hint. Identities without an SSH alias have
+  neither.
 - On macOS the Dock icon shows while the accounts window is open; closing the window does not quit Idset.
 
 ### Changed

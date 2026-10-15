@@ -86,7 +86,16 @@
     "FindOtherTip": "This repository’s user.email is %[1]s, which belongs to %[2]s, not %[3]s.",
     "FindUnknownTip": "This repository’s user.email is %s, which no identity uses.",
     "FindPushes": "Pushes use ",
-    "FindKeyTip": "core.sshCommand picks %[1]s, not %[2]s’s key."
+    "FindKeyTip": "core.sshCommand picks %[1]s, not %[2]s’s key.",
+    "HTTPSRow": "Remote is HTTPS",
+    "HTTPSTip": "Pushes over HTTPS do not use this identity’s SSH alias or key.",
+    "CopyCmd": "Copy command to use SSH",
+    "CopyCmdTip": "Copy command to use SSH: %s",
+    "CloneLabel": "Repository to clone",
+    "CloneTip": "Accepts owner/repo, a repository URL or a whole git clone command. Enter copies.",
+    "CloneHint": "Enter owner/repo or a repository URL",
+    "CloneCopy": "Copy the clone command",
+    "CloneToggle": "Clone with this identity"
   },
   "zh-Hans": {
     "Quit": "退出",
@@ -175,6 +184,15 @@
     "FindOtherTip": "仓库的 user.email 是 %[1]s，属于 %[2]s，不是 %[3]s。",
     "FindUnknownTip": "仓库的 user.email 是 %s，没有身份用这个邮箱。",
     "FindPushes": "推送会用 ",
-    "FindKeyTip": "core.sshCommand 指定了 %[1]s，不是 %[2]s 的密钥。"
+    "FindKeyTip": "core.sshCommand 指定了 %[1]s，不是 %[2]s 的密钥。",
+    "HTTPSRow": "远程地址是 HTTPS",
+    "HTTPSTip": "HTTPS 推送用不上这个身份的别名和密钥。",
+    "CopyCmd": "复制改地址命令",
+    "CopyCmdTip": "复制改地址命令：%s",
+    "CloneLabel": "要克隆的仓库",
+    "CloneTip": "可以输入 owner/repo、仓库地址或整条 git clone 命令，回车复制。",
+    "CloneHint": "输入 owner/repo 或仓库地址",
+    "CloneCopy": "复制克隆命令",
+    "CloneToggle": "用这个身份克隆"
   }
 }

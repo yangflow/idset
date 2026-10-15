@@ -30,7 +30,8 @@ type Copy struct {
 	OpenFinder, OpenExplorer, OpenFiles, More, BindTo, Bind, BindLabel, NewShort, NewBound, Cancel, Rebind, RebindTo,
 	Unbind, OverlapTitle, OverlapHint, Used, Overridden, OnlyUse, RemoveFrom, Has, ConfirmShort, Covered, CoveredBy,
 	BoundTo, Undo, Undone, BindFailed, BindRegenFailed, StaleHead, Then, StaleUpdate, StaleIgnore, StaleFix, StaleKeep,
-	Updated, FindNoEmail, FindNoEmailTip, FindCommits, FindOwner, FindOtherTip, FindUnknownTip, FindPushes, FindKeyTip string
+	Updated, FindNoEmail, FindNoEmailTip, FindCommits, FindOwner, FindOtherTip, FindUnknownTip, FindPushes, FindKeyTip, HTTPSRow, HTTPSTip, CopyCmd, CopyCmdTip, CloneLabel, CloneTip, CloneHint, CloneCopy,
+	CloneToggle string
 }
 
 var translations = func() map[string]Copy {
@@ -61,8 +62,11 @@ type Actions struct {
 	Reload   func()
 	Reveal   func(path string)
 	CopyText func(string)
-	Hide     func()
-	Quit     func()
+	// CloneCopied reports a clone command copied for an identity, with the owner prefix of the repository ("acme/",
+	// or "" when there is none): the owner remembers the prefix and records a use of the identity.
+	CloneCopied func(id, prefix string)
+	Hide        func()
+	Quit        func()
 }
 
 // FilterThreshold is how many identities make the filter appear.
@@ -87,11 +91,17 @@ type Screen struct {
 	resultSeq    int
 	announcedSeq int
 
-	query       string
-	providers   []account.Provider
-	copiedUntil time.Time
-	now         func() time.Time
-	goos        string
+	// clone is the helper on the matched card, row the one under the open identity row, and prefixes are the
+	// remembered owner prefixes by identity.
+	matchClone, rowClone cloneField
+	openRow              string
+	prefixes             map[string]string
+	httpsUntil           time.Time
+	query                string
+	providers            []account.Provider
+	copiedUntil          time.Time
+	now                  func() time.Time
+	goos                 string
 
 	binding
 }
@@ -108,6 +118,9 @@ func (s *Screen) SetAccounts(list []account.Account, readErr error, dataPath str
 		return !slices.Contains(account.ProvidersInUse(s.accounts), p)
 	})
 }
+
+// SetPrefixes gives the remembered owner prefixes by identity.
+func (s *Screen) SetPrefixes(p map[string]string) { s.prefixes = p }
 
 // Drop takes the first of the dropped paths and asks for it to be resolved.
 func (s *Screen) Drop(dropped []string) {
@@ -126,11 +139,13 @@ func (s *Screen) SetResult(dir string, r match.Result, err error) {
 	}
 	s.checking = ""
 	s.resultSeq++
+	s.matchClone, s.httpsUntil = cloneField{}, time.Time{}
 	if err != nil {
 		s.result, s.resultErr = nil, err
 		return
 	}
 	s.result, s.resultErr = &r, nil
+	s.matchClone.value = cloneSeed(r, s.prefixes[r.ID])
 }
 
 // Result is the latest outcome, nil when there is none.
