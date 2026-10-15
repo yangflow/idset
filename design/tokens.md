@@ -28,7 +28,10 @@ Mockups show the 4 DIP unit and 13 px text.
 | menu-entry | `t.Space(8)` | 32 | entry of the rebind menu; the stacked actions of the overlap card |
 | bar-undo | `t.Space(9)` | 36 | undo bar of a result card; the stale-path prompt's Update and Ignore row |
 | bar-actions | `t.Space(10)` | 40 | the stale-path prompt's header; the "New Identity" row of the bind list |
-| path-row | `t.Space(7)` | 28 | the two path rows of the stale-path prompt; a finding row of the identity check |
+| path-row | `t.Space(7)` | 28 | the two path rows of the stale-path prompt; a finding row of the identity check; the HTTPS row (8 right inset, its icon button 24) |
+| clone-input | `t.Space(7)` | 28 | the clone helper's input; its copy button is a 24 symbol-button; padding `Space(2)` x `Space(3)`, bottom `Space(2.5)`; `Space(1)` between input and output |
+| clone-output | `t.Space(4)` | 16 | the clone helper's output or hint line (`small`, monospace for the command) |
+| row-disclosure | `t.Space(6)` | 24 | the identity row's disclosure button (a 24 gap without an alias); the open helper is indented `Space(8)` (32) |
 | finding-section | `t.Space(1)` | 4 | above and below the finding rows, under their hairline |
 | row-bind | `t.Space(11)` | 44 | bind row, overlap row |
 | button-confirm | `t.Space(7)` high, `t.Space(20)` wide | 28 x 80 | Cancel and Bind of the confirm block; both the same size |
@@ -86,7 +89,7 @@ accent color and contrast settings, so mockups approximate it.
 | `Warning` | `#d97706` | `#f59e0b` | outline of cards without a match; warning glyph of a finding, outline of a matched card whose worst finding is a warning |
 | `Success` | `#16a34a` | `#22c55e` | not used yet |
 | `Selection` | `rgba(37, 99, 235, 0.25)` | `rgba(59, 130, 246, 0.4)` | drop zone fill while dragging over; selected text |
-| `Focus` | `rgba(37, 99, 235, 0.55)` | `rgba(96, 165, 250, 0.6)` | keyboard focus ring |
+| `Focus` | `rgba(37, 99, 235, 0.55)` | `rgba(96, 165, 250, 0.6)` | keyboard focus ring (also the clone helper's focused input, 2 DIPs) |
 | `Inverse` / `InverseText` | zero: `Text` / `Background` | zero: `Text` / `Background` | tooltips (every icon button has one) and toasts |
 | `Scrollbar` | `rgba(0, 0, 0, 0.32)` | `rgba(255, 255, 255, 0.35)` | scroll bar thumbs, 6 DIPs wide |
 
@@ -117,7 +120,7 @@ Any other `#RRGGBB` follows the same rule; an invalid value shows as blue (`inte
 | Token | Value |
 |---|---|
 | default | none: state changes take effect immediately |
-| copied, written, undone and updated acknowledgement | 1.2 s, then gone at once (`c.After`) |
+| copied (path, command, clone command), written, undone and updated acknowledgement | 1.2 s, then gone at once (`c.After`) |
 | undo countdown | 5 s from an absolute deadline; the line shortens in fifths, once a second (`c.After`), no animation |
 | element transition | 200 ms, ease-out (MyGo default); only as an agreed exception, see docs/design.md |
 | reduced motion | jump to the target (`Preferences().ReduceMotion`) |

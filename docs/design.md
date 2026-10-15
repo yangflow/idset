@@ -348,6 +348,30 @@ The result card has two parts with a divider between them:
   severity. Without findings the card is exactly the plain matched card. Mockup states: no email, another identity's
   email, an email no identity has, another key, and two findings with long values; `&tip=finding` pins the first
   row's tooltip.
+- Remote and clone (docs/product.md, "Change-remote command" and "Clone helper"). The matched card is read from top
+  to bottom as: who and details, what is wrong, what to do next. In that order: the details, the finding rows, the
+  HTTPS row, the clone helper. The HTTPS row is the last row of the same block as the findings (one hairline, same
+  28 DIP rows), because it is also a fact about the repository; but it has no severity: its glyph is a muted globe
+  and it never changes the card's outline, since HTTPS is not an error. The clone helper is a tool, not a fact, so
+  it has a hairline and a section of its own at the bottom, where the eye ends and where a pasted address is
+  typed. Both appear only for an identity with an alias, and the helper is the one block that is always there.
+  - HTTPS row: "Remote is HTTPS", with one icon button at the end (`terminal` glyph, 24 x 24, 8 from the edge like
+    the context line). The button's name is "Copy command to use SSH"; its tooltip is that name and the whole command
+    (`git remote set-url origin git@github-work:org/repo.git`), so nothing on the card has to show a long mono
+    string. Why it matters ("Pushes over HTTPS do not use this identity's SSH alias or key.") is the text's tooltip.
+    After the copy the glyph is a check and "Copied" (`Rem(0.85)`, `TextMuted`) stands before it for 1.2 seconds.
+  - Clone helper: padding `Space(2)`x`Space(3)`, bottom `Space(2.5)`. A 28 DIP input (monospace `Rem(0.9)`, `Background`
+    fill, `Border`, radius 6) with the copy button (`terminal` glyph, the same glyph as the HTTPS row, since both copy
+    a command) at its end; under them a 16 DIP line, monospace `Rem(0.85)` `TextMuted`: the output, `git clone
+    git@github-work:org/repo.git`, middle-truncated like a path ("git clone git@github-work:" and the last segment
+    stay; the full command is its tooltip). Enter copies. When the input cannot be read the copy button is
+    disabled (40% opacity) and the line is a quiet hint in the same style, "Enter owner/repo or a repository URL",
+    not an error: an empty or half-typed input is not a mistake. The input's tooltip lists what it accepts. After
+    a copy: check glyph and "Copied" left of the button for 1.2 seconds, the output stays. The input is prefilled
+    with the repository's `owner/repo`, else the remembered prefix ("acme/"), else shows the placeholder "owner/repo".
+  - Mockup states: `https`, `https-copied`, `https-check` (finding and HTTPS row stacked), `clone`, `clone-long`,
+    `clone-bad`, `clone-copied`, `row-open`; `&tip=cmd` pins the copy-command tooltip, `&tip=copyclone` and
+    `&tip=clone` those of the helper's button and an identity row's disclosure button.
 - Binding. Mockup states: no match, rebinding to a global identity (the confirmation), matched (by a parent folder, or by the folder itself
   with "Unbind"), the rebind menu, already covered, overlap, the undo bar, and after undo.
   - No match: the sentence, a "Bind to" heading (`Rem(0.9)`, 600, `TextMuted`) and one bind row per identity, then a
@@ -388,6 +412,13 @@ Identity list rows: padding `Space(2.25)`×`Space(3)` (9×12), a 10 DIP color do
 are more, "Global" for a global identity, "no folders" without any. A long first folder is middle-truncated (at
 most half the row) and " +N" always stays; the name and email are single lines too.
 
+An identity with an alias ends in a 24 x 24 disclosure button ("Clone with this identity": a chevron pointing right
+when closed, down when open; `aria-expanded`); a row without an alias keeps the 24 DIPs empty so the folders stay
+lined up. The row's body still opens the accounts window; only the button expands. Open, the row is followed, inside
+the same list and without a hairline between them, by the clone helper described above, indented to the name
+(`Space(8)`, 32) and with no remembered prefix shown as the placeholder "owner/repo". Only one row is open: opening
+another closes the first. Nothing else about the row changes while it is open.
+
 A path on one line is shortened in the middle only, the same way everywhere (the stale-path prompt's rows, the first
 folder of a bind row, the folder of an identity row, the context line of a result card): its start ("~/", "/" or a drive such
 as "C:/") and its last folder always stay, and what lies between gives way to an ellipsis, "~/…/payments-gateway/".
@@ -399,7 +430,8 @@ the scroll view. In the empty state the centered "Add Identity" button
 replaces it. Both open the accounts window on a new draft.
 
 Planned (product.md): the Settings, About and Re-check buttons (drawn in the mockup, shown once they work); "Import" when there are no
-identities; a connectivity dot, an expand arrow and problem bars on identity rows. Bind, unbind, rebind, "Use only" and undo on result
+identities; a connectivity dot and problem bars on identity rows. The expand arrow and the HTTPS row and clone
+helper are drawn in the mockup and shown once built (issue 26). Bind, unbind, rebind, "Use only" and undo on result
 cards are built as the mockup shows.
 
 ## The accounts window
