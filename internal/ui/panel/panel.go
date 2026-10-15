@@ -29,7 +29,7 @@ type Copy struct {
 	NoFolders, Identities, Reload, RevealFinder, RevealExplorer, RevealFiles, AddIdentity,
 	OpenFinder, OpenExplorer, OpenFiles, More, BindTo, Bind, BindLabel, NewShort, NewBound, Cancel, Rebind, RebindTo,
 	Unbind, OverlapTitle, OverlapHint, Used, Overridden, OnlyUse, RemoveFrom, Has, ConfirmShort, Covered, CoveredBy,
-	BoundTo, Undo, Undone, BindFailed, BindRegenFailed, StaleHead, StaleUpdate, StaleIgnore, StaleFix, StaleKeep,
+	BoundTo, Undo, Undone, BindFailed, BindRegenFailed, StaleHead, Then, StaleUpdate, StaleIgnore, StaleFix, StaleKeep,
 	Updated, FindNoEmail, FindNoEmailTip, FindCommits, FindOwner, FindOtherTip, FindUnknownTip, FindPushes, FindKeyTip string
 }
 
@@ -145,21 +145,21 @@ func (s *Screen) unresolved(k match.Kind) string {
 func (s *Screen) resultMessage() string {
 	switch {
 	case s.resultErr != nil:
-		return s.text.GitFailed + ". " + s.resultErr.Error()
+		return s.text.GitFailed + s.text.Then + s.resultErr.Error()
 	case s.result == nil:
 		return ""
 	case s.result.Kind == match.Matched:
 		if a, ok := s.find(s.result.ID); ok {
 			msg := fmt.Sprintf(s.text.Matched, s.label(a))
 			for _, f := range s.result.Findings {
-				msg += ". " + s.describe(f, a).sentence()
+				msg += s.text.Then + s.describe(f, a).sentence()
 			}
 			return msg
 		}
 		return ""
 	}
 	if a, ok := s.stale(); ok {
-		return s.unresolved(s.result.Kind) + ". " + s.label(a) + s.text.StaleHead
+		return s.unresolved(s.result.Kind) + s.text.Then + s.label(a) + s.text.StaleHead
 	}
 	return s.unresolved(s.result.Kind)
 }

@@ -129,11 +129,12 @@ func TestFindingsInChinese(t *testing.T) {
 		f     match.Finding
 		shown []string
 		tip   string
+		name  string
 	}{
-		{noEmail, []string{"提交没有作者"}, "这个仓库读不到 user.email，提交时 Git 会报错或自己猜一个地址。"},
-		{otherEmail, []string{"提交会署名为", "carol@example.com", "（client）"}, "仓库的 user.email 是 carol@example.com，属于 client，不是 work。"},
-		{unknownEmail, []string{"提交会署名为", "someone@example.org"}, "仓库的 user.email 是 someone@example.org，没有身份用这个邮箱。"},
-		{otherKey, []string{"推送会用", "~/.ssh/id_other"}, "core.sshCommand 指定了 ~/.ssh/id_other，不是 work 的密钥。"},
+		{noEmail, []string{"提交没有作者"}, "这个仓库读不到 user.email，提交时 Git 会报错或自己猜一个地址。", "提交没有作者。这个仓库读不到 user.email，提交时 Git 会报错或自己猜一个地址。"},
+		{otherEmail, []string{"提交会署名为", "carol@example.com", "（client）"}, "仓库的 user.email 是 carol@example.com，属于 client，不是 work。", "提交会署名为 carol@example.com（client）。仓库的 user.email 是 carol@example.com，属于 client，不是 work。"},
+		{unknownEmail, []string{"提交会署名为", "someone@example.org"}, "仓库的 user.email 是 someone@example.org，没有身份用这个邮箱。", "提交会署名为 someone@example.org。仓库的 user.email 是 someone@example.org，没有身份用这个邮箱。"},
+		{otherKey, []string{"推送会用", "~/.ssh/id_other"}, "core.sshCommand 指定了 ~/.ssh/id_other，不是 work 的密钥。", "推送会用 ~/.ssh/id_other。core.sshCommand 指定了 ~/.ssh/id_other，不是 work 的密钥。"},
 	} {
 		s := New(Text("zh-CN"), env, (&recorder{}).actions())
 		s.SetAccounts(list, nil, "")
@@ -144,6 +145,10 @@ func TestFindingsInChinese(t *testing.T) {
 		s.SetResult(res.Root, res, nil)
 		tt.Frame()
 		want(t, tt, c.shown...)
+		// The Chinese full stop joins the sentence and its reason in the row's name, not an ASCII one.
+		if !slices.Contains(tt.Texts(), c.name) {
+			t.Errorf("the row's name should be %q: %q", c.name, tt.Texts())
+		}
 		if tipShown := hover(t, tt, c.shown[0]); !tipShown(c.tip) {
 			t.Errorf("%q: tooltip %q in %q", c.shown[0], c.tip, tt.Texts())
 		}
@@ -158,6 +163,21 @@ func TestFindingsAreAnnounced(t *testing.T) {
 	}
 }
 
+func TestFindingsAreAnnouncedInChinese(t *testing.T) {
+	s := New(Text("zh-CN"), env, (&recorder{}).actions())
+	s.SetAccounts(findingList(), nil, "")
+	tt := ui.NewTester(s.View, 340, 480)
+	res := withFindings(otherEmail, otherKey)
+	s.Drop([]string{res.Root})
+	res.Dir = res.Root
+	s.SetResult(res.Root, res, nil)
+	tt.Frame()
+	got := tt.Announcements()
+	if want := []string{"Git 在这里用 work。提交会署名为 carol@example.com（client）。推送会用 ~/.ssh/id_other"}; !slices.Equal(got, want) {
+		t.Errorf("announced %q, want %q", got, want)
+	}
+}
+
 func TestAnEmailOfAGoneIdentityIsJustUnknown(t *testing.T) {
 	gone := match.Finding{Kind: match.OtherEmail, Value: "dan@example.com", Owner: "removed"}
 	_, tt, _ := card(t, withFindings(gone), findingList()...)
@@ -168,35 +188,80 @@ func TestAnEmailOfAGoneIdentityIsJustUnknown(t *testing.T) {
 	}
 }
 
-func TestLongValuesGiveWayButTheDomainAndTheNameStay(t *testing.T) {
-	list := findingList()
-	list[1].Label = "Northwind Traders"
-	long := match.Finding{Kind: match.OtherEmail, Value: "robert.fitzgerald-baker.the-third.of-many@client.example", Owner: "client"}
+// blankRun is the widest stretch, in pixels, between two inked columns of the box r of the frame.
+func blankRun(tt *ui.Tester, r ui.Rect, scale float32) int {
+	img := tt.Image()
+	x0, x1 := int(r.X*scale), int((r.X+r.W)*scale)
+	y0, y1 := int(r.Y*scale), int((r.Y+r.H)*scale)
+	bg := img.RGBAAt(x1+int(scale), y0)
+	inked := func(x int) bool {
+		for y := y0; y < y1; y++ {
+			c := img.RGBAAt(x, y)
+			if d := int(c.R) - int(bg.R) + int(c.G) - int(bg.G) + int(c.B) - int(bg.B); d > 60 || d < -60 {
+				return true
+			}
+		}
+		return false
+	}
+	widest, run, seen := 0, 0, false
+	for x := x0; x < x1; x++ {
+		switch {
+		case inked(x):
+			widest, run, seen = max(widest, run), 0, true
+		case seen:
+			run++
+		}
+	}
+	return widest
+}
+
+// The middle of a path or of an email gives way to an ellipsis, and what follows it comes right after: the width a
+// box has left over after the cut, less than one glyph, is at the end of the line, not in the line. This measures
+// the pixels of the frame, from the end of a row's words to the end of its line, at every width in a range, against
+// the widest stretch between two glyphs of the same line with room to spare.
+func TestATruncatedLineHasNoGapAfterItsEllipsis(t *testing.T) {
+	long := match.Finding{Kind: match.UnknownEmail, Value: "robert.fitzgerald-baker.the-third.of-many@client.example"}
 	key := match.Finding{Kind: match.OtherKey, Value: "~/.ssh/clients/northwind-traders/id_ed25519_deploy"}
-	_, tt, _ := card(t, withFindings(long, key), list...)
-	want(t, tt, "Commits use", "@client.example", "(Northwind Traders)", "Pushes use", "~/", "id_ed25519_deploy")
-	within(t, tt, "@client.example", "(Northwind Traders)", "id_ed25519_deploy")
-	local, _ := tt.Find("robert.fitzgerald-baker.the-third.of-many")
-	domain, _ := tt.Find("@client.example")
-	owner, _ := tt.Find("(Northwind Traders)")
-	if local.X+local.W > domain.X+0.5 || domain.X+domain.W > owner.X+0.5 {
-		t.Errorf("the local part, the domain and the name sit side by side: %+v %+v %+v", local, domain, owner)
+	const scale = 4
+	runs := func(w int) []int {
+		_, tt, _ := card(t, withFindings(long, key), findingList()...)
+		tt.SetScale(scale)
+		tt.SetSize(w, 480)
+		tt.Frame()
+		var out []int
+		for _, words := range []string{"Commits use", "Pushes use"} {
+			r, ok := tt.Find(words)
+			if !ok {
+				t.Fatalf("no %q in %q", words, tt.Texts())
+			}
+			// From the words to the end of the line, short of the card's border.
+			line := ui.Rect{X: r.X + r.W + 4, Y: r.Y, W: float32(w) - 34 - (r.X + r.W + 4), H: r.H}
+			if w > 600 {
+				line.W = 300
+			}
+			out = append(out, blankRun(tt, line, scale))
+		}
+		return out
+	}
+	natural := runs(800)
+	for w := 300; w <= 340; w++ {
+		for i, gap := range runs(w) {
+			if gap > natural[i]+4 {
+				t.Errorf("width %d, line %d: %d pixels of nothing in a line whose glyphs are at most %d apart", w, i, gap, natural[i])
+			}
+		}
 	}
 }
 
-// The middle of a key path gives way to an ellipsis and the last folder follows it with no gap.
-func TestTruncatedKeyPathHasNoGapBeforeItsLastFolder(t *testing.T) {
+func TestLongValuesGiveWayButTheDomainAndTheNameStay(t *testing.T) {
+	list := findingList()
+	list[1].Label = "Northwind"
+	long := match.Finding{Kind: match.OtherEmail, Value: "robert.fitzgerald-baker.the-third.of-many@client.example", Owner: "client"}
 	key := match.Finding{Kind: match.OtherKey, Value: "~/.ssh/clients/northwind-traders/id_ed25519_deploy"}
-	_, tt, _ := card(t, withFindings(key), findingList()...)
-	mid, ok := tt.Find(".ssh/clients/northwind-traders/")
-	last, ok2 := tt.Find("id_ed25519_deploy")
-	if !ok || !ok2 {
-		t.Fatalf("pieces of the path: %q", tt.Texts())
-	}
-	if gap := last.X - (mid.X + mid.W); gap < -0.01 || gap > 0.01 {
-		t.Errorf("the last folder starts %v DIPs after the middle ends", gap)
-	}
-	if slices.Contains(tt.Texts(), " id_ed25519_deploy") || slices.Contains(tt.Texts(), "/id_ed25519_deploy") {
+	_, tt, _ := card(t, withFindings(long, key), list...)
+	want(t, tt, "Commits use", "@client.example (Northwind)", "Pushes use", "~/", "id_ed25519_deploy")
+	within(t, tt, "robert.fitzgerald-baker.the-third.of-many@client.example (Northwind)", ".ssh/clients/northwind-traders/id_ed25519_deploy")
+	if slices.ContainsFunc(tt.Texts(), func(s string) bool { return s == " id_ed25519_deploy" || s == "/id_ed25519_deploy" }) {
 		t.Errorf("the last folder is a piece of its own: %q", tt.Texts())
 	}
 }

@@ -435,11 +435,12 @@ func (s *Screen) findings(c *ui.Context, r *match.Result, a account.Account) {
 			if d.severity == match.Error {
 				icon, color = icons.Error, t.Danger
 			}
-			ui.Row(c.Key(fmt.Sprintf("finding-%d", i))).Height(t.Space(7)).PaddingX(t.Space(3)).Gap(t.Space(1.5)).AlignItems(ui.Center).
-				MinWidth(0).Label(d.sentence() + ". " + d.why).Tooltip(d.why).Children(func() {
+			row := ui.Row(c.Key(fmt.Sprintf("finding-%d", i))).Height(t.Space(7)).PaddingX(t.Space(3)).Gap(t.Space(1.5)).AlignItems(ui.Center).
+				MinWidth(0).Label(d.sentence() + s.text.Then + d.why).Description(d.why).Children(func() {
 				ui.Icon(c, icon).FontSize(t.Rem(1.1)).TextColor(color).Shrink(0)
 				s.findingLine(c, d)
 			})
+			tipAbove(c, row, d.why)
 		}
 	})
 }
@@ -465,19 +466,35 @@ func (s *Screen) findingLine(c *ui.Context, d said) {
 		case d.path:
 			pathLine(c, d.value, "", d.why, pathFace{mono: true, size: t.Rem(0.9), color: t.Text})
 		case d.value != "":
-			local, domain := d.value, ""
+			// The text gives way before the "@" and the ellipsis carries the domain and the name, so that what
+			// the width leaves over after the cut stays at the end of the line, not before the "@".
+			domain := ""
 			if at := strings.LastIndex(d.value, "@"); at >= 0 {
-				local, domain = d.value[:at], d.value[at:]
+				domain = d.value[at:]
 			}
-			ui.Row(c).MinWidth(0).Clip().Shrink(1e6).Children(func() {
-				ui.Text(c, local).FontSize(t.Rem(0.9)).SingleLine().Ellipsis("…").MinWidth(0)
-			})
-			if domain != "" {
-				piece(domain)
-			}
+			ui.Text(c, d.value+d.tail).FontSize(t.Rem(0.9)).SingleLine().Ellipsis("…" + domain + d.tail).MinWidth(0)
 		}
-		if d.tail != "" {
+		if d.tail != "" && (d.path || d.value == "") {
 			piece(d.tail)
 		}
+	})
+}
+
+// tipAbove is the tooltip of anchor placed as the mockup has it: above it, 6 DIPs away, its start under the anchor's
+// start, at most 240 DIPs wide, which Element.Tooltip does not offer (it goes by the pointer, below it, 320 wide).
+func tipAbove(c *ui.Context, anchor ui.Element, text string) {
+	t := c.Theme()
+	fill, ink := t.Inverse, t.InverseText
+	if fill == (ui.Color{}) {
+		fill = t.Text
+	}
+	if ink == (ui.Color{}) {
+		ink = t.Background
+	}
+	ui.TooltipBase(c, anchor, func(tip ui.Element) {
+		tip.AttachTo(anchor, ui.AnchorTopLeft, ui.AnchorBottomLeft).Margin(t.Space(1.5), 0, 0, 0)
+		tip.MaxWidth(t.Space(60)).Padding(t.Space(1), t.Space(2)).Radius(t.Space(1.5)).
+			Background(fill).TextColor(ink).FontSize(t.Rem(0.75))
+		tip.Children(func() { ui.Text(c, text) })
 	})
 }

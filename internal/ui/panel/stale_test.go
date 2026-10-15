@@ -60,12 +60,12 @@ func TestStalePromptOnARenamedFolder(t *testing.T) {
 	if update.Y != ignore.Y || update.X >= ignore.X {
 		t.Errorf("Update, then Ignore, on one line: %v %v", update, ignore)
 	}
-	old, _ := tt.Find("api-old")
+	old, _ := tt.Find("projects/api-old")
 	head, _ := tt.Find("’s folder is gone")
 	if old.Y <= head.Y || old.Y >= update.Y {
 		t.Errorf("header, paths, buttons: %v %v %v", head, old, update)
 	}
-	within(t, tt, "’s folder is gone", "api-old", "Change to This Path", "Keep Old Path")
+	within(t, tt, "’s folder is gone", "projects/api-old", "Change to This Path", "Keep Old Path")
 	// The no-match card below is unchanged: its sentence, the bind list and the new identity.
 	want(t, tt, "No identity matches this folder", "Bind to", "Bind to client", "New Identity and Bind Here")
 	wantNot(t, tt, "Updated")
@@ -129,14 +129,15 @@ func TestStaleCardHasTheSameHeightForAnyPath(t *testing.T) {
 
 func TestLongPathsKeepTheirStartAndLastFolder(t *testing.T) {
 	tt := tallCard(t, staleResult("/home/ada/projects/payments-gateway", moved), staleList(moved)...)
-	// A path is one line made of its start, its middle and its last folder, side by side with the words around it;
-	// only the middle gives way. The old path of the prompt, the bind rows and the identity list all do it.
+	// A path is one line made of its start and the rest, side by side with the words around it; only the middle of
+	// the rest gives way. The old path of the prompt, the bind rows and the identity list all do it.
 	texts := tt.Texts()
+	const long = "Documents/archive/2023/legacy-services/payments-gateway"
 	for _, line := range [][]string{
-		{"’s folder is gone", "~/", "Documents/archive/2023/legacy-services/", "payments-gateway", "~/", "projects/", "payments-gateway", "Update"},
-		{"Bind to work", "work", "~/", "Documents/archive/2023/legacy-services/", "payments-gateway/", "Bind"},
-		{"m@example.com", "~/", "Documents/archive/2023/legacy-services/", "payments-gateway/", "work"},
-		{"bob@example.com", "~/", "Documents/archive/2023/legacy-services/", "payments-gateway/", "+1"},
+		{"’s folder is gone", "~/", long, "~/", "projects/payments-gateway", "Update"},
+		{"Bind to work", "work", "~/", long + "/", "Bind"},
+		{"m@example.com", "~/", long + "/", "work"},
+		{"bob@example.com", "~/", long + "/ +1"},
 	} {
 		at := slices.Index(texts, line[0])
 		if at < 0 {
@@ -152,8 +153,8 @@ func TestLongPathsKeepTheirStartAndLastFolder(t *testing.T) {
 		}
 	}
 	// Short paths have no middle.
-	if !slices.Contains(texts, "work/") {
-		t.Errorf("a short path is its start and its last folder: %q", texts)
+	if !slices.Contains(texts, "work/client/") {
+		t.Errorf("a short path is its start and the rest: %q", texts)
 	}
 }
 
