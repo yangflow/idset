@@ -1,0 +1,353 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Settings window</title>
+<style>
+/* Colors are the MyGo default theme roles and sizes the 4 DIP spacing unit at 13 px text; see design/tokens.md.
+   No shadows, gradients or blur: everything is fills, hairlines and text. */
+:root { color-scheme:light; --background:#ffffff; --surface:#f4f4f5; --pressed:#dddde1; --text:#18181b; --muted:#71717a; --border:#d9d9de; --accent:#2563eb; --accent-text:#ffffff; --focus:rgba(37,99,235,.55); --danger:#dc2626; --warning:#d97706; --scrim:rgba(0,0,0,.28) }
+:root[data-scheme=dark] { color-scheme:dark; --background:#18181b; --surface:#27272a; --pressed:#3c3c41; --text:#f4f4f5; --muted:#a1a1aa; --border:#3f3f46; --accent:#3b82f6; --focus:rgba(96,165,250,.6); --danger:#ef4444; --warning:#f59e0b; --scrim:rgba(0,0,0,.5) }
+* { box-sizing:border-box }
+body { margin:0; font-family:system-ui,sans-serif; font-size:13px; color:var(--text); background:#888; display:flex; gap:24px; padding:24px; align-items:flex-start }
+.controls { width:220px; flex:none; display:flex; flex-direction:column; gap:14px; padding:14px; border-radius:10px; background:#f4f4f4; color:#242424; font-size:12px }
+.controls h2 { margin:0 0 6px; font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:.04em; color:#666 }
+.controls .group { display:flex; flex-wrap:wrap; gap:4px }
+.controls button { padding:4px 8px; border:1px solid #ccc; border-radius:5px; background:#fff; color:#242424; font:inherit; cursor:pointer }
+.controls button.on { background:#006fdf; border-color:#006fdf; color:#fff }
+.controls .hint { color:#666; line-height:1.5 }
+.controls kbd { padding:0 4px; border:1px solid #ccc; border-radius:3px; background:#fff; font-size:11px }
+
+/* Window: the system title bar, then a pane list and the pane. 720x480. */
+.win { position:relative; width:720px; height:480px; flex:none; display:flex; flex-direction:column; background:var(--background); border:1px solid var(--border); border-radius:10px; overflow:hidden }
+.band { flex:none; background:var(--surface); border-bottom:1px solid var(--border) }
+.titlebar { height:28px; display:grid; place-items:center; font-size:11px; color:var(--muted) }
+.body { flex:1; min-height:0; display:flex }
+.side { width:176px; flex:none; display:flex; flex-direction:column; background:var(--surface); border-right:1px solid var(--border) }
+.side .items { flex:1; min-height:0; overflow:auto; padding:12px 8px; display:flex; flex-direction:column; gap:2px }
+.side .bar { flex:none; display:flex; align-items:center; height:44px; box-sizing:border-box; padding:0 8px; border-top:1px solid var(--border) }
+.detail { flex:1; min-width:0; display:flex; flex-direction:column }
+.scroll { flex:1; min-height:0; overflow:auto; padding:16px 20px 20px; display:flex; flex-direction:column; gap:20px }
+.scroll > * { flex-shrink:0 }
+.scroll.busy { opacity:.5; pointer-events:none }
+.foot { flex:none; display:flex; align-items:center; gap:8px; min-height:44px; box-sizing:border-box; padding:0 20px; border-top:1px solid var(--border) }
+.status { flex:1; min-width:0; font-size:11px; color:var(--muted); display:flex; align-items:center; gap:6px; overflow-wrap:anywhere }
+.status.error { color:var(--danger) }
+.status svg { width:12px; height:12px; flex:none }
+
+/* Buttons: bordered, primary (the only filled one), and text. */
+button { padding:0 12px; height:24px; border:1px solid var(--border); border-radius:6px; background:var(--background); color:var(--text); font:inherit; display:inline-flex; align-items:center; gap:4px; white-space:nowrap }
+/* Footer buttons: one height, and Revert and Save one width, so a label change moves nothing. */
+.foot button { height:28px }
+.foot button:not(.text) { width:100px; justify-content:center }
+button.primary { background:var(--accent); border-color:var(--accent); color:var(--accent-text) }
+button.destructive { background:var(--danger); border-color:var(--danger); color:#fff }
+button.text { border-color:transparent; background:transparent; padding:0 8px; color:var(--accent) }
+button.text.danger { color:var(--danger) }
+button:disabled { opacity:.4 }
+button svg { width:12px; height:12px }
+button.ghost { width:24px; padding:0; justify-content:center; border-color:transparent; background:transparent; color:var(--muted) }
+button.ghost svg { width:14px; height:14px }
+.muted { color:var(--muted) }
+.mono { font-family:ui-monospace,monospace; font-size:12px }
+.spinner { width:12px; height:12px; flex:none; border:2px solid var(--border); border-top-color:var(--accent); border-radius:50% }
+
+.dot { flex:none; width:10px; height:10px; border-radius:50%; background:rgb(var(--c)) }
+:root[data-scheme=dark] .dot { background:rgb(var(--cl)) }
+
+/* Source list: calm selection, a color dot, no tiles. */
+.section { padding:0 8px 4px; font-size:11px; color:var(--muted); display:flex; justify-content:space-between }
+.item { display:flex; align-items:center; gap:8px; padding:6px 8px; border-radius:6px }
+.item.sel { background:var(--pressed) }
+.item .text { flex:1; min-width:0; display:flex; flex-direction:column; gap:1px }
+.item .email { font-size:11px; color:var(--muted); overflow-wrap:anywhere }
+.item .new { font-size:11px; color:var(--muted) }
+.item .scope { width:14px; height:14px; flex:none; color:var(--muted) }
+
+/* Header. */
+.head { display:flex; align-items:center; gap:8px; flex-wrap:wrap }
+.head .dot { width:12px; height:12px }
+.head h2 { margin:0; font-size:15px; font-weight:600; overflow-wrap:anywhere }
+.head .mark { font-size:11px; color:var(--muted) }
+.head .sp { flex:1 }
+.choices { display:flex; align-items:center; gap:8px }
+.choice { width:14px; height:14px; border-radius:50%; background:rgb(var(--c)); display:grid; place-items:center; color:#fff }
+.choice.on { outline:1.5px solid rgb(var(--c)); outline-offset:2px }
+.choice svg { width:9px; height:9px }
+.choices .mono { margin-left:4px; color:var(--muted); font-size:11px }
+
+/* Inset groups: a title, then a Surface group of rows (label left, value right) with inset hairlines, then a footnote. */
+.g > h3 { margin:0 0 4px 12px; font-size:11px; font-weight:400; color:var(--muted) }
+.rows { background:var(--surface); border-radius:10px }
+.r { position:relative; display:flex; align-items:center; gap:12px; min-height:32px; padding:4px 12px }
+.r + .r::before { content:""; position:absolute; top:0; left:12px; right:0; height:1px; background:color-mix(in srgb, var(--border) 70%, transparent) }
+.r .k { flex:none; width:168px }
+.r .k.wide { width:auto; flex:1 }
+.r .hint-end { flex:none; font-size:11px; color:var(--muted) }
+.r .v { flex:1; min-width:0; text-align:right; overflow-wrap:anywhere }
+.r .v.ph { color:var(--muted) }
+.r .v.left { text-align:left }
+.r .v.focus { outline:2px solid var(--focus); outline-offset:1px; border-radius:4px }
+.r .v.sel { display:flex; align-items:center; justify-content:flex-end; gap:4px }
+.r .v.sel svg { width:10px; height:10px; color:var(--muted) }
+.r .tail { flex:none; display:flex; align-items:center; gap:4px }
+.r.add { padding-left:4px }
+.note { margin:4px 12px 0; font-size:11px; line-height:1.4; color:var(--muted) }
+.note.err { color:var(--danger); display:flex; gap:4px }
+.note.err svg { width:12px; height:12px; flex:none; margin-top:1px }
+.seg { display:inline-flex; padding:2px; gap:2px; border-radius:7px; background:var(--pressed) }
+.seg span { padding:2px 12px; border-radius:5px; font-size:12px }
+.seg span.on { background:var(--background) }
+.radios { display:inline-flex; gap:16px }
+.radio { display:inline-flex; align-items:center; gap:6px }
+.radio i { width:14px; height:14px; border:1.5px solid var(--muted); border-radius:50%; display:grid; place-items:center }
+.radio.on i { border-color:var(--accent) }
+.radio.on i::after { content:""; width:6px; height:6px; border-radius:50%; background:var(--accent) }
+.check { display:inline-flex; align-items:center; gap:8px }
+.check i { width:14px; height:14px; border:1.5px solid var(--muted); border-radius:4px; display:grid; place-items:center; color:var(--accent-text) }
+.check.on i { background:var(--accent); border-color:var(--accent) }
+.check i svg { width:10px; height:10px }
+.check.off { opacity:.45 }
+.switch { flex:none; width:28px; height:16px; border-radius:8px; background:var(--pressed); position:relative }
+.switch::after { content:""; position:absolute; top:2px; left:2px; width:12px; height:12px; border-radius:50%; background:var(--background) }
+.switch.on { background:var(--accent) }
+.switch.on::after { left:14px }
+.rw { flex:1; min-width:0; display:flex; flex-direction:column; gap:1px }
+.rw .to { color:var(--muted) }
+.push { font-size:11px; color:var(--muted) }
+
+.center { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; text-align:center; padding:0 24px }
+.center strong { font-size:15px; font-weight:600 }
+.center .acts { display:flex; gap:8px; margin-top:16px }
+
+/* Delete confirmation: an alert over the dimmed window. */
+.scrim { position:absolute; left:0; right:0; top:28px; bottom:0; background:var(--scrim); display:flex; align-items:center; justify-content:center }
+.dialog { width:360px; display:flex; flex-direction:column; gap:12px; padding:20px; background:var(--background); border:1px solid var(--border); border-radius:10px }
+.dialog h2 { margin:0; font-size:15px; font-weight:600; overflow-wrap:anywhere }
+.dialog p { margin:0; line-height:1.45 }
+.dialog .kv { display:grid; grid-template-columns:64px 1fr; gap:4px 8px; padding:8px 0; border-top:1px solid var(--border); border-bottom:1px solid var(--border); font-size:12px }
+.dialog .kv > :nth-child(odd) { color:var(--muted) }
+.dialog .kv .paths { display:flex; flex-direction:column; gap:2px }
+.dialog .small { font-size:11px; color:var(--muted) }
+.dialog .opt { display:flex; flex-direction:column; gap:4px }
+.dialog .opt .small { padding-left:22px }
+.dialog .buttons { display:flex; justify-content:flex-end; gap:8px; margin-top:4px }
+
+/* Settings additions: pane list rows, the pane heading, backup rows, notes in the warning color. */
+.side .items { gap:2px }
+.item svg.pane { width:14px; height:14px; flex:none; color:var(--muted) }
+.pane h2 { margin:0; font-size:15px; font-weight:600 }
+.note.warn { color:var(--warning); display:flex; gap:4px }
+.note.warn svg { width:12px; height:12px; flex:none; margin-top:1px }
+.note.ok { color:var(--muted); display:flex; gap:4px }
+.note.ok svg { width:12px; height:12px; flex:none; margin-top:1px; color:var(--accent) }
+.r .tickend { flex:none; width:14px; height:14px; color:var(--accent) }
+.r.pick .k { flex:1; width:auto }
+.r.bk { min-height:44px; padding:6px 12px 6px 4px }
+.r.bk .t { flex:1; min-width:0; display:flex; flex-direction:column; gap:1px }
+.r.bk .t .sub { font-size:11px; color:var(--muted); overflow-wrap:anywhere }
+.r.bk .t .sub.bad { color:var(--danger) }
+.r.bk .acts { flex:none; display:flex; align-items:center; gap:2px }
+.r.bk button.text { padding:0 8px }
+.r.bk.busy { opacity:.5 }
+.r.idr { min-height:32px; padding-left:44px; gap:8px }
+.r.idr .nm { flex:none }
+.r.idr .em { flex:1; min-width:0; font-size:11px; color:var(--muted); overflow-wrap:anywhere }
+.r.idr .scope { width:14px; height:14px; flex:none; color:var(--muted) }
+.r.err { display:block; min-height:0; padding:6px 12px 8px 44px }
+.banner { display:flex; gap:8px; align-items:flex-start; padding:10px 12px; border-radius:10px; background:color-mix(in srgb, var(--danger) 12%, transparent); line-height:1.4 }
+.banner svg { width:14px; height:14px; flex:none; margin-top:2px; color:var(--danger) }
+.dialog .ids { display:flex; flex-direction:column; gap:6px; padding:8px 0; border-top:1px solid var(--border); border-bottom:1px solid var(--border) }
+.dialog .ids .li { display:flex; align-items:center; gap:8px }
+.dialog .ids .li .em { font-size:11px; color:var(--muted) }
+.dialog .kv { grid-template-columns:72px 1fr }
+</style>
+<aside class="controls">
+  <div><h2>State</h2><div class="group" id="states"></div></div>
+  <div><h2>Scheme</h2><div class="group" id="schemes"></div></div>
+  <div><h2>Language</h2><div class="group" id="langs"></div></div>
+  <div class="hint">URL: <code>?state=…&amp;scheme=dark&amp;lang=zh</code><br><kbd>←</kbd> <kbd>→</kbd> switch state.<br>The manual language choice follows the Language switch.</div>
+</aside>
+<div class="win" id="win"></div>
+<script>
+const TEXT = {
+  zh: {
+    window:'Idset · 设置', general:'通用', backups:'备份', config:'配置',
+    gLanguage:'界面语言', system:'跟随系统', current:'当前：简体中文', langNote:'改动立即生效，不用重启。', systemNote:'现在跟随系统：简体中文。',
+    gStartup:'启动', login:'登录时启动', loginNote:'登录后 Idset 在托盘里启动。',
+    approve:'macOS 需要你先批准。打开「系统设置」›「通用」›「登录项与扩展」，打开 Idset。',
+    loginFail:'无法更改登录项：operation not permitted',
+    restore:'恢复', restoring:'正在恢复…', restored:'已恢复', del:'删除', expand:'展开', collapse:'收起', cancel:'取消',
+    identities:n => `${n} 个身份`, unreadable:'无法读取的备份', more:n => `+${n}`, global:'全局', scoped:'限定',
+    backupNote:'新增身份之前和恢复备份之前，Idset 会自动备份 accounts.json，只保留最新的 10 份。位置：~/.config/idset/backups/。',
+    readonlyBanner:'accounts.json 读不出来，Idset 现在是只读的。恢复一份备份即可继续。',
+    failed:'无法恢复：~/.config/idset/accounts.json 是符号链接，Idset 不会写入。',
+    emptyTitle:'还没有备份', emptyBody:'Idset 会在两种时候自动备份 accounts.json：新增身份之前，和恢复备份之前。编辑、删除、绑定不备份。只保留最新的 10 份，放在 ~/.config/idset/backups/。',
+    confirmTitle:t => `恢复 ${t} 的备份？`, confirmBody:'先备份当前的 accounts.json，再用这份备份替换它，并重新生成配置。恢复后会有这些身份：', confirmNote:'不在备份里的身份会从列表里移除。',
+    gInclude:'Include', present:'有 Include 标记块', absent:'没有 Include 标记块',
+    remove:'移除 Include（保留 accounts.json）', removed:'已移除',
+    includeNote:'只删除 ~/.ssh/config 和 ~/.gitconfig 里 Idset 的标记块，其余内容不动。下次修改身份时会加回来。',
+    removedNote:'已移除。身份没有变化；下次修改身份时，标记块会加回来。',
+    removeFail:'无法写入 ~/.gitconfig：permission denied。~/.ssh/config 里的标记块已经移除。',
+    removeTitle:'移除 Include？', removeBody:'Idset 将停止对 Git 和 SSH 生效，直到你再次修改身份。', removes:'移除', keeps:'保留',
+    markers:'Idset 的标记块，在', keptList:['accounts.json', '~/.config/idset/ 里的托管文件', '私钥'],
+    removeBtn:'移除',
+  },
+  en: {
+    window:'Idset · Settings', general:'General', backups:'Backups', config:'Configuration',
+    gLanguage:'Language', system:'Follow System', current:'Current: English', langNote:'Changes apply immediately; no restart.', systemNote:'Following the system now: English.',
+    gStartup:'Startup', login:'Open at login', loginNote:'Idset starts in the tray when you sign in.',
+    approve:'macOS needs your approval first. Open System Settings › General › Login Items & Extensions and turn on Idset.',
+    loginFail:'Could not change the login item: operation not permitted',
+    restore:'Restore', restoring:'Restoring…', restored:'Restored', del:'Delete', expand:'Show identities', collapse:'Hide identities', cancel:'Cancel',
+    identities:n => `${n} ${n === 1 ? 'identity' : 'identities'}`, unreadable:'Unreadable backup', more:n => `+${n}`, global:'Global', scoped:'Scoped',
+    backupNote:'Idset backs up accounts.json before an identity is added and before a backup is restored, and keeps the newest 10. Location: ~/.config/idset/backups/.',
+    readonlyBanner:'accounts.json cannot be read, so Idset is read-only. Restore a backup to carry on.',
+    failed:'Could not restore: ~/.config/idset/accounts.json is a symbolic link, and Idset will not write to it.',
+    emptyTitle:'No backups yet', emptyBody:'Idset backs up accounts.json automatically in two cases: before an identity is added, and before a backup is restored. Editing, deleting and binding do not back up. The newest 10 are kept in ~/.config/idset/backups/.',
+    confirmTitle:t => `Restore backup ${t}?`, confirmBody:'The current accounts.json is backed up first, then replaced by this backup, and the configuration is regenerated. After restoring you will have these identities:', confirmNote:'Identities that are not in the backup are removed from the list.',
+    gInclude:'Include', present:'Include block present', absent:'No Include block',
+    remove:'Remove Include (keep accounts.json)', removed:'Removed',
+    includeNote:'Only the Idset marker block in ~/.ssh/config and ~/.gitconfig is deleted; everything else stays. It comes back the next time you change an identity.',
+    removedNote:'Removed. Your identities are unchanged; the marker blocks return the next time you change an identity.',
+    removeFail:'Could not write ~/.gitconfig: permission denied. The block in ~/.ssh/config was already removed.',
+    removeTitle:'Remove Include?', removeBody:'Idset stops applying to Git and SSH until you change an identity again.', removes:'Removes', keeps:'Keeps',
+    markers:'The Idset marker block in', keptList:['accounts.json', 'Managed files in ~/.config/idset/', 'Private keys'],
+    removeBtn:'Remove',
+  },
+};
+const STATES = {
+  general:'通用 · 跟随系统', manual:'通用 · 手动选择', loginon:'登录项：开', approve:'登录项：待批准', loginfail:'登录项：失败',
+  backups:'备份 · 列表', expanded:'备份 · 展开', unreadable:'备份 · 无法读取', confirm:'恢复确认', restoring:'恢复中', restored:'恢复成功', failed:'恢复失败', readonly:'只读状态打开', empty:'没有备份',
+  config:'配置', remove:'移除确认', removed:'已移除', removefail:'移除失败',
+};
+const PANE = { general:['general','manual','loginon','approve','loginfail'], backups:['backups','expanded','unreadable','confirm','restoring','restored','failed','readonly','empty'], config:['config','remove','removed','removefail'] };
+const paneOf = s => Object.keys(PANE).find(p => PANE[p].includes(s));
+const COLORS = { blue:'58,123,213', green:'46,158,91', orange:'224,122,31', purple:'142,68,173' };
+const LIGHT = { '58,123,213':'120,170,240', '46,158,91':'95,200,135', '224,122,31':'240,165,95', '142,68,173':'190,130,215' };
+const IDS = {
+  work: { label:'work', color:'blue', email:'bob@example.com', scoped:true },
+  personal: { label:'personal', color:'green', email:'bob@example.net', scoped:false },
+  client: { label:'client', color:'orange', email:'bob@client.example', scoped:true },
+  side: { label:'side', color:'purple', email:'bob@example.org', scoped:true },
+};
+const BACKUPS = [
+  { time:'2026-10-12 09:07', ids:['work', 'personal', 'client', 'side'], size:'2.4 KB' },
+  { time:'2026-10-02 14:10', ids:['work', 'personal', 'client'], size:'1.9 KB' },
+  { time:'2026-09-20 18:44', ids:['work', 'personal'], size:'1.2 KB' },
+  { time:'2026-08-22 08:00', ids:['personal'], size:'0.7 KB' },
+];
+const icon = {
+  check:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 8.5l3 3 6-7"/></svg>',
+  warn:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2.5l6 11H2z"/><path d="M8 6.5v3M8 11.6v.1"/></svg>',
+  folder:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"><path d="M2 4.5a1 1 0 0 1 1-1h3l1.5 1.5H13a1 1 0 0 1 1 1V12a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1z"/></svg>',
+  down:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l4 4 4-4"/></svg>',
+  right:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4l4 4-4 4"/></svg>',
+  trash:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 4.5h11M6 4.5V3h4v1.5M4 4.5l.6 8.5h6.8l.6-8.5"/></svg>',
+  sliders:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M2 4.5h7M12 4.5h2M2 11.5h2M7 11.5h7"/><circle cx="10.5" cy="4.5" r="1.5"/><circle cx="5.5" cy="11.5" r="1.5"/></svg>',
+  clock:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 8a5.5 5.5 0 1 0 1.8-4.1M2.5 2.5v3h3"/><path d="M8 5v3.2l2 1.3"/></svg>',
+  doc:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 2h5l3 3v9H4z"/><path d="M9 2v3h3M6 8.5h4M6 11h4"/></svg>',
+};
+const q = new URLSearchParams(location.search);
+const view = {
+  state: STATES[q.get('state')] ? q.get('state') : 'general',
+  scheme: q.get('scheme') === 'dark' ? 'dark' : 'light',
+  lang: q.get('lang') === 'zh' ? 'zh' : 'en',
+};
+
+function render() {
+  const T = TEXT[view.lang], s = view.state, pane = paneOf(s);
+  const dot = i => { const c = COLORS[i.color]; return `<span class="dot" style="--c:${c};--cl:${LIGHT[c]}"></span>`; };
+  const ghost = (ic, label, off) => `<button class="ghost" title="${label}" aria-label="${label}"${off ? ' disabled' : ''}>${icon[ic]}</button>`;
+  const group = (title, rows, note = '') => `<div class="g"><h3>${title}</h3><div class="rows">${rows}</div>${note}</div>`;
+  const note = (kind, ic, text) => `<div class="note ${kind}">${ic ? icon[ic] : ''}<span>${text}</span></div>`;
+  const spinner = '<div class="spinner"></div>';
+
+  // General: language (three choices, the chosen one ticked), then the login item.
+  const chosen = s === 'manual' ? (view.lang === 'zh' ? 'zh' : 'en') : 'system';
+  const pick = (id, label, hint = '') => `<div class="r pick"><div class="k">${label}</div>${hint ? `<span class="hint-end">${hint}</span>` : ''}${chosen === id ? `<span class="tickend">${icon.check}</span>` : '<span class="tickend"></span>'}</div>`;
+  const sw = on => `<span class="switch${on ? ' on' : ''}" role="switch" aria-checked="${on}"></span>`;
+  const loginOn = s === 'loginon';
+  let loginNote = note('', '', T.loginNote);
+  if (s === 'approve') loginNote = note('warn', 'warn', T.approve);
+  if (s === 'loginfail') loginNote = note('err', 'warn', T.loginFail);
+  const general = `<h2>${T.general}</h2>` +
+    group(T.gLanguage, pick('system', T.system, chosen === 'system' ? T.current : '') + pick('en', 'English') + pick('zh', '简体中文'), note('', '', chosen === 'system' ? T.systemNote : T.langNote)) +
+    group(T.gStartup, `<div class="r"><div class="k wide">${T.login}</div>${sw(loginOn)}</div>`, loginNote);
+
+  // Backups.
+  const showRows = s === 'unreadable' ? BACKUPS.map((b, i) => i === 2 ? { ...b, bad:true, size:'0.2 KB' } : b) : BACKUPS;
+  const names = b => { const n = b.ids.map(k => IDS[k].label); return n.length > 3 ? `${n.slice(0, 3).join(', ')} ${T.more(n.length - 3)}` : n.join(', '); };
+  const target = s === 'restoring' || s === 'restored' || s === 'failed' || s === 'confirm' ? 1 : 0;
+  let rows = showRows.map((b, i) => {
+    const open = s === 'expanded' && i === 0;
+    const working = s === 'restoring' && i === target;
+    const idle = s === 'restoring' && i !== target;
+    const sub = b.bad ? `<span class="sub bad">${T.unreadable} · ${b.size}</span>` : `<span class="sub">${T.identities(b.ids.length)} · ${names(b)} · ${b.size}</span>`;
+    let acts = `<button class="text"${b.bad ? ' disabled' : ''}>${T.restore}</button>${ghost('trash', T.del)}`;
+    if (working) acts = `${spinner}<span class="muted">${T.restoring}</span>`;
+    if (s === 'restored' && i === target) acts = `<button class="text" disabled>${icon.check}${T.restored}</button>${ghost('trash', T.del)}`;
+    let out = `<div class="r bk${idle ? ' busy' : ''}">${ghost(open ? 'down' : 'right', open ? T.collapse : T.expand, b.bad)}<div class="t"><span>${b.time}</span>${sub}</div><div class="acts">${acts}</div></div>`;
+    if (open) out += b.ids.map(k => { const d = IDS[k]; return `<div class="r idr">${dot(d)}<span class="nm">${d.label}</span><span class="em">${d.email}</span>${d.scoped ? `<span class="scope" title="${T.scoped}" aria-label="${T.scoped}">${icon.folder}</span>` : `<span class="muted" style="font-size:11px">${T.global}</span>`}</div>`; }).join('');
+    if (s === 'failed' && i === target) out += `<div class="r err">${note('err', 'warn', T.failed)}</div>`;
+    return out;
+  }).join('');
+  const banner = s === 'readonly' ? `<div class="banner">${icon.warn}<span>${T.readonlyBanner}</span></div>` : '';
+  const list = `${banner}<div class="g"><div class="rows">${rows}</div>${note('', '', T.backupNote)}</div>`;
+  const backupsPane = s === 'empty'
+    ? `<h2>${T.backups}</h2><div class="center"><strong>${T.emptyTitle}</strong><span class="muted" style="max-width:380px;line-height:1.45">${T.emptyBody}</span></div>`
+    : `<h2>${T.backups}</h2>${list}`;
+
+  // Configuration.
+  const removed = s === 'removed';
+  const failedCfg = s === 'removefail';
+  const stat = (file, gone) => `<div class="r"><div class="k wide mono">${file}</div><span class="muted">${gone ? T.absent : T.present}</span></div>`;
+  let cfgNote = note('', '', T.includeNote);
+  if (removed) cfgNote = note('ok', 'check', T.removedNote);
+  if (failedCfg) cfgNote = note('err', 'warn', T.removeFail);
+  const action = `<div class="r add"><button class="text"${removed ? ' disabled' : ''}>${removed ? icon.check + T.removed : T.remove}</button></div>`;
+  const configPane = `<h2>${T.config}</h2>` + group(T.gInclude, stat('~/.ssh/config', removed || failedCfg) + stat('~/.gitconfig', removed) + action, cfgNote);
+
+  // Dialogs: the restore and remove confirmations, over the dimmed window.
+  let dialog = '';
+  if (s === 'confirm') {
+    const b = BACKUPS[target];
+    dialog = `<div class="scrim"><div class="dialog" role="alertdialog"><h2>${T.confirmTitle(b.time)}</h2><p>${T.confirmBody}</p>
+      <div class="ids">${b.ids.map(k => `<div class="li">${dot(IDS[k])}<span>${IDS[k].label}</span><span class="em">${IDS[k].email}</span></div>`).join('')}</div>
+      <div class="small">${T.confirmNote}</div>
+      <div class="buttons"><button>${T.cancel}</button><button class="primary">${T.restore}</button></div></div></div>`;
+  }
+  if (s === 'remove') {
+    dialog = `<div class="scrim"><div class="dialog" role="alertdialog"><h2>${T.removeTitle}</h2><p>${T.removeBody}</p>
+      <div class="kv"><span>${T.removes}</span><div class="paths"><span>${T.markers}</span><span class="mono">~/.ssh/config</span><span class="mono">~/.gitconfig</span></div>
+        <span>${T.keeps}</span><div class="paths">${T.keptList.map((k, i) => `<span${i === 1 ? '' : ' class="mono"'}>${k}</span>`).join('')}</div></div>
+      <div class="buttons"><button>${T.cancel}</button><button class="primary">${T.removeBtn}</button></div></div></div>`;
+  }
+
+  const nav = [['general', 'sliders', T.general], ['backups', 'clock', T.backups], ['config', 'doc', T.config]]
+    .map(([id, ic, label]) => `<div class="item${pane === id ? ' sel' : ''}">${icon[ic].replace('<svg', '<svg class="pane"')}<span>${label}</span></div>`).join('');
+  const body = { general, backups:backupsPane, config:configPane }[pane];
+  document.documentElement.dataset.scheme = view.scheme;
+  document.getElementById('win').innerHTML = `<div class="band"><div class="titlebar">${T.window}</div></div>
+    <div class="body"><div class="side"><div class="items">${nav}</div></div><div class="detail"><div class="scroll pane">${body}</div></div></div>${dialog}`;
+
+  const buttons = (id, options, key) => {
+    document.getElementById(id).innerHTML = Object.entries(options)
+      .map(([value, label]) => `<button data-value="${value}" class="${view[key] === value ? 'on' : ''}">${label}</button>`).join('');
+    document.getElementById(id).onclick = e => { const v = e.target.dataset.value; if (v) { view[key] = v; render(); } };
+  };
+  buttons('states', STATES, 'state');
+  buttons('schemes', { light:'浅色', dark:'深色' }, 'scheme');
+  buttons('langs', { zh:'中文', en:'English' }, 'lang');
+  history.replaceState(null, '', `?state=${view.state}&scheme=${view.scheme}&lang=${view.lang}`);
+}
+
+onkeydown = e => {
+  if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+  const keys = Object.keys(STATES), i = keys.indexOf(view.state);
+  view.state = keys[(i + (e.key === 'ArrowRight' ? 1 : keys.length - 1)) % keys.length];
+  render();
+};
+render();
+</script>
+</html>

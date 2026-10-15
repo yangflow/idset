@@ -62,9 +62,12 @@ Mockups show the 4 DIP unit and 13 px text.
 | dot | `t.Space(2.5)` / `t.Space(3)` / `t.Space(3.5)` | 10 / 12 / 14 | color dot in the panel and account lists / header / color choices |
 | accounts-bar | `t.Space(11)` | 44 | height of the sidebar's add bar and of the detail's footer; their hairlines are one line |
 | accounts-button | `t.Space(7)` high, `t.Space(25)` wide | 28 x 100 | footer buttons; Revert and Save share the width, Delete is a text button of the same height |
-| accounts-dialog | `t.Space(90)` | 360 | width of the delete confirmation |
+| accounts-dialog | `t.Space(90)` | 360 | width of the delete confirmation; the settings window's two confirmations reuse it |
+| settings-sidebar | `t.Space(44)` | 176 | sidebar of the settings window: three rows of an icon and a label |
+| settings-backup-row | `t.Space(11)` | 44 | height of a backup row; other settings rows use accounts-row (32) |
 | panel | `Width`, `Height` | 340 x 480 | the panel window, fixed |
 | accounts | `Width`, `Height` | 760 x 520 | the accounts window; resizable, with a minimum size |
+| settings | `Width`, `Height` | 720 x 480 | the settings window; resizable, with a minimum size |
 | tray-icon | 32 x 32 PNG | 16 x 16 points | drawn by `internal/trayicon/` |
 
 ## Color roles

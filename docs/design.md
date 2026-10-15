@@ -27,12 +27,13 @@ Related files: [design/README.md](../design/README.md) (mockups and how a UI cha
 6. [Component guide](#component-guide)
 7. [The panel](#the-panel)
 8. [The accounts window](#the-accounts-window)
-9. [Windows, menus and the tray](#windows-menus-and-the-tray)
-10. [Accessibility checklist](#accessibility-checklist)
-11. [Motion](#motion)
-12. [Localization](#localization)
-13. [Design acceptance checklist](#design-acceptance-checklist)
-14. [References](#references)
+9. [The settings window](#the-settings-window)
+10. [Windows, menus and the tray](#windows-menus-and-the-tray)
+11. [Accessibility checklist](#accessibility-checklist)
+12. [Motion](#motion)
+13. [Localization](#localization)
+14. [Design acceptance checklist](#design-acceptance-checklist)
+15. [References](#references)
 
 ## Principles
 
@@ -267,7 +268,7 @@ The tables below say what to reach for as the accounts, settings and about windo
 | Columns and rows of controls | [Grid](https://github.com/egoist/mygo/blob/v0.3.6/docs/ui/grid.md) |
 | List and detail of the accounts window | [Split view](https://github.com/egoist/mygo/blob/v0.3.6/docs/ui/split.md) |
 | Optional detail (the clone helper of an identity row, a backup's contents) | [Collapsible](https://github.com/egoist/mygo/blob/v0.3.6/docs/ui/collapsible.md), [Accordion](https://github.com/egoist/mygo/blob/v0.3.6/docs/ui/accordion.md) for several in a stack; only one identity row is expanded at a time, which the screen's state enforces |
-| The five panes of the settings window | [Sidebar](https://github.com/egoist/mygo/blob/v0.3.6/docs/ui/sidebar.md) with a [router](https://github.com/egoist/mygo/blob/v0.3.6/docs/ui/navigation.md) |
+| The three panes of the settings window (General, Backups, Configuration) | [Sidebar](https://github.com/egoist/mygo/blob/v0.3.6/docs/ui/sidebar.md) with a [router](https://github.com/egoist/mygo/blob/v0.3.6/docs/ui/navigation.md) |
 
 ### Dialogs, messages and status
 
@@ -299,7 +300,7 @@ Overlays share focus and Escape behavior; see
 Mockup: [design/screens/panel.html](../design/screens/panel.html), and both appearances side by side in
 [design/screens/panel-appearance.html](../design/screens/panel-appearance.html).
 
-From top to bottom: the title bar ("Idset", 13 / 600, a level 1 heading, and, once settings exist, the Settings icon
+From top to bottom: the title bar ("Idset", 13 / 600, a level 1 heading, and the Settings icon
 button at the right; no close button: the tray icon and Escape hide the panel), the content, and the footer. Both bars are 36 DIPs high. The
 title bar has `Space(4)` left and `Space(2)` right padding; the footer has `Space(2)` at both sides. The footer is four
 icon buttons: "Add Identity" (plus) at the left, then at the right About (`info.circle`), Re-check (`arrow.clockwise`)
@@ -308,8 +309,8 @@ and Quit (`power`). The footer after the content:
 - With identities, all of them. Without identities, loading or read-only: no Add (the empty state has its own button;
   the other two cannot write) and no Re-check (nothing to check); About and Quit stay, so the footer still has a way
   out when the read-only error takes the whole panel.
-- Only buttons that work are shown: Settings, About and Re-check join when they are built (the mockup's "Built today"
-  switch shows the footer without them).
+- Only buttons that work are shown: About and Re-check join when they are built (the mockup's "Built today"
+  switch shows the footer without them). Settings is always in the title bar.
 
 The content, in order:
 
@@ -318,8 +319,8 @@ The content, in order:
    vertically: a `Space(11)` (44) warning badge (radius 11), the title (`Rem(1.15)`, 600), the file path in
    monospace `Rem(0.9)` `TextMuted`, the parser error in monospace `Rem(0.85)` `TextMuted`, at most two lines (the full
    text is its tooltip), one short line "Read-only until fixed" (the sentence "Idset will not write to it until it is
-   fixed or restored from a backup." is its tooltip), and two 28×120 buttons, "Show in Finder" (Explorer on Windows,
-   the file manager on Linux) and "Read Again". There is no reason box.
+   fixed or restored from a backup." is its tooltip), and three buttons: "Restore from Backup" (primary, 28×248, opens the Backups pane of the settings window), then
+   "Show in Finder" (Explorer on Windows, the file manager on Linux) and "Read Again", 28×120 each on one row. There is no reason box.
 3. Otherwise: the result card (when there is a result), the one-line drop zone, the group heading "Identities" with the
    count, the filter (from three identities on) and the identity list. Without identities there is one centered block
    instead: "No identities yet" (`Rem(1.15)`, 600), one short line ("Give each folder its own Git and SSH identity.")
@@ -429,7 +430,7 @@ fixed footer, so that it stays reachable however long the list is: the content b
 the scroll view. In the empty state the centered "Add Identity" button
 replaces it. Both open the accounts window on a new draft.
 
-Planned (product.md): the Settings, About and Re-check buttons (drawn in the mockup, shown once they work); "Import" when there are no
+Planned (product.md): the About and Re-check buttons (drawn in the mockup, shown once they work); "Import" when there are no
 identities; a connectivity dot and problem bars on identity rows. The expand arrow and the HTTPS row and clone
 helper are drawn in the mockup and shown once built (issue 26). Bind, unbind, rebind, "Use only" and undo on result
 cards are built as the mockup shows.
@@ -494,6 +495,41 @@ pane.
   identity uses it, a symbolic link, missing, not a regular file) the checkbox is disabled and the reason is
   written under it; when checked, a line says that only the private key is deleted and `.pub` stays.
 - **Type.** 13 body, 11 secondary and footnotes, one larger size (`Rem(1.15)`, 600) for titles; nothing else is bold.
+
+## The settings window
+
+Mockup: [design/screens/settings.html](../design/screens/settings.html), every state in light and dark and in both
+languages. Behavior is in product.md, "设置窗口". 720×480, the system title bar ("Idset · Settings"), same
+material as the accounts window: fills, hairlines and text, no shadow, gradient or blur.
+
+- **Sidebar.** 176 wide (`Space(44)`), `Surface` fill, one hairline at its right. Three rows, each an icon and a label:
+  General, Backups, Configuration (通用 / 备份 / 配置). The selected row has the `Pressed` fill; nothing else changes
+  between rows. A level 1 heading of the pane's name starts each pane.
+- **General.** One grouped list of 32 DIPs rows. Language is three tick rows: "Follow System" (shows the language it
+  resolves to), "English" and "简体中文", the last two always in their own language. "Open at login" is a switch row; when
+  the system asks for approval the switch stays off and a `Warning` note under it says where to approve (macOS: System
+  Settings, General, Login Items). A failed change is an inline `Danger` note under the row.
+- **Backups.** One grouped list, newest first. A row is 44 high: a chevron, the time (13), and a muted line "N identities
+  · names · size" (11; the first three names and "+N" for the rest), then the text button "Restore" and a ghost trash
+  button. The chevron expands the row to show its identities read-only, one at a time. Delete has no confirmation: the
+  backup is a copy and the newest 10 are kept anyway. A backup that cannot be read has its sub-line in `Danger`, and
+  Restore and the chevron disabled. Under the list, a note says when backups are made (before an identity is added,
+  before a restore), that the newest 10 are kept and where. With no backups that note is the empty state.
+- **Restore.** An alert over the dimmed window, 360 wide, like the delete confirmation: "Restore backup <time>?", one
+  sentence (the current `accounts.json` is backed up first, the configuration is regenerated), the identities that will
+  exist afterwards between two hairlines, a line that identities not in the backup are removed, Cancel (Escape,
+  initial focus) and Restore (`Accent` fill: it replaces data but is undoable through the backup it makes). While it
+  runs the row's button is a spinner and the other rows are dimmed to half; on success the button reads "✓ Restored"
+  for 1.2 s; on failure the reason is an inline `Danger` note under the row. When the window is opened from the
+  read-only panel the Backups pane opens with a `Danger` banner explaining why.
+- **Configuration.** The two files with a marker block (`~/.ssh/config`, `~/.gitconfig`) and whether it is present, and
+  the row "Remove Include (keep accounts.json)" in `Accent` text. Its alert (same shape, primary button) lists
+  between hairlines what is removed (the marker blocks) and what stays (`accounts.json`, the managed files under
+  `~/.config/idset/`, private keys), and says it comes back at the next identity change. Afterwards the rows read "no
+  marker block" with a "✓ Removed" note. A failure is inline and names the file that could not be changed, including the
+  case where one file was changed and the other not.
+- **Errors and feedback.** Errors are inline notes, never dialogs; the only alerts are the two confirmations above.
+  Success feedback is the 1.2 s label of the panel.
 
 ## Windows, menus and the tray
 
