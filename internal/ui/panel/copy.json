@@ -77,7 +77,15 @@
     "ConfirmShort": "%s will apply only here",
     "CoveredBy": "Covered by %s",
     "StaleUpdate": "Update",
-    "StaleIgnore": "Ignore"
+    "StaleIgnore": "Ignore",
+    "FindNoEmail": "Commits have no author",
+    "FindNoEmailTip": "This repository has no user.email, so Git will stop at the commit or guess an address.",
+    "FindCommits": "Commits use ",
+    "FindOwner": " (%s)",
+    "FindOtherTip": "This repository’s user.email is %[1]s, which belongs to %[2]s, not %[3]s.",
+    "FindUnknownTip": "This repository’s user.email is %s, which no identity uses.",
+    "FindPushes": "Pushes use ",
+    "FindKeyTip": "core.sshCommand picks %[1]s, not %[2]s’s key."
   },
   "zh-Hans": {
     "Quit": "退出",
@@ -157,6 +165,14 @@
     "ConfirmShort": "%s 将只用于此文件夹",
     "CoveredBy": "已由 %s 覆盖",
     "StaleUpdate": "更新",
-    "StaleIgnore": "忽略"
+    "StaleIgnore": "忽略",
+    "FindNoEmail": "提交没有作者",
+    "FindNoEmailTip": "这个仓库读不到 user.email，提交时 Git 会报错或自己猜一个地址。",
+    "FindCommits": "提交会署名为 ",
+    "FindOwner": "（%s）",
+    "FindOtherTip": "仓库的 user.email 是 %[1]s，属于 %[2]s，不是 %[3]s。",
+    "FindUnknownTip": "仓库的 user.email 是 %s，没有身份用这个邮箱。",
+    "FindPushes": "推送会用 ",
+    "FindKeyTip": "core.sshCommand 指定了 %[1]s，不是 %[2]s 的密钥。"
   }
 }

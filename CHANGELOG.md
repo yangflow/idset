@@ -32,6 +32,11 @@ All notable user-facing changes are recorded here, following [Keep a Changelog](
   This Path", which replaces the old path in place and regenerates the configuration once, or "Keep Old Path".
 - Long paths in the bind list, in the identity list and in the stale-path card are shortened in the middle only: the
   start ("~/" or a drive) and the last folder stay.
+- After a match, the card reads the repository's effective `user.email` and `core.sshCommand` and lists what
+  disagrees with the identity, one row each, email first: no `user.email` (warning), an email that belongs to another
+  identity (error), an email no identity has (warning), or a `-i` key other than the identity's (error). The card's
+  outline takes the worst severity and the reason is in the row's tooltip. Nothing is checked for an identity
+  without an email or a key path.
 - On macOS the Dock icon shows while the accounts window is open; closing the window does not quit Idset.
 
 ### Changed
