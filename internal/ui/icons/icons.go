@@ -15,6 +15,7 @@ var (
 	Plus   = svg(`<path d="M8 3v10M3 8h10" stroke-width="1.6"/>`)
 	Minus  = svg(`<path d="M3.5 8h9" stroke-width="1.6"/>`)
 	Warn   = svg(`<path d="M8 2.5l6 11H2z" stroke-width="1.6"/><path d="M8 6.5v3M8 11.6v.1" stroke-width="1.6"/>`)
+	Error  = svg(`<circle cx="8" cy="8" r="6.25" stroke-width="1.5"/><path d="M8 4.9v3.8" stroke-width="1.5"/><path d="M8 11.1v.1" stroke-width="1.8"/>`)
 	Folder = svg(`<path d="M2 4.5a1 1 0 0 1 1-1h3l1.5 1.5H13a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1z" stroke-width="1.4"/>`)
 	More   = svg(`<path d="M3.5 8h.01M8 8h.01M12.5 8h.01" stroke-width="2.2"/>`)
 	Arrow  = svg(`<path d="M3 8h10M9.5 4.5L13 8l-3.5 3.5" stroke-width="1.5"/>`)

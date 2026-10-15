@@ -66,6 +66,17 @@ h1 { flex:1; margin:0; font-size:13px; font-weight:600 }
 .result .uses { font-size:12px; color:var(--muted) }
 .result .kv { display:grid; grid-template-columns:56px 1fr; align-items:start; gap:4px 8px; padding:0 12px 12px 60px; font-size:12px }
 .result .kv > :nth-child(odd) { color:var(--muted) }
+/* Identity check: findings sit under the details, a hairline above, 4 above and below the rows. A row is one 28 high line,
+   like a path row: a 14 severity glyph in Warning or Danger, 6, then the sentence; a long value gives way in its middle. */
+.result .finds { border-top:1px solid var(--border); padding:4px 0 }
+.result .find { display:flex; align-items:center; gap:6px; height:28px; padding:0 12px; font-size:12px }
+.result .find > svg { flex:none; width:14px; height:14px }
+.result .find.warning > svg { color:var(--warning) }
+.result .find.danger > svg { color:var(--danger) }
+.find .says { flex:1 1 auto; min-width:0; display:flex; white-space:pre }
+.find .says > span { flex:none }
+.find .says > .give { flex:0 1 auto; min-width:0; overflow:hidden; text-overflow:ellipsis }
+.find .says > .mid { flex:0 1 auto }
 .result .say { padding:12px; display:flex; align-items:center; gap:8px; font-weight:600 }
 .result .say.plain { font-weight:400 }
 .result .say.danger { color:var(--danger); font-weight:400 }
@@ -179,7 +190,7 @@ h1 { flex:1; margin:0; font-size:13px; font-weight:600 }
   <div><h2>Footer icons</h2><div class="group" id="icons"></div></div>
   <div><h2>Height</h2><div class="group" id="heights"></div></div>
   <div><h2>Language</h2><div class="group" id="langs"></div></div>
-  <div class="hint">URL: <code>?state=…&amp;scheme=dark&amp;lang=zh&amp;icons=today&amp;height=full</code><br><kbd>←</kbd> <kbd>→</kbd> switch state.<br>Pin a tooltip: <code>&amp;tip=quit</code> (settings, add, about, recheck, quit).</div>
+  <div class="hint">URL: <code>?state=…&amp;scheme=dark&amp;lang=zh&amp;icons=today&amp;height=full</code><br><kbd>←</kbd> <kbd>→</kbd> switch state.<br>Pin a tooltip: <code>&amp;tip=quit</code> (settings, add, about, recheck, quit, finding).</div>
 </aside>
 <div id="stage" style="display:flex;gap:24px;align-items:flex-start"></div>
 <script>
@@ -199,6 +210,10 @@ const TEXT = {
     staleKeep:'保留旧路径', staleFix:'改成这次的路径', updated:'已更新', hasTip:p => `已有 ${p} · 会再加一条`,
     staleHead:' 的路径已不在', staleUpdate:'更新', staleIgnore:'忽略',
     overlapTitle:n => `${n} 个身份覆盖这里`, onlyUse:n => `这里只用 ${n}`, removeFrom:(n, p) => `从 ${n} 去掉 ${p}`, boundTo:n => `已绑到 ${n}`,
+    noAuthor:'提交没有作者', noAuthorTip:'这个仓库读不到 user.email，提交时 Git 会报错或自己猜一个地址。',
+    commitsAs:'提交会署名为 ', otherTip:(e, n, w) => `仓库的 user.email 是 ${e}，属于 ${n}，不是 ${w}。`,
+    unknownTip:e => `仓库的 user.email 是 ${e}，没有身份用这个邮箱。`,
+    pushesWith:'推送会用 ', keyTip:(p, w) => `core.sshCommand 指定了 ${p}，不是 ${w} 的密钥。`, owner:n => `（${n}）`,
   },
   en: {
     quit:'Quit', settings:'Settings', about:'About Idset', recheck:'Re-check',
@@ -215,12 +230,17 @@ const TEXT = {
     staleKeep:'Keep Old Path', staleFix:'Change to This Path', updated:'Updated', hasTip:p => `Has ${p} · adds another`,
     staleHead:'’s folder is gone', staleUpdate:'Update', staleIgnore:'Ignore',
     overlapTitle:n => `${n} identities cover this folder`, onlyUse:n => `Use only ${n} here`, removeFrom:(n, p) => `Remove ${p} from ${n}`, boundTo:n => `Bound to ${n}`,
+    noAuthor:'Commits have no author', noAuthorTip:'This repository has no user.email, so Git will stop at the commit or guess an address.',
+    commitsAs:'Commits use ', otherTip:(e, n, w) => `This repository’s user.email is ${e}, which belongs to ${n}, not ${w}.`,
+    unknownTip:e => `This repository’s user.email is ${e}, which no identity uses.`,
+    pushesWith:'Pushes use ', keyTip:(p, w) => `core.sshCommand picks ${p}, not ${w}’s key.`, owner:n => ` (${n})`,
   },
 };
 const STATES = {
   list:'有身份', over:'拖着经过', filter:'筛选', nofilter:'筛选无结果', checking:'正在查看', matched:'已匹配（父目录）', exact:'已匹配（可解绑）', rebind:'⋯ 菜单', copied:'已复制',
   overlap:'多个身份覆盖', covered:'已覆盖，没改', undo:'撤销条', undone:'撤销之后',
   stale:'旧路径失效（改名）', 'stale-moved':'旧路径失效（挪位置）', 'stale-fixed':'改成这次的路径之后', 'stale-kept':'保留旧路径之后',
+  'check-noemail':'核对：没有邮箱', 'check-other':'核对：别的身份', 'check-unknown':'核对：陌生邮箱', 'check-key':'核对：别的密钥', 'check-many':'核对：多条，长值',
   nomatch:'没有匹配', confirm:'改绑到全局身份', notrepo:'不是仓库', notfolder:'不是文件夹', giterror:'git 失败', empty:'没有身份', loading:'读取中', readonly:'读不出来',
 };
 const ids = [
@@ -232,7 +252,7 @@ const ids = [
 // A path in one line: its start ("~/", "/" or a drive) and its last folder stay, what lies between them gives way to an ellipsis; the title carries the full text.
 const mid = (p, suffix = '', tip = p) => {
   const [, lead = '', body = '', last = ''] = p.match(/^(~\/|[A-Za-z]:\/|\/)?(?:(.*?)\/)?([^/]+\/?)$/);
-  return `<span class="mid" data-tip="${tip}"><span class="ml">${lead}</span><span class="mh">${body}</span><span class="mt">${body ? '/' : ''}${last}${suffix}</span></span>`;
+  return `<span class="mid"${tip ? ` data-tip="${tip}"` : ''}><span class="ml">${lead}</span><span class="mh">${body}</span><span class="mt">${body ? '/' : ''}${last}${suffix}</span></span>`;
 };
 const [work, personal, client, unnamed] = ids;
 const workExact = { ...work, scope:['~/work/api/', '~/src/new/'] };
@@ -243,6 +263,9 @@ const noGlobal = [work, client, unnamed];
 const staleRename = { ...work, scope:['~/projects/api-old/', '~/src/new/'] };
 const staleFixed = { ...work, scope:['~/projects/api/', '~/src/new/'] };
 const staleMoved = { ...work, scope:['~/Documents/archive/2023/legacy-services/payments-gateway/', '~/src/new/'] };
+// Identity check samples: client's email, one no identity has, a key that is not work's; and long ones for check-many.
+const clientLong = { ...client, email:'robert.fitzgerald-baker@client.example' };
+const strayEmail = 'someone@example.org', otherKey = '~/.ssh/id_other', longKey = '~/.ssh/clients/northwind-traders/id_ed25519_deploy';
 const swap = (set, from, to) => set.map(i => i === from ? to : i);
 const icon = {
   copy:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="5.5" y="5.5" width="8" height="8" rx="1.5"/><path d="M10.5 3.5v-.5a1 1 0 0 0-1-1h-6a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h.5"/></svg>',
@@ -255,6 +278,8 @@ const icon = {
   more:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M3.5 8h.01M8 8h.01M12.5 8h.01"/></svg>',
   arrow:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9.5 4.5L13 8l-3.5 3.5"/></svg>',
   minus:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M3.5 8h9"/></svg>',
+  // Error: a circle with an exclamation mark (exclamationmark.circle), the Info glyph's strokes turned upside down.
+  error:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="8" cy="8" r="6.25"/><path d="M8 4.9v3.8"/><path d="M8 11.1v.1" stroke-width="1.8"/></svg>',
   pin:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9.6 2.4l4 4-1.5.6-2.3 2.3.2 2.4-.9.9-5-5 .9-.9 2.4.2 2.3-2.3z"/><path d="M5.7 10.3L2.5 13.5"/></svg>',
   // The chrome glyphs: 16 x 16 line drawings, 1.5 stroke, as ui.Icon SVGs (no icon set; named after the SF Symbols they stand for).
   gear:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M6.91 3.12L7.14 1.46L8.86 1.46L9.09 3.12L10.68 3.78L12.02 2.77L13.23 3.98L12.22 5.32L12.88 6.91L14.54 7.14L14.54 8.86L12.88 9.09L12.22 10.68L13.23 12.02L12.02 13.23L10.68 12.22L9.09 12.88L8.86 14.54L7.14 14.54L6.91 12.88L5.32 12.22L3.98 13.23L2.77 12.02L3.78 10.68L3.12 9.09L1.46 8.86L1.46 7.14L3.12 6.91L3.78 5.32L2.77 3.98L3.98 2.77L5.32 3.78z"/><circle cx="8" cy="8" r="2"/></svg>',
@@ -298,10 +323,22 @@ function panel(state, T) {
     const i = o.id || work, path = o.path || '~/work/api';
     const menu = `<div class="menu"><div class="mhead">${T.rebind}</div>${[personal, client, unnamed].map((m, n) => `<div class="entry${n === 0 ? ' hot' : ''}">${dot(m)}<span class="label">${name(m)}</span><span class="tag">${m.scope ? m.scope[0] : T.global}</span></div>`).join('')}${o.exact ? `<div class="msep"></div><div class="entry"><span class="label">${T.unbind}</span></div>` : ''}</div>`;
     const status = o.ack ? ack(T.updated) : o.covered ? ack(T.coveredBy('~/work/'), T.coveredNote(name(work), '~/work/')) : o.copied ? ack(T.copied) : '';
-    return result('', path, `
+    return result(o.finds ? findsKind(o.finds) : '', path, `
       <div class="who">${avatar(i)}<div><div class="name">${name(i)}</div><div class="uses">${T.uses}</div></div></div>
-      <div class="kv"><span>${T.alias}</span><span class="mono">${i.alias}</span><span>${T.email}</span><span>${i.email}</span><span>${T.folders}</span><span class="mono paths">${i.scope ? i.scope.map(p => `<span>${p}</span>`).join('') : T.global}</span></div>${o.confirm ? confirmBlock : ''}${o.foot || ''}`,
+      <div class="kv"><span>${T.alias}</span><span class="mono">${i.alias}</span><span>${T.email}</span><span>${i.email}</span><span>${T.folders}</span><span class="mono paths">${i.scope ? i.scope.map(p => `<span>${p}</span>`).join('') : T.global}</span></div>${o.finds ? findings(o.finds) : ''}${o.confirm ? confirmBlock : ''}${o.foot || ''}`,
       status + ghost('folder', T.openFinder) + ghost(o.copied ? 'check' : 'copy', T.copy) + `<span class="menuwrap">${ghost('more', T.more)}${o.menu ? menu : ''}</span>` + ghost('x', T.clear, true));
+  };
+  // Identity check: one line per finding, a severity glyph and a short sentence; the explanation, with the full value, is the row's tooltip.
+  // ?tip=finding pins the first row's tooltip. The card's outline takes the highest severity.
+  const findsKind = fs => fs.some(f => f.sev === 'danger') ? 'danger' : 'warning';
+  const email = e => { const at = e.lastIndexOf('@'); return `<span class="give">${e.slice(0, at)}</span><span>${e.slice(at)}</span>`; };
+  const find = (f, n) => `<div class="find ${f.sev} tip-start${n === 0 && view.tip === 'finding' ? ' pinned' : ''}" data-tip="${f.tip}">${icon[f.sev === 'danger' ? 'error' : 'warn']}<span class="says">${f.says}</span></div>`;
+  const findings = fs => `<div class="finds">${fs.map(find).join('')}</div>`;
+  const check = {
+    noemail: { sev:'warning', says:`<span class="give">${T.noAuthor}</span>`, tip:T.noAuthorTip },
+    other: who => ({ sev:'danger', says:`<span>${T.commitsAs}</span>${email(who.email)}<span>${T.owner(name(who))}</span>`, tip:T.otherTip(who.email, name(who), name(work)) }),
+    unknown: { sev:'warning', says:`<span>${T.commitsAs}</span>${email(strayEmail)}`, tip:T.unknownTip(strayEmail) },
+    key: p => ({ sev:'danger', says:`<span>${T.pushesWith}</span>${mid(p, '', '')}`, tip:T.keyTip(p, name(work)) }),
   };
   // A bind row shows only the first folder of the identity; "has it, and adds another" is in the tooltip.
   const bindRow = i => `<div class="row">${dot(i)}<div class="lines"><span class="label">${name(i)}</span><span class="note">${mid(i.scope[0], '', T.hasTip(i.scope[0]))}</span></div><span class="go">${T.bind}</span></div>`;
@@ -337,6 +374,11 @@ function panel(state, T) {
     rebind: matched({ id:workExact, exact:true, menu:true }) + drop() + list(swap(withGlobal, work, workExact)),
     confirm: matched({ id:workExact, exact:true, confirm:true }) + drop() + list(swap(withGlobal, work, workExact)),
     copied: matched({ copied:true }) + drop() + list(),
+    'check-noemail': matched({ finds:[check.noemail] }) + drop() + list(),
+    'check-other': matched({ finds:[check.other(client)] }) + drop() + list(),
+    'check-unknown': matched({ finds:[check.unknown] }) + drop() + list(),
+    'check-key': matched({ finds:[check.key(otherKey)] }) + drop() + list(),
+    'check-many': matched({ finds:[check.other(clientLong), check.key(longKey)] }) + drop() + list(swap(withGlobal, client, clientLong)),
     overlap: overlap() + matched({ id:client, path:'~/work/client/app' }) + drop() + list(),
     covered: matched({ covered:true }) + drop() + list(),
     undo: matched({ id:workBound, path:'~/scratch/notes', exact:true, foot:undoBar(work) }) + drop() + list(swap(noGlobal, work, workBound)),

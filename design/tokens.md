@@ -28,7 +28,8 @@ Mockups show the 4 DIP unit and 13 px text.
 | menu-entry | `t.Space(8)` | 32 | entry of the rebind menu; the stacked actions of the overlap card |
 | bar-undo | `t.Space(9)` | 36 | undo bar of a result card; the stale-path prompt's Update and Ignore row |
 | bar-actions | `t.Space(10)` | 40 | the stale-path prompt's header; the "New Identity" row of the bind list |
-| path-row | `t.Space(7)` | 28 | the two path rows of the stale-path prompt |
+| path-row | `t.Space(7)` | 28 | the two path rows of the stale-path prompt; a finding row of the identity check |
+| finding-section | `t.Space(1)` | 4 | above and below the finding rows, under their hairline |
 | row-bind | `t.Space(11)` | 44 | bind row, overlap row |
 | button-confirm | `t.Space(7)` high, `t.Space(20)` wide | 28 x 80 | Cancel and Bind of the confirm block; both the same size |
 | menu-width | `t.Space(56)` | 224 | the card menu ("Rebind to", identities, "Unbind"); its heading is 28 high |
@@ -81,8 +82,8 @@ accent color and contrast settings, so mockups approximate it.
 | `AccentHover` | `#1d4ed8` | `#60a5fa` | hovered primary button |
 | `AccentPressed` | `#1e40af` | `#2563eb` | pressed primary button |
 | `AccentText` | `#ffffff` | `#ffffff` | text on the accent |
-| `Danger` | `#dc2626` | `#ef4444` | `git` failed card; read-only warning (fill at 14%); save error, field error, the Delete text button and the confirming Delete button |
-| `Warning` | `#d97706` | `#f59e0b` | outline of cards without a match |
+| `Danger` | `#dc2626` | `#ef4444` | `git` failed card; read-only warning (fill at 14%); save error, field error, the Delete text button and the confirming Delete button; error glyph of a finding, outline of a matched card with an error finding |
+| `Warning` | `#d97706` | `#f59e0b` | outline of cards without a match; warning glyph of a finding, outline of a matched card whose worst finding is a warning |
 | `Success` | `#16a34a` | `#22c55e` | not used yet |
 | `Selection` | `rgba(37, 99, 235, 0.25)` | `rgba(59, 130, 246, 0.4)` | drop zone fill while dragging over; selected text |
 | `Focus` | `rgba(37, 99, 235, 0.55)` | `rgba(96, 165, 250, 0.6)` | keyboard focus ring |

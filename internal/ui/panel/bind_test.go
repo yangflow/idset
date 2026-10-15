@@ -644,12 +644,12 @@ func TestOverlapShowsTheFolderOnce(t *testing.T) {
 	if n := count(tt, "Clear result"); n != 1 {
 		t.Errorf("%d clear buttons", n)
 	}
-	if n := count(tt, "app"); n != 1 {
+	if n := count(tt, "work/client/app"); n != 1 {
 		t.Errorf("the folder shows %d times: %q", n, tt.Texts())
 	}
 	// The overlap card comes first and starts with its title; the matched card's context line is under it.
 	title, _ := tt.Find("2 identities cover this folder")
-	path, _ := tt.Find("app")
+	path, _ := tt.Find("work/client/app")
 	if title.Y >= path.Y {
 		t.Errorf("title %v, path %v", title, path)
 	}

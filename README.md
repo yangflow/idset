@@ -27,6 +27,9 @@ Working now:
   most recently used first, with a filter once there are three or more.
 - **Drop a folder to check it.** Drop a project folder into the panel, or choose one, to see which identity Git
   uses there.
+- **Check the repository against the identity.** After a match, the card says when the repository's own
+  `user.email` is missing, belongs to another identity or to none, or when its `core.sshCommand` picks a different
+  key, so commits and pushes would not be as that identity.
 - **Bind from the result card.** Bind a folder to an identity, unbind it, move it to another one, or settle several
   identities covering the same folder, all from the card for a dropped folder. Binding, rebinding and "Use only"
   can be undone for five seconds.

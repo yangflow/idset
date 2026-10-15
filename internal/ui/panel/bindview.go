@@ -93,7 +93,14 @@ func (s *Screen) matchedCard(c *ui.Context, r *match.Result, a account.Account) 
 			}
 		},
 	}
-	s.frame(c, "result", t.Border, r.Root, h, func() {
+	border := t.Border
+	switch match.Worst(r.Findings) {
+	case match.Error:
+		border = t.Danger
+	case match.Warning:
+		border = t.Warning
+	}
+	s.frame(c, "result", border, r.Root, h, func() {
 		ui.Row(c).Gap(t.Space(3)).Padding(t.Space(3.5), t.Space(3), t.Space(2.5), t.Space(3)).AlignItems(ui.Center).Children(func() {
 			badge(c, a, t.Space(9), 9, t.Rem(1.25))
 			ui.Column(c).Gap(t.Space(0.25)).Children(func() {
@@ -122,6 +129,7 @@ func (s *Screen) matchedCard(c *ui.Context, r *match.Result, a account.Account) 
 			// Each folder has its own line.
 			detail(s.text.Folders, s.folderLines(a), !a.Scope.Global && len(usablePaths(a)) > 0)
 		})
+		s.findings(c, r, a)
 		s.confirmBlock(c)
 		if s.failure != "" {
 			s.bar(c, s.failure, t.Danger)
@@ -375,5 +383,118 @@ func (s *Screen) staleCard(c *ui.Context, st *match.Stale, a account.Account, ro
 		if s.failure != "" {
 			s.bar(c, s.failure, t.Danger)
 		}
+	})
+}
+
+// said is a finding as the card says it: a short sentence of a lead, a value that gives way when the line is
+// short, and a tail that does not, and the full reason for the tooltip and the accessible name.
+type said struct {
+	severity          match.Severity
+	lead, value, tail string
+	path              bool
+	why               string
+}
+
+func (d said) sentence() string { return d.lead + d.value + d.tail }
+
+func (s *Screen) describe(f match.Finding, a account.Account) said {
+	d := said{severity: f.Severity(), value: f.Value}
+	switch f.Kind {
+	case match.NoEmail:
+		d.lead, d.why = s.text.FindNoEmail, s.text.FindNoEmailTip
+	case match.OtherEmail:
+		if owner, ok := s.find(f.Owner); ok {
+			d.lead, d.tail = s.text.FindCommits, fmt.Sprintf(s.text.FindOwner, s.label(owner))
+			d.why = fmt.Sprintf(s.text.FindOtherTip, f.Value, s.label(owner), s.label(a))
+			break
+		}
+		// The owner is gone since the check; what is left is an email no identity uses.
+		fallthrough
+	case match.UnknownEmail:
+		d.lead, d.why = s.text.FindCommits, fmt.Sprintf(s.text.FindUnknownTip, f.Value)
+		d.severity = match.Warning
+	case match.OtherKey:
+		d.lead, d.path, d.value = s.text.FindPushes, true, s.env.Tilde(f.Value)
+		d.why = fmt.Sprintf(s.text.FindKeyTip, d.value, s.label(a))
+	}
+	return d
+}
+
+// findings is the identity check under the details of the matched card: a hairline, then a row for each
+// disagreement between the repository and the identity. There are no buttons; the reason is the tooltip.
+func (s *Screen) findings(c *ui.Context, r *match.Result, a account.Account) {
+	if len(r.Findings) == 0 {
+		return
+	}
+	t := c.Theme()
+	ui.Divider(c)
+	ui.Column(c).PaddingY(t.Space(1)).Children(func() {
+		for i, f := range r.Findings {
+			d := s.describe(f, a)
+			icon, color := icons.Warn, t.Warning
+			if d.severity == match.Error {
+				icon, color = icons.Error, t.Danger
+			}
+			row := ui.Row(c.Key(fmt.Sprintf("finding-%d", i))).Height(t.Space(7)).PaddingX(t.Space(3)).Gap(t.Space(1.5)).AlignItems(ui.Center).
+				MinWidth(0).Label(d.sentence() + s.text.Then + d.why).Description(d.why).Children(func() {
+				ui.Icon(c, icon).FontSize(t.Rem(1.1)).TextColor(color).Shrink(0)
+				s.findingLine(c, d)
+			})
+			tipAbove(c, row, d.why)
+		}
+	})
+}
+
+// findingLine is the sentence of a finding on one line. A long email gives way before its "@", so that the domain
+// and the identity name stay; a key path gives way in its middle like any path. The reason is the tooltip.
+func (s *Screen) findingLine(c *ui.Context, d said) {
+	t := c.Theme()
+	space := t.Rem(0.28)
+	piece := func(text string) ui.Element {
+		left, right := float32(0), float32(0)
+		if strings.HasPrefix(text, " ") {
+			left = space
+		}
+		if strings.HasSuffix(text, " ") {
+			right = space
+		}
+		return ui.Text(c, strings.TrimSpace(text)).FontSize(t.Rem(0.9)).SingleLine().Shrink(0).Padding(0, right, 0, left)
+	}
+	ui.Row(c).Grow(1).MinWidth(0).AlignItems(ui.Center).Children(func() {
+		piece(d.lead)
+		switch {
+		case d.path:
+			pathLine(c, d.value, "", d.why, pathFace{mono: true, size: t.Rem(0.9), color: t.Text})
+		case d.value != "":
+			// The text gives way before the "@" and the ellipsis carries the domain and the name, so that what
+			// the width leaves over after the cut stays at the end of the line, not before the "@".
+			domain := ""
+			if at := strings.LastIndex(d.value, "@"); at >= 0 {
+				domain = d.value[at:]
+			}
+			ui.Text(c, d.value+d.tail).FontSize(t.Rem(0.9)).SingleLine().Ellipsis("…" + domain + d.tail).MinWidth(0)
+		}
+		if d.tail != "" && (d.path || d.value == "") {
+			piece(d.tail)
+		}
+	})
+}
+
+// tipAbove is the tooltip of anchor placed as the mockup has it: above it, 6 DIPs away, its start under the anchor's
+// start, at most 240 DIPs wide, which Element.Tooltip does not offer (it goes by the pointer, below it, 320 wide).
+func tipAbove(c *ui.Context, anchor ui.Element, text string) {
+	t := c.Theme()
+	fill, ink := t.Inverse, t.InverseText
+	if fill == (ui.Color{}) {
+		fill = t.Text
+	}
+	if ink == (ui.Color{}) {
+		ink = t.Background
+	}
+	ui.TooltipBase(c, anchor, func(tip ui.Element) {
+		tip.AttachTo(anchor, ui.AnchorTopLeft, ui.AnchorBottomLeft).Margin(t.Space(1.5), 0, 0, 0)
+		tip.MaxWidth(t.Space(60)).Padding(t.Space(1), t.Space(2)).Radius(t.Space(1.5)).
+			Background(fill).TextColor(ink).FontSize(t.Rem(0.75))
+		tip.Children(func() { ui.Text(c, text) })
 	})
 }
