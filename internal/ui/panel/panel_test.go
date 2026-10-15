@@ -91,7 +91,7 @@ func TestEveryLanguageHasEveryText(t *testing.T) {
 
 func TestLoadingAndReadOnly(t *testing.T) {
 	s, tt, rec := screen(t)
-	if !tt.HasText("Reading configuration…") || tt.HasText("Drop a project folder here") {
+	if !tt.HasText("Reading configuration…") || tt.HasText("Drop a folder, or") {
 		t.Fatalf("loading: %v", tt.Texts())
 	}
 	s.goos = "darwin"
@@ -102,9 +102,19 @@ func TestLoadingAndReadOnly(t *testing.T) {
 			t.Fatalf("missing %q: %v", want, tt.Texts())
 		}
 	}
-	if tt.HasText("Drop a project folder here") {
+	if tt.HasText("Drop a folder, or") || tt.HasText("Add Identity") {
 		t.Fatal("nothing else shows while read-only")
 	}
+	// The short line names the state; the full sentence and the parser error are tooltips.
+	want(t, tt, "Read-only until fixed")
+	wantNot(t, tt, "Idset will not write to it")
+	sw, sh := size(t, tt, "Show in Finder")
+	rw, rh := size(t, tt, "Read Again")
+	if !same(sw, rw) || !same(sh, rh) {
+		t.Errorf("the two buttons are the same size: %v x %v, %v x %v", sw, sh, rw, rh)
+	}
+	within(t, tt, "accounts.json cannot be read", "~/.config/idset/accounts.json", "unexpected end of JSON input", "Read-only until fixed",
+		"Show in Finder", "Read Again")
 	if err := tt.Click("Read Again"); err != nil {
 		t.Fatal(err)
 	}
@@ -114,6 +124,19 @@ func TestLoadingAndReadOnly(t *testing.T) {
 	if rec.reloaded != 1 || !slices.Equal(rec.revealed, []string{"/home/ada/.config/idset/accounts.json"}) {
 		t.Fatalf("actions: %d %v", rec.reloaded, rec.revealed)
 	}
+	if tip := hover(t, tt, "Read-only until fixed"); !tip("Idset will not write to it until it is fixed or restored from a backup.") {
+		t.Errorf("the full sentence is the tooltip: %q", tt.Texts())
+	}
+	long := strings.Repeat("invalid character '}' looking for beginning of object key string ", 6)
+	s.SetAccounts(nil, fmt.Errorf("accounts.json cannot be read: %w", errors.New(long)), "/home/ada/.config/idset/accounts.json")
+	tt.Frame()
+	_, line := size(t, tt, "Read-only until fixed")
+	if _, h := size(t, tt, long); h > 2*line+1 {
+		t.Errorf("the parser error takes at most two lines: %v, a line %v", h, line)
+	}
+	within(t, tt, "accounts.json cannot be read", long, "Read-only until fixed", "Show in Finder", "Read Again")
+	s.SetAccounts(nil, fmt.Errorf("accounts.json cannot be read: %w", errors.New("unexpected end of JSON input")), "/home/ada/.config/idset/accounts.json")
+	tt.Frame()
 	s.Drop([]string{"/home/ada/x"})
 	if s.checking != "" {
 		t.Fatal("no drops while read-only")
@@ -132,9 +155,24 @@ func TestEmpty(t *testing.T) {
 	s := New(Text("en"), env, r.actions())
 	s.SetAccounts(nil, nil, "")
 	tt = ui.NewTester(s.View, 340, 480)
-	if !tt.HasText("No identities yet") || !tt.HasText("Drop a project folder here") {
+	if !tt.HasText("No identities yet") || !tt.HasText("Drop a folder, or") {
 		t.Fatalf("empty: %v", tt.Texts())
 	}
+	// One centered block, the drop zone under it, and the only Add Identity is the block's.
+	head, _ := tt.Find("No identities yet")
+	hint, _ := tt.Find("Give each folder its own Git and SSH identity.")
+	add, _ := tt.Find("Add Identity")
+	drop, _ := tt.Find("Drop a folder, or")
+	if !(head.Y < hint.Y && hint.Y < add.Y && add.Y < drop.Y) {
+		t.Errorf("title, line, button, then the drop zone: %v %v %v %v", head, hint, add, drop)
+	}
+	if d := (head.X + head.W/2) - (add.X + add.W/2); d > 1 || d < -1 {
+		t.Errorf("the block is centered: %v %v", head, add)
+	}
+	if n := count(tt, "Add Identity"); n != 1 {
+		t.Errorf("Add Identity shows %d times", n)
+	}
+	within(t, tt, "No identities yet", "Give each folder its own Git and SSH identity.", "Add Identity", "Drop a folder, or", "Choose Folder…")
 	if err := tt.Click("Choose Folder…"); err != nil || r.chosen != 1 {
 		t.Fatalf("choose: %v %d", err, r.chosen)
 	}
@@ -229,7 +267,7 @@ func TestDropAndMatchedResult(t *testing.T) {
 		t.Fatalf("resolve: %v", r.resolved)
 	}
 	tt.Frame()
-	if !tt.HasText("Checking…") || !tt.HasText("~/work/api") || !tt.HasText("Drop another folder, or") || tt.HasText("Clear result") {
+	if !tt.HasText("Checking…") || !shows(tt, "~/work/api") || !tt.HasText("Drop a folder, or") || tt.HasText("Clear result") {
 		t.Fatalf("checking: %v", tt.Texts())
 	}
 	s.SetResult("/home/ada/elsewhere", match.Result{Kind: match.NoMatch}, nil)
@@ -271,7 +309,7 @@ func TestDropAndMatchedResult(t *testing.T) {
 	if err := tt.Click("Clear result"); err != nil {
 		t.Fatal(err)
 	}
-	if s.Result() != nil || s.Tooltip() != "Idset" || !tt.HasText("Drop a project folder here") {
+	if s.Result() != nil || s.Tooltip() != "Idset" || !tt.HasText("Drop a folder, or") {
 		t.Fatalf("clear: %v", tt.Texts())
 	}
 }
@@ -284,7 +322,7 @@ func TestUnresolvedResults(t *testing.T) {
 		s.Drop([]string{"/home/ada/scratch"})
 		s.SetResult("/home/ada/scratch", match.Result{Kind: kind, Dir: "/home/ada/scratch"}, nil)
 		tt.Frame()
-		if !tt.HasText(want) || !tt.HasText("~/scratch") {
+		if !tt.HasText(want) || !shows(tt, "~/scratch") {
 			t.Errorf("%v: %v", kind, tt.Texts())
 		}
 		if got := tt.Announcements(); !slices.Equal(got, []string{want}) {
@@ -295,11 +333,16 @@ func TestUnresolvedResults(t *testing.T) {
 		}
 	}
 	s.Drop([]string{"/home/ada/scratch"})
-	s.SetResult("/home/ada/scratch", match.Result{}, errors.New("exec: \"git\": executable file not found"))
+	reason := strings.Repeat("exec: \"git\": executable file not found in $PATH ", 8)
+	s.SetResult("/home/ada/scratch", match.Result{}, errors.New(reason))
 	tt.Frame()
-	if !slices.ContainsFunc(tt.Texts(), func(s string) bool { return strings.HasPrefix(s, "Could not run git") }) {
-		t.Errorf("git error: %v", tt.Texts())
+	// A short headline, and the reason in at most two lines.
+	want(t, tt, "Could not run git", reason)
+	_, line := size(t, tt, "Could not run git")
+	if _, h := size(t, tt, reason); h > 2*line+1 {
+		t.Errorf("the reason takes at most two lines: %v, a line %v", h, line)
 	}
+	within(t, tt, "Could not run git", reason)
 	if got := tt.Announcements(); len(got) != 1 || !strings.HasPrefix(got[0], "Could not run git") {
 		t.Errorf("git error announced %v", got)
 	}
@@ -328,7 +371,7 @@ func TestChineseCopy(t *testing.T) {
 	s := New(Text("zh-Hans"), env, r.actions())
 	s.SetAccounts([]account.Account{identity("", "", "", account.Custom, 0)}, nil, "")
 	tt := ui.NewTester(s.View, 340, 480)
-	for _, want := range []string{"把项目文件夹拖到这里", "（未命名）", "没有邮箱", "全局", "身份", "退出", "添加身份"} {
+	for _, want := range []string{"拖入文件夹，或", "选择…", "（未命名）", "没有邮箱", "全局", "身份", "退出", "添加身份"} {
 		if !tt.HasText(want) {
 			t.Errorf("missing %q: %v", want, tt.Texts())
 		}
@@ -364,5 +407,95 @@ func TestManyIdentitiesScrollAndKeepTheFooterReachable(t *testing.T) {
 	}
 	if got, _ := tt.Find("Quit"); got != quit {
 		t.Fatalf("the footer does not move: %v %v", got, quit)
+	}
+}
+
+// count is how many texts or labels of the frame are text.
+func count(tt *ui.Tester, text string) int {
+	n := 0
+	for _, s := range tt.Texts() {
+		if s == text {
+			n++
+		}
+	}
+	return n
+}
+
+// within checks that each element is drawn whole between the title row and the footer, and inside the panel's
+// width.
+func within(t *testing.T, tt *ui.Tester, names ...string) {
+	t.Helper()
+	title, _ := tt.Find("Idset")
+	quit, ok := tt.Find("Quit")
+	if !ok {
+		quit, ok = tt.Find("退出")
+	}
+	if !ok {
+		t.Fatalf("no footer in %q", tt.Texts())
+	}
+	for _, name := range names {
+		r, ok := tt.Find(name)
+		switch {
+		case !ok:
+			t.Errorf("no %q in %q", name, tt.Texts())
+		case r.W <= 0 || r.H <= 0 || r.X < 0 || r.X+r.W > 340 || r.Y < title.Y+title.H || r.Y+r.H > quit.Y:
+			t.Errorf("%q is cut off at %v (title %v, footer %v)", name, r, title, quit)
+		}
+	}
+}
+
+// hover rests the pointer on the element and waits for its tooltip; the result tells whether a text shows then.
+func hover(t *testing.T, tt *ui.Tester, name string) func(text string) bool {
+	t.Helper()
+	r, ok := tt.Find(name)
+	if !ok {
+		t.Fatalf("no %q in %q", name, tt.Texts())
+	}
+	tt.Move(r.X+r.W/2, r.Y+r.H/2)
+	time.Sleep(700 * time.Millisecond)
+	tt.Frame()
+	return func(text string) bool { return slices.Contains(tt.Texts(), text) }
+}
+
+func TestTitleRowAndFooterAreCompactAndEquallyHigh(t *testing.T) {
+	for _, goos := range []string{"darwin", "windows", "linux"} {
+		s, tt, _ := screen(t, identity("work", "w", "w@example.com", account.GitHub, 0, "~/work/"))
+		s.goos = goos
+		tt.Frame()
+		title, _ := tt.Find("Idset")
+		add, _ := tt.Find("Add Identity")
+		quit, _ := tt.Find("Quit")
+		// The title is centered in its row as the icons are in theirs, so the rows are as high as each other.
+		top := title.Y + title.H/2
+		bottom := 480 - (quit.Y + quit.H/2)
+		if d := top - bottom; d > 1 || d < -1 {
+			t.Errorf("%s: the title row is %v high, the footer %v", goos, 2*top, 2*bottom)
+		}
+		// Both footer buttons are the same small square, Add on the left and Quit on the right, inside the row.
+		if !same(add.W, add.H) || !same(add.W, quit.W) || !same(add.H, quit.H) || add.X >= quit.X || quit.H >= 2*bottom {
+			t.Errorf("%s: add %v quit %v in a footer of %v", goos, add, quit, 2*bottom)
+		}
+		// Only actions that work today.
+		for _, planned := range []string{"Settings", "About Idset", "Re-check"} {
+			if _, ok := tt.Find(planned); ok {
+				t.Errorf("%s: %q is not built yet", goos, planned)
+			}
+		}
+		if count(tt, "Quit") != 1 || count(tt, "Add Identity") != 1 {
+			t.Errorf("%s: one of each: %q", goos, tt.Texts())
+		}
+	}
+	// Each icon has its name as the tooltip.
+	_, tt, _ := screen(t, identity("work", "w", "w@example.com", account.GitHub, 0, "~/work/"))
+	if tip := hover(t, tt, "Quit"); count(tt, "Quit") != 2 || !tip("Quit") {
+		t.Errorf("Quit has a tooltip: %q", tt.Texts())
+	}
+	// In the empty state the block has the only Add; the footer keeps Quit.
+	r := &recorder{}
+	s := New(Text("zh-Hans"), env, r.actions())
+	s.SetAccounts(nil, nil, "")
+	tt = ui.NewTester(s.View, 340, 480)
+	if _, ok := tt.Find("退出"); !ok || count(tt, "添加身份") != 1 {
+		t.Errorf("empty footer: %q", tt.Texts())
 	}
 }

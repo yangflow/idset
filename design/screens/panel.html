@@ -5,8 +5,8 @@
 <title>Panel</title>
 <style>
 /* Colors are the MyGo default theme roles and sizes the 4 DIP spacing unit at 13 px text; see design/tokens.md. */
-:root { color-scheme:light; --background:#ffffff; --surface:#f4f4f5; --text:#18181b; --muted:#71717a; --border:#d9d9de; --accent:#2563eb; --accent-soft:rgba(37,99,235,.25); --danger:#dc2626; --warning:#d97706; --ghost-hover:#e9e9ec }
-:root[data-scheme=dark] { color-scheme:dark; --background:#18181b; --surface:#27272a; --text:#f4f4f5; --muted:#a1a1aa; --border:#3f3f46; --accent:#3b82f6; --accent-soft:rgba(59,130,246,.4); --danger:#ef4444; --warning:#f59e0b; --ghost-hover:#323236 }
+:root { color-scheme:light; --background:#ffffff; --surface:#f4f4f5; --text:#18181b; --muted:#71717a; --border:#d9d9de; --accent:#2563eb; --accent-soft:rgba(37,99,235,.25); --danger:#dc2626; --warning:#d97706; --ghost-hover:#e9e9ec; --pressed:#dddde1 }
+:root[data-scheme=dark] { color-scheme:dark; --background:#18181b; --surface:#27272a; --text:#f4f4f5; --muted:#a1a1aa; --border:#3f3f46; --accent:#3b82f6; --accent-soft:rgba(59,130,246,.4); --danger:#ef4444; --warning:#f59e0b; --ghost-hover:#323236; --pressed:#3c3c41 }
 * { box-sizing:border-box }
 body { margin:0; font-family:system-ui,sans-serif; font-size:13px; color:var(--text); background:#888; display:flex; gap:24px; padding:24px; align-items:flex-start }
 .controls { width:220px; flex:none; display:flex; flex-direction:column; gap:14px; padding:14px; border-radius:10px; background:#f4f4f4; color:#242424; font-size:12px }
@@ -17,10 +17,25 @@ body { margin:0; font-family:system-ui,sans-serif; font-size:13px; color:var(--t
 .controls .hint { color:#666; line-height:1.5 }
 .controls kbd { padding:0 4px; border:1px solid #ccc; border-radius:3px; background:#fff; font-size:11px }
 .panel { width:340px; height:480px; flex:none; display:flex; flex-direction:column; background:var(--background); border:1px solid var(--border); border-radius:10px; overflow:hidden }
-header, footer { display:flex; align-items:center; gap:8px; padding:12px 16px }
-header { border-bottom:1px solid var(--border) }
-footer { border-top:1px solid var(--border); justify-content:flex-end }
-h1 { flex:1; margin:0; font-size:15px }
+/* Chrome: the title row and the footer are 36 high (hairline included), the icon buttons 24 x 24 with 16 glyphs, 4 apart. */
+header, footer { display:flex; align-items:center; flex:none; height:36px }
+header { gap:8px; padding:0 8px 0 16px; border-bottom:1px solid var(--border) }
+footer { gap:4px; padding:0 8px; border-top:1px solid var(--border) }
+footer .spacer { flex:1 }
+h1 { flex:1; margin:0; font-size:13px; font-weight:600 }
+.panel button.tool { flex:none; position:relative; width:24px; height:24px; padding:0; display:grid; place-items:center; border:0; border-radius:6px; background:transparent; color:var(--muted); cursor:pointer }
+.panel button.tool:hover { background:var(--ghost-hover) }
+.panel button.tool:active { background:var(--pressed) }
+.panel button.tool.pinned { background:var(--ghost-hover) }
+.tool svg { width:16px; height:16px }
+/* Tooltip: Inverse fill, no shadow; shows on hover, or pinned with ?tip=<name>. */
+.panel [data-tip] { position:relative }
+[data-tip]::after { content:attr(data-tip); position:absolute; z-index:5; display:none; padding:4px 8px; border-radius:6px; background:var(--text); color:var(--background); font-size:12px; font-weight:400; font-family:system-ui,sans-serif; line-height:16px; white-space:normal; width:max-content; max-width:240px; text-align:left; pointer-events:none; bottom:calc(100% + 6px); left:50% ; transform:translateX(-50%) }
+[data-tip].tip-start::after { left:0; transform:none }
+[data-tip].tip-end::after { left:auto; right:0; transform:none }
+[data-tip].tip-below::after { bottom:auto; top:calc(100% + 6px) }
+[data-tip].tip-end::after { text-align:left }
+[data-tip]:hover::after, [data-tip].pinned::after { display:block }
 .content { flex:1; overflow:auto; padding:16px; display:flex; flex-direction:column; gap:12px }
 .content > * { flex-shrink:0 }
 .panel button { padding:5px 10px; border:1px solid var(--border); border-radius:6px; background:var(--surface); color:var(--text); font:inherit }
@@ -28,15 +43,11 @@ h1 { flex:1; margin:0; font-size:15px }
 .panel footer button.text { margin-right:auto }
 .panel button.text { border-color:transparent; background:transparent; padding:5px 4px; color:var(--accent); display:inline-flex; align-items:center; gap:4px; align-self:flex-start }
 .panel button.text svg { width:14px; height:14px }
-.panel button.ghost { width:24px; height:24px; padding:0; display:grid; place-items:center; border:0; background:transparent; color:var(--muted); cursor:pointer }
-.panel button.ghost:hover { background:var(--ghost-hover) }
-.ghost svg { width:14px; height:14px }
 .muted { color:var(--muted) }
 .small { font-size:12px }
 .mono { font-family:ui-monospace,monospace; font-size:12px }
-.drop { border:1.5px dashed var(--border); border-radius:10px; padding:20px 16px; display:flex; flex-direction:column; align-items:center; gap:6px; text-align:center }
+.drop { border:1.5px dashed var(--border); border-radius:10px; padding:8px 12px; display:flex; align-items:center; justify-content:space-between; gap:8px }
 .drop.over { border-color:var(--accent); background:var(--accent-soft) }
-.drop.compact { flex-direction:row; padding:8px 12px; justify-content:space-between; text-align:left }
 .avatar { flex:none; display:grid; place-items:center; font-weight:700; color:rgb(var(--c)); background:rgba(var(--c),.16) }
 :root[data-scheme=dark] .avatar { color:rgb(var(--cl)); background:rgba(var(--c),.24) }
 
@@ -44,14 +55,16 @@ h1 { flex:1; margin:0; font-size:15px }
 .result { border:1px solid var(--border); border-radius:10px; background:var(--surface) }
 .result.warning { border-color:var(--warning) }
 .result.danger { border-color:var(--danger) }
-.result .top { display:flex; align-items:center; gap:4px; padding:8px 8px 8px 12px; border-bottom:1px solid var(--border) }
-.result .top .mono { flex:1; min-width:0; color:var(--muted); overflow-wrap:anywhere }
-.result .copied { font-size:11px; color:var(--muted); margin-right:2px }
+/* The context line is 36 high, hairline included, like the title row and the footer. */
+.result .top { display:flex; align-items:center; gap:4px; height:36px; padding:0 8px 0 12px; border-bottom:1px solid var(--border) }
+.result .top .cluster { flex:0 1 auto; min-width:0; display:flex; align-items:center; gap:4px }
+.result .top .mid { flex:1 0 80px; color:var(--muted) }
+.result .copied { flex:0 1 auto; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:11px; color:var(--muted); margin-right:2px }
 .result .who { display:flex; align-items:center; gap:12px; padding:14px 12px 10px }
 .result .avatar { width:36px; height:36px; border-radius:9px; font-size:16px }
 .result .name { font-size:15px; font-weight:600 }
 .result .uses { font-size:12px; color:var(--muted) }
-.result .kv { display:grid; grid-template-columns:56px 1fr; gap:4px 8px; padding:0 12px 12px 60px; font-size:12px }
+.result .kv { display:grid; grid-template-columns:56px 1fr; align-items:start; gap:4px 8px; padding:0 12px 12px 60px; font-size:12px }
 .result .kv > :nth-child(odd) { color:var(--muted) }
 .result .say { padding:12px; display:flex; align-items:center; gap:8px; font-weight:600 }
 .result .say.plain { font-weight:400 }
@@ -64,6 +77,9 @@ h1 { flex:1; margin:0; font-size:15px }
 .panel button.primary { background:var(--accent); border-color:var(--accent); color:#fff }
 .result .head { padding:0 12px 6px; font-size:12px; font-weight:600; color:var(--muted) }
 .result .say.tight { padding-bottom:8px }
+.result .say .tool { margin-left:auto }
+.result .why { padding:0 12px 12px; font-family:ui-monospace,monospace; font-size:11px; color:var(--muted) }
+.why span, .reason span { display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; overflow-wrap:anywhere }
 .result .row { display:flex; align-items:center; gap:10px; height:44px; padding:0 12px; border-top:1px solid var(--border) }
 .result .row.short { height:40px; padding:0 8px }
 .result .row .dot { flex:none; width:10px; height:10px; border-radius:50%; background:rgb(var(--c)) }
@@ -78,48 +94,47 @@ h1 { flex:1; margin:0; font-size:15px }
 .result .row .verdict { flex:none; display:flex; align-items:center; gap:4px; font-size:12px; color:var(--muted) }
 .result .row .verdict.win { color:var(--accent); font-weight:600 }
 .result .row .verdict svg { width:14px; height:14px }
-.result .row.pick { background:var(--ghost-hover) }
-.result .confirm.nobd { border-top:0 }
-.result .confirm { border-top:1px solid var(--border); padding:12px; display:flex; flex-direction:column; gap:12px }
+.result .confirm { border-top:1px solid var(--border); padding:12px; display:flex; flex-direction:column; gap:10px }
 .result .confirm p { margin:0; line-height:1.45 }
 .result .buttons { display:flex; justify-content:flex-end; gap:8px }
 .result button.text { align-self:center }
 .result .kv .paths { display:flex; flex-direction:column; gap:2px }
-.result .actions { position:relative; display:flex; align-items:center; gap:4px; height:40px; padding:0 8px; border-top:1px solid var(--border) }
-.result .actions .gap { flex:1 }
-.result .menuwrap { display:flex }
-.result .actions button.text svg.chev { width:12px; height:12px }
-.menu { position:absolute; z-index:1; top:calc(100% + 4px); right:8px; width:224px; padding:4px; border:1px solid var(--border); border-radius:8px; background:var(--background) }
+.result .actions { display:flex; align-items:center; justify-content:flex-end; gap:4px; height:36px; padding:0 8px; border-top:1px solid var(--border) }
+.result .menuwrap { position:relative; display:flex }
+.panel button.text.quiet { color:var(--muted) }
+/* The menu ends with the "⋯" button and opens 4 below the context line (the button sits 6 above its bottom). */
+.menu { position:absolute; z-index:4; top:calc(100% + 10px); right:0; width:224px; padding:4px; border:1px solid var(--border); border-radius:8px; background:var(--background) }
+.menu .mhead { height:28px; padding:0 8px; display:flex; align-items:center; font-size:12px; color:var(--muted) }
+.menu .msep { height:1px; margin:4px 0; background:var(--border) }
 .menu .entry { display:flex; align-items:center; gap:8px; height:32px; padding:0 8px; border-radius:6px }
 .menu .entry.hot { background:var(--ghost-hover) }
 .menu .entry .dot { flex:none; width:10px; height:10px; border-radius:50%; background:rgb(var(--c)) }
 :root[data-scheme=dark] .menu .entry .dot { background:rgb(var(--cl)) }
 .menu .entry .label { flex:1 }
 .menu .entry .tag { font-family:ui-monospace,monospace; font-size:11px; color:var(--muted) }
-.result .stack { display:flex; flex-direction:column; align-items:flex-start; padding:4px 8px; border-top:1px solid var(--border) }
-.result .stack button.text { align-self:flex-start }
 .result .bar { position:relative; display:flex; align-items:center; gap:0; min-height:36px; padding:8px 12px; border-top:1px solid var(--border); line-height:1.4 }
-.result .bar.note { font-size:12px; color:var(--muted) }
 .result .bar.timed { height:36px; padding:0 8px 0 12px; border-radius:0 0 9px 9px; overflow:hidden }
 /* The countdown: a 2 DIP line on the bottom edge of the bar, as wide as the time left of the card's width (here 3 of 5 seconds), Accent at 45%. */
 .result .bar.timed::after { content:""; position:absolute; left:0; bottom:0; height:2px; width:var(--left); background:color-mix(in srgb, var(--accent) 45%, transparent) }
 .result .bar button.text { padding:5px 4px }
 /* Stale path prompt: a card of its own above the no-match card; the sentence may wrap, the path inside it breaks anywhere. */
-.result .stale-head { display:flex; align-items:center; gap:10px; height:44px; padding:0 12px }
+.result .stale-head { display:flex; align-items:center; gap:10px; height:40px; padding:0 12px }
 .result .stale-head .dot { flex:none; width:10px; height:10px; border-radius:50%; background:rgb(var(--c)) }
 :root[data-scheme=dark] .result .stale-head .dot { background:rgb(var(--cl)) }
-.result .stale-head .name { flex:0 1 auto; min-width:0; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
 .result .stale-head .rest { flex:1 1 auto; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
-.result .path-row { display:flex; align-items:center; gap:8px; height:36px; padding:0 12px; border-top:1px solid var(--border) }
-.result .path-row .key { flex:none; width:40px; font-size:12px; color:var(--muted) }
+.result .stale-head .name { font-weight:600 }
+.result .path-row.old { border-top:1px solid var(--border) }
+.result .path-row { display:flex; align-items:center; gap:6px; height:28px; padding:0 12px; }
+.result .path-row.old .mid { color:var(--muted) }
+.path-row > svg { flex:none; width:14px; height:14px; color:var(--muted) }
 /* Middle truncation: the start of a path ("~/", "/" or a drive) and its last folder (and any suffix) never shrink; what lies between takes the ellipsis. */
-.mid { display:flex; min-width:0; white-space:pre; font-family:ui-monospace,monospace; font-size:12px }
+.mid { position:relative; display:flex; min-width:0; white-space:pre; font-family:ui-monospace,monospace; font-size:12px }
 .mid .ml { flex:none }
 .mid .mh { min-width:0; overflow:hidden; text-overflow:ellipsis }
 .mid .mt { flex:none }
-.result .path-row .mid { flex:1 }
-.result .overlap-hint { padding:0 12px 10px; font-size:12px; color:var(--muted) }
+.result .path-row .mid { flex:1 1 0 }
 .panel.full { height:auto; min-height:480px }
+.panel .content { min-height:0 }
 
 /* Identity list: a heading with the count, then one grouped list. */
 .section { display:flex; justify-content:space-between; padding:0 2px; margin-bottom:-6px; font-size:12px; font-weight:600; color:var(--muted) }
@@ -134,7 +149,7 @@ h1 { flex:1; margin:0; font-size:15px }
 .item .email { font-size:12px; color:var(--muted) }
 .item .tag { flex:none; max-width:50%; display:flex; font-family:ui-monospace,monospace; font-size:11px; color:var(--muted) }
 .item .tag .mid { font-size:inherit }
-.result .row .note .mid { font:inherit }
+.result .row .note .mid { font-family:ui-monospace,monospace; font-size:11px }
 .item .tag .mid { min-width:0 }
 
 .search { width:100%; padding:6px 8px; border:1px solid var(--border); border-radius:6px; background:var(--surface); color:var(--text); font:inherit }
@@ -146,61 +161,64 @@ h1 { flex:1; margin:0; font-size:15px }
 .spinner { width:16px; height:16px; flex:none; border:2px solid var(--border); border-top-color:var(--accent); border-radius:50% }
 .center .spinner { width:20px; height:20px }
 /* accounts.json cannot be read: nothing else can be done, so the error takes the whole panel. */
-.readonly { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; text-align:center; padding:0 8px }
+.readonly { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; text-align:center; padding:0 8px }
 .readonly .warn { width:44px; height:44px; border-radius:11px; display:grid; place-items:center; color:var(--danger); background:color-mix(in srgb, var(--danger) 14%, transparent) }
 .readonly .warn svg { width:22px; height:22px }
 .readonly .title { font-size:15px; font-weight:600 }
-.readonly .hint { font-size:12px; color:var(--muted); line-height:1.5 }
-.readonly .reason { width:100%; text-align:left; font-family:ui-monospace,monospace; font-size:11px; color:var(--muted); background:var(--background); border:1px solid var(--border); border-radius:6px; padding:6px 8px; overflow-wrap:anywhere }
-.readonly .actions { display:flex; gap:8px; margin-top:4px }
+.readonly .path { font-family:ui-monospace,monospace; font-size:12px; color:var(--muted) }
+.readonly .reason { width:100%; font-family:ui-monospace,monospace; font-size:11px; color:var(--muted); overflow-wrap:anywhere }
+.readonly .hint { font-size:12px; color:var(--muted) }
+.readonly .actions { display:flex; gap:8px; margin-top:8px }
+.panel button.fixed.wide { width:120px }
+.panel button.pad { height:28px; padding:0 16px; margin-top:4px }
+.center .big { font-size:15px }
 </style>
 <aside class="controls">
   <div><h2>State</h2><div class="group" id="states"></div></div>
   <div><h2>Scheme</h2><div class="group" id="schemes"></div></div>
+  <div><h2>Footer icons</h2><div class="group" id="icons"></div></div>
   <div><h2>Height</h2><div class="group" id="heights"></div></div>
   <div><h2>Language</h2><div class="group" id="langs"></div></div>
-  <div class="hint">URL: <code>?state=…&amp;scheme=dark&amp;lang=zh&amp;height=full</code><br><kbd>←</kbd> <kbd>→</kbd> switch state.</div>
+  <div class="hint">URL: <code>?state=…&amp;scheme=dark&amp;lang=zh&amp;icons=today&amp;height=full</code><br><kbd>←</kbd> <kbd>→</kbd> switch state.<br>Pin a tooltip: <code>&amp;tip=quit</code> (settings, add, about, recheck, quit).</div>
 </aside>
-<div class="panel">
-  <header><h1>Idset</h1></header>
-  <div class="content" id="content"></div>
-  <footer><button class="text" id="add"></button><button id="quit"></button></footer>
-</div>
+<div id="stage" style="display:flex;gap:24px;align-items:flex-start"></div>
 <script>
 const TEXT = {
   zh: {
-    close:'隐藏', quit:'退出', loading:'正在读取配置…', dropTitle:'把项目文件夹拖到这里', dropHint:'看看这个目录会用哪个身份推送',
-    choose:'选择文件夹…', dropAgain:'拖入另一个文件夹，或', empty:'还没有身份', emptyHint:'添加一个，让文件夹用上自己的 Git 署名、邮箱和 SSH 密钥。', add:'添加身份',
-    filter:'筛选身份', none:'没有匹配的身份', unnamed:'（未命名）', readonly:'accounts.json 读不出来',
+    quit:'退出', settings:'设置', about:'关于 Idset', recheck:'重新检查',
+    loading:'正在读取配置…', dropLine:'拖入文件夹，或', dropHint:'看看这个目录会用哪个身份推送', choose:'选择文件夹…', chooseShort:'选择…',
+    empty:'还没有身份', emptyHint:'让每个文件夹用自己的 Git 和 SSH 身份。', add:'添加身份',
+    filter:'筛选身份', none:'没有匹配的身份', unnamed:'（未命名）', readonly:'accounts.json 读不出来', readonlyShort:'修好前只读',
     readonlyHint:'修好文件或从备份恢复之前，Idset 不会写入它。', reload:'重新读取', reveal:'在 Finder 中显示', copy:'复制完整路径', copied:'已复制', clear:'清除结果',
-    uses:'Git 在这里用这个身份', alias:'别名', email:'邮箱', folders:'生效目录', global:'全局', noAlias:'没有别名', noEmail:'没有邮箱',
+    uses:'Git 在这里用这个身份', alias:'别名', email:'邮箱', folders:'生效目录', global:'全局', noEmail:'没有邮箱',
     noMatch:'没有身份匹配这个目录', notRepo:'不是 Git 仓库', notFolder:'只能查看文件夹', checking:'正在查看…',
-    gitFailed:'无法运行 git：exec: "git": executable file not found in $PATH', identities:'身份',
-    bindTo:'绑定到', bind:'绑定', globalId:'全局身份', newId:'新建身份并绑到这里', cancel:'取消', rebindDo:'改绑', unbind:'解绑', rebind:'改绑到', openFinder:'在 Finder 中打开',
+    gitFailed:'无法运行 git', gitReason:'exec: "git": executable file not found in $PATH', identities:'身份',
+    bindTo:'绑定到', bind:'绑定', newId:'新建身份并绑到这里', newShort:'新建身份', cancel:'取消', rebindDo:'改绑', unbind:'解绑', rebind:'改绑到', openFinder:'在 Finder 中打开', more:'更多',
     overlapHint:'Git 按这个顺序读取，后面的覆盖前面的', used:'生效', overridden:'被覆盖', undo:'撤销', undone:'已撤销',
-    confirmGlobal:n => `绑定后 ${n} 只在这个文件夹生效，不再全局生效。`, coveredNote:(n, p) => `${n} 的 ${p} 已经覆盖这里，没有改动`,
-    staleKeep:'保留旧路径', staleFix:'改成这次的路径', updated:'已更新', hasPre:'已有 ', hasSuf:' · 会再加一条',
-    staleHead:' 还指向一个已经不在的路径', staleOld:'旧路径', staleNew:'新路径',
+    confirmShort:n => `${n} 将只用于此文件夹`, coveredBy:p => `已由 ${p} 覆盖`, coveredNote:(n, p) => `${n} 的 ${p} 已经覆盖这里，没有改动`,
+    staleKeep:'保留旧路径', staleFix:'改成这次的路径', updated:'已更新', hasTip:p => `已有 ${p} · 会再加一条`,
+    staleHead:' 的路径已不在', staleUpdate:'更新', staleIgnore:'忽略',
     overlapTitle:n => `${n} 个身份覆盖这里`, onlyUse:n => `这里只用 ${n}`, removeFrom:(n, p) => `从 ${n} 去掉 ${p}`, boundTo:n => `已绑到 ${n}`,
   },
   en: {
-    close:'Hide', quit:'Quit', loading:'Reading configuration…', dropTitle:'Drop a project folder here', dropHint:'See which identity pushes from it',
-    choose:'Choose Folder…', dropAgain:'Drop another folder, or', empty:'No identities yet', emptyHint:'Add one to give a folder its own Git name, email and SSH key.', add:'Add Identity',
-    filter:'Filter identities', none:'No matching identities', unnamed:'(unnamed)', readonly:'accounts.json cannot be read',
+    quit:'Quit', settings:'Settings', about:'About Idset', recheck:'Re-check',
+    loading:'Reading configuration…', dropLine:'Drop a folder, or', dropHint:'See which identity pushes from it', choose:'Choose Folder…', chooseShort:'Choose…',
+    empty:'No identities yet', emptyHint:'Give each folder its own Git and SSH identity.', add:'Add Identity',
+    filter:'Filter identities', none:'No matching identities', unnamed:'(unnamed)', readonly:'accounts.json cannot be read', readonlyShort:'Read-only until fixed',
     readonlyHint:'Idset will not write to it until it is fixed or restored from a backup.', reload:'Read Again', reveal:'Show in Finder', copy:'Copy the full path', copied:'Copied', clear:'Clear result',
-    uses:'Git uses this identity here', alias:'Alias', email:'Email', folders:'Folders', global:'Global', noAlias:'no alias', noEmail:'no email',
+    uses:'Git uses this identity here', alias:'Alias', email:'Email', folders:'Folders', global:'Global', noEmail:'no email',
     noMatch:'No identity matches this folder', notRepo:'Not a Git repository', notFolder:'Only folders can be checked', checking:'Checking…',
-    gitFailed:'Could not run git: exec: "git": executable file not found in $PATH', identities:'Identities',
-    bindTo:'Bind to', bind:'Bind', globalId:'Global identity', newId:'New Identity and Bind Here', cancel:'Cancel', rebindDo:'Rebind', unbind:'Unbind', rebind:'Rebind to', openFinder:'Open in Finder',
+    gitFailed:'Could not run git', gitReason:'exec: "git": executable file not found in $PATH', identities:'Identities',
+    bindTo:'Bind to', bind:'Bind', newId:'New Identity and Bind Here', newShort:'New Identity', cancel:'Cancel', rebindDo:'Rebind', unbind:'Unbind', rebind:'Rebind to', openFinder:'Open in Finder', more:'More',
     overlapHint:'Git reads them in this order; the last one wins.', used:'Used', overridden:'Overridden', undo:'Undo', undone:'Undone',
-    confirmGlobal:n => `After binding, ${n} applies only to this folder, not globally.`, coveredNote:(n, p) => `${n} already covers this folder with ${p}. Nothing changed.`,
-    staleKeep:'Keep Old Path', staleFix:'Change to This Path', updated:'Updated', hasPre:'Has ', hasSuf:' · adds another',
-    staleHead:' points to a folder that is gone', staleOld:'Old', staleNew:'New',
+    confirmShort:n => `${n} will apply only here`, coveredBy:p => `Covered by ${p}`, coveredNote:(n, p) => `${n} already covers this folder with ${p}. Nothing changed.`,
+    staleKeep:'Keep Old Path', staleFix:'Change to This Path', updated:'Updated', hasTip:p => `Has ${p} · adds another`,
+    staleHead:'’s folder is gone', staleUpdate:'Update', staleIgnore:'Ignore',
     overlapTitle:n => `${n} identities cover this folder`, onlyUse:n => `Use only ${n} here`, removeFrom:(n, p) => `Remove ${p} from ${n}`, boundTo:n => `Bound to ${n}`,
   },
 };
 const STATES = {
-  list:'有身份', over:'拖着经过', filter:'筛选', nofilter:'筛选无结果', checking:'正在查看', matched:'已匹配（父目录）', exact:'已匹配（可解绑）', rebind:'改绑菜单', copied:'已复制',
+  list:'有身份', over:'拖着经过', filter:'筛选', nofilter:'筛选无结果', checking:'正在查看', matched:'已匹配（父目录）', exact:'已匹配（可解绑）', rebind:'⋯ 菜单', copied:'已复制',
   overlap:'多个身份覆盖', covered:'已覆盖，没改', undo:'撤销条', undone:'撤销之后',
   stale:'旧路径失效（改名）', 'stale-moved':'旧路径失效（挪位置）', 'stale-fixed':'改成这次的路径之后', 'stale-kept':'保留旧路径之后',
   nomatch:'没有匹配', confirm:'改绑到全局身份', notrepo:'不是仓库', notfolder:'不是文件夹', giterror:'git 失败', empty:'没有身份', loading:'读取中', readonly:'读不出来',
@@ -212,9 +230,9 @@ const ids = [
   { label:'', alias:'', email:'nobody@example.com', c:'142,68,173', cl:'190,130,215', scope:['~/misc/'] },
 ];
 // A path in one line: its start ("~/", "/" or a drive) and its last folder stay, what lies between them gives way to an ellipsis; the title carries the full text.
-const mid = (p, suffix = '') => {
+const mid = (p, suffix = '', tip = p) => {
   const [, lead = '', body = '', last = ''] = p.match(/^(~\/|[A-Za-z]:\/|\/)?(?:(.*?)\/)?([^/]+\/?)$/);
-  return `<span class="mid" title="${p}"><span class="ml">${lead}</span><span class="mh">${body}</span><span class="mt">${body ? '/' : ''}${last}${suffix}</span></span>`;
+  return `<span class="mid" data-tip="${tip}"><span class="ml">${lead}</span><span class="mh">${body}</span><span class="mt">${body ? '/' : ''}${last}${suffix}</span></span>`;
 };
 const [work, personal, client, unnamed] = ids;
 const workExact = { ...work, scope:['~/work/api/', '~/src/new/'] };
@@ -233,6 +251,16 @@ const icon = {
   warn:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2.5l6 11H2z"/><path d="M8 6.5v3M8 11.6v.1"/></svg>',
   chev:'<svg class="chev" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l4 4 4-4"/></svg>',
   plus:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M8 3v10M3 8h10"/></svg>',
+  folder:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"><path d="M2 4.5a1 1 0 0 1 1-1h3l1.5 1.5H13a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1z"/></svg>',
+  more:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M3.5 8h.01M8 8h.01M12.5 8h.01"/></svg>',
+  arrow:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9.5 4.5L13 8l-3.5 3.5"/></svg>',
+  minus:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M3.5 8h9"/></svg>',
+  pin:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9.6 2.4l4 4-1.5.6-2.3 2.3.2 2.4-.9.9-5-5 .9-.9 2.4.2 2.3-2.3z"/><path d="M5.7 10.3L2.5 13.5"/></svg>',
+  // The chrome glyphs: 16 x 16 line drawings, 1.5 stroke, as ui.Icon SVGs (no icon set; named after the SF Symbols they stand for).
+  gear:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M6.91 3.12L7.14 1.46L8.86 1.46L9.09 3.12L10.68 3.78L12.02 2.77L13.23 3.98L12.22 5.32L12.88 6.91L14.54 7.14L14.54 8.86L12.88 9.09L12.22 10.68L13.23 12.02L12.02 13.23L10.68 12.22L9.09 12.88L8.86 14.54L7.14 14.54L6.91 12.88L5.32 12.22L3.98 13.23L2.77 12.02L3.78 10.68L3.12 9.09L1.46 8.86L1.46 7.14L3.12 6.91L3.78 5.32L2.77 3.98L3.98 2.77L5.32 3.78z"/><circle cx="8" cy="8" r="2"/></svg>',
+  info:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="8" cy="8" r="6.25"/><path d="M8 7.3v3.7"/><path d="M8 4.9v.1" stroke-width="1.8"/></svg>',
+  refresh:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13.25 8a5.25 5.25 0 1 1-1.54-3.71"/><path d="M12.9 1.9v2.8H10.1"/></svg>',
+  power:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M4.4 4.1a5.5 5.5 0 1 0 7.2 0"/><path d="M8 1.8v5.6"/></svg>',
 };
 const q = new URLSearchParams(location.search);
 const view = {
@@ -240,10 +268,13 @@ const view = {
   scheme: q.get('scheme') === 'dark' ? 'dark' : 'light',
   lang: q.get('lang') === 'zh' ? 'zh' : 'en',
   height: q.get('height') === 'full' ? 'full' : 'fixed',
+  icons: q.get('icons') === 'today' ? 'today' : 'all',
+  tip: q.get('tip') || '',
 };
 
 function panel(state, T) {
-  const ghost = (name, label) => `<button class="ghost" title="${label}" aria-label="${label}">${icon[name]}</button>`;
+  // Icon buttons in a card: 24 x 24, a 16 glyph, a tooltip and an accessible name. The glyph name pins the tooltip with ?tip=<name>.
+  const ghost = (name, label, end = false) => `<button class="tool tip-below${end ? ' tip-end' : ''}${view.tip === name ? ' pinned' : ''}" data-tip="${label}" aria-label="${label}">${icon[name]}</button>`;
   const avatar = i => `<div class="avatar" style="--c:${i.c};--cl:${i.cl}">${(i.label || '?').slice(0, 1).toUpperCase()}</div>`;
   const tag = i => i.scope ? mid(i.scope[0], i.scope.length > 1 ? ` +${i.scope.length - 1}` : '') : T.global;
   const rows = set => set.map(i => `<div class="item"><span class="dot" style="--c:${i.c};--cl:${i.cl}"></span><div class="text"><span class="label">${i.label || T.unnamed}</span><span class="email">${i.email || T.noEmail}</span></div><span class="tag">${tag(i)}</span></div>`).join('');
@@ -251,73 +282,73 @@ function panel(state, T) {
   const list = (set = withGlobal, chips = false) => `<div class="section"><span>${T.identities}</span><span>${set.length}</span></div>` +
     (set.length >= 3 ? `<input class="search" placeholder="${T.filter}">` : '') + (chips ? `<div class="chips"><button class="chip on">GitHub</button><button class="chip">GitLab</button><button class="chip">Gitea</button></div>` : '') +
     `<div class="list">${rows(set)}</div>`;
-  const drop = (compact, over) => compact
-    ? `<div class="drop compact"><span class="muted small">${T.dropAgain}</span><button>${T.choose}</button></div>`
-    : `<div class="drop${over ? ' over' : ''}"><strong>${T.dropTitle}</strong><span class="muted small">${T.dropHint}</span><button>${T.choose}</button></div>`;
+  // The drop zone is always one line; what it says beyond that is in the tooltip.
+  const drop = over => `<div class="drop${over ? ' over' : ''}"><span class="muted small" data-tip="${T.dropHint}">${T.dropLine}</span><button class="tip-end" data-tip="${T.choose}" aria-label="${T.choose}">${T.chooseShort}</button></div>`;
   const filter = `<input class="search" placeholder="${T.filter}"><div class="chips"><button class="chip on">GitHub</button><button class="chip">GitLab</button><button class="chip">Gitea</button></div>`;
   const filtered = `<div class="section"><span>${T.identities}</span><span>4</span></div>` + filter;
-  const top = (path, actions) => `<div class="top"><span class="mono">${path}</span>${actions}</div>`;
-  const result = (kind, path, body, actions = ghost('x', T.clear)) => `<div class="result ${kind}">${top(path, actions)}${body}</div>`;
+  const top = (path, actions) => `<div class="top">${mid(path)}<span class="cluster">${actions}</span></div>`;
+  const result = (kind, path, body, actions = ghost('x', T.clear, true)) => `<div class="result ${kind}">${top(path, actions)}${body}</div>`;
   const dot = i => `<span class="dot" style="--c:${i.c};--cl:${i.cl}"></span>`;
   const name = i => i.label || T.unnamed;
-  const btn = label => `<button class="text">${label}</button>`;
-  const ack = text => `<span class="copied">${text}</span>`;
-  // A matched card: the answer, then the actions. Unbind only when the identity lists this very folder.
-  const confirmBlock = `<div class="row pick">${dot(personal)}<div class="lines"><span class="label">${name(personal)}</span><span class="note">${T.globalId}</span></div></div>` +
-    `<div class="confirm nobd"><p>${T.confirmGlobal(name(personal))}</p><div class="buttons"><button class="field fixed">${T.cancel}</button><button class="primary fixed">${T.rebindDo}</button></div></div>`;
+  const btn = (label, tip = '') => `<button class="text"${tip ? ` data-tip="${tip}"` : ''}>${label}</button>`;
+  const ack = (text, tip = '') => `<span class="copied"${tip ? ` data-tip="${tip}"` : ''}>${text}</span>`;
+  // A matched card. The header holds every action: open, copy, the menu (rebind, and unbind when the identity lists this very folder), clear.
+  const confirmBlock = `<div class="confirm"><p>${T.confirmShort(name(personal))}</p><div class="buttons"><button class="field fixed">${T.cancel}</button><button class="primary fixed">${T.rebindDo}</button></div></div>`;
   const matched = (o = {}) => {
     const i = o.id || work, path = o.path || '~/work/api';
-    const menu = `<div class="menu">${[personal, client, unnamed].map((m, n) => `<div class="entry${n === 0 ? ' hot' : ''}">${dot(m)}<span class="label">${name(m)}</span><span class="tag">${m.scope ? m.scope[0] : T.global}</span></div>`).join('')}</div>`;
+    const menu = `<div class="menu"><div class="mhead">${T.rebind}</div>${[personal, client, unnamed].map((m, n) => `<div class="entry${n === 0 ? ' hot' : ''}">${dot(m)}<span class="label">${name(m)}</span><span class="tag">${m.scope ? m.scope[0] : T.global}</span></div>`).join('')}${o.exact ? `<div class="msep"></div><div class="entry"><span class="label">${T.unbind}</span></div>` : ''}</div>`;
+    const status = o.ack ? ack(T.updated) : o.covered ? ack(T.coveredBy('~/work/'), T.coveredNote(name(work), '~/work/')) : o.copied ? ack(T.copied) : '';
     return result('', path, `
       <div class="who">${avatar(i)}<div><div class="name">${name(i)}</div><div class="uses">${T.uses}</div></div></div>
-      <div class="kv"><span>${T.alias}</span><span class="mono">${i.alias}</span><span>${T.email}</span><span>${i.email}</span><span>${T.folders}</span><span class="mono paths">${i.scope ? i.scope.map(p => `<span>${p}</span>`).join('') : T.global}</span></div>
-      <div class="actions">${btn(T.openFinder)}<span class="gap"></span>
-        <span class="menuwrap">${btn(T.rebind + icon.chev)}${o.menu ? menu : ''}</span>${o.exact ? btn(T.unbind) : ''}</div>${o.confirm ? confirmBlock : ''}${o.foot || ''}`,
-      (o.ack ? ack(T.updated) : '') + (o.copied ? ack(T.copied) + ghost('check', T.copy) : ghost('copy', T.copy)) + ghost('x', T.clear));
+      <div class="kv"><span>${T.alias}</span><span class="mono">${i.alias}</span><span>${T.email}</span><span>${i.email}</span><span>${T.folders}</span><span class="mono paths">${i.scope ? i.scope.map(p => `<span>${p}</span>`).join('') : T.global}</span></div>${o.confirm ? confirmBlock : ''}${o.foot || ''}`,
+      status + ghost('folder', T.openFinder) + ghost(o.copied ? 'check' : 'copy', T.copy) + `<span class="menuwrap">${ghost('more', T.more)}${o.menu ? menu : ''}</span>` + ghost('x', T.clear, true));
   };
-  // "Has <path> · adds another": the path gives way to an ellipsis, the rest of the sentence stays.
-  const has = i => `<span>${T.hasPre}</span>${mid(i.scope[0])}<span>${T.hasSuf}</span>`;
-  const bindRow = (i, pick) => `<div class="row${pick ? ' pick' : ''}">${dot(i)}<div class="lines"><span class="label">${name(i)}</span><span class="note">${has(i)}</span></div>${pick ? '' : `<span class="go">${T.bind}</span>`}</div>`;
+  // A bind row shows only the first folder of the identity; "has it, and adds another" is in the tooltip.
+  const bindRow = i => `<div class="row">${dot(i)}<div class="lines"><span class="label">${name(i)}</span><span class="note">${mid(i.scope[0], '', T.hasTip(i.scope[0]))}</span></div><span class="go">${T.bind}</span></div>`;
   const noMatch = (undone, o = {}) => result('warning', o.path || '~/scratch/notes', `<div class="say tight">${T.noMatch}</div><div class="head">${T.bindTo}</div>`
     + bindRow(o.work || work) + bindRow(client) + bindRow(unnamed)
-    + `<div class="row short">${btn(icon.plus + T.newId)}</div>`, (undone ? ack(T.undone) : '') + ghost('x', T.clear));
-  const stale = (old, now) => `<div class="result"><div class="stale-head">${dot(work)}<span class="name">${name(work)}</span><span class="rest">${T.staleHead}</span></div>`
-    + `<div class="path-row"><span class="key">${T.staleOld}</span>${mid(old)}</div><div class="path-row"><span class="key">${T.staleNew}</span>${mid(now)}</div>`
-    + `<div class="actions">${btn(T.staleFix)}<span class="gap"></span>${btn(T.staleKeep)}</div></div>`;
+    + `<div class="row short">${btn(icon.plus + T.newShort, T.newId)}</div>`, (undone ? ack(T.undone) : '') + ghost('x', T.clear, true));
+  // Stale path prompt: the header, one row "old → new" (each middle-truncated, the full path in its tooltip), Update and Ignore.
+  const stale = (old, now) => `<div class="result"><div class="stale-head">${dot(work)}<span class="rest"><span class="name">${name(work)}</span>${T.staleHead}</span></div>`
+    + `<div class="path-row old">${mid(old)}</div><div class="path-row">${icon.arrow}${mid(now)}</div>`
+    + `<div class="actions">${btn(T.staleUpdate, T.staleFix)}${btn(T.staleIgnore, T.staleKeep).replace('class="text"', 'class="text quiet"')}</div></div>`;
   const verdict = (win, label) => `<span class="verdict${win ? ' win' : ''}">${win ? icon.check : ''}${label}</span>`;
-  const overlap = () => result('', '~/work/client/app', `<div class="say tight">${T.overlapTitle(2)}</div><div class="overlap-hint">${T.overlapHint}</div>`
-    + `<div class="row lost">${dot(work)}<div class="lines"><span class="label">${name(work)}</span><span class="note mono">~/work/</span></div>${verdict(false, T.overridden)}</div>`
-    + `<div class="row">${dot(client)}<div class="lines"><span class="label">${name(client)}</span><span class="note mono">~/work/client/</span></div>${verdict(true, T.used)}</div>`
-    + `<div class="stack">${btn(T.onlyUse(name(client)))}${btn(T.removeFrom(name(work), '~/work/'))}</div>`);
+  // Overlap: the winner's pin ("use only it here") and each loser's minus ("remove the path from it") are icon buttons at the end of their rows.
+  // It has no context line of its own: the matched card under it shows the folder, and its one clear button clears both.
+  const overlap = () => `<div class="result"><div class="say tight">${T.overlapTitle(2)}<button class="tool tip-below${view.tip === 'info' ? ' pinned' : ''}" data-tip="${T.overlapHint}" aria-label="${T.overlapHint}">${icon.info}</button></div>`
+    + `<div class="row lost">${dot(work)}<div class="lines"><span class="label">${name(work)}</span><span class="note mono">~/work/</span></div>${verdict(false, T.overridden)}${ghost('minus', T.removeFrom(name(work), '~/work/'), true)}</div>`
+    + `<div class="row">${dot(client)}<div class="lines"><span class="label">${name(client)}</span><span class="note mono">~/work/client/</span></div>${verdict(true, T.used)}${ghost('pin', T.onlyUse(name(client)), true)}</div></div>`;
   const undoBar = who => `<div class="bar timed" style="--left:60%"><span>${T.boundTo(name(who))} ·</span>${btn(T.undo)}</div>`;
+  const clamp = (text, full, cls) => `<div class="${cls}" data-tip="${full}"><span>${text}</span></div>`;
+  const jsonError = `invalid character '}' looking for beginning of object key string`;
   return {
     loading: `<div class="center"><div class="spinner"></div><span class="muted">${T.loading}</span></div>`,
-    readonly: `<div class="readonly"><div class="warn">${icon.warn}</div><div class="title">${T.readonly}</div><div class="hint">${T.readonlyHint}</div>
-      <div class="reason">~/.config/idset/accounts.json<br>invalid character '}' looking for beginning of object key string</div>
-      <div class="actions"><button>${T.reveal}</button><button>${T.reload}</button></div></div>`,
-    empty: drop(false) + `<div class="center"><strong>${T.empty}</strong><span class="muted small">${T.emptyHint}</span><button>${T.add}</button></div>`,
-    list: drop(false) + list(),
-    over: drop(false, true) + list(),
-    filter: drop(false) + list(withGlobal, true),
-    nofilter: drop(false) + filtered + `<span class="muted center">${T.none}</span>`,
-    checking: result('', '~/work/api', `<div class="say plain"><div class="spinner"></div>${T.checking}</div>`, '') + drop(true) + list(),
-    matched: matched() + drop(true) + list(),
-    exact: matched({ id:workExact, exact:true }) + drop(true) + list(swap(withGlobal, work, workExact)),
-    rebind: matched({ id:workExact, exact:true, menu:true }) + drop(true) + list(swap(withGlobal, work, workExact)),
-    confirm: matched({ id:workExact, exact:true, confirm:true }) + drop(true) + list(swap(withGlobal, work, workExact)),
-    copied: matched({ copied:true }) + drop(true) + list(),
-    overlap: overlap() + matched({ id:client, path:'~/work/client/app' }) + drop(true) + list(),
-    covered: matched({ foot:`<div class="bar note">${T.coveredNote(name(work), '~/work/')}</div>` }) + drop(true) + list(),
-    undo: matched({ id:workBound, path:'~/scratch/notes', exact:true, foot:undoBar(work) }) + drop(true) + list(swap(noGlobal, work, workBound)),
-    stale: stale('~/projects/api-old', '~/projects/api') + noMatch(false, { path:'~/projects/api', work:staleRename }) + drop(true) + list(swap(noGlobal, work, staleRename)),
-    'stale-moved': stale(staleMoved.scope[0].slice(0, -1), '~/projects/payments-gateway') + noMatch(false, { path:'~/projects/payments-gateway', work:staleMoved }) + drop(true) + list(swap(noGlobal, work, staleMoved)),
-    'stale-fixed': matched({ id:staleFixed, path:'~/projects/api', exact:true, copied:false, ack:true }) + drop(true) + list(swap(noGlobal, work, staleFixed)),
-    'stale-kept': noMatch(false, { path:'~/projects/api', work:staleRename }) + drop(true) + list(swap(noGlobal, work, staleRename)),
-    undone: noMatch(true) + drop(true) + list(noGlobal),
-    nomatch: noMatch(false) + drop(true) + list(noGlobal),
-    notrepo: result('warning', '~/scratch/notes', `<div class="say">${T.notRepo}</div>`) + drop(true) + list(),
-    notfolder: result('warning', '~/Downloads/report.pdf', `<div class="say">${T.notFolder}</div>`) + drop(true) + list(),
-    giterror: result('danger', '~/work/api', `<div class="say danger">${T.gitFailed}</div>`) + drop(true) + list(),
+    readonly: `<div class="readonly"><div class="warn">${icon.warn}</div><div class="title">${T.readonly}</div><div class="path">~/.config/idset/accounts.json</div>
+      ${clamp(jsonError, jsonError, 'reason')}<div class="hint" data-tip="${T.readonlyHint}">${T.readonlyShort}</div>
+      <div class="actions"><button class="fixed wide">${T.reveal}</button><button class="fixed wide">${T.reload}</button></div></div>`,
+    empty: `<div class="center"><strong class="big">${T.empty}</strong><span class="muted small">${T.emptyHint}</span><button class="primary pad">${T.add}</button></div>` + drop(),
+    list: drop() + list(),
+    over: drop(true) + list(),
+    filter: drop() + list(withGlobal, true),
+    nofilter: drop() + filtered + `<span class="muted center">${T.none}</span>`,
+    checking: result('', '~/work/api', `<div class="say plain"><div class="spinner"></div>${T.checking}</div>`, '') + drop() + list(),
+    matched: matched() + drop() + list(),
+    exact: matched({ id:workExact, exact:true }) + drop() + list(swap(withGlobal, work, workExact)),
+    rebind: matched({ id:workExact, exact:true, menu:true }) + drop() + list(swap(withGlobal, work, workExact)),
+    confirm: matched({ id:workExact, exact:true, confirm:true }) + drop() + list(swap(withGlobal, work, workExact)),
+    copied: matched({ copied:true }) + drop() + list(),
+    overlap: overlap() + matched({ id:client, path:'~/work/client/app' }) + drop() + list(),
+    covered: matched({ covered:true }) + drop() + list(),
+    undo: matched({ id:workBound, path:'~/scratch/notes', exact:true, foot:undoBar(work) }) + drop() + list(swap(noGlobal, work, workBound)),
+    stale: stale('~/projects/api-old', '~/projects/api') + noMatch(false, { path:'~/projects/api', work:staleRename }) + drop() + list(swap(noGlobal, work, staleRename)),
+    'stale-moved': stale(staleMoved.scope[0].slice(0, -1), '~/projects/payments-gateway') + noMatch(false, { path:'~/projects/payments-gateway', work:staleMoved }) + drop() + list(swap(noGlobal, work, staleMoved)),
+    'stale-fixed': matched({ id:staleFixed, path:'~/projects/api', exact:true, ack:true }) + drop() + list(swap(noGlobal, work, staleFixed)),
+    'stale-kept': noMatch(false, { path:'~/projects/api', work:staleRename }) + drop() + list(swap(noGlobal, work, staleRename)),
+    undone: noMatch(true) + drop() + list(noGlobal),
+    nomatch: noMatch(false) + drop() + list(noGlobal),
+    notrepo: result('warning', '~/scratch/notes', `<div class="say">${T.notRepo}</div>`) + drop() + list(),
+    notfolder: result('warning', '~/Downloads/report.pdf', `<div class="say">${T.notFolder}</div>`) + drop() + list(),
+    giterror: result('danger', '~/work/api', `<div class="say danger tight">${T.gitFailed}</div>` + clamp(T.gitReason, T.gitReason, 'why')) + drop() + list(),
   }[state];
 }
 
@@ -327,21 +358,29 @@ function buttons(id, options, key) {
   document.getElementById(id).onclick = e => { const v = e.target.dataset.value; if (v) { view[key] = v; render(); } };
 }
 
+// The title row and footer. "Built today" shows only the actions that work in the app now: add and quit (settings does not exist yet).
+function chrome(T) {
+  const bare = ['loading', 'readonly', 'empty'].includes(view.state), all = view.icons === 'all';
+  const tool = (name, glyph, label, pos = '') => `<button class="tool ${pos} ${view.tip === name ? 'pinned' : ''}" data-tip="${label}" aria-label="${label}">${icon[glyph]}</button>`;
+  // Add Identity lives in the fixed footer so it stays reachable however long the list is; the empty state has its own button.
+  // Re-check has nothing to check without identities, so it goes with Add in the states that have none.
+  return {
+    head:`<header><h1>Idset</h1>${all ? tool('settings', 'gear', T.settings, 'tip-end tip-below') : ''}</header>`,
+    foot:`<footer>${bare ? '' : tool('add', 'plus', T.add, 'tip-start')}<span class="spacer"></span>`
+      + (all ? tool('about', 'info', T.about) : '') + (all && !bare ? tool('recheck', 'refresh', T.recheck) : '') + tool('quit', 'power', T.quit, 'tip-end') + `</footer>` };
+}
+
 function render() {
   const T = TEXT[view.lang];
   document.documentElement.dataset.scheme = view.scheme;
-  document.querySelector('.panel').classList.toggle('full', view.height === 'full');
-  document.getElementById('quit').textContent = T.quit;
-  // Add Identity lives in the fixed footer, so it stays reachable however long the list is; the empty state has its own button.
-  const add = document.getElementById('add');
-  add.innerHTML = icon.plus + T.add;
-  add.hidden = ['loading', 'readonly', 'empty'].includes(view.state);
-  document.getElementById('content').innerHTML = panel(view.state, T);
+  const c = chrome(T);
+  document.getElementById('stage').innerHTML = `<div class="panel${view.height === 'full' ? ' full' : ''}">${c.head}<div class="content">${panel(view.state, T)}</div>${c.foot}</div>`;
   buttons('states', STATES, 'state');
   buttons('schemes', { light:'浅色', dark:'深色' }, 'scheme');
+  buttons('icons', { all:'All planned', today:'Built today' }, 'icons');
   buttons('heights', { fixed:'480', full:'Full' }, 'height');
   buttons('langs', { zh:'中文', en:'English' }, 'lang');
-  history.replaceState(null, '', `?state=${view.state}&scheme=${view.scheme}&lang=${view.lang}&height=${view.height}`);
+  history.replaceState(null, '', `?state=${view.state}&scheme=${view.scheme}&lang=${view.lang}&icons=${view.icons}&height=${view.height}${view.tip ? `&tip=${view.tip}` : ''}`);
 }
 
 onkeydown = e => {

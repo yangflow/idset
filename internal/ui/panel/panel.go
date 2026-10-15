@@ -23,13 +23,14 @@ var catalog []byte
 
 // Copy is the panel's text in one language. Main reads the tray texts from it too.
 type Copy struct {
-	HidePanel, Quit, Loading, DropTitle, DropHint, DropAgain, Choose, ChooseTitle, Empty, EmptyHint, Filter, NoneMatch,
-	Unnamed, NoAlias, NoEmail, ReadOnly, ReadOnlyHint, CopyPath, Copied, Clear, Checking, NoMatch, NotRepo, NotFolder,
+	HidePanel, Quit, Loading, DropLine, DropHint, Choose, ChooseShort, ChooseTitle, Empty, EmptyHint, Filter, NoneMatch,
+	Unnamed, NoAlias, NoEmail, ReadOnly, ReadOnlyShort, ReadOnlyHint, CopyPath, Copied, Clear, Checking, NoMatch, NotRepo, NotFolder,
 	GitFailed, Matched, TooltipIdle, TooltipMatch, TooltipNoMatch, Open, Custom, UsesHere, Alias, Email, Folders, Global,
 	NoFolders, Identities, Reload, RevealFinder, RevealExplorer, RevealFiles, AddIdentity,
-	OpenFinder, OpenExplorer, OpenFiles, BindTo, Bind, BindLabel, GlobalIdentity, NewBound, Cancel, Rebind, RebindTo,
-	Unbind, OverlapTitle, OverlapHint, Used, Overridden, OnlyUse, RemoveFrom, Has, ConfirmGlobal, Covered, BoundTo,
-	Undo, Undone, BindFailed, BindRegenFailed, StaleHead, StaleOld, StaleNew, StaleFix, StaleKeep, Updated string
+	OpenFinder, OpenExplorer, OpenFiles, More, BindTo, Bind, BindLabel, NewShort, NewBound, Cancel, Rebind, RebindTo,
+	Unbind, OverlapTitle, OverlapHint, Used, Overridden, OnlyUse, RemoveFrom, Has, ConfirmShort, Covered, CoveredBy,
+	BoundTo, Undo, Undone, BindFailed, BindRegenFailed, StaleHead, StaleUpdate, StaleIgnore, StaleFix, StaleKeep,
+	Updated string
 }
 
 var translations = func() map[string]Copy {
@@ -144,7 +145,7 @@ func (s *Screen) unresolved(k match.Kind) string {
 func (s *Screen) resultMessage() string {
 	switch {
 	case s.resultErr != nil:
-		return fmt.Sprintf(s.text.GitFailed, s.resultErr)
+		return s.text.GitFailed + ". " + s.resultErr.Error()
 	case s.result == nil:
 		return ""
 	case s.result.Kind == match.Matched:
@@ -154,7 +155,7 @@ func (s *Screen) resultMessage() string {
 		return ""
 	}
 	if a, ok := s.stale(); ok {
-		return s.unresolved(s.result.Kind) + ". " + s.label(a) + " " + s.text.StaleHead
+		return s.unresolved(s.result.Kind) + ". " + s.label(a) + s.text.StaleHead
 	}
 	return s.unresolved(s.result.Kind)
 }

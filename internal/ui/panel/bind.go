@@ -22,6 +22,8 @@ const (
 	undoneFor = 1200 * time.Millisecond
 	// updatedFor is how long "Updated" shows after a stale path was changed.
 	updatedFor = 1200 * time.Millisecond
+	// coveredFor is how long "Covered by …" shows after a bind that changed nothing.
+	coveredFor = 1200 * time.Millisecond
 )
 
 // undoBar is what Undo puts back, and until when.
@@ -38,11 +40,13 @@ type binding struct {
 	// menuOpen is the rebind menu; confirmTo is the global identity whose rebind waits for confirmation.
 	menuOpen  bool
 	confirmTo string
-	// note says that a bind changed nothing; failure says why a request failed.
-	note, failure string
-	undo          *undoBar
-	undoneUntil   time.Time
-	updatedUntil  time.Time
+	// A bind that changed nothing shows coveredBy in the context line until coveredUntil; note is the full sentence.
+	// failure says why a request failed.
+	coveredBy, note, failure string
+	coveredUntil             time.Time
+	undo                     *undoBar
+	undoneUntil              time.Time
+	updatedUntil             time.Time
 	// staleKept hides the stale path prompt of the result on the card.
 	staleKept bool
 	// say is a sentence for screen readers, said once by the next frame.
@@ -78,7 +82,10 @@ func (s *Screen) confirmRebind() {
 	}
 }
 
-func (s *Screen) unbind() { s.run(bind.Op{Kind: bind.KindUnbind, From: s.result.ID}) }
+func (s *Screen) unbind() {
+	s.menuOpen = false
+	s.run(bind.Op{Kind: bind.KindUnbind, From: s.result.ID})
+}
 
 func (s *Screen) useOnly() { s.run(bind.Op{Kind: bind.KindUseOnly, To: s.result.ID}) }
 
@@ -147,7 +154,7 @@ func (s *Screen) OpDone(o bind.Outcome) {
 		s.say = s.failure
 		return
 	}
-	s.menuOpen, s.confirmTo, s.note, s.undo = false, "", "", nil
+	s.menuOpen, s.confirmTo, s.coveredBy, s.note, s.undo = false, "", "", "", nil
 	if o.ResultErr != nil {
 		s.result, s.resultErr = nil, o.ResultErr
 		return
@@ -156,6 +163,7 @@ func (s *Screen) OpDone(o bind.Outcome) {
 	switch {
 	case o.CoveredBy != "":
 		if a, ok := s.find(o.CoveredID); ok {
+			s.coveredBy, s.coveredUntil = fmt.Sprintf(s.text.CoveredBy, o.CoveredBy), s.now().Add(coveredFor)
 			s.note = fmt.Sprintf(s.text.Covered, s.label(a), o.CoveredBy)
 			s.say = s.note
 		}

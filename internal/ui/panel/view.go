@@ -10,22 +10,10 @@ import (
 	"github.com/egoist/mygo/ui"
 	"github.com/yangflow/idset/internal/account"
 	"github.com/yangflow/idset/internal/match"
+	"github.com/yangflow/idset/internal/ui/icons"
 )
 
 const copiedFor = 1200 * time.Millisecond
-
-func svg(paths string) *ui.SVG {
-	return ui.MustParseSVG([]byte(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="none" stroke="#000" stroke-linecap="round" stroke-linejoin="round">` + paths + `</svg>`))
-}
-
-var (
-	closeIcon = svg(`<path d="M4 4l8 8M12 4l-8 8" stroke-width="1.6"/>`)
-	copyIcon  = svg(`<rect x="5.5" y="5.5" width="8" height="8" rx="1.5" stroke-width="1.4"/><path d="M10.5 3.5v-.5a1 1 0 0 0-1-1h-6a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h.5" stroke-width="1.4"/>`)
-	checkIcon = svg(`<path d="M3.5 8.5l3 3 6-7" stroke-width="1.6"/>`)
-	plusIcon  = svg(`<path d="M8 3v10M3 8h10" stroke-width="1.6"/>`)
-	chevIcon  = svg(`<path d="M4 6l4 4 4-4" stroke-width="1.6"/>`)
-	warnIcon  = svg(`<path d="M8 2.5l6 11H2z" stroke-width="1.6"/><path d="M8 6.5v3M8 11.6v.1" stroke-width="1.6"/>`)
-)
 
 // View draws the panel. It reads state only; drops and clicks go to the owner through Actions. Spacing and type
 // sizes derive from the theme so they follow its Spacing, FontSize and the desktop's text scale; see docs/design.md.
@@ -40,9 +28,10 @@ func (s *Screen) View(c *ui.Context) {
 		}
 	}
 	ui.Column(c).Fill().Children(func() {
-		// No hide button: the tray icon and Escape hide the panel, as with other tray panels.
-		ui.Row(c).PaddingY(t.Space(3)).PaddingX(t.Space(4)).AlignItems(ui.Center).Children(func() {
-			ui.Text(c, "Idset").FontSize(t.Rem(1.15)).Bold().Role(ui.RoleHeading).Level(1)
+		// No hide button: the tray icon and Escape hide the panel, as with other tray panels. The title bar and the
+		// footer are the same height, hairline included, and give the rest to the content.
+		ui.Row(c).Height(t.Space(9)-1).Padding(0, t.Space(2), 0, t.Space(4)).AlignItems(ui.Center).Children(func() {
+			ui.Text(c, "Idset").FontWeight(600).Role(ui.RoleHeading).Level(1)
 		})
 		ui.Divider(c)
 		// States without a list never need scrolling, and centering only works in a container of fixed height.
@@ -52,20 +41,14 @@ func (s *Screen) View(c *ui.Context) {
 			ui.Scroll(c).Grow(1).Padding(t.Space(4)).Gap(t.Space(3)).Children(func() { s.content(c) })
 		}
 		ui.Divider(c)
-		ui.Row(c).PaddingY(t.Space(3)).PaddingX(t.Space(4)).AlignItems(ui.Center).Children(func() {
+		ui.Row(c).Height(t.Space(9) - 1).PaddingX(t.Space(2)).Gap(t.Space(1)).AlignItems(ui.Center).Children(func() {
 			// Add Identity stays in the fixed footer, reachable however long the list is. Without a list the
-			// empty state has its own button.
-			if !s.loading && s.readErr == nil && len(s.accounts) > 0 {
-				if ui.Button(c, "").Label(s.text.AddIdentity).Background(ui.Color{}).Border(0, ui.Color{}).TextColor(t.Accent).
-					Children(func() {
-						ui.Icon(c, plusIcon).FontSize(t.Rem(1.1))
-						ui.Text(c, s.text.AddIdentity).SingleLine()
-					}).Clicked() {
-					s.act.NewIdentity()
-				}
+			// empty state has its own button. Only actions that work are here.
+			if !s.loading && s.readErr == nil && len(s.accounts) > 0 && ghost(c, s.text.AddIdentity, icons.Plus).Clicked() {
+				s.act.NewIdentity()
 			}
 			ui.Spacer(c)
-			if ui.Button(c, s.text.Quit).Clicked() {
+			if ghost(c, s.text.Quit, icons.Power).Clicked() {
 				s.act.Quit()
 			}
 		})
@@ -83,11 +66,12 @@ func (s *Screen) View(c *ui.Context) {
 	}
 }
 
-// ghost is a borderless square symbol button, 24 DIPs at the default spacing, for actions inside a card.
+// ghost is a borderless square symbol button, 24 DIPs at the default spacing, with a 16 DIP glyph. Its label is
+// its accessible name and its tooltip.
 func ghost(c *ui.Context, label string, icon *ui.SVG) ui.Element {
 	t := c.Theme()
-	b := ui.Button(c, "").Label(label).Size(t.Space(6), t.Space(6)).Padding(0).Radius(t.Radius).Border(0, ui.Color{}).
-		Background(ui.Color{}).TextColor(t.TextMuted).Children(func() { ui.Icon(c, icon).FontSize(t.Rem(1.1)) })
+	b := ui.Button(c.Key("ghost-"+label), "").Label(label).Size(t.Space(6), t.Space(6)).Padding(0).Radius(t.Radius).Border(0, ui.Color{}).
+		Background(ui.Color{}).TextColor(t.TextMuted).Tooltip(label).Children(func() { ui.Icon(c, icon).FontSize(t.Rem(1.2)) })
 	if b.Hovered() {
 		b.Background(t.SurfaceHover)
 	}
@@ -108,19 +92,21 @@ func (s *Screen) content(c *ui.Context) {
 		return
 	}
 	s.resultCard(c)
-	s.dropZone(c)
 	if len(s.accounts) == 0 {
+		// One centered block, with the drop zone under it.
 		ui.Column(c).Grow(1).Gap(t.Space(1.5)).AlignItems(ui.Center).Justify(ui.Center).Children(func() {
-			ui.Text(c, s.text.Empty).Bold().Role(ui.RoleHeading).Level(2)
+			ui.Text(c, s.text.Empty).FontSize(t.Rem(1.15)).FontWeight(600).Role(ui.RoleHeading).Level(2)
 			ui.Text(c, s.text.EmptyHint).FontSize(t.Rem(0.9)).TextColor(t.TextMuted).TextAlign(ui.Center)
 			ui.Row(c).PaddingY(t.Space(1)).Children(func() {
-				if ui.Button(c, s.text.AddIdentity).Clicked() {
+				if ui.PrimaryButton(c, s.text.AddIdentity).Height(t.Space(7)).PaddingX(t.Space(4)).Clicked() {
 					s.act.NewIdentity()
 				}
 			})
 		})
+		s.dropZone(c)
 		return
 	}
+	s.dropZone(c)
 	ui.Row(c).PaddingX(t.Space(0.5)).Children(func() {
 		ui.Text(c, s.text.Identities).FontSize(t.Rem(0.9)).FontWeight(600).TextColor(t.TextMuted).Grow(1).
 			Role(ui.RoleHeading).Level(2)
@@ -161,20 +147,19 @@ func (s *Screen) readOnly(c *ui.Context) {
 	ui.Column(c).Grow(1).Gap(t.Space(2.5)).PaddingX(t.Space(2)).AlignItems(ui.Center).Justify(ui.Center).Children(func() {
 		ui.Column(c).Size(t.Space(11), t.Space(11)).Radius(11).Background(t.Danger.Alpha(0.14)).AlignItems(ui.Center).
 			Justify(ui.Center).Children(func() {
-			ui.Icon(c, warnIcon).FontSize(t.Rem(1.7)).TextColor(t.Danger)
+			ui.Icon(c, icons.Warn).FontSize(t.Rem(1.7)).TextColor(t.Danger)
 		})
 		ui.Text(c, s.text.ReadOnly).FontSize(t.Rem(1.15)).FontWeight(600).Role(ui.RoleHeading).Level(2)
-		ui.Text(c, s.text.ReadOnlyHint).FontSize(t.Rem(0.9)).TextColor(t.TextMuted).TextAlign(ui.Center)
-		ui.Column(c).FillWidth().Gap(t.Space(0.5)).PaddingY(t.Space(1.5)).PaddingX(t.Space(2)).Radius(t.Radius).
-			Background(t.Background).Border(1, t.Border).Children(func() {
-			ui.Text(c, s.env.Tilde(s.dataPath)).Font("monospace").FontSize(t.Rem(0.85)).TextColor(t.TextMuted).Selectable()
-			ui.Text(c, reason.Error()).Font("monospace").FontSize(t.Rem(0.85)).TextColor(t.TextMuted).Selectable()
-		})
+		ui.Text(c, s.env.Tilde(s.dataPath)).Font("monospace").FontSize(t.Rem(0.9)).TextColor(t.TextMuted).TextAlign(ui.Center).Selectable()
+		// The parser error is at most two lines; the tooltip has all of it.
+		ui.Text(c, reason.Error()).Font("monospace").FontSize(t.Rem(0.85)).TextColor(t.TextMuted).TextAlign(ui.Center).MaxLines(2).
+			Tooltip(reason.Error())
+		ui.Text(c, s.text.ReadOnlyShort).FontSize(t.Rem(0.9)).TextColor(t.TextMuted).Tooltip(s.text.ReadOnlyHint)
 		ui.Row(c).Gap(t.Space(2)).PaddingY(t.Space(1)).Children(func() {
-			if ui.Button(c, s.revealLabel()).Clicked() {
+			if ui.Button(c, s.revealLabel()).Label(s.revealLabel()).Size(t.Space(30), t.Space(7)).Padding(0).Clicked() {
 				s.act.Reveal(s.dataPath)
 			}
-			if ui.Button(c, s.text.Reload).Clicked() {
+			if ui.Button(c, s.text.Reload).Label(s.text.Reload).Size(t.Space(30), t.Space(7)).Padding(0).Clicked() {
 				s.act.Reload()
 			}
 		})
@@ -262,7 +247,7 @@ func (s *Screen) folderTag(c *ui.Context, a account.Account) {
 		if len(folders) > 1 {
 			suffix = fmt.Sprintf(" +%d", len(folders)-1)
 		}
-		pathLine(c, "", folders[0], suffix, face).MaxWidthPercent(50).Shrink(0)
+		pathLine(c, folders[0], suffix, "", face).MaxWidthPercent(50).Shrink(0)
 	}
 }
 
@@ -305,9 +290,9 @@ func (s *Screen) row(c *ui.Context, a account.Account) {
 	})
 }
 
+// dropZone is always one line; what it says beyond that is in the tooltip.
 func (s *Screen) dropZone(c *ui.Context) {
 	t := c.Theme()
-	compact := s.result != nil || s.resultErr != nil || s.checking != ""
 	zone := ui.Column(c).Key("drop").Radius(10).Border(1.5, t.Border).BorderStyle(ui.BorderDashed)
 	if zone.FileDragOver() {
 		zone.Border(1.5, t.Accent).Background(t.Selection)
@@ -315,19 +300,9 @@ func (s *Screen) dropZone(c *ui.Context) {
 	if files := zone.DroppedFiles(); len(files) > 0 {
 		s.Drop(files)
 	}
-	if compact {
-		zone.Row().PaddingY(t.Space(2)).PaddingX(t.Space(3)).Gap(t.Space(2)).AlignItems(ui.Center).Children(func() {
-			ui.Text(c, s.text.DropAgain).FontSize(t.Rem(0.9)).TextColor(t.TextMuted).Grow(1)
-			if ui.Button(c, s.text.Choose).Clicked() {
-				s.act.ChooseFolder()
-			}
-		})
-		return
-	}
-	zone.PaddingY(t.Space(5)).PaddingX(t.Space(4)).Gap(t.Space(1.5)).AlignItems(ui.Center).Children(func() {
-		ui.Text(c, s.text.DropTitle).Bold()
-		ui.Text(c, s.text.DropHint).FontSize(t.Rem(0.9)).TextColor(t.TextMuted)
-		if ui.Button(c, s.text.Choose).Clicked() {
+	zone.Row().PaddingY(t.Space(2)).PaddingX(t.Space(3)).Gap(t.Space(2)).AlignItems(ui.Center).Children(func() {
+		ui.Text(c, s.text.DropLine).FontSize(t.Rem(0.9)).TextColor(t.TextMuted).SingleLine().MinWidth(0).Grow(1).Tooltip(s.text.DropHint)
+		if ui.Button(c, s.text.ChooseShort).Label(s.text.Choose).Tooltip(s.text.Choose).Clicked() {
 			s.act.ChooseFolder()
 		}
 	})
@@ -343,14 +318,21 @@ func (s *Screen) resultCard(c *ui.Context) {
 	}
 	switch {
 	case checking != "":
-		s.frame(c, "result", t.Border, checking, false, func() {
+		s.frame(c, "result", t.Border, checking, head{}, func() {
 			ui.Row(c).Gap(t.Space(2)).Padding(t.Space(3)).AlignItems(ui.Center).Children(func() {
 				ui.Spinner(c)
 				ui.Text(c, s.text.Checking)
 			})
 		})
 	case resultErr != nil:
-		s.frame(c, "result", t.Danger, dir, false, say(fmt.Sprintf(s.text.GitFailed, resultErr), t.Danger, 400))
+		// The headline is short; the reason is at most two lines, and the tooltip has all of it.
+		s.frame(c, "result", t.Danger, dir, head{}, func() {
+			ui.Column(c).Gap(t.Space(1)).Padding(t.Space(3)).Children(func() {
+				ui.Text(c, s.text.GitFailed).TextColor(t.Danger)
+				ui.Text(c, resultErr.Error()).Font("monospace").FontSize(t.Rem(0.85)).TextColor(t.TextMuted).MaxLines(2).
+					Tooltip(resultErr.Error())
+			})
+		})
 	case r == nil:
 	case r.Kind == match.Matched:
 		a, ok := s.find(r.ID)
@@ -372,45 +354,73 @@ func (s *Screen) resultCard(c *ui.Context) {
 		if path == "" {
 			path = r.Dir
 		}
-		s.frame(c, "result", t.Warning, path, false, say(s.unresolved(r.Kind), t.Text, 600))
+		s.frame(c, "result", t.Warning, path, head{}, say(s.unresolved(r.Kind), t.Text, 600))
 	}
 }
 
-// frame is a result card: the folder with its acknowledgements and buttons, a hairline, then the body.
-func (s *Screen) frame(c *ui.Context, key string, border ui.Color, path string, copyable bool, body func()) {
+// head says what the context line of a result card holds besides the folder and the clear button.
+type head struct {
+	// actions are the icon buttons before the clear button; a card with them can be copied from.
+	actions func()
+	// menu is called after the context line, to attach a menu to one of its buttons.
+	menu func()
+}
+
+// frame is a result card: the folder with its status and icon buttons, a hairline, then the body.
+func (s *Screen) frame(c *ui.Context, key string, border ui.Color, path string, h head, body func()) {
 	t := c.Theme()
 	checking := s.checking
 	ui.Column(c).Key(key).Radius(10).Background(t.Surface).Border(1, border).Clip().Children(func() {
-		ui.Row(c).Gap(t.Space(1)).Padding(t.Space(2), t.Space(2), t.Space(2), t.Space(3)).AlignItems(ui.Center).Children(func() {
-			ui.Text(c, s.env.Tilde(path)).Font("monospace").FontSize(t.Rem(0.9)).TextColor(t.TextMuted).Grow(1).Selectable()
-			for _, ack := range []struct {
-				until time.Time
-				text  string
-			}{{s.undoneUntil, s.text.Undone}, {s.updatedUntil, s.text.Updated}} {
-				if left := ack.until.Sub(s.now()); left > 0 {
-					ui.Text(c, ack.text).FontSize(t.Rem(0.85)).TextColor(t.TextMuted)
-					c.After(left)
-				}
+		// The context line is as high as the title row and the footer, hairline included.
+		ui.Row(c).Height(t.Space(9)-1).Gap(t.Space(1)).Padding(0, t.Space(2), 0, t.Space(3)).AlignItems(ui.Center).Children(func() {
+			face := pathFace{mono: true, size: t.Rem(0.9), color: t.TextMuted}
+			// The folder keeps at least 80 DIPs; the status gives way first.
+			pathLine(c, s.env.Tilde(path), "", "", face).Grow(1).MinWidth(t.Space(20)).Shrink(0)
+			s.status(c, h.actions != nil)
+			if h.actions != nil {
+				h.actions()
 			}
-			if copyable {
-				s.copyButton(c, path)
-			}
-			if checking == "" && ghost(c, s.text.Clear, closeIcon).Clicked() {
+			if checking == "" && ghost(c, s.text.Clear, icons.Close).Clicked() {
 				s.clear()
 			}
 		})
+		if h.menu != nil {
+			h.menu()
+		}
 		ui.Divider(c)
 		body()
 	})
 }
 
-// copyButton copies the full path; for a moment afterwards it shows a check mark and "Copied".
-func (s *Screen) copyButton(c *ui.Context, path string) {
+// status is the short, transient word before the buttons of the context line: Copied, Updated, Undone, or
+// Covered by a folder, whose full sentence is the tooltip.
+func (s *Screen) status(c *ui.Context, copyable bool) {
 	t := c.Theme()
-	icon := copyIcon
+	for _, ack := range []struct {
+		until      time.Time
+		text, full string
+		show       bool
+	}{
+		{s.undoneUntil, s.text.Undone, "", true},
+		{s.updatedUntil, s.text.Updated, "", true},
+		{s.coveredUntil, s.coveredBy, s.note, true},
+		{s.copiedUntil, s.text.Copied, "", copyable},
+	} {
+		if left := ack.until.Sub(s.now()); ack.show && left > 0 {
+			text := ui.Text(c, ack.text).FontSize(t.Rem(0.85)).TextColor(t.TextMuted).SingleLine().MinWidth(0)
+			if ack.full != "" {
+				text.Tooltip(ack.full)
+			}
+			c.After(left)
+		}
+	}
+}
+
+// copyButton copies the full path; for a moment afterwards it shows a check mark, and the status says "Copied".
+func (s *Screen) copyButton(c *ui.Context, path string) {
+	icon := icons.Copy
 	if s.now().Before(s.copiedUntil) {
-		ui.Text(c, s.text.Copied).FontSize(t.Rem(0.85)).TextColor(t.TextMuted)
-		icon = checkIcon
+		icon = icons.Check
 	}
 	if ghost(c, s.text.CopyPath, icon).Clicked() {
 		s.act.CopyText(path)
