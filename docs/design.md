@@ -515,8 +515,8 @@ material as the accounts window: fills, hairlines and text, no shadow, gradient 
   the system asks for approval the switch stays off and a `Warning` note under it says where to approve (macOS: System
   Settings, General, Login Items). A failed change is an inline `Danger` note under the row.
 - **Backups.** One grouped list, newest first. A row is 44 high: a chevron, the time (13), and a muted line "N identities
-  · names · size" (11; the first three names and "+N" for the rest), then the text button "Restore" and a ghost trash
-  button. The chevron expands the row to show its identities read-only, one at a time. Delete has no confirmation: the
+  · names · size" (11; the first three names and "+N" for the rest), then two ghost buttons in fixed 24 DIP slots:
+  Restore (a back arrow, tooltip "Restore") and trash. The chevron expands the row to show its identities read-only, one at a time. Delete has no confirmation: the
   backup is a copy and the newest 10 are kept anyway. A backup that cannot be read has its sub-line in `Danger`, and
   Restore and the chevron disabled. Under the list, a note says when backups are made (before an identity is added,
   before a restore), that the newest 10 are kept and where. With no backups that note is the empty state.
@@ -524,13 +524,15 @@ material as the accounts window: fills, hairlines and text, no shadow, gradient 
   sentence (the current `accounts.json` is backed up first, the configuration is regenerated), the identities that will
   exist afterwards between two hairlines, a line that identities not in the backup are removed, Cancel (Escape,
   initial focus) and Restore (`Accent` fill: it replaces data but is undoable through the backup it makes). While it
-  runs the row's button is a spinner and the other rows are dimmed to half; on success the button reads "✓ Restored"
-  for 1.2 s; on failure the reason is an inline `Danger` note under the row. When the window is opened from the
+  runs the Restore slot is a spinner with a muted "Restoring…" before it, and the other rows are dimmed to half; on
+  success the slot is an `Accent` check with a muted "Restored" before it for 1.2 s; on failure the reason is an inline `Danger` note under the row. When the window is opened from the
   read-only panel the Backups pane opens with a `Danger` banner explaining why.
 - **Configuration.** The two files with a marker block (`~/.ssh/config`, `~/.gitconfig`) and whether it is present, and
-  the row "Remove Include (keep accounts.json)" in `Accent` text. Its alert (same shape, primary button) lists
-  between hairlines what is removed (the marker blocks) and what stays (`accounts.json`, the managed files under
-  `~/.config/idset/`, private keys), and says it comes back at the next identity change. Afterwards the rows read "no
+  the row "Remove Include (keep accounts.json)" in `Accent` text. Its alert (same shape, primary button) says in
+  one sentence what changes and that the blocks come back at the next identity change, then two `Surface` boxes with a
+  small muted heading: "Will be removed" lists the marker block in each file, one per line behind a `Danger` minus;
+  "Left as is" lists `accounts.json` and the identities, the managed files under `~/.config/idset/`, and private keys
+  with the rest of the user's config, each behind a muted check. Paths are monospace. Afterwards the rows read "no
   marker block" with a "✓ Removed" note. A failure is inline and names the file that could not be changed, including the
   case where one file was changed and the other not.
 - **Errors and feedback.** Errors are inline notes, never dialogs; the only alerts are the two confirmations above.

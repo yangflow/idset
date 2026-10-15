@@ -137,7 +137,10 @@ button.ghost svg { width:14px; height:14px }
 .r.bk .t .sub { font-size:11px; color:var(--muted); overflow-wrap:anywhere }
 .r.bk .t .sub.bad { color:var(--danger) }
 .r.bk .acts { flex:none; display:flex; align-items:center; gap:2px }
-.r.bk button.text { padding:0 8px }
+.r.bk .acts .muted { font-size:11px; margin-right:4px }
+.r.bk .slot { width:24px; height:24px; flex:none; display:flex; align-items:center; justify-content:center }
+.r.bk .slot.ok { color:var(--accent) }
+.r.bk .slot svg { width:14px; height:14px }
 .r.bk.busy { opacity:.5 }
 .r.idr { min-height:32px; padding-left:44px; gap:8px }
 .r.idr .nm { flex:none }
@@ -151,7 +154,12 @@ button.ghost svg { width:14px; height:14px }
 .dialog .ids { display:flex; flex-direction:column; gap:6px; padding:8px 0; border-top:1px solid var(--border); border-bottom:1px solid var(--border) }
 .dialog .ids .li { display:flex; align-items:center; gap:8px }
 .dialog .ids .li .em { font-size:11px; color:var(--muted) }
-.dialog .kv { grid-template-columns:72px 1fr }
+.dialog .sec { display:flex; flex-direction:column; gap:6px; padding:10px 12px; border-radius:8px; background:var(--surface) }
+.dialog .sec h3 { margin:0 0 2px; font-size:11px; font-weight:600; color:var(--muted) }
+.dialog .sec .li { display:flex; align-items:center; gap:8px; line-height:1.35 }
+.dialog .sec .li svg { width:12px; height:12px; flex:none }
+.dialog .sec .gone svg { color:var(--danger) }
+.dialog .sec .kept svg { color:var(--muted) }
 </style>
 <aside class="controls">
   <div><h2>State</h2><div class="group" id="states"></div></div>
@@ -180,8 +188,8 @@ const TEXT = {
     includeNote:'只删除 ~/.ssh/config 和 ~/.gitconfig 里 Idset 的标记块，其余内容不动。下次修改身份时会加回来。',
     removedNote:'已移除。身份没有变化；下次修改身份时，标记块会加回来。',
     removeFail:'无法写入 ~/.gitconfig：permission denied。~/.ssh/config 里的标记块已经移除。',
-    removeTitle:'移除 Include？', removeBody:'Idset 将停止对 Git 和 SSH 生效，直到你再次修改身份。', removes:'移除', keeps:'保留',
-    markers:'Idset 的标记块，在', keptList:['accounts.json', '~/.config/idset/ 里的托管文件', '私钥'],
+    removeTitle:'移除 Include？', removeBody:'移除后 Git 和 SSH 不再按文件夹选身份。下次修改身份时，标记块会自动加回来。', removes:'会移除', keeps:'不受影响',
+    markerIn:f => `${f} 里的 Idset 标记块`, keptList:['<span class="mono">accounts.json</span> 和你的身份', '<span class="mono">~/.config/idset/</span> 里的托管文件', '私钥和你自己写的其他配置'],
     removeBtn:'移除',
   },
   en: {
@@ -202,8 +210,8 @@ const TEXT = {
     includeNote:'Only the Idset marker block in ~/.ssh/config and ~/.gitconfig is deleted; everything else stays. It comes back the next time you change an identity.',
     removedNote:'Removed. Your identities are unchanged; the marker blocks return the next time you change an identity.',
     removeFail:'Could not write ~/.gitconfig: permission denied. The block in ~/.ssh/config was already removed.',
-    removeTitle:'Remove Include?', removeBody:'Idset stops applying to Git and SSH until you change an identity again.', removes:'Removes', keeps:'Keeps',
-    markers:'The Idset marker block in', keptList:['accounts.json', 'Managed files in ~/.config/idset/', 'Private keys'],
+    removeTitle:'Remove Include?', removeBody:'Git and SSH stop picking an identity by folder. The marker blocks come back the next time you change an identity.', removes:'Will be removed', keeps:'Left as is',
+    markerIn:f => `The Idset marker block in ${f}`, keptList:['<span class="mono">accounts.json</span> and your identities', 'Managed files in <span class="mono">~/.config/idset/</span>', 'Private keys and the rest of your own config'],
     removeBtn:'Remove',
   },
 };
@@ -237,6 +245,8 @@ const icon = {
   trash:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 4.5h11M6 4.5V3h4v1.5M4 4.5l.6 8.5h6.8l.6-8.5"/></svg>',
   sliders:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M2 4.5h7M12 4.5h2M2 11.5h2M7 11.5h7"/><circle cx="10.5" cy="4.5" r="1.5"/><circle cx="5.5" cy="11.5" r="1.5"/></svg>',
   clock:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 8a5.5 5.5 0 1 0 1.8-4.1M2.5 2.5v3h3"/><path d="M8 5v3.2l2 1.3"/></svg>',
+  restore:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5.5 3L2.5 6l3 3"/><path d="M2.5 6H10a3.5 3.5 0 0 1 0 7H6.5"/></svg>',
+  minus:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 8h8"/></svg>',
   doc:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 2h5l3 3v9H4z"/><path d="M9 2v3h3M6 8.5h4M6 11h4"/></svg>',
 };
 const q = new URLSearchParams(location.search);
@@ -275,9 +285,9 @@ function render() {
     const working = s === 'restoring' && i === target;
     const idle = s === 'restoring' && i !== target;
     const sub = b.bad ? `<span class="sub bad">${T.unreadable} · ${b.size}</span>` : `<span class="sub">${T.identities(b.ids.length)} · ${names(b)} · ${b.size}</span>`;
-    let acts = `<button class="text"${b.bad ? ' disabled' : ''}>${T.restore}</button>${ghost('trash', T.del)}`;
-    if (working) acts = `${spinner}<span class="muted">${T.restoring}</span>`;
-    if (s === 'restored' && i === target) acts = `<button class="text" disabled>${icon.check}${T.restored}</button>${ghost('trash', T.del)}`;
+    let acts = `${ghost('restore', T.restore, b.bad)}${ghost('trash', T.del)}`;
+    if (working) acts = `<span class="muted">${T.restoring}</span><span class="slot">${spinner}</span>${ghost('trash', T.del, true)}`;
+    if (s === 'restored' && i === target) acts = `<span class="muted">${T.restored}</span><span class="slot ok" title="${T.restored}">${icon.check}</span>${ghost('trash', T.del)}`;
     let out = `<div class="r bk${idle ? ' busy' : ''}">${ghost(open ? 'down' : 'right', open ? T.collapse : T.expand, b.bad)}<div class="t"><span>${b.time}</span>${sub}</div><div class="acts">${acts}</div></div>`;
     if (open) out += b.ids.map(k => { const d = IDS[k]; return `<div class="r idr">${dot(d)}<span class="nm">${d.label}</span><span class="em">${d.email}</span>${d.scoped ? `<span class="trail" title="${T.scoped}" aria-label="${T.scoped}">${icon.folder}</span>` : `<span class="trail txt">${T.global}</span>`}</div>`; }).join('');
     if (s === 'failed' && i === target) out += `<div class="r err">${note('err', 'warn', T.failed)}</div>`;
@@ -310,8 +320,8 @@ function render() {
   }
   if (s === 'remove') {
     dialog = `<div class="scrim"><div class="dialog" role="alertdialog"><h2>${T.removeTitle}</h2><p>${T.removeBody}</p>
-      <div class="kv"><span>${T.removes}</span><div class="paths"><span>${T.markers}</span><span class="mono">~/.ssh/config</span><span class="mono">~/.gitconfig</span></div>
-        <span>${T.keeps}</span><div class="paths">${T.keptList.map((k, i) => `<span${i === 1 ? '' : ' class="mono"'}>${k}</span>`).join('')}</div></div>
+      <div class="sec"><h3>${T.removes}</h3>${['~/.ssh/config', '~/.gitconfig'].map(f => `<div class="li gone">${icon.minus}<span>${T.markerIn(`<span class="mono">${f}</span>`)}</span></div>`).join('')}</div>
+      <div class="sec"><h3>${T.keeps}</h3>${T.keptList.map(k => `<div class="li kept">${icon.check}<span>${k}</span></div>`).join('')}</div>
       <div class="buttons"><button>${T.cancel}</button><button class="primary">${T.removeBtn}</button></div></div></div>`;
   }
 
