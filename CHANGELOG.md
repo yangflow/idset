@@ -33,3 +33,11 @@ All notable user-facing changes are recorded here, following [Keep a Changelog](
 - Long paths in the bind list, in the identity list and in the stale-path card are shortened in the middle only: the
   start ("~/" or a drive) and the last folder stay.
 - On macOS the Dock icon shows while the accounts window is open; closing the window does not quit Idset.
+
+### Changed
+
+- The panel is more compact. The title row and the footer are 36 DIPs high, and the footer has icon buttons for Add
+  Identity and Quit, with tooltips. On result cards, open, copy, a "⋯" menu (rebind, and unbind when the identity lists
+  this very folder) and clear are icon buttons next to the folder. The overlap card has a pin ("Use only") and minus
+  ("Remove") button on each row. Shorter labels replace long ones, and tooltips carry the full text: the one-line drop
+  zone, "Covered by …", the stale-path prompt's "Update" and "Ignore", and the read-only and `git` errors.

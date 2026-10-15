@@ -297,9 +297,9 @@ Overlays share focus and Escape behavior; see
 Mockup: [design/screens/panel.html](../design/screens/panel.html), and both appearances side by side in
 [design/screens/panel-appearance.html](../design/screens/panel-appearance.html).
 
-From top to bottom: the title bar ("Idset", 13 / 600, a level 1 heading, and the Settings icon button at the right; no
-close button: the tray icon and Escape hide the panel), the content, and the footer. Both bars are 36 DIPs high. The
-title bar has `Space(4)` left and `Space(2)` right padding; the footer has `Space(2)` at both sides. The footer is five
+From top to bottom: the title bar ("Idset", 13 / 600, a level 1 heading, and, once settings exist, the Settings icon
+button at the right; no close button: the tray icon and Escape hide the panel), the content, and the footer. Both bars are 36 DIPs high. The
+title bar has `Space(4)` left and `Space(2)` right padding; the footer has `Space(2)` at both sides. The footer is four
 icon buttons: "Add Identity" (plus) at the left, then at the right About (`info.circle`), Re-check (`arrow.clockwise`)
 and Quit (`power`). The footer after the content:
 
@@ -331,21 +331,24 @@ and "Choose Folder…" that of the button. Words that only explain are tooltips 
 The result card has two parts with a divider between them:
 
 - The context line: the folder (the repository root, or the dropped path when it is not a repository) in monospace,
-  then the copy button (matched only) and the clear button (not while checking). Padding `Space(2)`, left `Space(3)`
+  middle-truncated, then a short transient status ("Copied", "Updated", "Undone", "Covered by …"), the icon buttons of
+  a matched card (open, copy, "⋯") and the clear button (not while checking). Padding `Space(2)`, left `Space(3)`
   (8, left 12).
 - The answer, padding `Space(3)` (12). Checking: a spinner and "Checking…". Matched: a `Space(9)` (36) initial
   badge (radius 9), the identity's name and "Git uses this identity here", gap `Space(3)`; below them three rows,
   "Alias", "Email" and "Folders", with a label column `Space(14)` (56) wide, lined up with the name (left padding
   `Space(15)`, 60). Without a match: the sentence for the case, 600, on a `Warning` outline. `git` failed: "Could not
-  run git: <reason>" in `Danger`, on a `Danger` outline. In "Folders" each path has its own line.
+  run git" in `Danger`, then the reason in monospace `Rem(0.85)` `TextMuted`, at most two lines (the full text is its
+  tooltip), on a `Danger` outline. In "Folders" each path has its own line.
 - Binding. Mockup states: no match, rebinding to a global identity (the confirmation), matched (by a parent folder, or by the folder itself
   with "Unbind"), the rebind menu, already covered, overlap, the undo bar, and after undo.
   - No match: the sentence, a "Bind to" heading (`Rem(0.9)`, 600, `TextMuted`) and one bind row per identity, then a
-    last 40 DIP row with "New Identity and Bind Here" (an `Accent` text button with a plus). One tap binds; there is
+    last 40 DIP row with "New Identity" (an `Accent` text button with a plus; "New Identity and Bind Here" is its
+    tooltip and accessible name). One tap binds; there is
     no confirmation. A folder has no match only when there is no global identity, so the list never has one.
-  - Rebinding to a global identity: choosing it in the "Rebind to" menu closes the menu and adds, under the card
-    actions, its row (marked with `SurfacePressed`) and the confirm block: "After binding, <name> applies only to
-    this folder, not globally." "Cancel" closes the block; "Rebind" does it.
+  - Rebinding to a global identity: choosing it in the "Rebind to" menu closes the menu and adds, under the card's
+    details, the confirm block: one line "<name> will apply only here" and two 80×28 buttons, "Cancel" (closes the
+    block, as Escape does) and the filled "Rebind".
   - Matched: the actions are icon buttons in the context line (open, copy, "⋯", clear). "Unbind" is absent from the menu
     when only a parent folder covers the folder; nothing else explains it, since "Folders" lists the covering path. "Rebind
     to" lists every other identity.
@@ -359,8 +362,8 @@ The result card has two parts with a divider between them:
   - Stale path: when the dropped folder looks like a renamed or moved `gitdir` path that no longer exists, a card of
     its own sits above the no-match card, the same way the overlap card sits above the matched one. The header is
     one line and the paths are middle-truncated, so the card's height never changes. The no-match card below is
-    unchanged, so the bind list still works; in its "Has <path> · adds another" lines the middle of the path gives way to an
-    ellipsis and the rest stays: "Has ~/…/payments-gateway/ · adds another". Mockup states: rename, move (a long old path), after "Change to This Path" and after
+    unchanged, so the bind list still works; in its bind rows the middle of the first folder gives way to an
+    ellipsis and the rest stays: "~/…/payments-gateway/". Mockup states: rename, move (a long old path), after "Change to This Path" and after
     "Keep Old Path".
     - "Update" (tooltip "Change to This Path"): the card is gone and the folder matches, so the matched card shows with "Updated" next
       to the copy button for 1.2 seconds, like "Copied". There is no undo bar: only bind, rebind and "Use only" have
@@ -376,8 +379,8 @@ Identity list rows: padding `Space(2.25)`×`Space(3)` (9×12), a 10 DIP color do
 are more, "Global" for a global identity, "no folders" without any. A long first folder is middle-truncated (at
 most half the row) and " +N" always stays; the name and email are single lines too.
 
-A path on one line is shortened in the middle only, the same way everywhere (the stale-path prompt's rows, the "Has
-<path> · adds another" lines of the bind list, the folder of an identity row): its start ("~/", "/" or a drive such
+A path on one line is shortened in the middle only, the same way everywhere (the stale-path prompt's rows, the first
+folder of a bind row, the folder of an identity row, the context line of a result card): its start ("~/", "/" or a drive such
 as "C:/") and its last folder always stay, and what lies between gives way to an ellipsis, "~/…/payments-gateway/".
 Only when even those do not fit is the last folder cut at its end. The full path is in the tooltip.
 
