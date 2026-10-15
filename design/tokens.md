@@ -63,7 +63,9 @@ Mockups show the 4 DIP unit and 13 px text.
 | accounts-bar | `t.Space(11)` | 44 | height of the sidebar's add bar and of the detail's footer; their hairlines are one line |
 | accounts-button | `t.Space(7)` high, `t.Space(25)` wide | 28 x 100 | footer buttons; Revert and Save share the width, Delete is a text button of the same height |
 | accounts-dialog | `t.Space(90)` | 360 | width of the delete confirmation; the settings window's two confirmations reuse it |
-| settings-sidebar | `t.Space(44)` | 176 | sidebar of the settings window: three rows of an icon and a label |
+| settings-tab | `t.Space(22)` wide, `t.Space(13)` high | 88 x 52 | a tab of the settings window: an icon over a label, 4 apart; the bar pads 4 above, 6 below, 8 at the sides |
+| settings-tab-icon | `t.Space(5)` | 20 | icon of a tab; the label is the small text size |
+| settings-pane | `t.Space(140)` max width | 560 | content of a settings pane, centered, 16 above and 20 at the sides |
 | settings-backup-row | `t.Space(11)` | 44 | height of a backup row; other settings rows use accounts-row (32) |
 | panel | `Width`, `Height` | 340 x 480 | the panel window, fixed |
 | accounts | `Width`, `Height` | 760 x 520 | the accounts window; resizable, with a minimum size |

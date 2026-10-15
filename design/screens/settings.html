@@ -18,17 +18,18 @@ body { margin:0; font-family:system-ui,sans-serif; font-size:13px; color:var(--t
 .controls .hint { color:#666; line-height:1.5 }
 .controls kbd { padding:0 4px; border:1px solid #ccc; border-radius:3px; background:#fff; font-size:11px }
 
-/* Window: the system title bar, then a pane list and the pane. 720x480. */
+/* Window: the system title bar, a row of tabs (one per pane) under it, then the pane. 720x480. */
 .win { position:relative; width:720px; height:480px; flex:none; display:flex; flex-direction:column; background:var(--background); border:1px solid var(--border); border-radius:10px; overflow:hidden }
 .band { flex:none; background:var(--surface); border-bottom:1px solid var(--border) }
 .titlebar { height:28px; display:grid; place-items:center; font-size:11px; color:var(--muted) }
+.tabs { display:flex; justify-content:center; gap:4px; padding:4px 8px 6px }
+.tab { width:88px; height:52px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; border-radius:6px; font-size:11px; color:var(--muted) }
+.tab svg { width:20px; height:20px }
+.tab.sel { background:var(--pressed); color:var(--text) }
 .body { flex:1; min-height:0; display:flex }
-.side { width:176px; flex:none; display:flex; flex-direction:column; background:var(--surface); border-right:1px solid var(--border) }
-.side .items { flex:1; min-height:0; overflow:auto; padding:12px 8px; display:flex; flex-direction:column; gap:2px }
-.side .bar { flex:none; display:flex; align-items:center; height:44px; box-sizing:border-box; padding:0 8px; border-top:1px solid var(--border) }
 .detail { flex:1; min-width:0; display:flex; flex-direction:column }
 .scroll { flex:1; min-height:0; overflow:auto; padding:16px 20px 20px; display:flex; flex-direction:column; gap:20px }
-.scroll > * { flex-shrink:0 }
+.scroll > * { flex-shrink:0; width:100%; max-width:560px; margin-inline:auto }
 .scroll.busy { opacity:.5; pointer-events:none }
 .foot { flex:none; display:flex; align-items:center; gap:8px; min-height:44px; box-sizing:border-box; padding:0 20px; border-top:1px solid var(--border) }
 .status { flex:1; min-width:0; font-size:11px; color:var(--muted); display:flex; align-items:center; gap:6px; overflow-wrap:anywhere }
@@ -54,15 +55,6 @@ button.ghost svg { width:14px; height:14px }
 
 .dot { flex:none; width:10px; height:10px; border-radius:50%; background:rgb(var(--c)) }
 :root[data-scheme=dark] .dot { background:rgb(var(--cl)) }
-
-/* Source list: calm selection, a color dot, no tiles. */
-.section { padding:0 8px 4px; font-size:11px; color:var(--muted); display:flex; justify-content:space-between }
-.item { display:flex; align-items:center; gap:8px; padding:6px 8px; border-radius:6px }
-.item.sel { background:var(--pressed) }
-.item .text { flex:1; min-width:0; display:flex; flex-direction:column; gap:1px }
-.item .email { font-size:11px; color:var(--muted); overflow-wrap:anywhere }
-.item .new { font-size:11px; color:var(--muted) }
-.item .scope { width:14px; height:14px; flex:none; color:var(--muted) }
 
 /* Header. */
 .head { display:flex; align-items:center; gap:8px; flex-wrap:wrap }
@@ -133,10 +125,7 @@ button.ghost svg { width:14px; height:14px }
 .dialog .opt .small { padding-left:22px }
 .dialog .buttons { display:flex; justify-content:flex-end; gap:8px; margin-top:4px }
 
-/* Settings additions: pane list rows, the pane heading, backup rows, notes in the warning color. */
-.side .items { gap:2px }
-.item svg.pane { width:14px; height:14px; flex:none; color:var(--muted) }
-.pane h2 { margin:0; font-size:15px; font-weight:600 }
+/* Settings additions: the pane heading, backup rows, notes in the warning color. */
 .note.warn { color:var(--warning); display:flex; gap:4px }
 .note.warn svg { width:12px; height:12px; flex:none; margin-top:1px }
 .note.ok { color:var(--muted); display:flex; gap:4px }
@@ -271,7 +260,7 @@ function render() {
   let loginNote = note('', '', T.loginNote);
   if (s === 'approve') loginNote = note('warn', 'warn', T.approve);
   if (s === 'loginfail') loginNote = note('err', 'warn', T.loginFail);
-  const general = `<h2>${T.general}</h2>` +
+  const general =
     group(T.gLanguage, pick('system', T.system, chosen === 'system' ? T.current : '') + pick('en', 'English') + pick('zh', '简体中文'), note('', '', chosen === 'system' ? T.systemNote : T.langNote)) +
     group(T.gStartup, `<div class="r"><div class="k wide">${T.login}</div>${sw(loginOn)}</div>`, loginNote);
 
@@ -295,8 +284,8 @@ function render() {
   const banner = s === 'readonly' ? `<div class="banner">${icon.warn}<span>${T.readonlyBanner}</span></div>` : '';
   const list = `${banner}<div class="g"><div class="rows">${rows}</div>${note('', '', T.backupNote)}</div>`;
   const backupsPane = s === 'empty'
-    ? `<h2>${T.backups}</h2><div class="center"><strong>${T.emptyTitle}</strong><span class="muted" style="max-width:380px;line-height:1.45">${T.emptyBody}</span></div>`
-    : `<h2>${T.backups}</h2>${list}`;
+    ? `<div class="center"><strong>${T.emptyTitle}</strong><span class="muted" style="max-width:380px;line-height:1.45">${T.emptyBody}</span></div>`
+    : `${list}`;
 
   // Configuration.
   const removed = s === 'removed';
@@ -306,7 +295,7 @@ function render() {
   if (removed) cfgNote = note('ok', 'check', T.removedNote);
   if (failedCfg) cfgNote = note('err', 'warn', T.removeFail);
   const action = `<div class="r add"><button class="text"${removed ? ' disabled' : ''}>${removed ? icon.check + T.removed : T.remove}</button></div>`;
-  const configPane = `<h2>${T.config}</h2>` + group(T.gInclude, stat('~/.ssh/config', removed || failedCfg) + stat('~/.gitconfig', removed) + action, cfgNote);
+  const configPane = group(T.gInclude, stat('~/.ssh/config', removed || failedCfg) + stat('~/.gitconfig', removed) + action, cfgNote);
 
   // Dialogs: the restore and remove confirmations, over the dimmed window.
   let dialog = '';
@@ -325,11 +314,11 @@ function render() {
   }
 
   const nav = [['general', 'sliders', T.general], ['backups', 'clock', T.backups], ['config', 'doc', T.config]]
-    .map(([id, ic, label]) => `<div class="item${pane === id ? ' sel' : ''}">${icon[ic].replace('<svg', '<svg class="pane"')}<span>${label}</span></div>`).join('');
+    .map(([id, ic, label]) => `<div class="tab${pane === id ? ' sel' : ''}" role="tab" aria-selected="${pane === id}">${icon[ic]}<span>${label}</span></div>`).join('');
   const body = { general, backups:backupsPane, config:configPane }[pane];
   document.documentElement.dataset.scheme = view.scheme;
-  document.getElementById('win').innerHTML = `<div class="band"><div class="titlebar">${T.window}</div></div>
-    <div class="body"><div class="side"><div class="items">${nav}</div></div><div class="detail"><div class="scroll pane">${body}</div></div></div>${dialog}`;
+  document.getElementById('win').innerHTML = `<div class="band"><div class="titlebar">${T.window}</div><div class="tabs" role="tablist">${nav}</div></div>
+    <div class="body"><div class="detail"><div class="scroll pane">${body}</div></div></div>${dialog}`;
 
   const buttons = (id, options, key) => {
     document.getElementById(id).innerHTML = Object.entries(options)

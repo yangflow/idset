@@ -268,7 +268,7 @@ The tables below say what to reach for as the accounts, settings and about windo
 | Columns and rows of controls | [Grid](https://github.com/egoist/mygo/blob/v0.3.6/docs/ui/grid.md) |
 | List and detail of the accounts window | [Split view](https://github.com/egoist/mygo/blob/v0.3.6/docs/ui/split.md) |
 | Optional detail (the clone helper of an identity row, a backup's contents) | [Collapsible](https://github.com/egoist/mygo/blob/v0.3.6/docs/ui/collapsible.md), [Accordion](https://github.com/egoist/mygo/blob/v0.3.6/docs/ui/accordion.md) for several in a stack; only one identity row is expanded at a time, which the screen's state enforces |
-| The three panes of the settings window (General, Backups, Configuration) | [Sidebar](https://github.com/egoist/mygo/blob/v0.3.6/docs/ui/sidebar.md) with a [router](https://github.com/egoist/mygo/blob/v0.3.6/docs/ui/navigation.md) |
+| The three panes of the settings window (General, Backups, Configuration) | [Tabs](https://github.com/egoist/mygo/blob/v0.3.6/docs/ui/tabs.md); `ui.TabsBase` for the icon over the label |
 
 ### Dialogs, messages and status
 
@@ -502,9 +502,14 @@ Mockup: [design/screens/settings.html](../design/screens/settings.html), every s
 languages. Behavior is in product.md, "设置窗口". 720×480, the system title bar ("Idset · Settings"), same
 material as the accounts window: fills, hairlines and text, no shadow, gradient or blur.
 
-- **Sidebar.** 176 wide (`Space(44)`), `Surface` fill, one hairline at its right. Three rows, each an icon and a label:
-  General, Backups, Configuration (通用 / 备份 / 配置). The selected row has the `Pressed` fill; nothing else changes
-  between rows. A level 1 heading of the pane's name starts each pane.
+- **Tabs.** A tab bar along the top, under the title bar and part of the same `Surface` band, one hairline at its
+  bottom. Three tabs centered as a group, each an icon over a label: General, Backups, Configuration (通用 / 备份 /
+  配置). A tab is 88 wide and 52 high (`Space(22)`, `Space(13)`) with a 20 DIP icon (`Space(5)`), the 11 label 4 below it,
+  and 4 DIP gaps; the bar has 4 above and 6 below. The selected tab has the `Pressed` fill, `Text` icon and label and a
+  6 DIP radius; the others are `TextMuted` on no fill. Arrows, Home and End move the choice, as `ui.Tabs` does. The
+  pane has no heading of its own: the selected tab names it.
+- **Pane.** Full width below the bar, 16 above and 20 at the sides, scrolling; its content is at most 560 wide and
+  centered, so wider windows do not stretch the rows.
 - **General.** One grouped list of 32 DIPs rows. Language is three tick rows: "Follow System" (shows the language it
   resolves to), "English" and "简体中文", the last two always in their own language. "Open at login" is a switch row; when
   the system asks for approval the switch stays off and a `Warning` note under it says where to approve (macOS: System
