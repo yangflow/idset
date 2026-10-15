@@ -32,6 +32,7 @@ type recorder struct {
 	ran      []bind.Op
 	folders  []string
 	boundNew []string
+	cloned   [][2]string
 }
 
 func (r *recorder) actions() Actions {
@@ -48,6 +49,7 @@ func (r *recorder) actions() Actions {
 		Run:            func(op bind.Op) { r.ran = append(r.ran, op) },
 		NewIdentityFor: func(f string) { r.boundNew = append(r.boundNew, f) },
 		Open:           func(p string) { r.folders = append(r.folders, p) },
+		CloneCopied:    func(id, prefix string) { r.cloned = append(r.cloned, [2]string{id, prefix}) },
 	}
 }
 

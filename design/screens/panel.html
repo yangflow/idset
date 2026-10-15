@@ -5,8 +5,8 @@
 <title>Panel</title>
 <style>
 /* Colors are the MyGo default theme roles and sizes the 4 DIP spacing unit at 13 px text; see design/tokens.md. */
-:root { color-scheme:light; --background:#ffffff; --surface:#f4f4f5; --text:#18181b; --muted:#71717a; --border:#d9d9de; --accent:#2563eb; --accent-soft:rgba(37,99,235,.25); --danger:#dc2626; --warning:#d97706; --ghost-hover:#e9e9ec; --pressed:#dddde1 }
-:root[data-scheme=dark] { color-scheme:dark; --background:#18181b; --surface:#27272a; --text:#f4f4f5; --muted:#a1a1aa; --border:#3f3f46; --accent:#3b82f6; --accent-soft:rgba(59,130,246,.4); --danger:#ef4444; --warning:#f59e0b; --ghost-hover:#323236; --pressed:#3c3c41 }
+:root { color-scheme:light; --background:#ffffff; --surface:#f4f4f5; --text:#18181b; --muted:#71717a; --border:#d9d9de; --accent:#2563eb; --accent-soft:rgba(37,99,235,.25); --danger:#dc2626; --warning:#d97706; --ghost-hover:#e9e9ec; --pressed:#dddde1; --focus:rgba(37,99,235,.55) }
+:root[data-scheme=dark] { color-scheme:dark; --background:#18181b; --surface:#27272a; --text:#f4f4f5; --muted:#a1a1aa; --border:#3f3f46; --accent:#3b82f6; --accent-soft:rgba(59,130,246,.4); --danger:#ef4444; --warning:#f59e0b; --ghost-hover:#323236; --pressed:#3c3c41; --focus:rgba(96,165,250,.6) }
 * { box-sizing:border-box }
 body { margin:0; font-family:system-ui,sans-serif; font-size:13px; color:var(--text); background:#888; display:flex; gap:24px; padding:24px; align-items:flex-start }
 .controls { width:220px; flex:none; display:flex; flex-direction:column; gap:14px; padding:14px; border-radius:10px; background:#f4f4f4; color:#242424; font-size:12px }
@@ -77,6 +77,28 @@ h1 { flex:1; margin:0; font-size:13px; font-weight:600 }
 .find .says > span { flex:none }
 .find .says > .give { flex:0 1 auto; min-width:0; overflow:hidden; text-overflow:ellipsis }
 .find .says > .mid { flex:0 1 auto }
+/* Remote row: a finding-shaped row without a severity (muted globe), an acknowledgement and one icon button at the end, 8 from the edge like the context line. */
+.result .find.remote { padding-right:8px }
+.find.remote .says { align-items:center; gap:6px }
+.find.remote .says > svg { flex:none; width:14px; height:14px; color:var(--muted) }
+.ack { flex:none; font-size:11px; color:var(--muted); white-space:nowrap }
+.panel button.tool:disabled { opacity:.4; cursor:default; background:transparent }
+/* Clone helper: an input with the copy button at its end (28 high), under it one line of output (16 high) or a quiet hint. */
+.clone { display:flex; flex-direction:column; gap:4px; padding:8px 12px 10px }
+.result .clone { border-top:1px solid var(--border) }
+.clone .line { display:flex; align-items:center; gap:4px }
+.clone .inputwrap { flex:1; min-width:0; display:flex }
+.panel input.field { width:100%; height:28px; padding:0 8px; border:1px solid var(--border); border-radius:6px; background:var(--background); color:var(--text); font-family:ui-monospace,monospace; font-size:12px }
+.panel input.field::placeholder { color:var(--muted) }
+.panel input.field.focus { outline:2px solid var(--focus); outline-offset:-1px; border-color:transparent }
+.clone .out { display:flex; align-items:center; height:16px; padding:0 2px; font-size:11px; color:var(--muted) }
+.clone .out .mid { flex:1 1 0; font-size:11px }
+.clone .out .hint { white-space:nowrap; overflow:hidden; text-overflow:ellipsis }
+/* Expanded identity row: the helper sits inside the list under its row, lined up with the name (12 + 10 dot + 10 gap = 32). */
+.list .clone { padding:0 12px 10px 32px }
+.item .chev { transform:rotate(-90deg) }
+.item.open .chev { transform:none }
+.item .gap { flex:none; width:24px }
 .result .say { padding:12px; display:flex; align-items:center; gap:8px; font-weight:600 }
 .result .say.plain { font-weight:400 }
 .result .say.danger { color:var(--danger); font-weight:400 }
@@ -151,7 +173,7 @@ h1 { flex:1; margin:0; font-size:13px; font-weight:600 }
 .section { display:flex; justify-content:space-between; padding:0 2px; margin-bottom:-6px; font-size:12px; font-weight:600; color:var(--muted) }
 .list { border:1px solid var(--border); border-radius:10px; background:var(--surface); overflow:hidden }
 .item { display:flex; align-items:center; gap:10px; padding:9px 12px }
-.item + .item { border-top:1px solid var(--border) }
+.list > .item:not(:first-child) { border-top:1px solid var(--border) }
 .item .dot { flex:none; width:10px; height:10px; border-radius:50%; background:rgb(var(--c)) }
 :root[data-scheme=dark] .item .dot { background:rgb(var(--cl)) }
 .item .text { flex:1; min-width:0; display:flex; flex-direction:column; gap:1px }
@@ -190,7 +212,7 @@ h1 { flex:1; margin:0; font-size:13px; font-weight:600 }
   <div><h2>Footer icons</h2><div class="group" id="icons"></div></div>
   <div><h2>Height</h2><div class="group" id="heights"></div></div>
   <div><h2>Language</h2><div class="group" id="langs"></div></div>
-  <div class="hint">URL: <code>?state=…&amp;scheme=dark&amp;lang=zh&amp;icons=today&amp;height=full</code><br><kbd>←</kbd> <kbd>→</kbd> switch state.<br>Pin a tooltip: <code>&amp;tip=quit</code> (settings, add, about, recheck, quit, finding).</div>
+  <div class="hint">URL: <code>?state=…&amp;scheme=dark&amp;lang=zh&amp;icons=today&amp;height=full</code><br><kbd>←</kbd> <kbd>→</kbd> switch state.<br>Pin a tooltip: <code>&amp;tip=quit</code> (settings, add, about, recheck, quit, finding, cmd, copyclone, clone).</div>
 </aside>
 <div id="stage" style="display:flex;gap:24px;align-items:flex-start"></div>
 <script>
@@ -213,6 +235,8 @@ const TEXT = {
     noAuthor:'提交没有作者', noAuthorTip:'这个仓库读不到 user.email，提交时 Git 会报错或自己猜一个地址。',
     commitsAs:'提交会署名为 ', otherTip:(e, n, w) => `仓库的 user.email 是 ${e}，属于 ${n}，不是 ${w}。`,
     unknownTip:e => `仓库的 user.email 是 ${e}，没有身份用这个邮箱。`,
+    httpsRow:'远程地址是 HTTPS', httpsTip:'HTTPS 推送用不上这个身份的别名和密钥。', copyCmd:'复制改地址命令', copyCmdTip:c => `复制改地址命令：${c}`,
+    cloneLabel:'要克隆的仓库', cloneTip:'可以输入 owner/repo、仓库地址或整条 git clone 命令，回车复制。', cloneHint:'输入 owner/repo 或仓库地址', cloneCopy:'复制克隆命令', cloneToggle:'用这个身份克隆',
     pushesWith:'推送会用 ', keyTip:(p, w) => `core.sshCommand 指定了 ${p}，不是 ${w} 的密钥。`, owner:n => `（${n}）`,
   },
   en: {
@@ -233,6 +257,8 @@ const TEXT = {
     noAuthor:'Commits have no author', noAuthorTip:'This repository has no user.email, so Git will stop at the commit or guess an address.',
     commitsAs:'Commits use ', otherTip:(e, n, w) => `This repository’s user.email is ${e}, which belongs to ${n}, not ${w}.`,
     unknownTip:e => `This repository’s user.email is ${e}, which no identity uses.`,
+    httpsRow:'Remote is HTTPS', httpsTip:'Pushes over HTTPS do not use this identity’s SSH alias or key.', copyCmd:'Copy command to use SSH', copyCmdTip:c => `Copy command to use SSH: ${c}`,
+    cloneLabel:'Repository to clone', cloneTip:'Accepts owner/repo, a repository URL or a whole git clone command. Enter copies.', cloneHint:'Enter owner/repo or a repository URL', cloneCopy:'Copy the clone command', cloneToggle:'Clone with this identity',
     pushesWith:'Pushes use ', keyTip:(p, w) => `core.sshCommand picks ${p}, not ${w}’s key.`, owner:n => ` (${n})`,
   },
 };
@@ -241,6 +267,7 @@ const STATES = {
   overlap:'多个身份覆盖', covered:'已覆盖，没改', undo:'撤销条', undone:'撤销之后',
   stale:'旧路径失效（改名）', 'stale-moved':'旧路径失效（挪位置）', 'stale-fixed':'改成这次的路径之后', 'stale-kept':'保留旧路径之后',
   'check-noemail':'核对：没有邮箱', 'check-other':'核对：别的身份', 'check-unknown':'核对：陌生邮箱', 'check-key':'核对：别的密钥', 'check-many':'核对：多条，长值',
+  https:'HTTPS 远程', 'https-copied':'HTTPS：已复制', 'https-check':'HTTPS + 核对', clone:'克隆助手：有结果', 'clone-long':'克隆助手：长结果', 'clone-bad':'克隆助手：解释不了', 'clone-copied':'克隆助手：已复制', 'row-open':'身份行展开',
   nomatch:'没有匹配', confirm:'改绑到全局身份', notrepo:'不是仓库', notfolder:'不是文件夹', giterror:'git 失败', empty:'没有身份', loading:'读取中', readonly:'读不出来',
 };
 const ids = [
@@ -273,6 +300,8 @@ const icon = {
   x:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M4 4l8 8M12 4l-8 8"/></svg>',
   warn:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2.5l6 11H2z"/><path d="M8 6.5v3M8 11.6v.1"/></svg>',
   chev:'<svg class="chev" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l4 4 4-4"/></svg>',
+  terminal:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4.5l4 3.5-4 3.5"/><path d="M8.5 12h4.5"/></svg>',
+  globe:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><circle cx="8" cy="8" r="6.25"/><path d="M1.75 8h12.5"/><path d="M8 1.75c2.2 2 2.2 10.5 0 12.5M8 1.75c-2.2 2-2.2 10.5 0 12.5"/></svg>',
   plus:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M8 3v10M3 8h10"/></svg>',
   folder:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"><path d="M2 4.5a1 1 0 0 1 1-1h3l1.5 1.5H13a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1z"/></svg>',
   more:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M3.5 8h.01M8 8h.01M12.5 8h.01"/></svg>',
@@ -302,11 +331,14 @@ function panel(state, T) {
   const ghost = (name, label, end = false) => `<button class="tool tip-below${end ? ' tip-end' : ''}${view.tip === name ? ' pinned' : ''}" data-tip="${label}" aria-label="${label}">${icon[name]}</button>`;
   const avatar = i => `<div class="avatar" style="--c:${i.c};--cl:${i.cl}">${(i.label || '?').slice(0, 1).toUpperCase()}</div>`;
   const tag = i => i.scope ? mid(i.scope[0], i.scope.length > 1 ? ` +${i.scope.length - 1}` : '') : T.global;
-  const rows = set => set.map(i => `<div class="item"><span class="dot" style="--c:${i.c};--cl:${i.cl}"></span><div class="text"><span class="label">${i.label || T.unnamed}</span><span class="email">${i.email || T.noEmail}</span></div><span class="tag">${tag(i)}</span></div>`).join('');
+  // A row with an alias ends in a disclosure button (right when closed, down when open); one without keeps the space so the folders line up. Only one row is open.
+  const disclose = (i, open) => i.alias ? `<button class="tool tip-end${open && view.tip === 'clone' ? ' pinned' : ''}" data-tip="${T.cloneToggle}" aria-label="${T.cloneToggle}" aria-expanded="${!!open}">${icon.chev}</button>` : '<span class="gap"></span>';
+  const rows = (set, open) => set.map(i => `<div class="item${open && open.id === i ? ' open' : ''}"><span class="dot" style="--c:${i.c};--cl:${i.cl}"></span><div class="text"><span class="label">${i.label || T.unnamed}</span><span class="email">${i.email || T.noEmail}</span></div><span class="tag">${tag(i)}</span>${disclose(i, open && open.id === i)}</div>`
+    + (open && open.id === i ? clone(i, open.value, open) : '')).join('');
   // The filter shows from three identities on; the platform buttons only in the filter state.
-  const list = (set = withGlobal, chips = false) => `<div class="section"><span>${T.identities}</span><span>${set.length}</span></div>` +
+  const list = (set = withGlobal, chips = false, open = null) => `<div class="section"><span>${T.identities}</span><span>${set.length}</span></div>` +
     (set.length >= 3 ? `<input class="search" placeholder="${T.filter}">` : '') + (chips ? `<div class="chips"><button class="chip on">GitHub</button><button class="chip">GitLab</button><button class="chip">Gitea</button></div>` : '') +
-    `<div class="list">${rows(set)}</div>`;
+    `<div class="list">${rows(set, open)}</div>`;
   // The drop zone is always one line; what it says beyond that is in the tooltip.
   const drop = over => `<div class="drop${over ? ' over' : ''}"><span class="muted small" data-tip="${T.dropHint}">${T.dropLine}</span><button class="tip-end" data-tip="${T.choose}" aria-label="${T.choose}">${T.chooseShort}</button></div>`;
   const filter = `<input class="search" placeholder="${T.filter}"><div class="chips"><button class="chip on">GitHub</button><button class="chip">GitLab</button><button class="chip">Gitea</button></div>`;
@@ -317,6 +349,22 @@ function panel(state, T) {
   const name = i => i.label || T.unnamed;
   const btn = (label, tip = '') => `<button class="text"${tip ? ` data-tip="${tip}"` : ''}>${label}</button>`;
   const ack = (text, tip = '') => `<span class="copied"${tip ? ` data-tip="${tip}"` : ''}>${text}</span>`;
+  // Clone helper: the input, the copy button, and one line under them: the command (middle-truncated, full text in its tooltip) or, when the input cannot be read, a quiet hint.
+  const cloneOf = (i, v) => /^[\w.-]+(\/[\w.-]+)+$/.test(v) ? `git clone git@${i.alias}:${v}.git` : null;
+  const cmdLine = (i, full) => {
+    const head = `git clone git@${i.alias}:`, rest = full.slice(head.length), cut = rest.lastIndexOf('/');
+    return `<span class="mid tip-start" data-tip="${full}"><span class="ml">${head}</span><span class="mh">${rest.slice(0, cut)}</span><span class="mt">${rest.slice(cut)}</span></span>`;
+  };
+  const clone = (i, value, o = {}) => {
+    const full = cloneOf(i, value);
+    return `<div class="clone"><div class="line"><span class="inputwrap tip-start" data-tip="${T.cloneTip}"><input class="field${o.focus ? ' focus' : ''}" value="${value}" placeholder="owner/repo" aria-label="${T.cloneLabel}" readonly></span>${o.copied ? ack(T.copied).replace('class="copied"', 'class="ack"') : ''}`
+      + `<button class="tool tip-end${view.tip === 'copyclone' ? ' pinned' : ''}" data-tip="${T.cloneCopy}" aria-label="${T.cloneCopy}"${full ? '' : ' disabled'}>${icon[o.copied ? 'check' : 'terminal']}</button></div>`
+      + `<div class="out">${full ? cmdLine(i, full) : `<span class="hint">${T.cloneHint}</span>`}</div></div>`;
+  };
+  // Remote row: the HTTPS notice and the copy-command button, whose tooltip holds the whole command. ?tip=cmd pins it.
+  const switchCmd = i => `git remote set-url origin git@${i.alias}:org/repo.git`;
+  const remoteRow = (i, copied) => `<div class="find remote"><span class="says tip-start" data-tip="${T.httpsTip}">${icon.globe}<span class="give">${T.httpsRow}</span></span>${copied ? `<span class="ack">${T.copied}</span>` : ''}`
+    + `<button class="tool tip-end${view.tip === 'cmd' ? ' pinned' : ''}" data-tip="${T.copyCmdTip(switchCmd(i))}" aria-label="${T.copyCmd}">${icon[copied ? 'check' : 'terminal']}</button></div>`;
   // A matched card. The header holds every action: open, copy, the menu (rebind, and unbind when the identity lists this very folder), clear.
   const confirmBlock = `<div class="confirm"><p>${T.confirmShort(name(personal))}</p><div class="buttons"><button class="field fixed">${T.cancel}</button><button class="primary fixed">${T.rebindDo}</button></div></div>`;
   const matched = (o = {}) => {
@@ -325,7 +373,7 @@ function panel(state, T) {
     const status = o.ack ? ack(T.updated) : o.covered ? ack(T.coveredBy('~/work/'), T.coveredNote(name(work), '~/work/')) : o.copied ? ack(T.copied) : '';
     return result(o.finds ? findsKind(o.finds) : '', path, `
       <div class="who">${avatar(i)}<div><div class="name">${name(i)}</div><div class="uses">${T.uses}</div></div></div>
-      <div class="kv"><span>${T.alias}</span><span class="mono">${i.alias}</span><span>${T.email}</span><span>${i.email}</span><span>${T.folders}</span><span class="mono paths">${i.scope ? i.scope.map(p => `<span>${p}</span>`).join('') : T.global}</span></div>${o.finds ? findings(o.finds) : ''}${o.confirm ? confirmBlock : ''}${o.foot || ''}`,
+      <div class="kv"><span>${T.alias}</span><span class="mono">${i.alias}</span><span>${T.email}</span><span>${i.email}</span><span>${T.folders}</span><span class="mono paths">${i.scope ? i.scope.map(p => `<span>${p}</span>`).join('') : T.global}</span></div>${findings(o.finds || [], o.https ? remoteRow(i, o.httpsCopied) : '')}${o.confirm ? confirmBlock : ''}${i.alias && o.clone ? clone(i, o.clone.value, o.clone) : ''}${o.foot || ''}`,
       status + ghost('folder', T.openFinder) + ghost(o.copied ? 'check' : 'copy', T.copy) + `<span class="menuwrap">${ghost('more', T.more)}${o.menu ? menu : ''}</span>` + ghost('x', T.clear, true));
   };
   // Identity check: one line per finding, a severity glyph and a short sentence; the explanation, with the full value, is the row's tooltip.
@@ -333,7 +381,7 @@ function panel(state, T) {
   const findsKind = fs => fs.some(f => f.sev === 'danger') ? 'danger' : 'warning';
   const email = e => { const at = e.lastIndexOf('@'); return `<span class="give">${e.slice(0, at)}</span><span>${e.slice(at)}</span>`; };
   const find = (f, n) => `<div class="find ${f.sev} tip-start${n === 0 && view.tip === 'finding' ? ' pinned' : ''}" data-tip="${f.tip}">${icon[f.sev === 'danger' ? 'error' : 'warn']}<span class="says">${f.says}</span></div>`;
-  const findings = fs => `<div class="finds">${fs.map(find).join('')}</div>`;
+  const findings = (fs, extra = '') => fs.length || extra ? `<div class="finds">${fs.map(find).join('')}${extra}</div>` : '';
   const check = {
     noemail: { sev:'warning', says:`<span class="give">${T.noAuthor}</span>`, tip:T.noAuthorTip },
     other: who => ({ sev:'danger', says:`<span>${T.commitsAs}</span>${email(who.email)}<span>${T.owner(name(who))}</span>`, tip:T.otherTip(who.email, name(who), name(work)) }),
@@ -379,6 +427,14 @@ function panel(state, T) {
     'check-unknown': matched({ finds:[check.unknown] }) + drop() + list(),
     'check-key': matched({ finds:[check.key(otherKey)] }) + drop() + list(),
     'check-many': matched({ finds:[check.other(clientLong), check.key(longKey)] }) + drop() + list(swap(withGlobal, client, clientLong)),
+    https: matched({ https:true, clone:{ value:'org/repo' } }) + drop() + list(),
+    'https-copied': matched({ https:true, httpsCopied:true, clone:{ value:'org/repo' } }) + drop() + list(),
+    'https-check': matched({ finds:[check.other(client)], https:true, clone:{ value:'org/repo' } }) + drop() + list(),
+    clone: matched({ clone:{ value:'org/repo', focus:true } }) + drop() + list(),
+    'clone-long': matched({ clone:{ value:'acme/platform/payments/api', focus:true } }) + drop() + list(),
+    'clone-bad': matched({ clone:{ value:'acme repo', focus:true } }) + drop() + list(),
+    'clone-copied': matched({ clone:{ value:'org/repo', copied:true } }) + drop() + list(),
+    'row-open': drop() + list(withGlobal, false, { id:work, value:'acme/', focus:true }),
     overlap: overlap() + matched({ id:client, path:'~/work/client/app' }) + drop() + list(),
     covered: matched({ covered:true }) + drop() + list(),
     undo: matched({ id:workBound, path:'~/scratch/notes', exact:true, foot:undoBar(work) }) + drop() + list(swap(noGlobal, work, workBound)),

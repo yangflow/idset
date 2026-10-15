@@ -8,6 +8,7 @@ import (
 	"github.com/egoist/mygo/ui"
 	"github.com/yangflow/idset/internal/account"
 	"github.com/yangflow/idset/internal/match"
+	"github.com/yangflow/idset/internal/remote"
 	"github.com/yangflow/idset/internal/ui/icons"
 )
 
@@ -131,6 +132,7 @@ func (s *Screen) matchedCard(c *ui.Context, r *match.Result, a account.Account) 
 		})
 		s.findings(c, r, a)
 		s.confirmBlock(c)
+		s.cardClone(c, a)
 		if s.failure != "" {
 			s.bar(c, s.failure, t.Danger)
 		}
@@ -423,7 +425,7 @@ func (s *Screen) describe(f match.Finding, a account.Account) said {
 // findings is the identity check under the details of the matched card: a hairline, then a row for each
 // disagreement between the repository and the identity. There are no buttons; the reason is the tooltip.
 func (s *Screen) findings(c *ui.Context, r *match.Result, a account.Account) {
-	if len(r.Findings) == 0 {
+	if _, https := remote.RemoteCommand(a, r.Origin); len(r.Findings) == 0 && !https {
 		return
 	}
 	t := c.Theme()
@@ -442,6 +444,7 @@ func (s *Screen) findings(c *ui.Context, r *match.Result, a account.Account) {
 			})
 			tipAbove(c, row, d.why)
 		}
+		s.remoteRow(c, r, a)
 	})
 }
 
@@ -483,6 +486,16 @@ func (s *Screen) findingLine(c *ui.Context, d said) {
 // tipAbove is the tooltip of anchor placed as the mockup has it: above it, 6 DIPs away, its start under the anchor's
 // start, at most 240 DIPs wide, which Element.Tooltip does not offer (it goes by the pointer, below it, 320 wide).
 func tipAbove(c *ui.Context, anchor ui.Element, text string) {
+	tipPlaced(c, anchor, text, false)
+}
+
+// tipAboveEnd is tipAbove for a button at the end of a line: the tooltip ends where the button ends, so that it
+// stays inside the panel.
+func tipAboveEnd(c *ui.Context, anchor ui.Element, text string) {
+	tipPlaced(c, anchor, text, true)
+}
+
+func tipPlaced(c *ui.Context, anchor ui.Element, text string, end bool) {
 	t := c.Theme()
 	fill, ink := t.Inverse, t.InverseText
 	if fill == (ui.Color{}) {
@@ -492,7 +505,11 @@ func tipAbove(c *ui.Context, anchor ui.Element, text string) {
 		ink = t.Background
 	}
 	ui.TooltipBase(c, anchor, func(tip ui.Element) {
-		tip.AttachTo(anchor, ui.AnchorTopLeft, ui.AnchorBottomLeft).Margin(t.Space(1.5), 0, 0, 0)
+		if end {
+			tip.AttachTo(anchor, ui.AnchorTopRight, ui.AnchorBottomRight).Margin(t.Space(1.5), 0, 0, 0)
+		} else {
+			tip.AttachTo(anchor, ui.AnchorTopLeft, ui.AnchorBottomLeft).Margin(t.Space(1.5), 0, 0, 0)
+		}
 		tip.MaxWidth(t.Space(60)).Padding(t.Space(1), t.Space(2)).Radius(t.Space(1.5)).
 			Background(fill).TextColor(ink).FontSize(t.Rem(0.75))
 		tip.Children(func() { ui.Text(c, text) })
