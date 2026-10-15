@@ -50,8 +50,22 @@ func staleResult(root, old string) match.Result {
 
 func TestStalePromptOnARenamedFolder(t *testing.T) {
 	_, tt, _ := card(t, staleResult(newRoot, renamed), staleList(renamed)...)
-	want(t, tt, "work", "points to a folder that is gone", "Old", "New", "~/projects/api-old", "~/projects/api",
-		"Change to This Path", "Keep Old Path")
+	want(t, tt, "work’s folder is gone", "~/projects/api-old", "~/projects/api", "Update", "Ignore")
+	if count(tt, "Old")+count(tt, "New") != 0 {
+		t.Errorf("no labels before the paths: %q", tt.Texts())
+	}
+	// The short words name the long actions, and the old path comes above the new one.
+	update, _ := tt.Find("Change to This Path")
+	ignore, _ := tt.Find("Keep Old Path")
+	if update.Y != ignore.Y || update.X >= ignore.X {
+		t.Errorf("Update, then Ignore, on one line: %v %v", update, ignore)
+	}
+	old, _ := tt.Find("api-old")
+	head, _ := tt.Find("’s folder is gone")
+	if old.Y <= head.Y || old.Y >= update.Y {
+		t.Errorf("header, paths, buttons: %v %v %v", head, old, update)
+	}
+	within(t, tt, "’s folder is gone", "api-old", "Change to This Path", "Keep Old Path")
 	// The no-match card below is unchanged: its sentence, the bind list and the new identity.
 	want(t, tt, "No identity matches this folder", "Bind to", "Bind to client", "New Identity and Bind Here")
 	wantNot(t, tt, "Updated")
@@ -65,17 +79,17 @@ func TestStalePromptInChinese(t *testing.T) {
 	s.Drop([]string{newRoot})
 	s.SetResult(newRoot, staleResult(newRoot, renamed), nil)
 	tt.Frame()
-	want(t, tt, "还指向一个已经不在的路径", "旧路径", "新路径", "改成这次的路径", "保留旧路径", "没有身份匹配这个目录")
-	if got := tt.Announcements(); !slices.ContainsFunc(got, func(a string) bool { return strings.Contains(a, "还指向一个已经不在的路径") }) {
+	want(t, tt, "work 的路径已不在", "更新", "忽略", "改成这次的路径", "保留旧路径", "没有身份匹配这个目录")
+	within(t, tt, " 的路径已不在", "更新", "忽略")
+	if got := tt.Announcements(); !slices.ContainsFunc(got, func(a string) bool { return strings.Contains(a, "work 的路径已不在") }) {
 		t.Errorf("the prompt is announced: %q", got)
 	}
 }
 
-// stackHeights are the heights the prompt's lines take, for any path.
-func stackHeights(t *testing.T, tt *ui.Tester) (head, old, fresh, buttons float32) {
+// stackHeights are the heights the prompt's lines take, for any path: from the header to the buttons, and the
+// buttons.
+func stackHeights(t *testing.T, tt *ui.Tester) (paths, buttons float32) {
 	t.Helper()
-	o, _ := tt.Find("Old")
-	n, _ := tt.Find("New")
 	b, ok := tt.Find("Change to This Path")
 	if !ok {
 		t.Fatalf("no button in %q", tt.Texts())
@@ -84,26 +98,23 @@ func stackHeights(t *testing.T, tt *ui.Tester) (head, old, fresh, buttons float3
 	if b.Y != k.Y {
 		t.Errorf("the two buttons sit on one line: %v %v", b.Y, k.Y)
 	}
-	h, _ := tt.Find("points to a folder that is gone")
-	return o.Y - h.Y, n.Y - o.Y, b.Y - n.Y, k.H
+	h, _ := tt.Find("’s folder is gone")
+	return b.Y - h.Y, k.H
 }
 
 func TestStaleCardHasTheSameHeightForAnyPath(t *testing.T) {
 	short := tallCard(t, staleResult(newRoot, renamed), staleList(renamed)...)
 	long := tallCard(t, staleResult("/home/ada/projects/payments-gateway", moved), staleList(moved)...)
-	a1, a2, a3, a4 := stackHeights(t, short)
-	b1, b2, b3, b4 := stackHeights(t, long)
-	if a1 != b1 || a2 != b2 || a3 != b3 || a4 != b4 {
-		t.Errorf("short %v %v %v %v, long %v %v %v %v", a1, a2, a3, a4, b1, b2, b3, b4)
+	a1, a2 := stackHeights(t, short)
+	b1, b2 := stackHeights(t, long)
+	if !same(a1, b1) || !same(a2, b2) {
+		t.Errorf("short %v %v, long %v %v", a1, a2, b1, b2)
 	}
-	// The two path rows are as high as each other, and the bind rows as high as each other, long path or not.
-	if a2 != b2 {
-		t.Error("path rows differ")
-	}
+	// The bind rows are as high as each other, long path or not.
 	_, h1 := size(t, long, "Bind to work")
 	_, h2 := size(t, long, "Bind to misc")
 	_, h3 := size(t, long, "Bind to client")
-	if h1 != h2 || h2 != h3 {
+	if !same(h1, h2) || !same(h2, h3) {
 		t.Errorf("bind rows differ in height: %v %v %v", h1, h2, h3)
 	}
 	// The card below starts at the same distance from the buttons in both.
@@ -111,7 +122,7 @@ func TestStaleCardHasTheSameHeightForAnyPath(t *testing.T) {
 	s2, _ := long.Find("No identity matches this folder")
 	k1, _ := short.Find("Keep Old Path")
 	k2, _ := long.Find("Keep Old Path")
-	if s1.Y-k1.Y != s2.Y-k2.Y {
+	if !same(s1.Y-k1.Y, s2.Y-k2.Y) {
 		t.Errorf("the no-match card moves with the path: %v %v", s1.Y-k1.Y, s2.Y-k2.Y)
 	}
 }
@@ -122,12 +133,16 @@ func TestLongPathsKeepTheirStartAndLastFolder(t *testing.T) {
 	// only the middle gives way. The old path of the prompt, the bind rows and the identity list all do it.
 	texts := tt.Texts()
 	for _, line := range [][]string{
-		{"~/", "Documents/archive/2023/legacy-services/", "payments-gateway", "New"},
-		{"Has", "~/", "Documents/archive/2023/legacy-services/", "payments-gateway/", "· adds another", "Bind"},
+		{"’s folder is gone", "~/", "Documents/archive/2023/legacy-services/", "payments-gateway", "~/", "projects/", "payments-gateway", "Update"},
+		{"Bind to work", "work", "~/", "Documents/archive/2023/legacy-services/", "payments-gateway/", "Bind"},
 		{"m@example.com", "~/", "Documents/archive/2023/legacy-services/", "payments-gateway/", "work"},
 		{"bob@example.com", "~/", "Documents/archive/2023/legacy-services/", "payments-gateway/", "+1"},
 	} {
 		at := slices.Index(texts, line[0])
+		if at < 0 {
+			t.Errorf("no %q in %q", line[0], texts)
+			continue
+		}
 		for _, piece := range line {
 			if i := slices.Index(texts[at:], piece); i < 0 {
 				t.Errorf("%q has no %q after %q", texts, piece, line[0])
@@ -170,8 +185,8 @@ func TestAfterChangingThePathTheFolderMatchesWithUpdated(t *testing.T) {
 	s.SetAccounts([]account.Account{fixed, client()}, nil, "")
 	s.OpDone(bind.Outcome{Op: r.ran[0], Result: matched(newRoot, "work", true)})
 	tt.Frame()
-	want(t, tt, "Updated", "Git uses this identity here", "Unbind", s.openLabel())
-	wantNot(t, tt, "points to a folder that is gone", "Change to This Path", "Keep Old Path", "Undo", "Bound to work")
+	want(t, tt, "Updated", "Git uses this identity here", "More", s.openLabel())
+	wantNot(t, tt, "’s folder is gone", "Change to This Path", "Keep Old Path", "Undo", "Bound to work")
 	if got := tt.Announcements(); !slices.Contains(got, "Updated") {
 		t.Errorf("announced %q", got)
 	}
@@ -192,18 +207,18 @@ func TestKeepOldPathOnlyHidesThePrompt(t *testing.T) {
 	if len(r.ran) != 0 || s.busy {
 		t.Fatalf("no data changes: %+v", r.ran)
 	}
-	wantNot(t, tt, "points to a folder that is gone", "Change to This Path", "Keep Old Path", "Updated")
+	wantNot(t, tt, "’s folder is gone", "Change to This Path", "Keep Old Path", "Updated")
 	want(t, tt, "No identity matches this folder", "Bind to client")
 	// A request on the card does not bring it back, even when it fails.
 	click(t, tt, "Bind to client")
 	s.OpDone(bind.Outcome{Op: r.ran[0], Err: errors.New("denied")})
 	tt.Frame()
-	wantNot(t, tt, "points to a folder that is gone")
+	wantNot(t, tt, "’s folder is gone")
 	// Dropping the folder again is a new result, and asks again.
 	s.Drop([]string{newRoot})
 	s.SetResult(newRoot, staleResult(newRoot, renamed), nil)
 	tt.Frame()
-	want(t, tt, "points to a folder that is gone")
+	want(t, tt, "’s folder is gone")
 }
 
 func TestStaleFailuresShowOnceInTheCard(t *testing.T) {
@@ -234,11 +249,11 @@ func TestStaleFailuresShowOnceInTheCard(t *testing.T) {
 
 func TestNoPromptWithoutAnIdentityOrAMatchResult(t *testing.T) {
 	_, tt, _ := card(t, staleResult(newRoot, renamed), client())
-	wantNot(t, tt, "points to a folder that is gone")
+	wantNot(t, tt, "’s folder is gone")
 	want(t, tt, "No identity matches this folder")
 	other := match.Result{Kind: match.NotRepo, Root: newRoot, Stale: &match.Stale{ID: "work", Path: renamed}}
 	_, tt, _ = card(t, other, staleList(renamed)...)
-	wantNot(t, tt, "points to a folder that is gone")
+	wantNot(t, tt, "’s folder is gone")
 }
 
 func TestStalePromptOnWindowsPaths(t *testing.T) {

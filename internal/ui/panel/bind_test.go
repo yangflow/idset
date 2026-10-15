@@ -94,6 +94,15 @@ func size(t *testing.T, tt *ui.Tester, text string) (w, h float32) {
 	return r.W, r.H
 }
 
+// same compares sizes, which differ in the last bits of a float.
+func same(a, b float32) bool { return a-b < 0.01 && b-a < 0.01 }
+
+// openMenu opens the card's "⋯" menu.
+func openMenu(t *testing.T, s *Screen, tt *ui.Tester) {
+	t.Helper()
+	click(t, tt, s.text.More)
+}
+
 // fakeClock is a clock the test moves.
 type fakeClock struct{ at time.Time }
 
@@ -109,15 +118,15 @@ func noMatch() match.Result { return match.Result{Kind: match.NoMatch, Root: not
 
 func TestNoMatchOffersEveryIdentityAndANewOne(t *testing.T) {
 	s, tt, r := card(t, noMatch(), work(), client())
-	want(t, tt, "No identity matches this folder", "Bind to", "Has ~/work/ · adds another", "Has ~/work/client/ · adds another",
-		"New Identity and Bind Here", "~/scratch/notes")
-	if tt.HasText("Rebind to") || tt.HasText("Unbind") {
-		t.Error("no match, nothing to rebind or unbind")
+	want(t, tt, "No identity matches this folder", "Bind to", "~/work/", "~/work/client/", "New Identity", "~/scratch/notes")
+	wantNot(t, tt, "adds another", "More", "Unbind")
+	if _, ok := tt.Find("New Identity and Bind Here"); !ok {
+		t.Error("the long label names the short button")
 	}
 	// Rows are equally high, whatever they say.
 	_, h1 := size(t, tt, "Bind to work")
 	_, h2 := size(t, tt, "Bind to client")
-	if h1 != h2 {
+	if !same(h1, h2) {
 		t.Errorf("bind rows differ in height: %v %v", h1, h2)
 	}
 	click(t, tt, "Bind to client")
@@ -154,21 +163,38 @@ func TestNoMatchWithoutIdentitiesStillOffersANewOne(t *testing.T) {
 
 func TestMatchedByAParentOffersRebindButNotUnbind(t *testing.T) {
 	s, tt, r := card(t, matched(api, "work", false), work(), client(), personal())
-	want(t, tt, "work", s.openLabel(), "Rebind to")
+	want(t, tt, "work", s.openLabel(), s.text.More)
 	wantNot(t, tt, "Unbind", "Undo")
 	click(t, tt, s.openLabel())
 	if !slices.Equal(r.folders, []string{api}) {
 		t.Fatalf("open: %v", r.folders)
 	}
+	// The menu lists the others, and has no Unbind: only a parent folder covers this one.
+	openMenu(t, s, tt)
+	want(t, tt, "Rebind to", "Rebind to client", "Rebind to personal")
+	wantNot(t, tt, "Rebind to work", "Unbind")
+	// With nobody to rebind to and nothing to unbind, the menu has no entries, and there is no "⋯".
+	_, tt, _ = card(t, matched(api, "work", false), work())
+	want(t, tt, s.openLabel(), "Copy the full path", "Clear result")
+	wantNot(t, tt, s.text.More)
 }
 
 func TestExactMatchOffersUnbind(t *testing.T) {
 	s, tt, r := card(t, matched(api, "work", true), work(), client())
-	_, hOpen := size(t, tt, s.openLabel())
-	_, hRebind := size(t, tt, "Rebind to")
-	_, hUnbind := size(t, tt, "Unbind")
-	if hOpen != hRebind || hRebind != hUnbind {
-		t.Errorf("the card's actions are equally high: %v %v %v", hOpen, hRebind, hUnbind)
+	wantNot(t, tt, "Unbind")
+	wo, hOpen := size(t, tt, s.openLabel())
+	wm, hMore := size(t, tt, s.text.More)
+	wc, hClear := size(t, tt, s.text.Clear)
+	if !same(hOpen, hMore) || !same(hMore, hClear) || !same(wo, wm) || !same(wm, wc) {
+		t.Errorf("the icon buttons are the same size: %v x %v, %v x %v, %v x %v", wo, hOpen, wm, hMore, wc, hClear)
+	}
+	// Unbind is in the menu, below the identities, only when the identity lists this very folder.
+	openMenu(t, s, tt)
+	want(t, tt, "Rebind to client", "Unbind")
+	entry, _ := tt.Find("Rebind to client")
+	unbind, _ := tt.Find("Unbind")
+	if unbind.Y <= entry.Y {
+		t.Errorf("Unbind comes last: %v %v", entry, unbind)
 	}
 	click(t, tt, "Unbind")
 	if len(r.ran) != 1 || r.ran[0].Kind != bind.KindUnbind || r.ran[0].From != "work" || r.ran[0].Dir != api || r.ran[0].Root != api {
@@ -185,7 +211,7 @@ func TestExactMatchOffersUnbind(t *testing.T) {
 
 func TestRebindMenuListsTheOtherIdentities(t *testing.T) {
 	s, tt, r := card(t, matched(api, "work", true), work(), client(), personal())
-	click(t, tt, "Rebind to")
+	openMenu(t, s, tt)
 	want(t, tt, "Rebind to client", "Rebind to personal")
 	wantNot(t, tt, "Rebind to work")
 	if !s.menuOpen {
@@ -197,7 +223,7 @@ func TestRebindMenuListsTheOtherIdentities(t *testing.T) {
 	if s.menuOpen || r.hidden != 0 {
 		t.Fatalf("Escape closes the menu first: open %v hidden %d", s.menuOpen, r.hidden)
 	}
-	click(t, tt, "Rebind to")
+	openMenu(t, s, tt)
 	click(t, tt, "Rebind to client")
 	if len(r.ran) != 1 || r.ran[0].Kind != bind.KindRebind || r.ran[0].From != "work" || r.ran[0].To != "client" {
 		t.Fatalf("ran %+v", r.ran)
@@ -207,43 +233,50 @@ func TestRebindMenuListsTheOtherIdentities(t *testing.T) {
 	}
 	// The menu sits under the card's actions, right-aligned to them, and is as wide as the mockup says.
 	s2, tt2, _ := card(t, matched(api, "work", true), work(), client())
-	click(t, tt2, "Rebind to")
+	openMenu(t, s2, tt2)
 	entry, _ := tt2.Find("Rebind to client")
 	if entry.H <= 0 || s2.menuOpen != true {
 		t.Fatalf("entry %v", entry)
 	}
-	copyBtn, _ := tt2.Find("Clear result")
-	if right := entry.X + entry.W; right >= copyBtn.X+copyBtn.W {
-		t.Errorf("the menu stays inside the card: %v %v", entry, copyBtn)
+	clear, _ := tt2.Find("Clear result")
+	if right := entry.X + entry.W; right > clear.X+clear.W+1 {
+		t.Errorf("the menu stays inside the card: %v %v", entry, clear)
 	}
 }
 
 func TestRebindToAGlobalIdentityAsksFirst(t *testing.T) {
 	s, tt, r := card(t, matched(api, "work", true), work(), personal())
-	click(t, tt, "Rebind to")
+	openMenu(t, s, tt)
 	click(t, tt, "Rebind to personal")
 	if len(r.ran) != 0 || s.confirmTo != "personal" || s.menuOpen {
 		t.Fatalf("the menu closes and the confirmation opens: %+v %q", r.ran, s.confirmTo)
 	}
-	want(t, tt, "After binding, personal applies only to this folder, not globally.", "Global identity", "Cancel", "Rebind")
+	want(t, tt, "personal will apply only here", "Cancel", "Rebind")
+	wantNot(t, tt, "Global identity")
+	// One line of text above the buttons.
+	_, line := size(t, tt, "Cancel")
+	if _, h := size(t, tt, "personal will apply only here"); h > line {
+		t.Errorf("the question is one line: %v", h)
+	}
+	within(t, tt, "personal will apply only here", "Cancel", "Rebind")
 	cw, ch := size(t, tt, "Cancel")
 	rw, rh := size(t, tt, "Rebind")
-	if cw != rw || ch != rh {
+	if !same(cw, rw) || !same(ch, rh) {
 		t.Errorf("both buttons are the same size: %v x %v, %v x %v", cw, ch, rw, rh)
 	}
 	click(t, tt, "Cancel")
 	if s.confirmTo != "" || len(r.ran) != 0 {
 		t.Fatal("Cancel closes the block")
 	}
-	wantNot(t, tt, "Global identity")
-	click(t, tt, "Rebind to")
+	wantNot(t, tt, "personal will apply only here")
+	openMenu(t, s, tt)
 	click(t, tt, "Rebind to personal")
 	tt.Key(0, ui.KeyEscape)
 	tt.Frame()
 	if s.confirmTo != "" || r.hidden != 0 {
 		t.Fatalf("Escape cancels the confirmation: %q %d", s.confirmTo, r.hidden)
 	}
-	click(t, tt, "Rebind to")
+	openMenu(t, s, tt)
 	click(t, tt, "Rebind to personal")
 	click(t, tt, "Rebind")
 	if len(r.ran) != 1 || r.ran[0].Kind != bind.KindRebind || r.ran[0].To != "personal" || r.ran[0].From != "work" {
@@ -253,12 +286,29 @@ func TestRebindToAGlobalIdentityAsksFirst(t *testing.T) {
 
 func TestCoveredBindChangesNothingAndSaysWhy(t *testing.T) {
 	s, tt, r := card(t, matched(api, "client", false), work(), client())
-	click(t, tt, "Rebind to")
+	openMenu(t, s, tt)
 	click(t, tt, "Rebind to work")
 	s.OpDone(bind.Outcome{Op: r.ran[0], CoveredID: "work", CoveredBy: "~/work/", Result: matched(api, "client", false)})
 	tt.Frame()
-	want(t, tt, "work already covers this folder with ~/work/. Nothing changed.")
-	wantNot(t, tt, "Undo")
+	// The card keeps its answer; its context line says "Covered by …" for a moment, the full sentence is a tooltip.
+	want(t, tt, "Covered by ~/work/")
+	wantNot(t, tt, "Undo", "Nothing changed")
+	// The status sits in the context line before the buttons, whole.
+	status, _ := tt.Find("Covered by ~/work/")
+	open, _ := tt.Find(s.openLabel())
+	if status.X+status.W > open.X || status.Y+status.H < open.Y || status.Y > open.Y+open.H {
+		t.Errorf("status %v, open %v", status, open)
+	}
+	within(t, tt, "Covered by ~/work/")
+	if tip := hover(t, tt, "Covered by ~/work/"); !tip("work already covers this folder with ~/work/. Nothing changed.") {
+		t.Errorf("the full sentence is the tooltip: %q", tt.Texts())
+	}
+	if s.note != "work already covers this folder with ~/work/. Nothing changed." {
+		t.Errorf("tooltip %q", s.note)
+	}
+	s.now = func() time.Time { return time.Now().Add(2 * time.Second) }
+	tt.Frame()
+	wantNot(t, tt, "Covered by")
 	if got := tt.Announcements(); !slices.Contains(got, "work already covers this folder with ~/work/. Nothing changed.") {
 		t.Errorf("announced %v", got)
 	}
@@ -277,11 +327,21 @@ func TestOverlapListsGitsOrderAndOffersToSettleIt(t *testing.T) {
 	if first.Y >= second.Y {
 		t.Errorf("git's read order from top to bottom: %v %v", first, second)
 	}
-	_, hOnly := size(t, tt, "Use only client here")
-	_, hRemove := size(t, tt, "Remove ~/work/ from work")
-	if hOnly != hRemove {
-		t.Errorf("the stacked actions are equally high: %v %v", hOnly, hRemove)
+	wantNot(t, tt, "Rebind to")
+	// The pin, the minus and the info mark are icon buttons the size of the clear button.
+	wc, hc := size(t, tt, "Clear result")
+	for _, name := range []string{"Use only client here", "Remove ~/work/ from work", "Git reads them in this order; the last one wins."} {
+		if w, h := size(t, tt, name); !same(w, wc) || !same(h, hc) {
+			t.Errorf("%s is %v x %v, the clear button %v x %v", name, w, h, wc, hc)
+		}
 	}
+	// Each sits at the end of its row: the minus by the overridden identity, the pin by the one Git uses.
+	pin, _ := tt.Find("Use only client here")
+	minus, _ := tt.Find("Remove ~/work/ from work")
+	if !same(pin.X, minus.X) || minus.Y >= pin.Y || pin.Y <= second.Y-pin.H || minus.Y <= first.Y-minus.H {
+		t.Errorf("pin %v minus %v rows %v %v", pin, minus, first, second)
+	}
+	within(t, tt, "2 identities cover this folder", "Use only client here", "Remove ~/work/ from work")
 	click(t, tt, "Use only client here")
 	if len(r.ran) != 1 || r.ran[0].Kind != bind.KindUseOnly || r.ran[0].To != "client" {
 		t.Fatalf("ran %+v", r.ran)
@@ -312,7 +372,7 @@ func TestUndoBarCountsDownFromAnAbsoluteDeadline(t *testing.T) {
 	before := []account.Account{client()}
 	s.OpDone(bind.Outcome{Op: r.ran[0], Undo: before, Result: matched(notes, "client", true)})
 	tt.Frame()
-	want(t, tt, "Bound to client ·", "Undo", "Unbind")
+	want(t, tt, "Bound to client ·", "Undo", "More")
 	if got := tt.Announcements(); !slices.Contains(got, "Bound to client") {
 		t.Errorf("announced %v", got)
 	}
@@ -370,7 +430,7 @@ func TestUndoBeforeExpiryPutsTheIdentitiesBack(t *testing.T) {
 func TestARebindOrUseOnlyIsUndoneWithBothIdentities(t *testing.T) {
 	s, tt, r := card(t, matched(api, "work", true), work(), client())
 	newClock(s)
-	click(t, tt, "Rebind to")
+	openMenu(t, s, tt)
 	click(t, tt, "Rebind to client")
 	before := []account.Account{work(), client()}
 	s.OpDone(bind.Outcome{Op: r.ran[0], Undo: before, Result: matched(api, "client", true)})
@@ -409,14 +469,20 @@ func TestResultOfAnotherFolderOnlyEndsTheWait(t *testing.T) {
 
 func TestFailuresShowInTheCard(t *testing.T) {
 	s, tt, r := card(t, matched(api, "work", true), work(), client())
+	openMenu(t, s, tt)
 	click(t, tt, "Unbind")
+	tt.Frame()
+	if s.menuOpen {
+		t.Error("Unbind closes the menu")
+	}
 	s.OpDone(bind.Outcome{Op: r.ran[0], Err: fmt.Errorf("writing: %w", errors.New("permission denied"))})
 	tt.Frame()
-	want(t, tt, "Could not change the bindings: permission denied", "Unbind")
+	want(t, tt, "Could not change the bindings: permission denied", "More")
 	if s.Result().ID != "work" || s.busy {
 		t.Error("a failed request leaves the card as it was and ends the wait")
 	}
 	// The buttons work again.
+	openMenu(t, s, tt)
 	click(t, tt, "Unbind")
 	if len(r.ran) != 2 {
 		t.Fatalf("ran %+v", r.ran)
@@ -460,7 +526,7 @@ func TestRecheckLooksAtTheFolderAgainOnlyForTheCardsFolder(t *testing.T) {
 	want(t, tt, "Checking…")
 	s.SetResult(notes, matched(notes, "work", true), nil)
 	tt.Frame()
-	want(t, tt, "Unbind")
+	want(t, tt, "More")
 
 	win := paths.Env{Home: `C:\Users\Ada`, Windows: true}
 	rec := &recorder{}
@@ -486,15 +552,19 @@ func TestBindingTextInChinese(t *testing.T) {
 	s.Drop([]string{notes})
 	s.SetResult(notes, noMatch(), nil)
 	tt.Frame()
-	want(t, tt, "没有身份匹配这个目录", "绑定到", "已有 ~/work/ · 会再加一条", "新建身份并绑到这里")
+	want(t, tt, "没有身份匹配这个目录", "绑定到", "~/work/", "新建身份", "新建身份并绑到这里")
+	wantNot(t, tt, "会再加一条")
 	res := matched("/home/ada/work/client/app", "client", false, match.Cover{ID: "work", Path: "~/work/"}, match.Cover{ID: "client", Path: "~/work/client/"})
 	s.Drop([]string{res.Root})
 	s.SetResult(res.Root, res, nil)
 	tt.Frame()
-	want(t, tt, "2 个身份覆盖这里", "这里只用 client", "从 work 去掉 ~/work/", "生效", "被覆盖", "改绑到")
+	want(t, tt, "2 个身份覆盖这里", "这里只用 client", "从 work 去掉 ~/work/", "生效", "被覆盖", "更多", "复制完整路径", "清除结果")
 	s.OpDone(bind.Outcome{Op: bind.Op{Dir: res.Root}, CoveredID: "work", CoveredBy: "~/work/", Result: res})
 	tt.Frame()
-	want(t, tt, "work 的 ~/work/ 已经覆盖这里，没有改动")
+	want(t, tt, "已由 ~/work/ 覆盖")
+	if s.note != "work 的 ~/work/ 已经覆盖这里，没有改动" {
+		t.Errorf("tooltip %q", s.note)
+	}
 }
 
 func TestKeyboardReachesTheBindRows(t *testing.T) {
@@ -520,7 +590,7 @@ func TestBindRowsStayUniformWhateverTheyHoldToSay(t *testing.T) {
 	_, tt, _ := card(t, noMatch(), work(), long, client())
 	_, h := size(t, tt, "Bind to work")
 	for _, name := range []string{"Bind to client", "Bind to " + long.Label} {
-		if _, got := size(t, tt, name); got != h {
+		if _, got := size(t, tt, name); !same(got, h) {
 			t.Errorf("%s is %v high, the first row %v", name, got, h)
 		}
 	}
