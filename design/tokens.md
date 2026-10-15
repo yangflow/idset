@@ -25,7 +25,7 @@ Mockups show the 4 DIP unit and 13 px text.
 | symbol-button | `t.Space(6)` | 24 | borderless symbol buttons in cards |
 | menu-entry | `t.Space(8)` | 32 | entry of the rebind menu; the stacked actions of the overlap card |
 | bar-undo | `t.Space(9)` | 36 | undo bar of a result card |
-| bar-actions | `t.Space(10)` | 40 | card actions row; the "New Identity and Bind Here" row |
+| bar-actions | `t.Space(10)` | 40 | card actions row, also the stale-path prompt's two buttons; the "New Identity and Bind Here" row |
 | row-bind | `t.Space(11)` | 44 | bind row, overlap row |
 | button-confirm | `t.Space(7)` high, `t.Space(20)` wide | 28 x 80 | Cancel and Bind of the confirm block; both the same size |
 | menu-width | `t.Space(56)` | 224 | the rebind menu |
@@ -111,7 +111,7 @@ Any other `#RRGGBB` follows the same rule; an invalid value shows as blue (`inte
 | Token | Value |
 |---|---|
 | default | none: state changes take effect immediately |
-| copied, written and undone acknowledgement | 1.2 s, then gone at once (`c.After`) |
+| copied, written, undone and updated acknowledgement | 1.2 s, then gone at once (`c.After`) |
 | undo countdown | 5 s from an absolute deadline; the line shortens in fifths, once a second (`c.After`), no animation |
 | element transition | 200 ms, ease-out (MyGo default); only as an agreed exception, see docs/design.md |
 | reduced motion | jump to the target (`Preferences().ReduceMotion`) |

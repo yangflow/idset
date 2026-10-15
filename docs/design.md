@@ -206,6 +206,7 @@ What Idset uses today:
 | Rebind menu | A menu button's menu, 224 DIPs wide, opened under the card actions and right-aligned to them: `Background` fill, `Border` outline, radius 8, 4 DIPs of padding, 32 DIP entries (color dot, name, first folder or "Global" in monospace `Rem(0.85)`). No shadow. |
 | Confirm block | In a result card, under the chosen identity's row (`SurfacePressed`): one sentence and two 80×28 buttons at the right, the plain one first ("Cancel"), then the only filled button of the panel (`Accent`, "Rebind"). |
 | Overlap rows | In the overlap card: a row per identity in git's read order (dot, name, path in monospace `Rem(0.9)`), and at the end the verdict: "Used" in `Accent` 600 with a check mark for the winner, "Overridden" in `TextMuted` for the others, whose names also lose their weight. |
+| Stale-path prompt | A card of its own above the no-match card, built like the overlap card: a 44 DIP header (color dot, the identity's name in 600, then "points to a folder that is gone" / 「还指向一个已经不在的路径」, one line, ending in an ellipsis), two 36 DIP path rows under hairlines (a 40 DIP `TextMuted` key, "Old" and "New", then the path in monospace, one line, middle-truncated, full text in the tooltip), and a 40 DIP card actions row with two `Accent` text buttons, "Change to This Path" at the left and "Keep Old Path" at the right. The height is the same for any path. Plain `Border` outline, no filled button, no clear button. |
 | Undo bar | The last row of the result card, 36 DIPs high, hairline above: "Bound to <identity> ·" and an `Accent` "Undo" text button. A 2 DIP line on the bar's bottom edge, `Accent` at 45%, is as wide as the time left of the card's width, in fifths. |
 | Identity list | A group heading, then one `Surface` container with `Border` dividers between rows. |
 | Source list row | A color dot, name and email on two lines, an optional folder symbol; `SurfacePressed` fill when selected. |
@@ -335,6 +336,16 @@ The result card has two parts with a divider between them:
     folder", one line of `TextMuted` ("Git reads them in this order; the last one wins."), the overlap rows, and the
     two actions stacked under a hairline, `Accent` text buttons aligned left: "Use only <winner> here" and "Remove
     <path> from <loser>". The card has the plain `Border`, since nothing is wrong. It shows only while the winner has no path of the folder's own; once it has one (after "Use only" or a rebind) the choice is explicit and the card is gone.
+  - Stale path: when the dropped folder looks like a renamed or moved `gitdir` path that no longer exists, a card of
+    its own sits above the no-match card, the same way the overlap card sits above the matched one. The header is
+    one line and the paths are middle-truncated, so the card's height never changes. The no-match card below is
+    unchanged, so the bind list still works; in its "Has <path> · adds another" lines the middle of the path gives way to an
+    ellipsis and the rest stays: "Has ~/…/payments-gateway/ · adds another". Mockup states: rename, move (a long old path), after "Change to This Path" and after
+    "Keep Old Path".
+    - "Change to This Path": the card is gone and the folder matches, so the matched card shows with "Updated" next
+      to the copy button for 1.2 seconds, like "Copied". There is no undo bar: only bind, rebind and "Use only" have
+      one (docs/product.md), and the old path is gone from disk anyway.
+    - "Keep Old Path": only the prompt goes; the plain no-match card stays and shows no acknowledgement.
   - Undo: after a bind, rebind or "Use only", the undo bar is the last row of the matched card. The countdown line
     shortens once a second (`c.After` from the absolute deadline), five steps; no animation. After "Undo" the card
     returns to what it was, with "Undone" next to the clear button for 1.2 seconds, like "Copied". Unbinding shows
@@ -342,7 +353,13 @@ The result card has two parts with a divider between them:
 
 Identity list rows: padding `Space(2.25)`×`Space(3)` (9×12), a 10 DIP color dot (the same as in the accounts window's source list), gap
 `Space(2.5)` (10), the name and the email on two lines, and at the end the folders: the first one, "+N" when there
-are more, "Global" for a global identity, "no folders" without any. Text is not truncated.
+are more, "Global" for a global identity, "no folders" without any. A long first folder is middle-truncated (at
+most half the row) and " +N" always stays; the name and email are single lines too.
+
+A path on one line is shortened in the middle only, the same way everywhere (the stale-path prompt's rows, the "Has
+<path> · adds another" lines of the bind list, the folder of an identity row): its start ("~/", "/" or a drive such
+as "C:/") and its last folder always stay, and what lies between gives way to an ellipsis, "~/…/payments-gateway/".
+Only when even those do not fit is the last folder cut at its end. The full path is in the tooltip.
 
 Identity rows open the accounts window on their identity. "Add Identity" (an `Accent` text button with a plus) sits at
 the left of the fixed footer, "Quit" at the right, so that it stays reachable however long the list is: the content

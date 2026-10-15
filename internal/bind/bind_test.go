@@ -1,7 +1,9 @@
 package bind
 
 import (
+	"errors"
 	"reflect"
+	"slices"
 	"testing"
 	"time"
 
@@ -245,5 +247,61 @@ func TestRebindMakesTheTargetEffectiveEvenWhenItCoversThroughAParent(t *testing.
 	plan, err = Rebind(list, "home", "work", "/home/ada/src/x", unix, now)
 	if err != nil || effective(list, plan, "/home/ada/src/x") != "work" {
 		t.Fatalf("%+v %v", plan, err)
+	}
+}
+
+func TestFixPathReplacesInPlace(t *testing.T) {
+	list := []account.Account{scoped("work", "~/a/", "~/projects/api-old/", "~/z/"), scoped("other", "~/projects/api-old/")}
+	plan, err := FixPath(list, "work", "~/projects/api-old", "/home/ada/projects/api", unix, now)
+	if err != nil || len(plan.Changes) != 1 {
+		t.Fatalf("%+v %v", plan, err)
+	}
+	if got := plan.Changes[0].Scope.Paths; !reflect.DeepEqual(got, []string{"~/a/", "~/projects/api/", "~/z/"}) {
+		t.Fatalf("the new path takes the old one's place: %v", got)
+	}
+	if plan.Changes[0].LastUsedAt == nil || !plan.Changes[0].LastUsedAt.Equal(now) {
+		t.Fatal("fixing a path is a use")
+	}
+	if !reflect.DeepEqual(paths_(t, list, "work"), []string{"~/a/", "~/projects/api-old/", "~/z/"}) || len(plan.Before) != 1 {
+		t.Fatal("the list must not change")
+	}
+}
+
+func TestFixPathWhenTheNewPathIsThereOnlyDropsTheOldOne(t *testing.T) {
+	for _, paths := range [][]string{
+		{"~/projects/api-old/", "~/x/", "~/projects/api/"},
+		{"~/projects/api/", "~/x/", "~/projects/api-old/"},
+	} {
+		plan, err := FixPath([]account.Account{scoped("work", paths...)}, "work", "~/projects/api-old/", "/home/ada/projects/api", unix, now)
+		if err != nil || len(plan.Changes) != 1 {
+			t.Fatalf("%v %v", plan, err)
+		}
+		if got := plan.Changes[0].Scope.Paths; len(got) != 2 || got[0] == "~/projects/api-old/" || got[1] == "~/projects/api-old/" {
+			t.Errorf("%v: %v", paths, got)
+		}
+		if got := plan.Changes[0].Scope.Paths; !slices.Contains(got, "~/projects/api/") || !slices.Contains(got, "~/x/") {
+			t.Errorf("%v: %v", paths, got)
+		}
+	}
+}
+
+func TestFixPathNeedsTheStalePath(t *testing.T) {
+	list := []account.Account{scoped("work", "~/a/")}
+	if plan, err := FixPath(list, "work", "~/gone/", "/home/ada/b", unix, now); err != nil || !plan.Empty() {
+		t.Fatalf("a path the identity lacks changes nothing: %+v %v", plan, err)
+	}
+	if _, err := FixPath(list, "nobody", "~/a/", "/home/ada/b", unix, now); !errors.Is(err, ErrNotFound) {
+		t.Fatalf("%v", err)
+	}
+}
+
+func TestFixPathOnWindowsComparesLikeWindows(t *testing.T) {
+	list := []account.Account{scoped("work", `~/Projects/Api-Old/`, `D:/keep/`)}
+	plan, err := FixPath(list, "work", `c:\users\ada\projects\api-old`, `C:\Users\Ada\Projects\Api`, win, now)
+	if err != nil || len(plan.Changes) != 1 {
+		t.Fatalf("%+v %v", plan, err)
+	}
+	if got := plan.Changes[0].Scope.Paths; !reflect.DeepEqual(got, []string{"~/Projects/Api/", "D:/keep/"}) {
+		t.Fatalf("%v", got)
 	}
 }

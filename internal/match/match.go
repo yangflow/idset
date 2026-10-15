@@ -32,7 +32,8 @@ type Cover struct{ ID, Path string }
 // Result describes a dropped folder. Root is the work tree root and Origin the remote URL when there is one;
 // ID is the identity git uses when Kind is Matched. Covering lists the identities whose gitdir paths cover Root
 // in the order git reads them, the last being ID, and Exact says whether ID has a path that is Root itself, so
-// that the folder can be unbound from it. Both are computed here because they read the disk.
+// that the folder can be unbound from it. Stale is set only for NoMatch: a gitdir path that is gone and that the
+// folder probably replaced. All three are computed here because they read the disk.
 type Result struct {
 	Kind     Kind
 	Dir      string
@@ -41,6 +42,7 @@ type Result struct {
 	ID       string
 	Covering []Cover
 	Exact    bool
+	Stale    *Stale
 }
 
 // Git runs git with args in dir and returns its trimmed standard output and exit code.
@@ -85,6 +87,9 @@ func Resolve(ctx context.Context, git Git, dir string, list []account.Account, e
 	}
 	r.Kind, r.ID = Identity(list, r.Root, env)
 	r.Covering = Covering(list, r.Root, env)
+	if r.Kind == NoMatch {
+		r.Stale = FindStale(list, r.Root, env, Gone, Canon)
+	}
 	for _, a := range list {
 		if a.ID == r.ID && !a.Scope.Global {
 			r.Exact = slices.ContainsFunc(a.Scope.Paths, func(p string) bool { return gitdir.Exact(r.Root, p, env) })

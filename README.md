@@ -30,6 +30,8 @@ Working now:
 - **Bind from the result card.** Bind a folder to an identity, unbind it, move it to another one, or settle several
   identities covering the same folder, all from the card for a dropped folder. Binding, rebinding and "Use only"
   can be undone for five seconds.
+- **Follow a renamed or moved folder.** When nothing matches a dropped folder but it looks like a folder an identity
+  still points to, renamed or moved, the panel offers to change that old path to the new one, or to keep it.
 - **Manage identities in the app.** The accounts window creates, edits and deletes identities: signature, platform,
   SSH key and alias, the folders each one applies to, and URL rewrites. Deleting can remove the private key too, but
   only when you ask for it.

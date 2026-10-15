@@ -38,3 +38,32 @@ func TestTildeAndExpand(t *testing.T) {
 		t.Errorf("another user's home must not expand: %q", got)
 	}
 }
+
+func TestSplitKeepsTheStartAndTheLastSegment(t *testing.T) {
+	for _, c := range []struct{ path, lead, mid, last string }{
+		{"~/Documents/archive/2023/legacy-services/payments-gateway/", "~/", "Documents/archive/2023/legacy-services/", "payments-gateway/"},
+		{"~/work/", "~/", "", "work/"},
+		{"~/work/api", "~/", "work/", "api"},
+		{"~", "~", "", ""},
+		{"~/", "~/", "", ""},
+		{"/home/ada/work/api/", "/", "home/ada/work/", "api/"},
+		{"/", "/", "", ""},
+		{"/srv", "/", "", "srv"},
+		{`C:\Users\Ada\work\api\`, "C:/", "Users/Ada/work/", "api/"},
+		{"c:/work/", "c:/", "", "work/"},
+		{"C:", "C:", "", ""},
+		{"//server/share/team/api/", "//", "server/share/team/", "api/"},
+		{"work/api/", "", "work/", "api/"},
+		{"api", "", "", "api"},
+		{"", "", "", ""},
+		{"~tilde/x", "", "~tilde/", "x"},
+	} {
+		lead, mid, last := Split(c.path)
+		if lead != c.lead || mid != c.mid || last != c.last {
+			t.Errorf("%q: got %q %q %q, want %q %q %q", c.path, lead, mid, last, c.lead, c.mid, c.last)
+		}
+		if whole := lead + mid + last; whole != Slash(c.path) {
+			t.Errorf("%q: the parts add up to %q", c.path, whole)
+		}
+	}
+}

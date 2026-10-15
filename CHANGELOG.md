@@ -27,4 +27,9 @@ All notable user-facing changes are recorded here, following [Keep a Changelog](
   cover a folder, the card lists them in the order Git reads them, and offers "Use only <identity> here" and removing
   a path from another one. Binding, rebinding and "Use only" show a five second "Undo" bar; unbinding has none. Each
   of these regenerates the configuration once.
+- When a dropped folder has no match but looks like an identity's folder that was renamed (same parent folder) or
+  moved (same last folder name), and the old path is gone from the disk, a card above the result offers "Change to
+  This Path", which replaces the old path in place and regenerates the configuration once, or "Keep Old Path".
+- Long paths in the bind list, in the identity list and in the stale-path card are shortened in the middle only: the
+  start ("~/" or a drive) and the last folder stay.
 - On macOS the Dock icon shows while the accounts window is open; closing the window does not quit Idset.

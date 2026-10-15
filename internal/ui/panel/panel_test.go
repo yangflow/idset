@@ -179,7 +179,7 @@ func TestListIsSortedAndFilterAppearsAtThree(t *testing.T) {
 		t.Fatalf("most recently used first: %v", texts)
 	}
 	for _, want := range []string{"Identities", "2", "bob@example.com", "~/work/", "no email", "Global"} {
-		if !tt.HasText(want) {
+		if !shows(tt, want) {
 			t.Fatalf("missing %q: %v", want, texts)
 		}
 	}
@@ -240,7 +240,7 @@ func TestDropAndMatchedResult(t *testing.T) {
 	tt.Frame()
 	for _, want := range []string{"W", "work", "Git uses this identity here", "Alias", "github-work", "Email", "bob@example.com",
 		"Folders", "~/work/", "~/src/new/", "~/work/api", "~/work/ +1"} {
-		if !tt.HasText(want) {
+		if !shows(tt, want) {
 			t.Fatalf("missing %q: %v", want, tt.Texts())
 		}
 	}

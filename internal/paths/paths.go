@@ -77,3 +77,24 @@ func (e Env) Expand(p string) string {
 
 // Native returns p expanded and with the platform's separators, for the file system.
 func (e Env) Native(p string) string { return filepath.FromSlash(e.Expand(p)) }
+
+// Split cuts a path for display into its start, its last segment and what lies between them, so that a view can
+// give way in the middle only: lead is "~/", "/" or a drive such as "C:/" (empty for a relative path), last is the
+// final segment with its trailing slash if it has one, and mid is everything between, ending in a slash. Short
+// paths have no mid. The path is read in slash form; lead + mid + last is always the whole path.
+func Split(p string) (lead, mid, last string) {
+	p = Slash(p)
+	rest := p
+	switch {
+	case rest == "~" || strings.HasPrefix(rest, "~/"):
+		lead = "~"
+	case len(rest) >= 2 && rest[1] == ':' && (rest[0]|0x20 >= 'a' && rest[0]|0x20 <= 'z'):
+		lead = rest[:2]
+	}
+	rest = rest[len(lead):]
+	slashes := len(rest) - len(strings.TrimLeft(rest, "/"))
+	lead, rest = lead+rest[:slashes], rest[slashes:]
+	body := strings.TrimRight(rest, "/")
+	cut := strings.LastIndex(body, "/") + 1
+	return lead, rest[:cut], rest[cut:]
+}

@@ -223,3 +223,45 @@ func TestRebindToAnIdentityThatOnlyCoversMakesItWinWithOneRegeneration(t *testin
 		t.Fatal("undo restores every touched identity")
 	}
 }
+
+func TestFixPathWritesOnceAndMatchesTheFolderAgain(t *testing.T) {
+	r := newRig(t, scoped("work", "~/before/", "~/scratch/old/", "~/after/"), scoped("client", "~/c/"))
+	want := []string{"~/before/", "~/scratch/notes/", "~/after/"}
+	if match.FindStale(r.store.Accounts(), paths.Slash(r.dir), r.env, match.Gone, match.Canon) == nil {
+		t.Fatal("the stale path is found on the disk")
+	}
+	out := r.run(Op{Kind: KindFixPath, From: "work", Path: "~/scratch/old/"})
+	if out.Err != nil || r.regenerated != 1 || out.Undo != nil {
+		t.Fatalf("%+v regenerated %d", out, r.regenerated)
+	}
+	if got := r.account("work").Scope.Paths; !reflect.DeepEqual(got, want) {
+		t.Fatalf("%v", got)
+	}
+	if r.account("work").LastUsedAt == nil || r.account("client").LastUsedAt != nil {
+		t.Fatal("the fixed identity is used")
+	}
+	if out.Result.Kind != match.Matched || out.Result.ID != uid("work") || !out.Result.Exact || out.Result.Stale != nil {
+		t.Fatalf("the folder is matched again: %+v", out.Result)
+	}
+}
+
+func TestFixPathWithTheNewPathThereRemovesTheOldOne(t *testing.T) {
+	r := newRig(t, scoped("work", "~/scratch/old/", "~/scratch/notes/"))
+	out := r.run(Op{Kind: KindFixPath, From: "work", Path: "~/scratch/old/"})
+	if out.Err != nil || r.regenerated != 1 {
+		t.Fatalf("%+v regenerated %d", out, r.regenerated)
+	}
+	if got := r.account("work").Scope.Paths; !reflect.DeepEqual(got, []string{"~/scratch/notes/"}) {
+		t.Fatalf("%v", got)
+	}
+}
+
+func TestFixPathRegenerateErrorStands(t *testing.T) {
+	r := newRig(t, scoped("work", "~/scratch/old/"))
+	r.regenErr = errors.New("disk full")
+	out := r.run(Op{Kind: KindFixPath, From: "work", Path: "~/scratch/old/"})
+	var regen *store.RegenerateError
+	if !errors.As(out.Err, &regen) || !out.Written() || out.Result.ID != uid("work") || r.regenerated != 1 {
+		t.Fatalf("the change stands: %+v", out)
+	}
+}
