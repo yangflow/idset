@@ -84,6 +84,39 @@ func RemoveIncludes(t Target) error {
 	return edit(t.GitConfig, include.Strip)
 }
 
+// FileState is whether a user file holds the marked block. Err is why that could not be told: the file could not
+// be read, or its block has no end marker.
+type FileState struct {
+	Present bool
+	Err     error
+}
+
+// IncludeState is the state of both user files.
+type IncludeState struct {
+	SSH, Git FileState
+}
+
+// Includes looks for the marked block in both user files without changing them. A missing file has no block.
+func Includes(t Target) IncludeState {
+	return IncludeState{SSH: hasBlock(t.SSHConfig), Git: hasBlock(t.GitConfig)}
+}
+
+func hasBlock(path string) FileState {
+	real, err := fsutil.Resolve(path)
+	if err != nil {
+		return FileState{Err: err}
+	}
+	data, err := os.ReadFile(real)
+	if errors.Is(err, fs.ErrNotExist) {
+		return FileState{}
+	}
+	if err != nil {
+		return FileState{Err: err}
+	}
+	found, err := include.Present(string(data))
+	return FileState{Present: found, Err: err}
+}
+
 // edit rewrites a user file through change, following a symbolic link to the real file and writing nothing when
 // the content stays the same. Line endings are kept as the file has them.
 func edit(path string, change func(string) (string, bool, error)) error {
