@@ -52,20 +52,22 @@ func (s *Screen) tabBar(c *ui.Context) {
 		name string
 		icon *ui.SVG
 	}{{s.text.General, icons.Sliders}, {s.text.Backups, icons.Clock}, {s.text.Config, icons.Doc}}
-	ui.Row(c).Justify(ui.Center).Padding(t.Space(2)).Children(func() {
+	ui.Row(c).Justify(ui.Center).Padding(t.Space(1), t.Space(2), t.Space(1.5), t.Space(2)).Children(func() {
 		parts := ui.TabsBase(c, &s.tab, len(tabs))
 		parts.List.Gap(t.Space(1)).Label(s.text.Tabs).Children(func() {
 			for i, tab := range tabs {
 				el := parts.Tab(i).Size(t.Space(22), t.Space(13)).Radius(6).Gap(t.Space(1)).AlignItems(ui.Center).Justify(ui.Center).Label(tab.name)
+				color := t.TextMuted
 				switch {
 				case i == s.tab:
 					el.Background(t.SurfacePressed)
+					color = t.Text
 				case el.Hovered():
 					el.Background(t.SurfaceHover)
 				}
 				el.Children(func() {
-					ui.Icon(c, tab.icon).FontSize(t.Space(5)).TextColor(t.Text)
-					ui.Text(c, tab.name).FontSize(t.Space(2.75)).SingleLine()
+					ui.Icon(c, tab.icon).FontSize(t.Space(5)).TextColor(color)
+					ui.Text(c, tab.name).FontSize(t.Space(2.75)).TextColor(color).SingleLine()
 				})
 			}
 		})
@@ -88,9 +90,9 @@ func (r *rows) next() {
 // section is a titled group; its notes follow it.
 func (s *Screen) section(c *ui.Context, title string, body func(r *rows), after func()) {
 	t := c.Theme()
-	ui.Column(c).Gap(t.Space(1.5)).Children(func() {
+	ui.Column(c).Gap(t.Space(1)).Children(func() {
 		if title != "" {
-			ui.Text(c, title).FontSize(t.Rem(0.85)).TextColor(t.TextMuted).Role(ui.RoleHeading).Level(2).PaddingX(t.Space(0.5))
+			ui.Text(c, title).FontSize(t.Space(2.75)).TextColor(t.TextMuted).Role(ui.RoleHeading).Level(2).PaddingX(t.Space(3))
 		}
 		ui.Column(c).Radius(10).Background(t.Surface).Clip().Children(func() { body(&rows{c: c}) })
 		if after != nil {
@@ -99,24 +101,33 @@ func (s *Screen) section(c *ui.Context, title string, body func(r *rows), after 
 	})
 }
 
+// note is a line of 11 DIP text under a group with a 12 DIP icon in front: a warning, a failure or a success.
+func (s *Screen) note(c *ui.Context, icon *ui.SVG, iconColor, textColor ui.Color, text string) {
+	t := c.Theme()
+	ui.Row(c).Gap(t.Space(1)).PaddingX(t.Space(3)).Children(func() {
+		ui.Icon(c, icon).FontSize(t.Space(3)).TextColor(iconColor)
+		ui.Text(c, text).FontSize(t.Space(2.75)).TextColor(textColor).Grow(1)
+	})
+}
+
 func (s *Screen) warn(c *ui.Context, text string) {
 	t := c.Theme()
-	ui.Row(c).Gap(t.Space(1.5)).PaddingX(t.Space(0.5)).Children(func() {
-		ui.Icon(c, icons.Warn).FontSize(t.Rem(1)).TextColor(t.Danger)
-		ui.Text(c, text).FontSize(t.Rem(0.85)).TextColor(t.Danger).Grow(1)
-	})
+	s.note(c, icons.Warn, t.Danger, t.Danger, text)
 }
 
 func (s *Screen) footnote(c *ui.Context, text string) {
 	t := c.Theme()
-	ui.Text(c, text).FontSize(t.Rem(0.85)).TextColor(t.TextMuted).PaddingX(t.Space(0.5))
+	ui.Text(c, text).FontSize(t.Space(2.75)).TextColor(t.TextMuted).PaddingX(t.Space(3))
 }
 
 // line is a row of a group.
-func (r *rows) line(content func()) {
+func (r *rows) line(content func()) { r.lineAt(r.c.Theme().Space(3), content) }
+
+// lineAt is a row with its own left padding, for a row that holds a text button.
+func (r *rows) lineAt(left float32, content func()) {
 	r.next()
 	t := r.c.Theme()
-	ui.Row(r.c).MinHeight(t.Space(10)).PaddingX(t.Space(3)).PaddingY(t.Space(1)).Gap(t.Space(2)).AlignItems(ui.Center).Children(content)
+	ui.Row(r.c).MinHeight(t.Space(8)).Padding(t.Space(1), t.Space(3), t.Space(1), left).Gap(t.Space(2)).AlignItems(ui.Center).Children(content)
 }
 
 func (s *Screen) general(c *ui.Context) {
@@ -126,7 +137,7 @@ func (s *Screen) general(c *ui.Context) {
 		for _, choice := range choices {
 			r.next()
 			on := s.language == choice.value
-			row := ui.Row(c.Key("lang-" + choice.value)).Focusable().Selected(on).Label(choice.name).MinHeight(t.Space(10)).PaddingX(t.Space(3)).
+			row := ui.Row(c.Key("lang-"+choice.value)).Focusable().Selected(on).Label(choice.name).MinHeight(t.Space(8)).Padding(t.Space(1), t.Space(3), t.Space(1), t.Space(3)).
 				Gap(t.Space(2)).AlignItems(ui.Center)
 			if row.Hovered() {
 				row.Background(t.SurfaceHover)
@@ -137,7 +148,7 @@ func (s *Screen) general(c *ui.Context) {
 			row.Children(func() {
 				ui.Text(c, choice.name).Grow(1)
 				if on && choice.value == FollowSystem {
-					ui.Text(c, fmt.Sprintf(s.text.Current, s.systemName())).FontSize(t.Rem(0.85)).TextColor(t.TextMuted)
+					ui.Text(c, fmt.Sprintf(s.text.Current, s.systemName())).FontSize(t.Space(2.75)).TextColor(t.TextMuted)
 				}
 				if on {
 					ui.Icon(c, icons.Check).FontSize(t.Rem(1.1)).TextColor(t.Accent)
@@ -162,10 +173,7 @@ func (s *Screen) general(c *ui.Context) {
 	}, func() {
 		switch s.loginNote {
 		case loginApprove:
-			ui.Row(c).Gap(t.Space(1.5)).PaddingX(t.Space(0.5)).Children(func() {
-				ui.Icon(c, icons.Info).FontSize(t.Rem(1)).TextColor(t.Warning)
-				ui.Text(c, s.text.Approve).FontSize(t.Rem(0.85)).TextColor(t.Warning).Grow(1)
-			})
+			s.note(c, icons.Warn, t.Warning, t.Warning, s.text.Approve)
 		case loginFailed:
 			s.warn(c, fmt.Sprintf(s.text.LoginFail, s.loginError))
 		default:
@@ -199,9 +207,9 @@ func dot(c *ui.Context, color string) {
 func (s *Screen) backupsPane(c *ui.Context) {
 	t := c.Theme()
 	if s.readOnly {
-		ui.Row(c).Gap(t.Space(2)).Padding(t.Space(3)).Radius(10).Background(ui.RGBA(220, 38, 38, 0.1)).Border(1, t.Danger).Children(func() {
-			ui.Icon(c, icons.Warn).FontSize(t.Rem(1.1)).TextColor(t.Danger)
-			ui.Text(c, s.text.ReadOnlyBanner).TextColor(t.Danger).Grow(1)
+		ui.Row(c).Gap(t.Space(2)).Padding(t.Space(2.5), t.Space(3), t.Space(2.5), t.Space(3)).Radius(10).Background(t.Danger.Alpha(0.12)).Children(func() {
+			ui.Icon(c, icons.Warn).FontSize(t.Space(3.5)).TextColor(t.Danger)
+			ui.Text(c, s.text.ReadOnlyBanner).Grow(1)
 		})
 	}
 	switch {
@@ -253,21 +261,21 @@ func (s *Screen) backupRow(c *ui.Context, b Backup) {
 			ui.Column(c).Grow(1).Children(func() {
 				ui.Text(c, s.stamp(b.Time)).SingleLine()
 				if unreadable {
-					ui.Text(c, s.text.Unreadable+" · "+size(b.Size)).FontSize(t.Rem(0.85)).TextColor(t.Danger).SingleLine()
+					ui.Text(c, s.text.Unreadable+" · "+size(b.Size)).FontSize(t.Space(2.75)).TextColor(t.Danger).SingleLine()
 					return
 				}
 				sub := s.identityCount(len(b.Accounts))
 				if len(b.Accounts) > 0 {
 					sub += " · " + s.names(b.Accounts)
 				}
-				ui.Text(c, sub+" · "+size(b.Size)).FontSize(t.Rem(0.85)).TextColor(t.TextMuted).SingleLine()
+				ui.Text(c, sub+" · "+size(b.Size)).FontSize(t.Space(2.75)).TextColor(t.TextMuted).SingleLine()
 			})
 			switch {
 			case busy:
-				ui.Text(c, s.text.Restoring).FontSize(t.Rem(0.85)).TextColor(t.TextMuted).SingleLine()
+				ui.Text(c, s.text.Restoring).FontSize(t.Space(2.75)).TextColor(t.TextMuted).SingleLine()
 				ui.Spinner(c)
 			case flash:
-				ui.Text(c, s.text.Restored).FontSize(t.Rem(0.85)).TextColor(t.TextMuted).SingleLine()
+				ui.Text(c, s.text.Restored).FontSize(t.Space(2.75)).TextColor(t.TextMuted).SingleLine()
 				ui.Icon(c, icons.Check).FontSize(t.Rem(1.1)).TextColor(t.Accent)
 			default:
 				if ghost(c, "restore", s.text.Restore, icons.Restore).Disabled(unreadable || s.restoring != "").Clicked() {
@@ -289,17 +297,20 @@ func (s *Screen) backupRow(c *ui.Context, b Backup) {
 	})
 }
 
-// identityRow is an identity inside a backup: read-only, with a 24 DIP slot at the end.
+// identityRow is an identity inside a backup: read-only, with a 24 DIP slot at the end under the delete column.
 func (s *Screen) identityRow(c *ui.Context, a account.Account) {
 	t := c.Theme()
 	ui.Row(c.Key("id-"+a.ID)).MinHeight(t.Space(8)).Padding(0, t.Space(3), 0, t.Space(11)).Gap(t.Space(2)).AlignItems(ui.Center).Children(func() {
 		dot(c, a.Color)
-		ui.Text(c, s.label(a)).Grow(1).SingleLine()
-		ui.Row(c).MinWidth(t.Space(6)).Justify(ui.End).Shrink(0).Children(func() {
-			if a.Scope.Global {
-				ui.Text(c, s.text.Global).FontSize(t.Rem(0.85)).TextColor(t.TextMuted).SingleLine()
-				return
-			}
+		ui.Text(c, s.label(a)).SingleLine().Shrink(0)
+		ui.Text(c, a.GitUserEmail).FontSize(t.Space(2.75)).TextColor(t.TextMuted).Grow(1).Wrap()
+		if a.Scope.Global {
+			ui.Row(c).MinWidth(t.Space(6)).Justify(ui.End).Padding(0, t.Space(1.25), 0, 0).Shrink(0).Children(func() {
+				ui.Text(c, s.text.Global).FontSize(t.Space(2.75)).TextColor(t.TextMuted).SingleLine()
+			})
+			return
+		}
+		ui.Row(c).Size(t.Space(6), t.Space(6)).Justify(ui.Center).AlignItems(ui.Center).Shrink(0).Children(func() {
 			ui.Icon(c, icons.Folder).FontSize(t.Rem(1.1)).TextColor(t.TextMuted).Label(s.text.Scoped)
 		})
 	})
@@ -320,15 +331,18 @@ func (s *Screen) restoreDialog(c *ui.Context) {
 			Role(ui.RoleAlertDialog).Label(title)
 		ui.Text(c, title).FontSize(t.Rem(1.15)).FontWeight(600).Role(ui.RoleHeading).Level(2).Wrap()
 		ui.Text(c, s.text.ConfirmBody).Wrap()
-		ui.Column(c).Radius(8).Background(t.Surface).Padding(t.Space(1)).Children(func() {
+		ui.Divider(c)
+		ui.Column(c).Gap(t.Space(1.5)).Children(func() {
 			for _, a := range b.Accounts {
-				ui.Row(c).MinHeight(t.Space(7)).PaddingX(t.Space(2)).Gap(t.Space(2)).AlignItems(ui.Center).Children(func() {
+				ui.Row(c).Gap(t.Space(2)).AlignItems(ui.Center).Children(func() {
 					dot(c, a.Color)
-					ui.Text(c, s.label(a)).Grow(1).SingleLine()
+					ui.Text(c, s.label(a)).SingleLine().Shrink(0)
+					ui.Text(c, a.GitUserEmail).FontSize(t.Space(2.75)).TextColor(t.TextMuted).Grow(1).Wrap()
 				})
 			}
 		})
-		ui.Text(c, s.text.ConfirmNote).FontSize(t.Rem(0.85)).TextColor(t.TextMuted).Wrap()
+		ui.Divider(c)
+		ui.Text(c, s.text.ConfirmNote).FontSize(t.Space(2.75)).TextColor(t.TextMuted).Wrap()
 		ui.Row(c).Gap(t.Space(2)).Justify(ui.End).Children(func() {
 			if ui.Button(c.Key("confirm-cancel"), s.text.Cancel).AutoFocus().Clicked() {
 				s.confirmOpen = false
@@ -346,29 +360,35 @@ func (s *Screen) configPane(c *ui.Context) {
 		switch {
 		case !s.includesRead:
 		case f.err != nil:
-			ui.Text(c, cause(f.err)).FontSize(t.Rem(0.85)).TextColor(t.Danger).SingleLine()
+			ui.Text(c, cause(f.err)).FontSize(t.Space(2.75)).TextColor(t.Danger).SingleLine()
 		case f.present:
-			ui.Text(c, s.text.Present).FontSize(t.Rem(0.85)).TextColor(t.TextMuted).SingleLine()
+			ui.Text(c, s.text.Present).FontSize(t.Space(2.75)).TextColor(t.TextMuted).SingleLine()
 		default:
-			ui.Text(c, s.text.Absent).FontSize(t.Rem(0.85)).TextColor(t.TextMuted).SingleLine()
+			ui.Text(c, s.text.Absent).FontSize(t.Space(2.75)).TextColor(t.TextMuted).SingleLine()
 		}
 	}
+	done := s.removal == removalDone
 	s.section(c, s.text.Include, func(r *rows) {
 		for _, f := range []struct {
 			name  string
 			state fileState
 		}{{sshConfig, fileState{s.includes.SSH.Present, s.includes.SSH.Err}}, {gitConfig, fileState{s.includes.Git.Present, s.includes.Git.Err}}} {
 			r.line(func() {
-				ui.Text(c, f.name).Font("monospace").FontSize(t.Rem(0.9)).Grow(1).SingleLine()
+				ui.Text(c, f.name).Font("monospace").FontSize(t.Space(3)).Grow(1).SingleLine()
 				state(f.state)
 			})
 		}
-	}, nil)
-	s.section(c, "", func(r *rows) {
-		r.line(func() {
+		r.lineAt(t.Space(1), func() {
 			b := ui.Button(c.Key("remove"), "").Label(s.text.Remove).Background(ui.Color{}).Border(0, ui.Color{}).TextColor(t.Accent).
-				Disabled(s.removing || !s.includesRead)
-			b.Children(func() { ui.Text(c, s.text.Remove).SingleLine() })
+				Disabled(s.removing || !s.includesRead || done)
+			b.Children(func() {
+				if done {
+					ui.Icon(c, icons.Check).FontSize(t.Space(3))
+					ui.Text(c, s.text.Removed).SingleLine()
+					return
+				}
+				ui.Text(c, s.text.Remove).SingleLine()
+			})
 			if b.Clicked() {
 				s.askRemove()
 			}
@@ -381,12 +401,8 @@ func (s *Screen) configPane(c *ui.Context) {
 		switch {
 		case s.removal == removalFailed:
 			s.warn(c, s.removeErr)
-		case s.removal == removalDone:
-			ui.Row(c).Gap(t.Space(1.5)).PaddingX(t.Space(0.5)).Children(func() {
-				ui.Icon(c, icons.Check).FontSize(t.Rem(1)).TextColor(t.Accent)
-				ui.Text(c, s.text.Removed).FontSize(t.Rem(0.85)).TextColor(t.Accent)
-			})
-			s.footnote(c, s.text.RemovedNote)
+		case done:
+			s.note(c, icons.Check, t.Accent, t.TextMuted, s.text.RemovedNote)
 		default:
 			s.footnote(c, s.text.IncludeNote)
 		}
@@ -410,16 +426,42 @@ func (s *Screen) removeDialog(c *ui.Context) {
 			Role(ui.RoleAlertDialog).Label(s.text.RemoveTitle)
 		ui.Text(c, s.text.RemoveTitle).FontSize(t.Rem(1.15)).FontWeight(600).Role(ui.RoleHeading).Level(2)
 		ui.Text(c, s.text.RemoveBody).Wrap()
-		group := func(title string, items ...string) {
-			ui.Column(c).Gap(t.Space(1)).Children(func() {
-				ui.Text(c, title).FontSize(t.Rem(0.85)).TextColor(t.TextMuted)
-				for _, item := range items {
-					ui.Text(c, item).Wrap().FontSize(t.Rem(0.9))
-				}
+		// item is a line of a box: a 12 DIP icon, then the text, whose path (mono) sits between the two plain parts.
+		item := func(icon *ui.SVG, color ui.Color, pre, mono, post string) {
+			ui.Row(c).Gap(t.Space(2)).AlignItems(ui.Center).Children(func() {
+				ui.Icon(c, icon).FontSize(t.Space(3)).TextColor(color)
+				ui.Row(c).Gap(t.Space(1)).AlignItems(ui.Center).Children(func() {
+					for _, part := range []struct {
+						text string
+						mono bool
+					}{{pre, false}, {mono, true}, {post, false}} {
+						switch {
+						case part.text == "":
+						case part.mono:
+							ui.Text(c, part.text).Font("monospace").FontSize(t.Space(3)).SingleLine()
+						default:
+							ui.Text(c, part.text).SingleLine()
+						}
+					}
+				})
 			})
 		}
-		group(s.text.Removes, fmt.Sprintf(s.text.MarkerIn, sshConfig), fmt.Sprintf(s.text.MarkerIn, gitConfig))
-		group(s.text.Keeps, s.text.Kept1, s.text.Kept2, s.text.Kept3)
+		box := func(title string, items func()) {
+			ui.Column(c).Gap(t.Space(1.5)).Padding(t.Space(2.5), t.Space(3), t.Space(2.5), t.Space(3)).Radius(8).Background(t.Surface).Children(func() {
+				ui.Text(c, title).FontSize(t.Space(2.75)).FontWeight(600).TextColor(t.TextMuted)
+				items()
+			})
+		}
+		box(s.text.Removes, func() {
+			for _, file := range []string{sshConfig, gitConfig} {
+				item(icons.Minus, t.Danger, s.text.MarkerPre, file, s.text.MarkerPost)
+			}
+		})
+		box(s.text.Keeps, func() {
+			item(icons.Check, t.TextMuted, "", "accounts.json", s.text.Kept1Post)
+			item(icons.Check, t.TextMuted, s.text.Kept2Pre, "~/.config/idset/", s.text.Kept2Post)
+			item(icons.Check, t.TextMuted, s.text.Kept3, "", "")
+		})
 		ui.Row(c).Gap(t.Space(2)).Justify(ui.End).Children(func() {
 			if ui.Button(c.Key("remove-cancel"), s.text.Cancel).AutoFocus().Clicked() {
 				s.removeOpen = false

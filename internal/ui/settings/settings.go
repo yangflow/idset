@@ -33,7 +33,7 @@ type Copy struct {
 	BackupNote, ReadOnlyBanner, RestoreFailed, DeleteFailed, ListFailed, Loading,
 	EmptyTitle, EmptyBody, ConfirmTitle, ConfirmBody, ConfirmNote,
 	Include, Present, Absent, Remove, Removed, IncludeNote, RemovedNote, RemoveFail, RemoveFailPartial,
-	RemoveTitle, RemoveBody, Removes, Keeps, MarkerIn, Kept1, Kept2, Kept3, RemoveButton string
+	RemoveTitle, RemoveBody, Removes, Keeps, MarkerPre, MarkerPost, Kept1Post, Kept2Pre, Kept2Post, Kept3, RemoveButton string
 }
 
 var translations = func() map[string]Copy {

@@ -4,6 +4,7 @@ import (
 	"errors"
 	"reflect"
 	"slices"
+	"strings"
 	"testing"
 	"time"
 
@@ -154,6 +155,10 @@ func TestCatalogsHaveEveryKey(t *testing.T) {
 	for lang, c := range translations {
 		v := reflect.ValueOf(c)
 		for i := range v.NumField() {
+			name := v.Type().Field(i).Name
+			if strings.HasSuffix(name, "Pre") || strings.HasSuffix(name, "Post") {
+				continue
+			}
 			if v.Field(i).String() == "" {
 				t.Errorf("%s: %s is empty", lang, v.Type().Field(i).Name)
 			}
@@ -340,7 +345,7 @@ func TestBackupRowExpands(t *testing.T) {
 	r := loaded(t, "en")
 	r.wantNot(t, "Global")
 	r.click(t, "Show identities")
-	r.want(t, "personal", "Global", "(unnamed)", "Hide identities")
+	r.want(t, "personal", "personal@example.com", "Global", "(unnamed)", "Hide identities")
 	r.click(t, "Hide identities")
 	r.wantNot(t, "Global", "Hide identities")
 }
@@ -510,8 +515,8 @@ func TestConfigurationShowsTheBlocksAndRemovesThem(t *testing.T) {
 		t.Fatalf("present rows = %d in %q", got, r.tt.Texts())
 	}
 	r.click(t, "Remove Include (keep accounts.json)")
-	r.want(t, "Remove Include?", "Will be removed", "Left as is", "The Idset marker block in ~/.ssh/config",
-		"The Idset marker block in ~/.gitconfig", "accounts.json and your identities")
+	r.want(t, "Remove Include?", "Will be removed", "Left as is", "The Idset marker block in", "~/.ssh/config",
+		"~/.gitconfig", "accounts.json", "and your identities", "Managed files in", "~/.config/idset/")
 	if !r.tt.Focused("Cancel") {
 		t.Error("Cancel does not have the initial focus")
 	}
@@ -536,6 +541,11 @@ func TestConfigurationShowsTheBlocksAndRemovesThem(t *testing.T) {
 		t.Fatalf("absent rows = %d in %q", got, r.tt.Texts())
 	}
 	r.want(t, "Removed", "Your identities are unchanged")
+	if got := countText(r.tt, "Removed"); got != 1 {
+		t.Errorf("Removed shown %d times in %q", got, r.tt.Texts())
+	}
+	r.click(t, "Removed")
+	r.wantNot(t, "Remove Include?")
 	if got := r.tt.Announcements(); !slices.Contains(got, "Removed") {
 		t.Errorf("announcements = %q", got)
 	}

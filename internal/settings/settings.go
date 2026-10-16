@@ -1,6 +1,7 @@
 // Package settings keeps settings.json, the interface preferences in Idset's directory. That is the owner prefix
-// the clone helper remembers for each identity and the language the user chose. Keys this version does not know are kept when it writes.
-// A file that cannot be read is never overwritten. Methods block on disk work, so callers run them off the UI thread.
+// the clone helper remembers for each identity and the language the user chose. Keys this version does not know
+// are kept when it writes. A file that cannot be read is never overwritten. Methods block on disk work, so callers
+// run them off the UI thread.
 package settings
 
 import (
