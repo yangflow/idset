@@ -32,6 +32,10 @@ func (s *Screen) View(c *ui.Context) {
 		// footer are the same height, hairline included, and give the rest to the content.
 		ui.Row(c).Height(t.Space(9)-1).Padding(0, t.Space(2), 0, t.Space(4)).AlignItems(ui.Center).Children(func() {
 			ui.Text(c, "Idset").FontWeight(600).Role(ui.RoleHeading).Level(1)
+			ui.Spacer(c)
+			if ghost(c, s.text.Settings, icons.Gear).Clicked() {
+				s.act.OpenSettings()
+			}
 		})
 		ui.Divider(c)
 		// States without a list never need scrolling, and centering only works in a container of fixed height.
@@ -166,13 +170,18 @@ func (s *Screen) readOnly(c *ui.Context) {
 		ui.Text(c, reason.Error()).Font("monospace").FontSize(t.Rem(0.85)).TextColor(t.TextMuted).TextAlign(ui.Center).MaxLines(2).
 			Tooltip(reason.Error())
 		ui.Text(c, s.text.ReadOnlyShort).FontSize(t.Rem(0.9)).TextColor(t.TextMuted).Tooltip(s.text.ReadOnlyHint)
-		ui.Row(c).Gap(t.Space(2)).PaddingY(t.Space(1)).Children(func() {
-			if ui.Button(c, s.revealLabel()).Label(s.revealLabel()).Size(t.Space(30), t.Space(7)).Padding(0).Clicked() {
-				s.act.Reveal(s.dataPath)
+		ui.Column(c).Gap(t.Space(2)).PaddingY(t.Space(1)).AlignItems(ui.Center).Children(func() {
+			if ui.PrimaryButton(c, s.text.RestoreBackup).Label(s.text.RestoreBackup).Size(t.Space(62), t.Space(7)).Padding(0).Clicked() {
+				s.act.OpenBackups()
 			}
-			if ui.Button(c, s.text.Reload).Label(s.text.Reload).Size(t.Space(30), t.Space(7)).Padding(0).Clicked() {
-				s.act.Reload()
-			}
+			ui.Row(c).Gap(t.Space(2)).Children(func() {
+				if ui.Button(c, s.revealLabel()).Label(s.revealLabel()).Size(t.Space(30), t.Space(7)).Padding(0).Clicked() {
+					s.act.Reveal(s.dataPath)
+				}
+				if ui.Button(c, s.text.Reload).Label(s.text.Reload).Size(t.Space(30), t.Space(7)).Padding(0).Clicked() {
+					s.act.Reload()
+				}
+			})
 		})
 	})
 }

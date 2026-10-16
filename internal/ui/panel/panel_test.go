@@ -33,6 +33,8 @@ type recorder struct {
 	folders  []string
 	boundNew []string
 	cloned   [][2]string
+	settings int
+	backups  int
 }
 
 func (r *recorder) actions() Actions {
@@ -50,6 +52,8 @@ func (r *recorder) actions() Actions {
 		NewIdentityFor: func(f string) { r.boundNew = append(r.boundNew, f) },
 		Open:           func(p string) { r.folders = append(r.folders, p) },
 		CloneCopied:    func(id, prefix string) { r.cloned = append(r.cloned, [2]string{id, prefix}) },
+		OpenSettings:   func() { r.settings++ },
+		OpenBackups:    func() { r.backups++ },
 	}
 }
 
@@ -117,6 +121,12 @@ func TestLoadingAndReadOnly(t *testing.T) {
 	}
 	within(t, tt, "accounts.json cannot be read", "~/.config/idset/accounts.json", "unexpected end of JSON input", "Read-only until fixed",
 		"Show in Finder", "Read Again")
+	if err := tt.Click("Restore from Backup"); err != nil {
+		t.Fatal(err)
+	}
+	if rec.backups != 1 {
+		t.Fatalf("restore opens Backups: %d", rec.backups)
+	}
 	if err := tt.Click("Read Again"); err != nil {
 		t.Fatal(err)
 	}
@@ -478,7 +488,7 @@ func TestTitleRowAndFooterAreCompactAndEquallyHigh(t *testing.T) {
 			t.Errorf("%s: add %v quit %v in a footer of %v", goos, add, quit, 2*bottom)
 		}
 		// Only actions that work today.
-		for _, planned := range []string{"Settings", "About Idset", "Re-check"} {
+		for _, planned := range []string{"About Idset", "Re-check"} {
 			if _, ok := tt.Find(planned); ok {
 				t.Errorf("%s: %q is not built yet", goos, planned)
 			}
@@ -499,5 +509,15 @@ func TestTitleRowAndFooterAreCompactAndEquallyHigh(t *testing.T) {
 	tt = ui.NewTester(s.View, 340, 480)
 	if _, ok := tt.Find("退出"); !ok || count(tt, "添加身份") != 1 {
 		t.Errorf("empty footer: %q", tt.Texts())
+	}
+}
+
+func TestSettingsButton(t *testing.T) {
+	_, tt, rec := screen(t, identity("Work", "work", "a@example.com", account.GitHub, 1))
+	if err := tt.Click("Settings"); err != nil {
+		t.Fatal(err)
+	}
+	if rec.settings != 1 || rec.backups != 0 {
+		t.Fatalf("gear opens settings: %d %d", rec.settings, rec.backups)
 	}
 }
