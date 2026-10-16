@@ -45,6 +45,14 @@ All notable user-facing changes are recorded here, following [Keep a Changelog](
   `settings.json`. A prefix alone (`acme/`) cannot be copied and shows a hint. Identities without an SSH alias have
   neither.
 - On macOS the Dock icon shows while the accounts window is open; closing the window does not quit Idset.
+- The settings window opens from the gear in the panel title row or "Settings…" in the tray menu. General sets the
+  language (follow the system, English or Simplified Chinese; it applies to every open window at once) and opens
+  Idset at login. If macOS needs approval for the login item, a note says where to give it.
+- Backups lists every backup, newest first, with its identities. Restore asks first and lists what comes back;
+  Delete removes a backup. When `accounts.json` cannot be read, the panel's "Restore from Backup" opens the window
+  on this list.
+- Configuration shows whether `~/.ssh/config` and `~/.gitconfig` hold the Include block and removes both while
+  keeping `accounts.json`.
 
 ### Changed
 

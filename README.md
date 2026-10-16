@@ -44,6 +44,9 @@ Working now:
 - **Use the SSH alias for clones and remotes.** When a repository's origin is an HTTPS address, the card copies the
   command that switches it to the identity's SSH alias. A clone helper turns `owner/repo`, an address or a
   `git clone` command into the clone command for that identity.
+- **Settings, backups and restore.** The settings window sets the language and opening at login, lists the backups
+  to restore or delete (also when `accounts.json` cannot be read), and removes the `Include` blocks while keeping
+  your accounts.
 
 Planned:
 
