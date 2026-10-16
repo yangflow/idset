@@ -21,6 +21,7 @@ import (
 	"github.com/yangflow/idset/internal/trayicon"
 	"github.com/yangflow/idset/internal/ui/accounts"
 	"github.com/yangflow/idset/internal/ui/panel"
+	settingsui "github.com/yangflow/idset/internal/ui/settings"
 )
 
 const gitTimeout = 10 * time.Second
@@ -40,9 +41,15 @@ type app struct {
 	menu      *mygo.Menu
 	openItem  *mygo.MenuItem
 	hideItem  *mygo.MenuItem
-	quitting  bool
+	// settingsItem and quitItem are the other tray menu entries, kept to re-label them on a language change.
+	settingsItem *mygo.MenuItem
+	quitItem     *mygo.MenuItem
+	prefs        *settings.Settings
+	quitting     bool
 	// accounts is the account window while it is open, nil otherwise.
 	accounts *accountsWindow
+	// settings is the settings window while it is open, nil otherwise.
+	settings *settingsWindow
 }
 
 func main() {
@@ -65,6 +72,7 @@ func main() {
 	}
 	a := &app{env: env, dataDir: apply.DefaultTarget(env).Dir, git: match.SystemGit(gitTimeout),
 		gitConfig: accounts.SystemGitConfig(gitTimeout)}
+	a.prefs = settings.Open(a.dataDir)
 	mygo.Use(native.Plugin)
 	mygo.App.SetActivationPolicy(mygo.ActivationPolicyAccessory)
 	mygo.App.OnBeforeQuit(func(*mygo.QuitEvent) { a.quitting = true })
@@ -77,7 +85,7 @@ func main() {
 }
 
 func (a *app) ready() {
-	a.text = panel.Text(mygo.App.Locale())
+	a.text = panel.Text(a.locale())
 	a.screen = panel.New(a.text, a.env, panel.Actions{
 		Resolve:      a.resolve,
 		ChooseFolder: a.chooseFolder,
@@ -86,6 +94,8 @@ func (a *app) ready() {
 		Hide:         a.hide,
 		Quit:         mygo.App.Quit,
 		Reload:       func() { a.load() },
+		OpenSettings: func() { a.openSettings(settingsui.Request{}) },
+		OpenBackups:  func() { a.openSettings(settingsui.Request{Pane: settingsui.Backups}) },
 		Reveal:       mygo.Shell.ShowItemInFolder,
 		Open:         a.openFolder,
 		Run:          a.runBind,
@@ -134,10 +144,14 @@ func (a *app) ready() {
 	})
 	a.openItem = &mygo.MenuItem{Label: a.text.Open, Click: func(*mygo.MenuItem, *mygo.Window) { a.show() }}
 	a.hideItem = &mygo.MenuItem{Label: a.text.HidePanel, Hidden: true, Click: func(*mygo.MenuItem, *mygo.Window) { a.hide() }}
+	a.settingsItem = &mygo.MenuItem{Label: a.text.SettingsMenu, Click: func(*mygo.MenuItem, *mygo.Window) {
+		a.openSettings(settingsui.Request{})
+	}}
+	a.quitItem = &mygo.MenuItem{Label: a.text.Quit, Click: func(*mygo.MenuItem, *mygo.Window) { mygo.App.Quit() }}
 	a.menu = mygo.NewMenu([]*mygo.MenuItem{
-		a.openItem, a.hideItem,
+		a.openItem, a.hideItem, a.settingsItem,
 		mygo.Separator(),
-		{Label: a.text.Quit, Click: func(*mygo.MenuItem, *mygo.Window) { mygo.App.Quit() }},
+		a.quitItem,
 	})
 	if runtime.GOOS == "linux" {
 		// AppIndicator reports no clicks; its menu is the only way to open and hide the panel.
@@ -183,6 +197,9 @@ func (a *app) post(fn func()) {
 	if a.accounts != nil {
 		a.accounts.win.Update(func() {})
 	}
+	if a.settings != nil {
+		a.settings.win.Update(func() {})
+	}
 }
 
 // showAccounts gives the list to both screens and updates the tray tooltip.
@@ -190,6 +207,9 @@ func (a *app) showAccounts(list []account.Account, readErr error, path string) {
 	a.screen.SetAccounts(list, readErr, path)
 	if a.accounts != nil {
 		a.accounts.screen.SetAccounts(list, readErr, path)
+	}
+	if a.settings != nil {
+		a.settings.screen.SetReadOnly(readErr != nil)
 	}
 	a.updateTooltip()
 }

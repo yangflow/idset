@@ -201,8 +201,9 @@ h1 { flex:1; margin:0; font-size:13px; font-weight:600 }
 .readonly .path { font-family:ui-monospace,monospace; font-size:12px; color:var(--muted) }
 .readonly .reason { width:100%; font-family:ui-monospace,monospace; font-size:11px; color:var(--muted); overflow-wrap:anywhere }
 .readonly .hint { font-size:12px; color:var(--muted) }
-.readonly .actions { display:flex; gap:8px; margin-top:8px }
+.readonly .actions { display:flex; flex-wrap:wrap; justify-content:center; gap:8px; margin-top:8px }
 .panel button.fixed.wide { width:120px }
+.panel button.fixed.full { width:248px }
 .panel button.pad { height:28px; padding:0 16px; margin-top:4px }
 .center .big { font-size:15px }
 </style>
@@ -222,7 +223,7 @@ const TEXT = {
     loading:'正在读取配置…', dropLine:'拖入文件夹，或', dropHint:'看看这个目录会用哪个身份推送', choose:'选择文件夹…', chooseShort:'选择…',
     empty:'还没有身份', emptyHint:'让每个文件夹用自己的 Git 和 SSH 身份。', add:'添加身份',
     filter:'筛选身份', none:'没有匹配的身份', unnamed:'（未命名）', readonly:'accounts.json 读不出来', readonlyShort:'修好前只读',
-    readonlyHint:'修好文件或从备份恢复之前，Idset 不会写入它。', reload:'重新读取', reveal:'在 Finder 中显示', copy:'复制完整路径', copied:'已复制', clear:'清除结果',
+    readonlyHint:'修好文件或从备份恢复之前，Idset 不会写入它。', reload:'重新读取', restore:'从备份恢复', reveal:'在 Finder 中显示', copy:'复制完整路径', copied:'已复制', clear:'清除结果',
     uses:'Git 在这里用这个身份', alias:'别名', email:'邮箱', folders:'生效目录', global:'全局', noEmail:'没有邮箱',
     noMatch:'没有身份匹配这个目录', notRepo:'不是 Git 仓库', notFolder:'只能查看文件夹', checking:'正在查看…',
     gitFailed:'无法运行 git', gitReason:'exec: "git": executable file not found in $PATH', identities:'身份',
@@ -244,7 +245,7 @@ const TEXT = {
     loading:'Reading configuration…', dropLine:'Drop a folder, or', dropHint:'See which identity pushes from it', choose:'Choose Folder…', chooseShort:'Choose…',
     empty:'No identities yet', emptyHint:'Give each folder its own Git and SSH identity.', add:'Add Identity',
     filter:'Filter identities', none:'No matching identities', unnamed:'(unnamed)', readonly:'accounts.json cannot be read', readonlyShort:'Read-only until fixed',
-    readonlyHint:'Idset will not write to it until it is fixed or restored from a backup.', reload:'Read Again', reveal:'Show in Finder', copy:'Copy the full path', copied:'Copied', clear:'Clear result',
+    readonlyHint:'Idset will not write to it until it is fixed or restored from a backup.', reload:'Read Again', restore:'Restore from Backup', reveal:'Show in Finder', copy:'Copy the full path', copied:'Copied', clear:'Clear result',
     uses:'Git uses this identity here', alias:'Alias', email:'Email', folders:'Folders', global:'Global', noEmail:'no email',
     noMatch:'No identity matches this folder', notRepo:'Not a Git repository', notFolder:'Only folders can be checked', checking:'Checking…',
     gitFailed:'Could not run git', gitReason:'exec: "git": executable file not found in $PATH', identities:'Identities',
@@ -410,7 +411,7 @@ function panel(state, T) {
     loading: `<div class="center"><div class="spinner"></div><span class="muted">${T.loading}</span></div>`,
     readonly: `<div class="readonly"><div class="warn">${icon.warn}</div><div class="title">${T.readonly}</div><div class="path">~/.config/idset/accounts.json</div>
       ${clamp(jsonError, jsonError, 'reason')}<div class="hint" data-tip="${T.readonlyHint}">${T.readonlyShort}</div>
-      <div class="actions"><button class="fixed wide">${T.reveal}</button><button class="fixed wide">${T.reload}</button></div></div>`,
+      <div class="actions"><button class="primary fixed full">${T.restore}</button><button class="fixed wide">${T.reveal}</button><button class="fixed wide">${T.reload}</button></div></div>`,
     empty: `<div class="center"><strong class="big">${T.empty}</strong><span class="muted small">${T.emptyHint}</span><button class="primary pad">${T.add}</button></div>` + drop(),
     list: drop() + list(),
     over: drop(true) + list(),
@@ -456,14 +457,14 @@ function buttons(id, options, key) {
   document.getElementById(id).onclick = e => { const v = e.target.dataset.value; if (v) { view[key] = v; render(); } };
 }
 
-// The title row and footer. "Built today" shows only the actions that work in the app now: add and quit (settings does not exist yet).
+// The title row and footer. "Built today" shows only the actions that work in the app now: settings, add and quit.
 function chrome(T) {
   const bare = ['loading', 'readonly', 'empty'].includes(view.state), all = view.icons === 'all';
   const tool = (name, glyph, label, pos = '') => `<button class="tool ${pos} ${view.tip === name ? 'pinned' : ''}" data-tip="${label}" aria-label="${label}">${icon[glyph]}</button>`;
   // Add Identity lives in the fixed footer so it stays reachable however long the list is; the empty state has its own button.
   // Re-check has nothing to check without identities, so it goes with Add in the states that have none.
   return {
-    head:`<header><h1>Idset</h1>${all ? tool('settings', 'gear', T.settings, 'tip-end tip-below') : ''}</header>`,
+    head:`<header><h1>Idset</h1>${tool('settings', 'gear', T.settings, 'tip-end tip-below')}</header>`,
     foot:`<footer>${bare ? '' : tool('add', 'plus', T.add, 'tip-start')}<span class="spacer"></span>`
       + (all ? tool('about', 'info', T.about) : '') + (all && !bare ? tool('recheck', 'refresh', T.recheck) : '') + tool('quit', 'power', T.quit, 'tip-end') + `</footer>` };
 }

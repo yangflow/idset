@@ -10,11 +10,12 @@ Chinese). Mockups approximate the result; the app running on a real device is wh
 |---|---|
 | `screens/<screen>.html` | One self-contained mockup per screen with every state: static HTML and CSS with a small script for switching states, no external resources |
 | `screens/accounts.html` | The accounts window: every state, light and dark, English and Chinese, switched like the panel |
+| `screens/settings.html` | The settings window (General, Backups, Configuration): every state, light and dark, English and Chinese, switched like the panel |
 | `screens/panel-appearance.html` | The panel side by side in light and dark, with the drag-over state and a focus ring |
 | `tokens.md` | Spacing, size, color and motion values, mapped to MyGo theme roles, plus identity colors |
 
 The tray panel (`screens/panel.html`) is implemented; the accounts window has its mockup (`screens/accounts.html`)
-and no code yet. The settings and about windows get their mockups before their code.
+and no code yet, and so has the settings window (`screens/settings.html`). The about window gets its mockup before its code.
 
 ## Preview
 
@@ -30,6 +31,7 @@ every state. `screens/panel-appearance.html` needs no parameters.
 |---|---|---|
 | Panel | `screens/panel.html`, `screens/panel-appearance.html` | `internal/ui/panel/` |
 | Accounts | `screens/accounts.html` | `internal/ui/accounts/` (planned) |
+| Settings | `screens/settings.html` | `internal/ui/settings/` (planned) |
 
 A mockup maps to a package: `screens/<screen>.html` is implemented by `internal/ui/<screen>/`. The text and states in
 the mockup are the strings in that package's `copy.json` (English and Simplified Chinese) and the states its `Screen`

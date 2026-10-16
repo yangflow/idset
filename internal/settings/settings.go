@@ -1,6 +1,7 @@
-// Package settings keeps settings.json, the interface preferences in Idset's directory. Today that is the owner
-// prefix the clone helper remembers for each identity. Keys this version does not know are kept when it writes.
-// A file that cannot be read is never overwritten. Methods block on disk work, so callers run them off the UI thread.
+// Package settings keeps settings.json, the interface preferences in Idset's directory. That is the owner prefix
+// the clone helper remembers for each identity and the language the user chose. Keys this version does not know
+// are kept when it writes. A file that cannot be read is never overwritten. Methods block on disk work, so callers
+// run them off the UI thread.
 package settings
 
 import (
@@ -17,7 +18,10 @@ import (
 // FileName is the name of the preferences in the Idset directory.
 const FileName = "settings.json"
 
-const prefixesKey = "clonePrefixes"
+const (
+	prefixesKey = "clonePrefixes"
+	languageKey = "language"
+)
 
 // Settings is safe for concurrent use.
 type Settings struct {
@@ -26,6 +30,7 @@ type Settings struct {
 	mu       sync.Mutex
 	raw      map[string]json.RawMessage
 	prefixes map[string]string
+	language string
 	readErr  error
 }
 
@@ -41,7 +46,7 @@ func Open(dir string) *Settings {
 func (s *Settings) Reload() {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	s.raw, s.prefixes, s.readErr = map[string]json.RawMessage{}, map[string]string{}, nil
+	s.raw, s.prefixes, s.language, s.readErr = map[string]json.RawMessage{}, map[string]string{}, "", nil
 	data, err := os.ReadFile(s.path)
 	if errors.Is(err, fs.ErrNotExist) {
 		return
@@ -57,6 +62,11 @@ func (s *Settings) Reload() {
 	if v, ok := s.raw[prefixesKey]; ok {
 		if err := json.Unmarshal(v, &s.prefixes); err != nil || s.prefixes == nil {
 			s.prefixes = map[string]string{}
+		}
+	}
+	if v, ok := s.raw[languageKey]; ok {
+		if err := json.Unmarshal(v, &s.language); err != nil {
+			s.language = ""
 		}
 	}
 }
@@ -99,10 +109,7 @@ func (s *Settings) SetPrefix(id, prefix string) error {
 	} else {
 		next[id] = prefix
 	}
-	raw := make(map[string]json.RawMessage, len(s.raw)+1)
-	for k, v := range s.raw {
-		raw[k] = v
-	}
+	raw := s.copyRaw()
 	if len(next) == 0 {
 		delete(raw, prefixesKey)
 	} else {
@@ -112,13 +119,60 @@ func (s *Settings) SetPrefix(id, prefix string) error {
 		}
 		raw[prefixesKey] = v
 	}
-	data, err := json.MarshalIndent(raw, "", "  ")
-	if err != nil {
-		return err
-	}
-	if err := fsutil.WriteAtomic(s.path, append(data, '\n'), 0o600, 0o700); err != nil {
+	if err := s.write(raw); err != nil {
 		return err
 	}
 	s.raw, s.prefixes = raw, next
 	return nil
+}
+
+// Language is the UI language the user chose, "en" or "zh-Hans", or "" to follow the system.
+func (s *Settings) Language() string {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.language
+}
+
+// SetLanguage stores the chosen UI language; "" follows the system again. It changes nothing and returns the
+// read error when the file could not be read.
+func (s *Settings) SetLanguage(language string) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if s.readErr != nil {
+		return s.readErr
+	}
+	if s.language == language {
+		return nil
+	}
+	raw := s.copyRaw()
+	if language == "" {
+		delete(raw, languageKey)
+	} else {
+		v, err := json.Marshal(language)
+		if err != nil {
+			return err
+		}
+		raw[languageKey] = v
+	}
+	if err := s.write(raw); err != nil {
+		return err
+	}
+	s.raw, s.language = raw, language
+	return nil
+}
+
+func (s *Settings) copyRaw() map[string]json.RawMessage {
+	raw := make(map[string]json.RawMessage, len(s.raw)+1)
+	for k, v := range s.raw {
+		raw[k] = v
+	}
+	return raw
+}
+
+func (s *Settings) write(raw map[string]json.RawMessage) error {
+	data, err := json.MarshalIndent(raw, "", "  ")
+	if err != nil {
+		return err
+	}
+	return fsutil.WriteAtomic(s.path, append(data, '\n'), 0o600, 0o700)
 }

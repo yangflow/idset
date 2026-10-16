@@ -102,3 +102,10 @@ func Strip(content string) (string, bool, error) {
 	}
 	return before + after, true, nil
 }
+
+// Present reports whether content holds a block. A begin marker without an end marker is an error, as in the
+// other functions.
+func Present(content string) (bool, error) {
+	_, _, found, err := find(content)
+	return found, err
+}

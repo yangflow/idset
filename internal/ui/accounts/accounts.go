@@ -132,6 +132,9 @@ func New(text Copy, env paths.Env, act Actions) *Screen {
 		forms: map[string]*form{}, splitW: 232}
 }
 
+// SetText changes the language of the window.
+func (s *Screen) SetText(text Copy) { s.text = text }
+
 // Open selects what the request asks for, as soon as the list is loaded.
 func (s *Screen) Open(req Request) {
 	if s.loading {

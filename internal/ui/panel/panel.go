@@ -26,7 +26,7 @@ type Copy struct {
 	HidePanel, Quit, Loading, DropLine, DropHint, Choose, ChooseShort, ChooseTitle, Empty, EmptyHint, Filter, NoneMatch,
 	Unnamed, NoAlias, NoEmail, ReadOnly, ReadOnlyShort, ReadOnlyHint, CopyPath, Copied, Clear, Checking, NoMatch, NotRepo, NotFolder,
 	GitFailed, Matched, TooltipIdle, TooltipMatch, TooltipNoMatch, Open, Custom, UsesHere, Alias, Email, Folders, Global,
-	NoFolders, Identities, Reload, RevealFinder, RevealExplorer, RevealFiles, AddIdentity,
+	NoFolders, Identities, Reload, Settings, SettingsMenu, RestoreBackup, RevealFinder, RevealExplorer, RevealFiles, AddIdentity,
 	OpenFinder, OpenExplorer, OpenFiles, More, BindTo, Bind, BindLabel, NewShort, NewBound, Cancel, Rebind, RebindTo,
 	Unbind, OverlapTitle, OverlapHint, Used, Overridden, OnlyUse, RemoveFrom, Has, ConfirmShort, Covered, CoveredBy,
 	BoundTo, Undo, Undone, BindFailed, BindRegenFailed, StaleHead, Then, StaleUpdate, StaleIgnore, StaleFix, StaleKeep,
@@ -58,10 +58,13 @@ type Actions struct {
 	NewIdentity    func()
 	NewIdentityFor func(folder string)
 	// Open opens a folder in the system's file manager.
-	Open     func(path string)
-	Reload   func()
-	Reveal   func(path string)
-	CopyText func(string)
+	Open   func(path string)
+	Reload func()
+	Reveal func(path string)
+	// OpenSettings opens the settings window on the pane it showed last; OpenBackups opens it on Backups.
+	OpenSettings func()
+	OpenBackups  func()
+	CopyText     func(string)
 	// CloneCopied reports a clone command copied for an identity, with the owner prefix of the repository ("acme/",
 	// or "" when there is none): the owner remembers the prefix and records a use of the identity.
 	CloneCopied func(id, prefix string)
@@ -110,6 +113,9 @@ type Screen struct {
 func New(text Copy, env paths.Env, act Actions) *Screen {
 	return &Screen{text: text, env: env, act: act, loading: true, now: time.Now, goos: runtime.GOOS}
 }
+
+// SetText changes the language of the panel.
+func (s *Screen) SetText(text Copy) { s.text = text }
 
 // SetAccounts shows a freshly loaded list, or the read-only state when readErr is set.
 func (s *Screen) SetAccounts(list []account.Account, readErr error, dataPath string) {

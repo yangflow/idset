@@ -80,3 +80,22 @@ func TestStripRestoresTheOriginal(t *testing.T) {
 		t.Error("a file without a block must not change")
 	}
 }
+
+func TestPresent(t *testing.T) {
+	block := GitBlock("~/.config/idset/git.managed")
+	for name, tc := range map[string]struct {
+		content string
+		want    bool
+		err     error
+	}{
+		"empty":        {"", false, nil},
+		"other lines":  {"[user]\n\tname = x\n", false, nil},
+		"block":        {"[user]\n\tname = x\n\n" + block, true, nil},
+		"unterminated": {Begin + "\n[include]\n", false, ErrUnterminated},
+	} {
+		got, err := Present(tc.content)
+		if got != tc.want || err != tc.err {
+			t.Errorf("%s: got %v, %v", name, got, err)
+		}
+	}
+}

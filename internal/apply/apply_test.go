@@ -189,3 +189,33 @@ func TestGitAgreesWithMatching(t *testing.T) {
 		}
 	}
 }
+
+func TestIncludesReportsTheBlocksWithoutChangingFiles(t *testing.T) {
+	env := home(t)
+	target := DefaultTarget(env)
+	if got := Includes(target); got.SSH.Present || got.Git.Present || got.SSH.Err != nil || got.Git.Err != nil {
+		t.Fatalf("missing files have no block: %+v", got)
+	}
+	if err := Write(project.Project(nil, env, now), target); err != nil {
+		t.Fatal(err)
+	}
+	before := read(t, target.GitConfig)
+	if got := Includes(target); !got.SSH.Present || !got.Git.Present {
+		t.Fatalf("after Write: %+v", got)
+	}
+	if read(t, target.GitConfig) != before {
+		t.Error("looking must not write")
+	}
+	if err := RemoveIncludes(target); err != nil {
+		t.Fatal(err)
+	}
+	if got := Includes(target); got.SSH.Present || got.Git.Present {
+		t.Fatalf("after remove: %+v", got)
+	}
+	if err := os.WriteFile(target.GitConfig, []byte(include.Begin+"\n[include]\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if got := Includes(target); got.Git.Present || got.Git.Err == nil {
+		t.Fatalf("a block without an end is an error: %+v", got)
+	}
+}
