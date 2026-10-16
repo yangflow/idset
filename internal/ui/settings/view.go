@@ -56,7 +56,7 @@ func (s *Screen) tabBar(c *ui.Context) {
 		parts := ui.TabsBase(c, &s.tab, len(tabs))
 		parts.List.Gap(t.Space(1)).Label(s.text.Tabs).Children(func() {
 			for i, tab := range tabs {
-				el := parts.Tab(i).Size(t.Space(22), t.Space(13)).Radius(6).Gap(t.Space(1)).AlignItems(ui.Center).Justify(ui.Center).Label(tab.name)
+				el := parts.Tab(i).MinWidth(t.Space(22)).Height(t.Space(13)).PaddingX(t.Space(1)).Radius(6).AlignItems(ui.Center).Justify(ui.Center).Label(tab.name)
 				color := t.TextMuted
 				switch {
 				case i == s.tab:
@@ -66,8 +66,10 @@ func (s *Screen) tabBar(c *ui.Context) {
 					el.Background(t.SurfaceHover)
 				}
 				el.Children(func() {
-					ui.Icon(c, tab.icon).FontSize(t.Space(5)).TextColor(color)
-					ui.Text(c, tab.name).FontSize(t.Space(2.75)).TextColor(color).SingleLine()
+					ui.Column(c).Gap(t.Space(1)).AlignItems(ui.Center).Children(func() {
+						ui.Icon(c, tab.icon).FontSize(t.Space(5)).TextColor(color)
+						ui.Text(c, tab.name).FontSize(t.Space(2.75)).TextColor(color).SingleLine().Shrink(0)
+					})
 				})
 			}
 		})
@@ -133,11 +135,13 @@ func (r *rows) lineAt(left float32, content func()) {
 func (s *Screen) general(c *ui.Context) {
 	t := c.Theme()
 	choices := []struct{ value, name string }{{FollowSystem, s.text.FollowSystem}, {English, s.text.LangEnglish}, {Chinese, s.text.LangChinese}}
+	chosen := s.language
 	s.section(c, s.text.Language, func(r *rows) {
 		for _, choice := range choices {
 			r.next()
 			on := s.language == choice.value
-			row := ui.Row(c.Key("lang-"+choice.value)).Focusable().Selected(on).Label(choice.name).MinHeight(t.Space(8)).Padding(t.Space(1), t.Space(3), t.Space(1), t.Space(3)).
+			// A radio, not Selected: Selected would paint the row in the accent color; the mockup marks the choice with a check.
+			row := ui.RadioBase(c.Key("lang-"+choice.value), &chosen, choice.value).Label(choice.name).MinHeight(t.Space(8)).Padding(t.Space(1), t.Space(3), t.Space(1), t.Space(3)).
 				Gap(t.Space(2)).AlignItems(ui.Center)
 			if row.Hovered() {
 				row.Background(t.SurfaceHover)
@@ -150,9 +154,11 @@ func (s *Screen) general(c *ui.Context) {
 				if on && choice.value == FollowSystem {
 					ui.Text(c, fmt.Sprintf(s.text.Current, s.systemName())).FontSize(t.Space(2.75)).TextColor(t.TextMuted)
 				}
-				if on {
-					ui.Icon(c, icons.Check).FontSize(t.Rem(1.1)).TextColor(t.Accent)
-				}
+				ui.Row(c).Size(t.Space(3.5), t.Space(3.5)).Shrink(0).Children(func() {
+					if on {
+						ui.Icon(c, icons.Check).FontSize(t.Space(3.5)).TextColor(t.Accent)
+					}
+				})
 			})
 		}
 	}, func() {
@@ -165,7 +171,7 @@ func (s *Screen) general(c *ui.Context) {
 	s.section(c, s.text.Startup, func(r *rows) {
 		r.line(func() {
 			ui.Text(c, s.text.Login).Grow(1)
-			sw := ui.Switch(c.Key("login"), &s.login).Label(s.text.Login).Disabled(s.loginBusy)
+			sw := ui.Switch(c.Key("login"), &s.login).Size(t.Space(7), t.Space(4)).Radius(t.Space(2)).Label(s.text.Login).Disabled(s.loginBusy)
 			if sw.Changed() {
 				s.toggleLogin()
 			}
@@ -246,8 +252,9 @@ func (s *Screen) backupRow(c *ui.Context, b Backup) {
 	}
 	open := s.expanded[b.Path] && !unreadable
 	ui.Column(c).Children(func() {
+		other := s.restoring != "" && !busy
 		row := ui.Row(c).MinHeight(t.Space(11)).Padding(t.Space(1.5), t.Space(3), t.Space(1.5), t.Space(1)).Gap(t.Space(1)).AlignItems(ui.Center)
-		if s.restoring != "" && !busy {
+		if other {
 			row.Opacity(0.5)
 		}
 		row.Children(func() {
@@ -255,7 +262,7 @@ func (s *Screen) backupRow(c *ui.Context, b Backup) {
 			if open {
 				chevron, label = icons.ChevronDown, s.text.Collapse
 			}
-			if ghost(c, "expand", label, chevron).Disabled(unreadable).Clicked() {
+			if ghost(c, "expand", label, chevron).Disabled(unreadable || other).Clicked() {
 				s.toggle(b.Path)
 			}
 			ui.Column(c).Grow(1).Children(func() {
@@ -287,7 +294,10 @@ func (s *Screen) backupRow(c *ui.Context, b Backup) {
 			}
 		})
 		if open {
-			for _, a := range b.Accounts {
+			for i, a := range b.Accounts {
+				if i > 0 {
+					ui.Column(c).Padding(0, 0, 0, t.Space(11)).Children(func() { ui.Divider(c) })
+				}
 				s.identityRow(c, a)
 			}
 		}

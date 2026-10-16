@@ -243,6 +243,22 @@ func TestLanguageChoiceAppliesAndRelabels(t *testing.T) {
 	r.want(t, "当前：简体中文", "现在跟随系统：简体中文。")
 }
 
+// The chosen language row is marked by a check, not an accent fill, and is exposed to assistive technology as a radio.
+func TestChosenLanguageRowHasNoFill(t *testing.T) {
+	r := open(t, "en", Request{})
+	r.click(t, "English")
+	row, ok := r.tt.Find("English")
+	if !ok {
+		t.Fatal("no English row")
+	}
+	img := r.tt.Image()
+	scale := float32(img.Bounds().Dx()) / 720.0
+	c := img.RGBAAt(int((row.X+row.W+200)*scale), int((row.Y+row.H/2)*scale))
+	if c.B > 200 && c.R < 100 {
+		t.Errorf("chosen row filled with %v", c)
+	}
+}
+
 func TestChoosingTheChosenLanguageDoesNothing(t *testing.T) {
 	r := open(t, "en", Request{})
 	r.s.SetLanguage(English)
@@ -411,6 +427,16 @@ func TestRestoreListsTheIdentitiesAfterwards(t *testing.T) {
 	r.clickRow(t, "Restore", "2026-10-11 07:07")
 	r.want(t, "work", "personal", "client")
 	r.wantNot(t, "(unnamed)")
+}
+
+func TestOtherRowsCannotExpandWhileRestoring(t *testing.T) {
+	r := loaded(t, "en")
+	r.clickRow(t, "Restore", "2026-10-11 07:07")
+	r.clickDialogPrimary(t)
+	r.clickRow(t, "Show identities", "2026-10-12 09:07")
+	if len(r.s.expanded) != 0 {
+		t.Errorf("expanded = %v", r.s.expanded)
+	}
 }
 
 func TestRestoreRunsAndShowsProgress(t *testing.T) {
