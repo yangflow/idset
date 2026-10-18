@@ -394,6 +394,9 @@ func TestUnlockCommand(t *testing.T) {
 		{"outside home", paths.Env{Home: "/home/ada"}, "/keys/id_work", "ssh-add /keys/id_work"},
 		{"space", paths.Env{Home: "/home/ada"}, "~/My Keys/id_work", `ssh-add '/home/ada/My Keys/id_work'`},
 		{"quote", paths.Env{Home: "/home/ada"}, "/keys/ada's", `ssh-add '/keys/ada'\''s'`},
+		{"windows", paths.Env{Home: "C:/Users/ada", Windows: true}, "~/.ssh/id_work", `ssh-add C:\Users\ada\.ssh\id_work`},
+		{"windows space", paths.Env{Home: "C:/Users/ada", Windows: true}, "~/My Keys/id_work",
+			`ssh-add "C:\Users\ada\My Keys\id_work"`},
 	} {
 		t.Run(c.name, func(t *testing.T) {
 			a := identity("work", account.GitHub)

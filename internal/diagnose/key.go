@@ -115,14 +115,15 @@ func Unlock(ctx context.Context, run Run, tools Tools, env paths.Env, a account.
 // UnlockCommand is the ssh-add command to run in a terminal where the keychain cannot unlock the key. The path is
 // quoted for the shell when it needs it.
 func UnlockCommand(env paths.Env, a account.Account) string {
-	p := env.Native(strings.TrimSpace(a.KeyPath))
+	p := env.Expand(strings.TrimSpace(a.KeyPath))
 	if env.Windows {
+		p = strings.ReplaceAll(p, "/", `\`)
 		if strings.ContainsAny(p, " '\"") {
 			p = `"` + p + `"`
 		}
 		return "ssh-add " + p
 	}
-	if t := env.Tilde(paths.Slash(p)); strings.HasPrefix(t, "~/") && plain(t[2:]) {
+	if t := env.Tilde(p); strings.HasPrefix(t, "~/") && plain(t[2:]) {
 		return "ssh-add " + t
 	}
 	if plain(p) {
