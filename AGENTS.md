@@ -106,6 +106,8 @@ python3 scripts/bump.py <version>
 `gh issue create` and `gh pr create --body` skip the issue forms and the pull request template, so write their
 structure yourself. Search open issues first; one issue is one problem.
 
+- Work is planned only in issues, grouped by milestone; there is no roadmap file. Do one topic at a time. A new
+  idea becomes an issue first; it does not join the topic in progress.
 - Issue title: one short sentence that says the problem or the outcome, in English or Simplified Chinese. No type
   prefix such as `[feat]`; the label carries the type.
 - Bug, `--label bug`: `## What happened`, `## What you expected`, `## Steps to reproduce`,
