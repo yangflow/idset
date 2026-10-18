@@ -41,6 +41,7 @@ internal/gitdir/         normalizing `gitdir` paths, includeIf write order and m
 internal/project/        managed file contents generated from the identity list; pure, no disk access
 internal/include/        inserting, replacing and removing the Include marker block; pure
 internal/apply/          the only place that writes config files: managed files and the marker block in user files
+internal/keygen/         generating a key with ssh-keygen (never over an existing file) and loading it with ssh-add
 internal/keyfile/        whether a private key may be deleted with its identity (Lstat only, never opened), and deleting it
 internal/sysexec/        running system commands: timeout, no stdin, no shell (ADR 0004)
 internal/bind/           binding a folder to an identity, unbinding, rebinding and undo: pure plans, and a runner that

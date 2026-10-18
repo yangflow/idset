@@ -40,6 +40,7 @@ type recorder struct {
 	pubs     []string
 	rewrites []string
 	regen    int
+	keygen   []string
 }
 
 func (r *recorder) actions() Actions {
@@ -64,6 +65,7 @@ func (r *recorder) actions() Actions {
 		CopyPublicKey:  func(id string) { r.pubs = append(r.pubs, id) },
 		AddRewrites:    func(id string) { r.rewrites = append(r.rewrites, id) },
 		Regenerate:     func() { r.regen++ },
+		GenerateKey:    func(id string) { r.keygen = append(r.keygen, id) },
 	}
 }
 

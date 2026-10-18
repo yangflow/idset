@@ -31,7 +31,7 @@ type Copy struct {
 	Unbind, OverlapTitle, OverlapHint, Used, Overridden, OnlyUse, RemoveFrom, Has, ConfirmShort, Covered, CoveredBy,
 	BoundTo, Undo, Undone, BindFailed, BindRegenFailed, StaleHead, Then, StaleUpdate, StaleIgnore, StaleFix, StaleKeep,
 	Updated, FindNoEmail, FindNoEmailTip, FindCommits, FindOwner, FindOtherTip, FindUnknownTip, FindPushes, FindKeyTip, HTTPSRow, HTTPSTip, CopyCmd, CopyCmdTip, CloneLabel, CloneTip, CloneHint, CloneCopy,
-	CloneToggle, ConnOK, ConnOKPlain, ConnPending, ConnFail, Retry, Recheck, NoSSH, NoSSHWindows, NoSSHMac, NoSSHLinux, NoKey, NoKeyTip, Locked, LockedTip, Unlock, UnlockFailed, UnlockCmdTip, CopyUnlock, TimedOut, TimedOutTip, NoHost, NoHostTip, Refused, RefusedTip, HostKey, HostKeyTip, Denied, DeniedTip, CopyPub, OpenKeys, OpenKeysTip, NoPub, NoPubTip, HTTPSBarTip, AddRewrite, AddRewriteTip, AllOK, OneError, Errors, OneWarning, Warnings, Net001, Net001How, CopyDebug, Ssh001, Ssh001How, Git001, Git001How, Git001Global, Regenerate, Git002, Git002How string
+	CloneToggle, ConnOK, ConnOKPlain, ConnPending, ConnFail, Retry, Recheck, NoSSH, NoSSHWindows, NoSSHMac, NoSSHLinux, NoKey, NoKeyTip, GenerateKey, Locked, LockedTip, Unlock, UnlockFailed, UnlockCmdTip, CopyUnlock, TimedOut, TimedOutTip, NoHost, NoHostTip, Refused, RefusedTip, HostKey, HostKeyTip, Denied, DeniedTip, CopyPub, OpenKeys, OpenKeysTip, NoPub, NoPubTip, HTTPSBarTip, AddRewrite, AddRewriteTip, AllOK, OneError, Errors, OneWarning, Warnings, Net001, Net001How, CopyDebug, Ssh001, Ssh001How, Git001, Git001How, Git001Global, Regenerate, Git002, Git002How string
 }
 
 var translations = func() map[string]Copy {
@@ -78,6 +78,8 @@ type Actions struct {
 	// the managed files again. Both look at the folder again when they are done.
 	AddRewrites func(id string)
 	Regenerate  func()
+	// GenerateKey opens the Keys pane of the settings window, filled in for an identity whose key is missing.
+	GenerateKey func(id string)
 	Hide        func()
 	Quit        func()
 }

@@ -27,6 +27,11 @@ type recorder struct {
 	deletes        []string
 	loadedIncludes int
 	removes        int
+	generated      []KeyRequest
+	loads          []string
+	uses           [][3]string
+	drafts         []KeyDraft
+	reveals        []string
 }
 
 func (r *recorder) actions() Actions {
@@ -39,6 +44,11 @@ func (r *recorder) actions() Actions {
 		DeleteBackup:   func(path string) { r.deletes = append(r.deletes, path) },
 		LoadIncludes:   func() { r.loadedIncludes++ },
 		RemoveIncludes: func() { r.removes++ },
+		Generate:       func(req KeyRequest) { r.generated = append(r.generated, req) },
+		LoadKey:        func(keyPath string) { r.loads = append(r.loads, keyPath) },
+		UseKey:         func(id, keyPath, fp string) { r.uses = append(r.uses, [3]string{id, keyPath, fp}) },
+		NewIdentity:    func(d KeyDraft) { r.drafts = append(r.drafts, d) },
+		Reveal:         func(keyPath string) { r.reveals = append(r.reveals, keyPath) },
 	}
 }
 
@@ -189,8 +199,13 @@ func TestTabsSwitchByClickAndArrowKeys(t *testing.T) {
 	r.tt.Key(0, ui.KeyLeft)
 	r.tt.Key(0, ui.KeyLeft)
 	r.frame()
-	if r.s.Tab() != General {
+	if r.s.Tab() != Keys {
 		t.Fatalf("tab %v after Left twice", r.s.Tab())
+	}
+	r.tt.Key(0, ui.KeyLeft)
+	r.frame()
+	if r.s.Tab() != General {
+		t.Fatalf("tab %v after Left three times", r.s.Tab())
 	}
 	r.tt.Key(0, ui.KeyEnd)
 	r.frame()

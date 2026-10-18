@@ -126,6 +126,9 @@ func (a *app) ready() {
 		CopyPublicKey: a.copyPublicKey,
 		AddRewrites:   a.addRewrites,
 		Regenerate:    a.regenerate,
+		GenerateKey: func(id string) {
+			a.openSettings(settingsui.Request{Pane: settingsui.Keys, For: id})
+		},
 	})
 	// The application menu keeps the standard editing shortcuts working in text fields.
 	mygo.App.SetMenu(mygo.NewMenu([]*mygo.MenuItem{
@@ -232,6 +235,7 @@ func (a *app) showAccounts(list []account.Account, readErr error, path string) {
 	}
 	if a.settings != nil {
 		a.settings.screen.SetReadOnly(readErr != nil)
+		a.settings.screen.SetAccounts(list)
 	}
 	a.diagnose(list, false, nil)
 	a.updateTray()

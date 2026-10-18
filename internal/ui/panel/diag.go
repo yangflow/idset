@@ -321,6 +321,12 @@ func (s *Screen) nextStep(c *ui.Context, a account.Account, p diagnose.Problem) 
 		ui.Row(c).Height(t.Space(6)).Padding(0, 0, 0, t.Space(5)).Gap(t.Space(3)).AlignItems(ui.Center).Children(children)
 	}
 	switch p {
+	case diagnose.MissingKey:
+		actions(func() {
+			if s.link(c, "keygen-"+a.ID, s.text.GenerateKey, "", false).Clicked() {
+				s.act.GenerateKey(a.ID)
+			}
+		})
 	case diagnose.LockedKey:
 		if s.goos == "darwin" && !s.diag.unlockErr[a.ID] {
 			actions(func() {

@@ -1,6 +1,6 @@
-// Package settings is the settings window: a row of tabs over three panes. General holds the interface language and
-// the login item, Backups lists the snapshots of accounts.json to restore or delete, and Configuration removes the
-// Include blocks from the user's own files. State changes on the UI thread only; everything that touches the disk,
+// Package settings is the settings window: a row of tabs over four panes. General holds the interface language and
+// the login item, Keys generates a new SSH key and puts it to use, Backups lists the snapshots of accounts.json to
+// restore or delete, and Configuration removes the Include blocks from the user's own files. State changes on the UI thread only; everything that touches the disk,
 // the system or a command runs in the owner's background work (see Actions and Backend) and reports back through
 // the setters and the Done methods.
 package settings
@@ -10,12 +10,14 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"runtime"
 	"slices"
 	"strings"
 	"time"
 
 	"github.com/yangflow/idset/internal/account"
 	"github.com/yangflow/idset/internal/apply"
+	"github.com/yangflow/idset/internal/keygen"
 	"github.com/yangflow/idset/internal/paths"
 	"github.com/yangflow/idset/internal/ui/locale"
 )
@@ -33,7 +35,11 @@ type Copy struct {
 	BackupNote, ReadOnlyBanner, RestoreFailed, DeleteFailed, ListFailed, Loading,
 	EmptyTitle, EmptyBody, ConfirmTitle, ConfirmBody, ConfirmNote,
 	Include, Present, Absent, Remove, Removed, IncludeNote, RemovedNote, RemoveFail, RemoveFailPartial,
-	RemoveTitle, RemoveBody, Removes, Keeps, MarkerPre, MarkerPost, Kept1Post, Kept2Pre, Kept2Post, Kept3, RemoveButton string
+	RemoveTitle, RemoveBody, Removes, Keeps, MarkerPre, MarkerPost, Kept1Post, Kept2Pre, Kept2Post, Kept3, RemoveButton,
+	Keys, KNew, KType, KPlatform, KFile, KComment, Custom, KFormNote, Generate, Generating, KInvalid, KExists, KNoKeygen, KFail, KDiag,
+	Created, PubKey, CopyPub, Copied, NoPub, KFiles, Priv, Pub, Fp, Pass, None, PassNote, RevealFinder, RevealExplorer, RevealFiles,
+	KNext, AddOn, OpenSettings, AddCustom, AddCustomHint, Agent, Load, Loaded, AgentFail, LoadFail, UseFor, Choose, Change,
+	NextNote, NextCustom, UsedNote, UseFail, Another, UseTitle, UseBody, NowKey, NoKey, NewID, NewIDSub, NewIDSubPlain, UseNote, UseButton string
 }
 
 var translations = func() map[string]Copy {
@@ -54,15 +60,18 @@ type Pane int
 const (
 	Last Pane = iota
 	General
+	Keys
 	Backups
 	Config
 )
 
-const paneCount = 3
+const paneCount = 4
 
-// Request says what the window should show when it opens.
+// Request says what the window should show when it opens. For, with the Keys pane, is the ID of an identity whose
+// private key is missing: the form is filled in for it, and the new key goes to it.
 type Request struct {
 	Pane Pane
+	For  string
 }
 
 // Language choices as stored: "" follows the system.
@@ -101,6 +110,31 @@ type Actions struct {
 	LoadIncludes func()
 	// RemoveIncludes removes the Include blocks and answers with RemoveDone.
 	RemoveIncludes func()
+	// Generate generates a key pair and answers with GenerateDone.
+	Generate func(req KeyRequest)
+	// LoadKey adds the key at a stored path to ssh-agent and answers with LoadDone.
+	LoadKey func(keyPath string)
+	// UseKey writes a key path and fingerprint to an identity, regenerates the configuration and answers with UseDone.
+	UseKey func(id, keyPath, fingerprint string)
+	// NewIdentity opens the accounts window on a new identity filled in with the key.
+	NewIdentity func(draft KeyDraft)
+	// Reveal shows a file, by its stored path, in the file manager.
+	Reveal func(keyPath string)
+}
+
+// KeyRequest is the key the Keys form asks for.
+type KeyRequest struct {
+	Type    keygen.Type
+	Name    string
+	Comment string
+}
+
+// KeyDraft is what a new identity starts with when it is made for a generated key.
+type KeyDraft struct {
+	Provider    account.Provider
+	Email       string
+	KeyPath     string
+	Fingerprint string
 }
 
 // flashFor is how long "Restored" shows on a row.
@@ -162,17 +196,27 @@ type Screen struct {
 	removeErr    string
 	removeOpen   bool
 
+	accounts []account.Account
+	goos     string
+	keys     keys
+
 	announce string
 }
 
 // New returns a window on the General pane.
 func New(text Copy, env paths.Env, act Actions) *Screen {
-	return &Screen{text: text, env: env, act: act, now: time.Now, zone: time.Local, shown: -1,
+	s := &Screen{text: text, env: env, act: act, now: time.Now, zone: time.Local, shown: -1, goos: runtime.GOOS,
 		expanded: map[string]bool{}, failed: map[string]string{}}
+	s.resetKeys()
+	return s
 }
 
-// SetText changes the language of the window.
-func (s *Screen) SetText(text Copy) { s.text = text }
+// SetText changes the language of the window. The platform of the Keys form keeps its choice.
+func (s *Screen) SetText(text Copy) {
+	p := s.formProvider()
+	s.text = text
+	s.keys.platform = s.providerName(p)
+}
 
 // SetSystem tells the language the system asks for, a UI language such as "zh-Hans", for the "Current" hint.
 func (s *Screen) SetSystem(language string) { s.system = locale.Language(language) }
@@ -186,13 +230,25 @@ func (s *Screen) Open(req Request) {
 	if req.Pane >= General && int(req.Pane) <= paneCount {
 		s.tab = int(req.Pane) - 1
 	}
+	if req.Pane == Keys && req.For != "" {
+		s.keysFor(req.For)
+	}
 }
 
 // Tab is the pane being shown.
 func (s *Screen) Tab() Pane { return Pane(s.tab + 1) }
 
-// SetReadOnly says whether accounts.json is read-only, which the Backups pane tells in a banner.
+// SetReadOnly says whether accounts.json is read-only, which the Backups pane tells in a banner; the Keys pane then
+// writes no identity.
 func (s *Screen) SetReadOnly(readOnly bool) { s.readOnly = readOnly }
+
+// SetAccounts gives the identities the Keys pane fills its form from and offers the new key to.
+func (s *Screen) SetAccounts(list []account.Account) {
+	s.accounts = list
+	if s.keys.fresh && s.keys.comment == "" && len(list) > 0 {
+		s.keys.comment, s.keys.fresh = list[0].GitUserEmail, false
+	}
+}
 
 // entered asks for what the pane about to be shown needs.
 func (s *Screen) entered() {
