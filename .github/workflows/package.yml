@@ -1,4 +1,4 @@
-# Manual trigger; builds unsigned development packages only, never publishes.
+# Manual trigger; builds unsigned development packages only, never publishes. Releases are release.yml.
 name: Package
 on:
   workflow_dispatch:
