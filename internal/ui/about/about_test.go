@@ -2,6 +2,7 @@ package about
 
 import (
 	"fmt"
+	"image"
 	"reflect"
 	"slices"
 	"testing"
@@ -16,7 +17,7 @@ const width, height = 320, 292
 func open(t *testing.T, lang string, u Updates) (*ui.Tester, *int) {
 	t.Helper()
 	checks := 0
-	s := New(Text(lang), "0.1.0", Actions{CheckForUpdates: func() { checks++ }})
+	s := New(Text(lang), "0.1.0", ui.NewBitmap(image.NewRGBA(image.Rect(0, 0, 64, 64))), Actions{CheckForUpdates: func() { checks++ }})
 	s.SetUpdates(u)
 	tt := ui.NewTester(s.View, width, height)
 	tt.Frame()

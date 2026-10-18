@@ -182,13 +182,18 @@ and carries the user's accent color and contrast settings. See
   footer buttons are `Rem(1.2)` (about 16); the read-only warning is
   `Rem(1.7)` (about 22) in `Danger`.
 - **The tray icon** is drawn in code by `internal/trayicon/`, so no image file is maintained by hand: a 32×32 PNG of
-  an identity card. On macOS it is a template icon, black on transparent, that the system tints for the menu bar;
-  elsewhere it is a mid gray that stays visible on light and dark taskbars. The worst entry of the diagnostics summary
-  adds a badge at the lower right: a triangle for a warning, a circle for an error (and when ssh is missing), with a
-  "!" in it, cut free of the card by a 1.5 px gap. Outside macOS the badge is `#d97706` or `#dc2626` with a white
-  mark; in the template it is the ink with the mark cut out, since the system tints a template icon as a whole. The
-  icon changes once a round of checks has finished, never while one runs, and does not flash.
-- **The product icon** is still to be designed (see [design/README.md](../design/README.md)).
+  the product icon's key as an outline, pointing right: a rounded diamond bow around a dot, the shaft and two bits.
+  On macOS it is a template icon, black on transparent, that the system tints for the menu bar; elsewhere it is a
+  mid gray that stays visible on light and dark taskbars. The worst entry of the diagnostics summary adds a badge at
+  the lower right: a triangle for a warning, a circle for an error (and when ssh is missing), with a "!" in it, cut
+  free of the key by a 1.5 px gap. Outside macOS the badge is `#d97706` or `#dc2626` with a white mark; in the
+  template it is the ink with the mark cut out, since the system tints a template icon as a whole. The icon changes
+  once a round of checks has finished, never while one runs, and does not flash.
+- **The product icon** is an ivory key on a graphite tile: the bow is a rounded diamond carrying a Git branch in Git
+  orange (`#f6643f` to `#c8361b`), whose tip is a glowing mint commit; the key is one piece, the bow joined to the
+  shaft by fillets, and stands raised, with a dark edge below. It sits on the macOS grid (an 824 tile at 100 in
+  1024, radius 185) with transparent corners, so every platform shows the same rounded tile. The source is
+  [design/icon.svg](../design/icon.svg); see [design/README.md](../design/README.md) for exporting it.
 
 ## Component guide
 
@@ -582,8 +587,7 @@ Mockup: [design/screens/about.html](../design/screens/about.html), every state i
 languages. Behavior is in product.md, "关于窗口". 320×292 under the system title bar ("About Idset"), not resizable,
 minimizable or full-screen; one centered column with `Space(7)` above and `Space(6)` at the sides and below.
 
-- **Identity.** A 64 DIP tile (`Space(16)`, radius 14) in `Accent` with the identity card icon at 44 (`Space(11)`)
-  in `AccentText`, until the product icon (issue 35) replaces it. Under it, 12 apart, "Idset" (18, 600, a level 1
+- **Identity.** The product icon at 64 DIP (`Space(16)`), from `resources/icon.png`. Under it, 12 apart, "Idset" (18, 600, a level 1
   heading), then the muted, selectable "Version 0.1.0", then 12 below the copyright and the license on two muted
   11 lines.
 - **Actions.** At the bottom, 8 apart and centered: "GitHub", bordered, with the external icon, opens the repository

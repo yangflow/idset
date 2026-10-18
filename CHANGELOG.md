@@ -80,6 +80,8 @@ All notable user-facing changes are recorded here, following [Keep a Changelog](
   in the panel footer and "About Idset" in the macOS app menu.
 - Releases are built for macOS (signed and notarized), Windows and Linux, and installed copies update themselves
   from GitHub releases. On Linux, the Debian package needs `libayatana-appindicator3-1` for the tray.
+- Idset has its own icon, a Git key on a graphite tile, in the Dock, the taskbar, the installers and the about
+  window.
 
 ### Changed
 
@@ -88,3 +90,4 @@ All notable user-facing changes are recorded here, following [Keep a Changelog](
   this very folder) and clear are icon buttons next to the folder. The overlap card has a pin ("Use only") and minus
   ("Remove") button on each row. Shorter labels replace long ones, and tooltips carry the full text: the one-line drop
   zone, "Covered by …", the stale-path prompt's "Update" and "Ignore", and the read-only and `git` errors.
+- The tray icon is the product icon's key, drawn as an outline, instead of an identity card.

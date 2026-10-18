@@ -8,11 +8,14 @@ Chinese). Mockups approximate the result; the app running on a real device is wh
 
 | Path | Purpose |
 |---|---|
-| `screens/<screen>.html` | One self-contained mockup per screen with every state: static HTML and CSS with a small script for switching states, no external resources |
+| `screens/<screen>.html` | One self-contained mockup per screen with every state: static HTML and CSS with a small script for switching states, no external resources apart from `../icon.svg` |
 | `screens/accounts.html` | The accounts window: every state, light and dark, English and Chinese, switched like the panel |
 | `screens/about.html` | The about window: with and without self-update, keyboard focus, light and dark, English and Chinese |
 | `screens/settings.html` | The settings window (General, Backups, Configuration): every state, light and dark, English and Chinese, switched like the panel |
 | `screens/panel-appearance.html` | The panel side by side in light and dark, with the drag-over state and a focus ring |
+| `icon.svg` | The product icon's source |
+| `icon.html` | The product icon at every size it ships, on light and dark, in a Dock and a taskbar |
+| `export-icon.sh` | Renders `icon.svg` to `resources/icon.png` with Chrome |
 | `tokens.md` | Spacing, size, color and motion values, mapped to MyGo theme roles, plus identity colors |
 
 The tray panel (`screens/panel.html`) is implemented; the accounts window has its mockup (`screens/accounts.html`)
@@ -56,8 +59,12 @@ Mockup, design notes and code go in the same pull request.
 
 ## Icons
 
-There are no icon files to regenerate. The tray icon is drawn in code by `internal/trayicon/`; change it there and
-run `go test ./internal/trayicon/`. The panel's symbols are inline SVG in `internal/ui/panel/view.go`. The product
-icon is still to be designed; when it lands, its source and the script that exports it will live here.
+The tray icon is drawn in code by `internal/trayicon/`; change it there and run `go test ./internal/trayicon/`. The
+panel's symbols are inline SVG in `internal/ui/panel/view.go`.
+
+The product icon's source is `icon.svg`. After changing it, run `design/export-icon.sh` (it needs Google Chrome, or
+a Chromium-based browser given as `CHROME`) and commit `resources/icon.png` with it; `mygo build` makes every
+platform's icon from that PNG, and the about window shows it. Check the result in `icon.html`. MyGo does not draw SVG
+filters, which is why the app uses the PNG.
 
 Screenshots go in the pull request body, not into the repository; `design/screenshots/` is ignored by git.
