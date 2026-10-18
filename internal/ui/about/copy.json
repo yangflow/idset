@@ -1,0 +1,20 @@
+{
+    "en": {
+        "Window": "About Idset",
+        "Version": "Version %s",
+        "Copyright": "© 2026 yangflow",
+        "License": "Released under the MIT License",
+        "GitHub": "GitHub",
+        "Check": "Check for Updates…",
+        "Cannot": "This copy cannot update itself. Download new versions from GitHub."
+    },
+    "zh-Hans": {
+        "Window": "关于 Idset",
+        "Version": "版本 %s",
+        "Copyright": "© 2026 yangflow",
+        "License": "以 MIT 许可发布",
+        "GitHub": "GitHub",
+        "Check": "检查更新…",
+        "Cannot": "这个版本不能自动更新，新版本请到 GitHub 下载。"
+    }
+}

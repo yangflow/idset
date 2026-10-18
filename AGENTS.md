@@ -25,6 +25,7 @@ document only when following it would lead someone to do the wrong thing.
 main.go                  lifecycle, single instance, tray, panel window position and visibility,
                          background loading and matching, native updater plugin
 accounts_window.go       opening the account window, Dock icon on macOS, its background work (save, delete, pickers)
+about_window.go          opening the about window, finding out in the background whether this copy can update itself
 internal/ui/<screen>/    one package per screen: state, copy.json catalog, headless interaction tests;
                          the name matches design/screens/<screen>.html
 internal/ui/panel/       the panel

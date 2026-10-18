@@ -83,7 +83,7 @@ func (a *app) syncDock() {
 	if runtime.GOOS != "darwin" {
 		return
 	}
-	if a.accounts != nil || a.settings != nil {
+	if a.accounts != nil || a.settings != nil || a.about != nil {
 		mygo.App.SetActivationPolicy(mygo.ActivationPolicyRegular)
 		return
 	}

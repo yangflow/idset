@@ -23,7 +23,7 @@ var catalog []byte
 
 // Copy is the panel's text in one language. Main reads the tray texts from it too.
 type Copy struct {
-	HidePanel, Quit, Loading, DropLine, DropHint, Choose, ChooseShort, ChooseTitle, Empty, EmptyHint, Filter, NoneMatch,
+	HidePanel, Quit, About, AboutMenu, Loading, DropLine, DropHint, Choose, ChooseShort, ChooseTitle, Empty, EmptyHint, Filter, NoneMatch,
 	Unnamed, NoAlias, NoEmail, ReadOnly, ReadOnlyShort, ReadOnlyHint, CopyPath, Copied, Clear, Checking, NoMatch, NotRepo, NotFolder,
 	GitFailed, Matched, TooltipIdle, TooltipMatch, TooltipNoMatch, Open, Custom, UsesHere, Alias, Email, Folders, Global,
 	NoFolders, Identities, Reload, Settings, SettingsMenu, RestoreBackup, RevealFinder, RevealExplorer, RevealFiles, AddIdentity, ImportExisting,
@@ -62,10 +62,11 @@ type Actions struct {
 	Reload func()
 	Reveal func(path string)
 	// OpenSettings opens the settings window on the pane it showed last; OpenBackups and OpenImport open it on
-	// Backups and Import.
+	// Backups and Import. OpenAbout opens the about window.
 	OpenSettings func()
 	OpenBackups  func()
 	OpenImport   func()
+	OpenAbout    func()
 	CopyText     func(string)
 	// CloneCopied reports a clone command copied for an identity, with the owner prefix of the repository ("acme/",
 	// or "" when there is none): the owner remembers the prefix and records a use of the identity.

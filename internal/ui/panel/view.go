@@ -52,6 +52,9 @@ func (s *Screen) View(c *ui.Context) {
 				s.act.NewIdentity()
 			}
 			ui.Spacer(c)
+			if ghost(c, s.text.About, icons.Info).Clicked() {
+				s.act.OpenAbout()
+			}
 			if !s.loading && s.readErr == nil && len(s.accounts) > 0 {
 				s.recheckButton(c)
 			}

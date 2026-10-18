@@ -42,6 +42,7 @@ type recorder struct {
 	regen    int
 	keygen   []string
 	imports  int
+	abouts   int
 }
 
 func (r *recorder) actions() Actions {
@@ -62,6 +63,7 @@ func (r *recorder) actions() Actions {
 		OpenSettings:   func() { r.settings++ },
 		OpenBackups:    func() { r.backups++ },
 		OpenImport:     func() { r.imports++ },
+		OpenAbout:      func() { r.abouts++ },
 		CheckAgain:     func(ids []string) { r.checked = append(r.checked, ids) },
 		Unlock:         func(id string) { r.unlocked = append(r.unlocked, id) },
 		CopyPublicKey:  func(id string) { r.pubs = append(r.pubs, id) },
@@ -501,12 +503,11 @@ func TestTitleRowAndFooterAreCompactAndEquallyHigh(t *testing.T) {
 		if !same(add.W, add.H) || !same(add.W, quit.W) || !same(add.H, quit.H) || add.X >= quit.X || quit.H >= 2*bottom {
 			t.Errorf("%s: add %v quit %v in a footer of %v", goos, add, quit, 2*bottom)
 		}
-		// Only actions that work today; Re-check sits just before Quit.
-		if _, ok := tt.Find("About Idset"); ok {
-			t.Errorf("%s: About is not built yet", goos)
-		}
-		if recheck, ok := tt.Find("Re-check"); !ok || !same(recheck.W, quit.W) || recheck.X >= quit.X {
-			t.Errorf("%s: re-check %v before quit %v", goos, recheck, quit)
+		// About, Re-check and Quit, in that order, the same size.
+		about, ok := tt.Find("About Idset")
+		recheck, ok2 := tt.Find("Re-check")
+		if !ok || !ok2 || !same(about.W, quit.W) || !same(recheck.W, quit.W) || about.X >= recheck.X || recheck.X >= quit.X {
+			t.Errorf("%s: about %v, re-check %v, quit %v", goos, about, recheck, quit)
 		}
 		if count(tt, "Quit") != 1 || count(tt, "Add Identity") != 1 {
 			t.Errorf("%s: one of each: %q", goos, tt.Texts())
@@ -522,8 +523,15 @@ func TestTitleRowAndFooterAreCompactAndEquallyHigh(t *testing.T) {
 	s := New(Text("zh-Hans"), env, r.actions())
 	s.SetAccounts(nil, nil, "")
 	tt = ui.NewTester(s.View, 340, 480)
-	if _, ok := tt.Find("退出"); !ok || count(tt, "添加身份") != 1 {
+	if _, ok := tt.Find("退出"); !ok || count(tt, "添加身份") != 1 || count(tt, "关于 Idset") != 1 {
 		t.Errorf("empty footer: %q", tt.Texts())
+	}
+}
+
+func TestAboutButton(t *testing.T) {
+	_, tt, rec := screen(t, identity("Work", "work", "a@example.com", account.GitHub, 1))
+	if err := tt.Click("About Idset"); err != nil || rec.abouts != 1 {
+		t.Fatalf("about: %v %d", err, rec.abouts)
 	}
 }
 

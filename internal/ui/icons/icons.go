@@ -35,5 +35,6 @@ var (
 	Trash        = svg(`<path d="M2.5 4.5h11M6 4.5V3h4v1.5M4 4.5l.6 8.5h6.8l.6-8.5" stroke-width="1.4"/>`)
 	Gear         = svg(`<path d="M6.91 3.12L7.14 1.46L8.86 1.46L9.09 3.12L10.68 3.78L12.02 2.77L13.23 3.98L12.22 5.32L12.88 6.91L14.54 7.14L14.54 8.86L12.88 9.09L12.22 10.68L13.23 12.02L12.02 13.23L10.68 12.22L9.09 12.88L8.86 14.54L7.14 14.54L6.91 12.88L5.32 12.22L3.98 13.23L2.77 12.02L3.78 10.68L3.12 9.09L1.46 8.86L1.46 7.14L3.12 6.91L3.78 5.32L2.77 3.98L3.98 2.77L5.32 3.78z" stroke-width="1.5"/><circle cx="8" cy="8" r="2" stroke-width="1.5"/>`)
 	Key          = svg(`<circle cx="5.5" cy="10.5" r="3" stroke-width="1.4"/><path d="M7.7 8.3L13.5 2.5M11 5l2 2M9.5 6.5l1.5 1.5" stroke-width="1.4"/>`)
+	Card         = svg(`<rect x="1.5" y="3.5" width="13" height="9" rx="1.5" stroke-width="1.2"/><circle cx="5.5" cy="7" r="1.3" stroke-width="1.2"/><path d="M3.5 10.5a2 2 0 0 1 4 0M9.5 7h3M9.5 9.5h2" stroke-width="1.2"/>`)
 	External     = svg(`<path d="M9 3h4v4M13 3L7.5 8.5M11.5 9.5V13h-8.5V4.5H6.5" stroke-width="1.4"/>`)
 )
