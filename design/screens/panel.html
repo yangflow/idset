@@ -297,7 +297,7 @@ const TEXT = {
     pushesWith:'推送会用 ', keyTip:(p, w) => `core.sshCommand 指定了 ${p}，不是 ${w} 的密钥。`, owner:n => `（${n}）`,
     connOk:(p, u) => `已连通 · ${p} 用户 ${u}`, connPending:'正在检查连接…', connFail:s => `检查失败 · ${s}`, retry:'再检查一次',
     noSSH:'找不到 ssh', noSSHHint:'Idset 用系统的 OpenSSH 客户端检查连接。在「设置 → 系统 → 可选功能」里添加「OpenSSH 客户端」，或安装 Git for Windows。',
-    noKey:'私钥不存在 ', noKeyTip:p => `${p} 不存在。在账户窗口里选一把已有的密钥。`,
+    noKey:'私钥不存在 ', noKeyTip:p => `${p} 不存在。在设置里生成一把密钥，或在账户窗口里选一把已有的。`, generateKey:'生成密钥',
     locked:'密钥已锁定', lockedTip:'这把密钥有口令，ssh-agent 里还没有它。', unlock:'用钥匙串解锁',
     unlockFailed:'钥匙串里没有它的口令，在终端运行一次：', cmdTip:'在终端运行，输入口令，然后再检查一次', copyUnlock:'复制 ssh-add 命令',
     timeout:h => `连接 ${h} 超时`, timeoutTip:'5 秒内没有连上。检查网络和代理，再检查一次。',
@@ -336,7 +336,7 @@ const TEXT = {
     pushesWith:'Pushes use ', keyTip:(p, w) => `core.sshCommand picks ${p}, not ${w}’s key.`, owner:n => ` (${n})`,
     connOk:(p, u) => `Connected · ${p} user ${u}`, connPending:'Checking the connection…', connFail:s => `Check failed · ${s}`, retry:'Check Again',
     noSSH:'ssh not found', noSSHHint:'Idset checks connections with the system’s OpenSSH client. Add “OpenSSH Client” in Settings → System → Optional features, or install Git for Windows.',
-    noKey:'Key not found ', noKeyTip:p => `${p} does not exist. Choose an existing key in the accounts window.`,
+    noKey:'Key not found ', noKeyTip:p => `${p} does not exist. Generate a key in Settings, or choose an existing one in the accounts window.`, generateKey:'Generate Key',
     locked:'Key is locked', lockedTip:'The key has a passphrase and ssh-agent does not hold it yet.', unlock:'Unlock with Keychain',
     unlockFailed:'The keychain has no passphrase for it. Run this once in a terminal:', cmdTip:'Run it in a terminal, enter the passphrase, then check again', copyUnlock:'Copy the ssh-add command',
     timeout:h => `${h} timed out`, timeoutTip:'No connection within 5 seconds. Check the network and any proxy, then check again.',
@@ -521,8 +521,8 @@ function panel(state, T) {
         more: acts(btn(T.copyPub), btn(T.openSettings(i.provider), T.openSettingsTip(i.provider))) }),
     locked: (i, o = {}) => pbar('danger', 'error', `<span>${T.locked}</span>`, T.lockedTip,
       { more: o.cmd ? unlockCmd(i) : o.failed ? `<div class="hint">${T.unlockFailed}</div>` + unlockCmd(i) : acts(btn(T.unlock)) }),
-    // Generate Key joins Check Again once the settings window has its Keys pane.
-    nokey: i => pbar('danger', 'error', `<span>${T.noKey}</span>${mid(i.key, '', '')}`, T.noKeyTip(i.key)),
+    // Generate Key opens the Keys pane of the settings window, filled in for the identity.
+    nokey: i => pbar('danger', 'error', `<span>${T.noKey}</span>${mid(i.key, '', '')}`, T.noKeyTip(i.key), { more: acts(btn(T.generateKey)) }),
     timeout: i => pbar('danger', 'error', `<span>${T.timeout(i.host)}</span>`, T.timeoutTip),
     hostkey: i => pbar('danger', 'error', `<span>${T.hostkey(i.host)}</span>`, T.hostkeyTip(i.host)),
     https: i => pbar('quiet', 'globe', `<span>${T.httpsBar}</span>`, T.httpsBarTip(`https://${i.host}/`, `git@${i.alias}:`),

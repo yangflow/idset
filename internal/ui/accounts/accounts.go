@@ -76,6 +76,18 @@ type Request struct {
 	// Folder, with New, scopes the draft to this folder: the folder of a result card to bind a new identity to.
 	// A draft that is open already takes the folder as one more path.
 	Folder string
+	// Key, with New, fills the draft in for a key generated in the settings window. A draft that is open already
+	// takes it too.
+	Key *Key
+}
+
+// Key is a generated key a new identity starts from: its platform, the email of its comment (may be empty), its
+// stored path and its fingerprint.
+type Key struct {
+	Provider    account.Provider
+	Email       string
+	Path        string
+	Fingerprint string
 }
 
 // flashFor is how long "Written" stays on the Save button.
@@ -148,6 +160,9 @@ func (s *Screen) apply(req Request) {
 	switch {
 	case req.New:
 		s.newDraft(req.Folder)
+		if req.Key != nil {
+			s.draftKey(*req.Key)
+		}
 	case req.ID != "" && s.stored(req.ID) != nil:
 		s.sel = req.ID
 	case s.selectedForm() == nil:
@@ -247,6 +262,23 @@ func (s *Screen) newDraft(folder string) {
 	}
 	s.sel = s.draftID
 	s.notice = ""
+}
+
+// draftKey puts a generated key into the open draft: its path and fingerprint, its platform, and its email when the
+// draft has none yet.
+func (s *Screen) draftKey(k Key) {
+	f := s.forms[s.draftID]
+	if f == nil {
+		return
+	}
+	f.setProvider(k.Provider)
+	f.platform = s.providerName(k.Provider)
+	f.cur.keyPath = k.Path
+	// The fingerprint is kept on save while the key path stays the one of base.
+	f.base.KeyPath, f.base.KeyFingerprint = k.Path, k.Fingerprint
+	if k.Email != "" && f.cur.email == "" {
+		f.cur.email = k.Email
+	}
 }
 
 // freeColor is the first preset no identity uses, or the first preset.

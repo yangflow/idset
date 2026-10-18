@@ -861,6 +861,40 @@ func TestNewDraftForAFolderIsScopedToIt(t *testing.T) {
 	}
 }
 
+func TestNewDraftForAGeneratedKey(t *testing.T) {
+	key := &Key{Provider: account.GitLab, Email: "ada@example.com", Path: "~/.ssh/id_idset", Fingerprint: "SHA256:AbCdEf"}
+	r := open(t, "en", sample(), Request{New: true, Key: key})
+	id := r.s.Draft()
+	if f := r.form(); f.cur.provider != account.GitLab || f.cur.email != "ada@example.com" || f.cur.keyPath != "~/.ssh/id_idset" {
+		t.Fatalf("the draft starts from the key: %+v", f.cur)
+	}
+	// The email of the key wins over the one git config gives.
+	r.s.SetPrefill(id, "Ada", "other@example.com")
+	r.tt.Frame()
+	if f := r.form(); f.cur.provider != account.GitLab || f.cur.email != "ada@example.com" || f.cur.gitName != "Ada" {
+		t.Fatalf("after a frame and the prefill: %+v", f.cur)
+	}
+	r.form().cur.label = "lab"
+	r.click(t, "Limited to folders")
+	r.click(t, "Save")
+	if len(r.rec.saves) != 1 {
+		t.Fatalf("saves: %+v, %q", r.rec.saves, r.tt.Texts())
+	}
+	if a := r.rec.saves[0].a; a.Provider != account.GitLab || a.KeyPath != "~/.ssh/id_idset" || a.KeyFingerprint != "SHA256:AbCdEf" {
+		t.Errorf("the saved identity keeps the key and its fingerprint: %+v", a)
+	}
+}
+
+func TestGeneratedKeyOnAnOpenDraft(t *testing.T) {
+	r := open(t, "en", sample(), Request{New: true})
+	r.form().cur.email = "mine@example.com"
+	r.s.Open(Request{New: true, Key: &Key{Provider: account.Custom, Email: "ada@example.com", Path: "~/.ssh/id_b", Fingerprint: "SHA256:B"}})
+	f := r.form()
+	if f.cur.provider != account.Custom || f.cur.keyPath != "~/.ssh/id_b" || f.cur.email != "mine@example.com" || f.base.KeyFingerprint != "SHA256:B" {
+		t.Errorf("the open draft takes the key and keeps its email: %+v", f.cur)
+	}
+}
+
 func TestFolderRequestOnAnOpenDraft(t *testing.T) {
 	r := open(t, "en", sample(), Request{New: true})
 	r.s.Open(Request{New: true, Folder: "/home/ada/scratch/a"})

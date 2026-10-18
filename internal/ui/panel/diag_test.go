@@ -138,9 +138,13 @@ func TestUnreachableBars(t *testing.T) {
 func TestMissingKeyBar(t *testing.T) {
 	c := failed("work", diagnose.NoKeyFile)
 	c.Key = diagnose.KeyState{HasPath: true}
-	_, tt, _ := diagScreen(t, c, passed("own", ""))
-	want(t, tt, "Key not found", "~/.ssh/id_work", "Check Again")
-	wantNot(t, tt, "Copy Public Key", "Generate Key")
+	_, tt, rec := diagScreen(t, c, passed("own", ""))
+	want(t, tt, "Key not found", "~/.ssh/id_work", "Check Again", "Generate Key")
+	wantNot(t, tt, "Copy Public Key")
+	click(t, tt, "Generate Key")
+	if !slices.Equal(rec.keygen, []string{"work"}) {
+		t.Errorf("generate key for %q", rec.keygen)
+	}
 }
 
 func TestLockedKeyUnlocksWithTheKeychainOnMacOS(t *testing.T) {

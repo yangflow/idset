@@ -65,6 +65,11 @@ All notable user-facing changes are recorded here, following [Keep a Changelog](
 - A summary under the list counts the errors and warnings (an identity that failed its check, an alias your own
   `~/.ssh/config` also defines, a dropped folder that disagrees with its identity, several global identities) and says how to look into each; it copies the
   `ssh -vT` command or regenerates the configuration. The tray icon gets a warning or error badge for the worst one.
+- The Keys pane of the settings window generates an Ed25519 or RSA 4096 key in `~/.ssh/` with `ssh-keygen`, without
+  a passphrase and never over an existing file. The result shows the public key to copy, the files and fingerprint,
+  a link to the platform's SSH key settings, "Load into ssh-agent", and "Use for identity", which writes the key path
+  and fingerprint to an identity or starts a new identity with them in the accounts window. "Generate Key" on a
+  missing key's bar opens the pane filled in for that identity, and the new key goes to it at once.
 
 ### Changed
 

@@ -51,12 +51,13 @@ Working now:
 - **Diagnostics.** Checks each identity with `ssh -T` in the background and shows the result as a dot on its row.
   When a key is rejected, locked or missing, a host cannot be reached or `ssh` is not installed, the row says what to
   do next; a summary under the list and a badge on the tray icon show the worst problem.
+- **Keys.** The settings window generates an SSH key, copies its public key, loads it into ssh-agent and gives it to
+  an identity, or starts a new identity with it. A missing key's bar opens it filled in for that identity.
 
 Planned:
 
-- **Keys** ([#32](https://github.com/yangflow/idset/issues/32)) and **import**
-  ([#33](https://github.com/yangflow/idset/issues/33)). Generate a key, load it into ssh-agent, and import
-  identities from an existing `~/.ssh/config` and `~/.gitconfig`.
+- **Import** ([#33](https://github.com/yangflow/idset/issues/33)). Import identities from an existing
+  `~/.ssh/config` and `~/.gitconfig`.
 
 Targets: macOS 12+, Windows 10/11 and Linux with GTK 3, on amd64 and arm64. Tray icons on Linux need
 AppIndicator.

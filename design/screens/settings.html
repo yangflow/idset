@@ -160,6 +160,32 @@ button.ghost svg { width:14px; height:14px }
 .dialog .sec .li svg { width:12px; height:12px; flex:none }
 .dialog .sec .gone svg { color:var(--danger) }
 .dialog .sec .kept svg { color:var(--muted) }
+
+/* Keys: the form, its action row, the public key text, the next steps, the identity picker. */
+.banner.info { background:var(--surface) }
+.banner.info svg { color:var(--muted) }
+.actrow { display:flex; justify-content:flex-end; align-items:center; gap:8px }
+.actrow .muted { font-size:11px }
+.actrow.split { justify-content:space-between }
+.scroll.form-busy .g { opacity:.5 }
+.keyhead { display:flex; align-items:center; gap:8px }
+.keyhead svg { width:16px; height:16px; color:var(--accent); flex:none }
+.keyhead h2 { margin:0; font-size:15px; font-weight:600 }
+.keyhead .mark { font-size:11px; color:var(--muted) }
+.r.keytext { display:block; padding:8px 12px; line-height:1.45; word-break:break-all; user-select:text }
+.r .v.mono, .r .k.mono { font-size:12px }
+.files .r .k { width:96px }
+.r .tail .ok { display:inline-flex; align-items:center; gap:4px; font-size:11px; color:var(--muted) }
+.r .tail .ok svg { width:12px; height:12px; color:var(--accent) }
+.r .tail .who { display:inline-flex; align-items:center; gap:6px }
+.r .tail .who .dot { width:8px; height:8px }
+.dialog .picks { display:flex; flex-direction:column; padding:4px 0; border-top:1px solid var(--border); border-bottom:1px solid var(--border) }
+.dialog .picks .pk { display:flex; align-items:flex-start; gap:8px; padding:5px 0 }
+.dialog .picks .pk .radio { margin-top:1px }
+.dialog .picks .pk .t { flex:1; min-width:0; display:flex; flex-direction:column; gap:1px }
+.dialog .picks .pk .t .ln { display:flex; align-items:center; gap:6px }
+.dialog .picks .pk .t .em { font-size:11px; color:var(--muted) }
+.dialog .picks .pk .t .sub { font-size:11px; color:var(--muted); overflow-wrap:anywhere }
 </style>
 <aside class="controls">
   <div><h2>State</h2><div class="group" id="states"></div></div>
@@ -191,6 +217,28 @@ const TEXT = {
     removeTitle:'移除 Include？', removeBody:'移除后 Git 和 SSH 不再按文件夹选身份。下次修改身份时，标记块会自动加回来。', removes:'会移除', keeps:'不受影响',
     markerIn:f => `${f} 里的 Idset 标记块`, keptList:['<span class="mono">accounts.json</span> 和你的身份', '<span class="mono">~/.config/idset/</span> 里的托管文件', '私钥和你自己写的其他配置'],
     removeBtn:'移除',
+    keys:'密钥',
+    kNew:'新密钥', kType:'类型', kPlatform:'平台', kFile:'文件名', kComment:'注释',
+    kFormNote:(f, g) => `保存为 ${f} 和 ${g}。已有同名文件时不会覆盖。`,
+    generate:'生成', generating:'正在生成…',
+    kInvalid:'文件名只能用字母、数字、.、_ 和 -，不能以 . 开头，不能含 ..。',
+    kExists:f => `${f} 已经存在。Idset 不会覆盖已有的密钥，换一个文件名。`,
+    kFail:'无法运行 ssh-keygen：找不到这个命令。安装 OpenSSH 客户端后再试。',
+    kDiag:(n, f) => `${n} 的私钥 ${f} 不存在。下面已经按 ${n} 填好，生成后 ${n} 直接用这把密钥。`,
+    created:'已生成', pubKey:'公钥', copyPub:'复制公钥', copied:'已复制',
+    noPub:f => `${f} 不存在，没有可复制的公钥。`,
+    kFiles:'文件', priv:'私钥', pub:'公钥文件', fp:'指纹', pass:'口令', none:'无',
+    passNote:f => `这把私钥没有口令。以后可以运行 ssh-keygen -p -f ${f} 加上。`,
+    reveal:'在 Finder 中显示',
+    kNext:'下一步', addOn:p => `在 ${p} 添加公钥`, openSettings:p => `打开 ${p} 设置`, addCustom:'在你的服务器上添加公钥', addCustomHint:'复制上面的公钥',
+    agent:'加载到 ssh-agent', load:'加载', loaded:'已加载', agentFail:'ssh-agent 没有运行，没法加载。用这把密钥时 ssh 会直接读文件，不影响使用。',
+    useFor:'用于身份', choose:'选择…', change:'更改…',
+    nextNote:p => `在 ${p} 的设置页新建 SSH 密钥，把复制的公钥粘贴进去。`, nextCustom:'自定义平台没有固定的设置页，把公钥交给服务器的管理员，或加到它的 authorized_keys。',
+    usedNote:n => `已写入 ${n} 的密钥路径和指纹，配置已重新生成。`,
+    another:'再生成一把',
+    useTitle:'这把密钥用于哪个身份？', useBody:'只写入密钥路径和指纹，身份的其他内容不变。',
+    nowKey:f => `现在：${f}`, noKey:'还没有密钥', newId:'新建身份', newIdSub:(e, p) => `邮箱 ${e} · ${p}。在身份窗口里补全后保存。`,
+    useNote:'取消不会改动任何身份，密钥文件留在 ~/.ssh/。', useBtn:'使用',
   },
   en: {
     window:'Idset · Settings', general:'General', backups:'Backups', config:'Configuration',
@@ -213,23 +261,50 @@ const TEXT = {
     removeTitle:'Remove Include?', removeBody:'Git and SSH stop picking an identity by folder. The marker blocks come back the next time you change an identity.', removes:'Will be removed', keeps:'Left as is',
     markerIn:f => `The Idset marker block in ${f}`, keptList:['<span class="mono">accounts.json</span> and your identities', 'Managed files in <span class="mono">~/.config/idset/</span>', 'Private keys and the rest of your own config'],
     removeBtn:'Remove',
+    keys:'Keys',
+    kNew:'New key', kType:'Type', kPlatform:'Platform', kFile:'File name', kComment:'Comment',
+    kFormNote:(f, g) => `Saved as ${f} and ${g}. An existing file is never overwritten.`,
+    generate:'Generate', generating:'Generating…',
+    kInvalid:'Use letters, digits, ., _ and - only; do not start with . or include ..',
+    kExists:f => `${f} already exists. Idset never overwrites a key; choose another file name.`,
+    kFail:'Could not run ssh-keygen: command not found. Install the OpenSSH client and try again.',
+    kDiag:(n, f) => `The private key of ${n}, ${f}, does not exist. The form is filled in for ${n}, which uses the key as soon as it is generated.`,
+    created:'Key created', pubKey:'Public key', copyPub:'Copy Public Key', copied:'Copied',
+    noPub:f => `${f} does not exist, so there is no public key to copy.`,
+    kFiles:'Files', priv:'Private key', pub:'Public key', fp:'Fingerprint', pass:'Passphrase', none:'None',
+    passNote:f => `This private key has no passphrase. You can add one later with ssh-keygen -p -f ${f}.`,
+    reveal:'Show in Finder',
+    kNext:'Next steps', addOn:p => `Add the public key on ${p}`, openSettings:p => `Open ${p} Settings`, addCustom:'Add the public key on your server', addCustomHint:'Copy the public key above',
+    agent:'Load into ssh-agent', load:'Load', loaded:'Loaded', agentFail:'ssh-agent is not running, so the key was not loaded. ssh reads the key file directly, so the key still works.',
+    useFor:'Use for identity', choose:'Choose…', change:'Change…',
+    nextNote:p => `On the ${p} settings page, add a new SSH key and paste the copied public key.`, nextCustom:'A custom platform has no fixed settings page. Give the public key to the server administrator, or add it to its authorized_keys.',
+    usedNote:n => `The key path and fingerprint of ${n} were written and the configuration regenerated.`,
+    another:'Generate Another',
+    useTitle:'Use this key for which identity?', useBody:'Only the key path and fingerprint are written; nothing else about the identity changes.',
+    nowKey:f => `Now: ${f}`, noKey:'No key yet', newId:'New identity', newIdSub:(e, p) => `Email ${e} · ${p}. Finish and save it in the accounts window.`,
+    useNote:'Cancel leaves every identity as it is; the key files stay in ~/.ssh/.', useBtn:'Use',
   },
 };
 const STATES = {
   general:'通用 · 跟随系统', manual:'通用 · 手动选择', loginon:'登录项：开', approve:'登录项：待批准', loginfail:'登录项：失败',
+  keys:'密钥 · 表单', keysinvalid:'密钥 · 文件名无效', keysexists:'密钥 · 已存在', keysrunning:'密钥 · 生成中', keysfail:'密钥 · 生成失败', keysdiag:'密钥 · 从诊断打开',
+  keysdone:'密钥 · 结果', keyscopied:'密钥 · 已复制', keysnopub:'密钥 · 缺少公钥', keysagent:'密钥 · 已加载', keysagentfail:'密钥 · agent 不可用', keyscustom:'密钥 · 自定义平台', keysuse:'用于身份', keysused:'已用于身份',
   backups:'备份 · 列表', expanded:'备份 · 展开', unreadable:'备份 · 无法读取', confirm:'恢复确认', restoring:'恢复中', restored:'恢复成功', failed:'恢复失败', readonly:'只读状态打开', empty:'没有备份',
   config:'配置', remove:'移除确认', removed:'已移除', removefail:'移除失败',
 };
-const PANE = { general:['general','manual','loginon','approve','loginfail'], backups:['backups','expanded','unreadable','confirm','restoring','restored','failed','readonly','empty'], config:['config','remove','removed','removefail'] };
+const PANE = { general:['general','manual','loginon','approve','loginfail'], keys:['keys','keysinvalid','keysexists','keysrunning','keysfail','keysdiag','keysdone','keyscopied','keysnopub','keysagent','keysagentfail','keyscustom','keysuse','keysused'], backups:['backups','expanded','unreadable','confirm','restoring','restored','failed','readonly','empty'], config:['config','remove','removed','removefail'] };
 const paneOf = s => Object.keys(PANE).find(p => PANE[p].includes(s));
 const COLORS = { blue:'58,123,213', green:'46,158,91', orange:'224,122,31', purple:'142,68,173' };
 const LIGHT = { '58,123,213':'120,170,240', '46,158,91':'95,200,135', '224,122,31':'240,165,95', '142,68,173':'190,130,215' };
 const IDS = {
-  work: { label:'work', color:'blue', email:'bob@example.com', scoped:true },
-  personal: { label:'personal', color:'green', email:'bob@example.net', scoped:false },
-  client: { label:'client', color:'orange', email:'bob@client.example', scoped:true },
-  side: { label:'side', color:'purple', email:'bob@example.org', scoped:true },
+  work: { label:'work', color:'blue', email:'bob@example.com', scoped:true, key:'~/.ssh/id_work' },
+  personal: { label:'personal', color:'green', email:'bob@example.net', scoped:false, key:'~/.ssh/id_ed25519' },
+  client: { label:'client', color:'orange', email:'bob@client.example', scoped:true, key:'~/.ssh/id_client' },
+  side: { label:'side', color:'purple', email:'bob@example.org', scoped:true, key:'' },
 };
+// A made-up public key and fingerprint: the mockup never shows a real key.
+const PUBKEY = 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIExampleOnlyNotARealKeyExampleOnlyNotAReal bob@example.com';
+const FINGERPRINT = 'SHA256:ExampleOnlyNotARealFingerprint0000000000000';
 const BACKUPS = [
   { time:'2026-10-12 09:07', ids:['work', 'personal', 'client', 'side'], size:'2.4 KB' },
   { time:'2026-10-02 14:10', ids:['work', 'personal', 'client'], size:'1.9 KB' },
@@ -247,6 +322,9 @@ const icon = {
   clock:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 8a5.5 5.5 0 1 0 1.8-4.1M2.5 2.5v3h3"/><path d="M8 5v3.2l2 1.3"/></svg>',
   restore:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5.5 3L2.5 6l3 3"/><path d="M2.5 6H10a3.5 3.5 0 0 1 0 7H6.5"/></svg>',
   minus:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 8h8"/></svg>',
+  key:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="5.5" cy="10.5" r="3"/><path d="M7.7 8.3L13.5 2.5M11 5l2 2M9.5 6.5l1.5 1.5"/></svg>',
+  copy:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"><rect x="5.5" y="5.5" width="8" height="8" rx="1.5"/><path d="M10.5 5.5V3.5a1 1 0 0 0-1-1h-6a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2"/></svg>',
+  ext:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h4v4M13 3L7.5 8.5M11.5 9.5V13h-8.5V4.5H6.5"/></svg>',
   doc:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 2h5l3 3v9H4z"/><path d="M9 2v3h3M6 8.5h4M6 11h4"/></svg>',
 };
 const q = new URLSearchParams(location.search);
@@ -309,8 +387,65 @@ function render() {
   const action = `<div class="r add"><button class="text"${removed ? ' disabled' : ''}>${removed ? icon.check + T.removed : T.remove}</button></div>`;
   const configPane = group(T.gInclude, stat('~/.ssh/config', removed || failedCfg) + stat('~/.gitconfig', removed) + action, cfgNote);
 
-  // Dialogs: the restore and remove confirmations, over the dimmed window.
+  // Keys: the form until a key is generated, then the result.
+  const diag = s === 'keysdiag';
+  const custom = s === 'keyscustom';
+  const file = diag ? 'id_work' : s === 'keysinvalid' ? '.id idset' : 'id_idset';
+  const path = `~/.ssh/${file}`;
+  const platform = custom ? (view.lang === 'zh' ? '自定义' : 'Custom') : 'GitHub';
+  const running = s === 'keysrunning';
+  const formRow = (k, v, cls = '') => `<div class="r"><div class="k">${k}</div><div class="v ${cls}">${v}</div></div>`;
+  let formNote = note('', '', T.kFormNote(...['', '.pub'].map(x => `<span class="mono">~/.ssh/${s === 'keysinvalid' ? 'id_idset' : file}${x}</span>`)));
+  if (s === 'keysinvalid') formNote = note('err', 'warn', T.kInvalid);
+  if (s === 'keysexists') formNote = note('err', 'warn', T.kExists(path));
+  if (s === 'keysfail') formNote = note('err', 'warn', T.kFail);
+  const form =
+    (diag ? `<div class="banner info">${icon.key}<span>${T.kDiag('work', '<span class="mono">~/.ssh/id_work</span>')}</span></div>` : '') +
+    group(T.kNew,
+      `<div class="r"><div class="k">${T.kType}</div><div class="v"><span class="seg"><span class="on">Ed25519</span><span>RSA 4096</span></span></div></div>` +
+      formRow(T.kPlatform, `GitHub${icon.down}`, 'sel') +
+      formRow(T.kFile, file, `mono${s === 'keysinvalid' || s === 'keysexists' ? ' focus' : ''}`) +
+      formRow(T.kComment, 'bob@example.com'),
+      formNote) +
+    `<div class="actrow">${running ? `<span class="muted">${T.generating}</span>${spinner}` : ''}<button class="primary"${running || s === 'keysinvalid' ? ' disabled' : ''}>${T.generate}</button></div>`;
+
+  const done = (k, label) => `<span class="ok">${icon.check}${label}</span>`;
+  let pubNote = '';
+  if (s === 'keysnopub') pubNote = note('err', 'warn', T.noPub(`<span class="mono">${path}.pub</span>`));
+  const copyBtn = s === 'keyscopied' ? `<button class="text" disabled>${icon.check}${T.copied}</button>` : `<button class="text">${icon.copy}${T.copyPub}</button>`;
+  const used = s === 'keysused';
+  const addRow = custom
+    ? `<div class="r"><div class="k wide">${T.addCustom}</div><span class="hint-end">${T.addCustomHint}</span></div>`
+    : `<div class="r"><div class="k wide">${T.addOn('GitHub')}</div><div class="tail"><button>${T.openSettings('GitHub')}${icon.ext}</button></div></div>`;
+  const agentRow = `<div class="r"><div class="k wide">${T.agent}</div><div class="tail">${s === 'keysagent' ? done('', T.loaded) : `<button${s === 'keysagentfail' ? ' disabled' : ''}>${T.load}</button>`}</div></div>`;
+  const useRow = `<div class="r"><div class="k wide">${T.useFor}</div><div class="tail">${used ? `<span class="who">${dot(IDS.side)}${IDS.side.label}</span><button class="text">${T.change}</button>` : `<button>${T.choose}</button>`}</div></div>`;
+  let nextNote = note('', '', custom ? T.nextCustom : T.nextNote('GitHub'));
+  if (s === 'keysagentfail') nextNote = note('warn', 'warn', T.agentFail);
+  if (used) nextNote = note('ok', 'check', T.usedNote(IDS.side.label));
+  const result =
+    `<div class="keyhead">${icon.check}<h2>${T.created}</h2><span class="mark">Ed25519 · ${platform}</span></div>` +
+    group(T.pubKey, `<div class="r keytext mono">${PUBKEY}</div><div class="r add">${copyBtn}</div>`, pubNote) +
+    `<div class="files">` + group(T.kFiles,
+      `<div class="r"><div class="k">${T.priv}</div><div class="v mono">${path}</div><div class="tail">${ghost('folder', T.reveal)}</div></div>` +
+      `<div class="r"><div class="k">${T.pub}</div><div class="v mono">${path}.pub</div><div class="tail"><span style="width:24px"></span></div></div>` +
+      `<div class="r"><div class="k">${T.fp}</div><div class="v mono">${FINGERPRINT}</div><div class="tail"><span style="width:24px"></span></div></div>` +
+      `<div class="r"><div class="k">${T.pass}</div><div class="v">${T.none}</div><div class="tail"><span style="width:24px"></span></div></div>`,
+      note('', '', T.passNote(path))) + `</div>` +
+    group(T.kNext, addRow + agentRow + useRow, nextNote) +
+    `<div class="actrow"><button class="text">${T.another}</button></div>`;
+  const keysPane = ['keys', 'keysinvalid', 'keysexists', 'keysrunning', 'keysfail', 'keysdiag'].includes(s) ? form : result;
+
+  // Dialogs: the restore and remove confirmations and the identity picker, over the dimmed window.
   let dialog = '';
+  if (s === 'keysuse') {
+    const radio = on => `<span class="radio${on ? ' on' : ''}"><i></i></span>`;
+    const pk = (on, head, sub) => `<div class="pk">${radio(on)}<div class="t">${head}<span class="sub">${sub}</span></div></div>`;
+    dialog = `<div class="scrim"><div class="dialog" role="alertdialog"><h2>${T.useTitle}</h2><p>${T.useBody}</p>
+      <div class="picks">${Object.values(IDS).map(d => pk(d === IDS.side, `<span class="ln">${dot(d)}<span>${d.label}</span><span class="em">${d.email}</span></span>`, d.key ? T.nowKey(`<span class="mono">${d.key}</span>`) : T.noKey)).join('')}
+      ${pk(false, `<span class="ln">${T.newId}</span>`, T.newIdSub('bob@example.com', 'GitHub'))}</div>
+      <div class="small">${T.useNote}</div>
+      <div class="buttons"><button>${T.cancel}</button><button class="primary">${T.useBtn}</button></div></div></div>`;
+  }
   if (s === 'confirm') {
     const b = BACKUPS[target];
     dialog = `<div class="scrim"><div class="dialog" role="alertdialog"><h2>${T.confirmTitle(b.time)}</h2><p>${T.confirmBody}</p>
@@ -325,12 +460,12 @@ function render() {
       <div class="buttons"><button>${T.cancel}</button><button class="primary">${T.removeBtn}</button></div></div></div>`;
   }
 
-  const nav = [['general', 'sliders', T.general], ['backups', 'clock', T.backups], ['config', 'doc', T.config]]
+  const nav = [['general', 'sliders', T.general], ['keys', 'key', T.keys], ['backups', 'clock', T.backups], ['config', 'doc', T.config]]
     .map(([id, ic, label]) => `<div class="tab${pane === id ? ' sel' : ''}" role="tab" aria-selected="${pane === id}">${icon[ic]}<span>${label}</span></div>`).join('');
-  const body = { general, backups:backupsPane, config:configPane }[pane];
+  const body = { general, keys:keysPane, backups:backupsPane, config:configPane }[pane];
   document.documentElement.dataset.scheme = view.scheme;
   document.getElementById('win').innerHTML = `<div class="band"><div class="titlebar">${T.window}</div><div class="tabs" role="tablist">${nav}</div></div>
-    <div class="body"><div class="detail"><div class="scroll pane">${body}</div></div></div>${dialog}`;
+    <div class="body"><div class="detail"><div class="scroll pane${running ? ' form-busy' : ''}">${body}</div></div></div>${dialog}`;
 
   const buttons = (id, options, key) => {
     document.getElementById(id).innerHTML = Object.entries(options)

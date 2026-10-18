@@ -217,7 +217,7 @@ What Idset uses today:
 | Stale-path prompt | A card of its own above the no-match card: a 40 DIP header (color dot, "<name>'s folder is gone" / 「<name> 的路径已不在」, the name in 600, one line), two 28 DIP path rows under hairlines with no labels (the old path in `TextMuted`, then the new path after an arrow, monospace, one line, middle-truncated, full text in the tooltip), and a 36 DIP row with two text buttons at the right, "Update" in `Accent` and "Ignore" in `TextMuted`; their tooltips are "Change to This Path" and "Keep Old Path". The height is the same for any path. Plain `Border` outline, no clear button. |
 | Finding rows | In a matched card, under the details, in a section of their own: a hairline above, `Space(1)` (4) above and below the rows. One 28 DIP row per identity-check finding, email first, then key, like a path row: padding `Space(3)` (12), a `Rem(1.1)` (about 14) glyph, the warning triangle in `Warning` or the error circle in `Danger`, gap `Space(1.5)` (6), and one line of `Rem(0.9)` (about 12) `Text`: "Commits have no author", "Commits use <email> (<name>)", "Commits use <email>", "Pushes use <path>" (「提交没有作者」「提交会署名为 <邮箱>（<身份>）」「提交会署名为 <邮箱>」「推送会用 <路径>」). A long email gives way before its "@", so the domain and the identity name stay; a key path is middle-truncated in monospace like any path. The row's tooltip says why, with the full value: above the row, 6 DIPs away, its start under the row's start, at most 240 DIPs wide. No buttons: fixes belong to the diagnostics. The card's outline is `Danger` when any finding is an error, else `Warning`. |
 | Connectivity dot | At the end of an identity row, after the folders: a 14 DIP slot holding a 6 DIP dot, `Success` when the last `ssh -T` passed, `Danger` when it failed, a 1.5 DIP `TextMuted` ring while the first check runs. Its tooltip and accessible name say it in words: "Connected · <platform> user <user>", "Check failed · <why>", "Checking the connection…". A row without an alias keeps the empty slot so the folders line up; before the first report there are no dots. |
-| Problem bar | Under the row of an identity whose check failed, inside the same list, indented to the name (`Space(8)`, 32), 28 DIP line: the error circle in `Danger` (the globe in `TextMuted` for an HTTPS remote), one `Rem(0.9)` sentence (a missing key names its path in monospace, middle-truncated), the reason as its tooltip, and "Check Again" (the refresh icon button, disabled while the check runs). Below it, indented 20 more, at most one line of next step: "Unlock with Keychain" on macOS (an `Accent` text button); elsewhere, or after the unlock failed, the `ssh-add <path>` command with a copy button; "Copy Public Key" and "Open <platform> Settings" for a rejected key; "Add Rewrite" for an HTTPS remote. No hairline between the row and its bar. |
+| Problem bar | Under the row of an identity whose check failed, inside the same list, indented to the name (`Space(8)`, 32), 28 DIP line: the error circle in `Danger` (the globe in `TextMuted` for an HTTPS remote), one `Rem(0.9)` sentence (a missing key names its path in monospace, middle-truncated), the reason as its tooltip, and "Check Again" (the refresh icon button, disabled while the check runs). Below it, indented 20 more, at most one line of next step: "Unlock with Keychain" on macOS (an `Accent` text button); elsewhere, or after the unlock failed, the `ssh-add <path>` command with a copy button; "Copy Public Key" and "Open <platform> Settings" for a rejected key; "Add Rewrite" for an HTTPS remote; "Generate Key" for a missing key, which opens the Keys pane of the settings window filled in for the identity. No hairline between the row and its bar. |
 | ssh notice | When the checks find no `ssh`, one card above the drop zone replaces every bar and the summary: `Danger` outline, the error circle, "ssh not found" (600), "Check Again" over all identities, and one muted line on how to install it for the platform. |
 | Diagnostics summary | After the identity list, once a round of checks has finished. Nothing wrong: one muted line with a `Success` check mark, "Configuration OK". Otherwise a `Surface` card with radius 10: a 32 DIP header, a button with `aria-expanded` (the worst glyph, "1 error · 2 warnings" in 600, a chevron), and when open one entry per problem under hairlines: the glyph, what is wrong, how to look into it in `TextMuted`, an optional `Accent` text button ("Copy the Command" for NET001, "Regenerate" for GIT001), and the code (NET001, SSH001, GIT001, GIT002) in monospace `Rem(0.85)` at the end. It opens by itself whenever its set of entries changes, and stays as the user left it otherwise. |
 | Undo bar | The last row of the result card, 36 DIPs high, hairline above: "Bound to <identity> ·" and an `Accent` "Undo" text button. A 2 DIP line on the bar's bottom edge, `Accent` at 45%, is as wide as the time left of the card's width, in fifths. |
@@ -274,7 +274,7 @@ The tables below say what to reach for as the accounts, settings and about windo
 | Columns and rows of controls | [Grid](https://github.com/egoist/mygo/blob/v0.3.6/docs/ui/grid.md) |
 | List and detail of the accounts window | [Split view](https://github.com/egoist/mygo/blob/v0.3.6/docs/ui/split.md) |
 | Optional detail (the clone helper of an identity row, a backup's contents) | [Collapsible](https://github.com/egoist/mygo/blob/v0.3.6/docs/ui/collapsible.md), [Accordion](https://github.com/egoist/mygo/blob/v0.3.6/docs/ui/accordion.md) for several in a stack; only one identity row is expanded at a time, which the screen's state enforces |
-| The three panes of the settings window (General, Backups, Configuration) | [Tabs](https://github.com/egoist/mygo/blob/v0.3.6/docs/ui/tabs.md); `ui.TabsBase` for the icon over the label |
+| The four panes of the settings window (General, Keys, Backups, Configuration) | [Tabs](https://github.com/egoist/mygo/blob/v0.3.6/docs/ui/tabs.md); `ui.TabsBase` for the icon over the label |
 
 ### Dialogs, messages and status
 
@@ -439,7 +439,7 @@ the scroll view. In the empty state the centered "Add Identity" button
 replaces it. Both open the accounts window on a new draft.
 
 Planned (product.md): the About button (drawn in the mockup, shown once it works); "Import" when there are no
-identities; "Generate Key" on a missing key's bar, once the settings window has its Keys pane. The expand arrow and the HTTPS row and clone
+identities. The expand arrow and the HTTPS row and clone
 helper are drawn in the mockup and shown once built (issue 26). Bind, unbind, rebind, "Use only" and undo on result
 cards are built as the mockup shows.
 
@@ -511,8 +511,8 @@ languages. Behavior is in product.md, "设置窗口". 720×480, the system title
 material as the accounts window: fills, hairlines and text, no shadow, gradient or blur.
 
 - **Tabs.** A tab bar along the top, under the title bar and part of the same `Surface` band, one hairline at its
-  bottom. Three tabs centered as a group, each an icon over a label: General, Backups, Configuration (通用 / 备份 /
-  配置). A tab is 88 wide and 52 high (`Space(22)`, `Space(13)`) with a 20 DIP icon (`Space(5)`), the 11 label 4 below it,
+  bottom. Four tabs centered as a group, each an icon over a label: General, Keys, Backups, Configuration (通用 / 密钥 /
+  备份 / 配置). A tab is 88 wide and 52 high (`Space(22)`, `Space(13)`) with a 20 DIP icon (`Space(5)`), the 11 label 4 below it,
   and 4 DIP gaps; the bar has 4 above and 6 below. The selected tab has the `Pressed` fill, `Text` icon and label and a
   6 DIP radius; the others are `TextMuted` on no fill. Arrows, Home and End move the choice, as `ui.Tabs` does. The
   pane has no heading of its own: the selected tab names it.
@@ -522,6 +522,23 @@ material as the accounts window: fills, hairlines and text, no shadow, gradient 
   resolves to), "English" and "简体中文", the last two always in their own language. "Open at login" is a switch row; when
   the system asks for approval the switch stays off and a `Warning` note under it says where to approve (macOS: System
   Settings, General, Login Items). A failed change is an inline `Danger` note under the row.
+- **Keys.** The form is one grouped list "New key" of 32 DIP rows, a 168 DIP label at the start and the control at
+  the end: Type (a segmented control, Ed25519 / RSA 4096), Platform (a pop-up), File name (monospace) and Comment
+  (borderless inputs, text at the end). Under it a muted note says where the two files go and that an existing file is
+  never overwritten; a bad name or a failure replaces it with an inline `Danger` note. "Generate" is the primary
+  button at the end; while it runs the group is dimmed to half and a muted "Generating…" and a spinner stand before
+  it. Opened from a missing key's bar, a `Surface` banner with the key icon above the form names the identity and its
+  key path. The result has a heading with an `Accent` check, "Key created" and a muted "type · platform", then three
+  groups: "Public key" (the selectable monospace key, "Copy Public Key" as an `Accent` text button that turns into a
+  check and "Copied" for 1.2 s), "Files" (private key with "Show in Finder" as a ghost button, public key,
+  fingerprint, passphrase "None", 96 DIP labels, a footnote with the `ssh-keygen -p` command), and "Next steps" (add the
+  public key on the platform with "Open <platform> Settings" and the external icon; "Load into ssh-agent" with Load,
+  a spinner, then a check and "Loaded"; "Use for identity" with "Choose…", then the identity's dot and name and
+  "Change…"). Notes under Next steps: the identity written, ssh-agent not running (`Warning`), or the platform hint.
+  "Generate Another" is a text button at the end. "Choose…" opens an alert 360 wide: "Use this key for which
+  identity?", one sentence, the identities as radio rows (dot, name, muted email, and "Now: <key>" or "No key yet"
+  under it) and "New identity" with the email and platform it starts from, between two hairlines, a muted note,
+  Cancel (initial focus) and Use.
 - **Backups.** One grouped list, newest first. A row is 44 high: a chevron, the time (13), and a muted line "N identities
   · names · size" (11; the first three names and "+N" for the rest), then two ghost buttons in fixed 24 DIP slots:
   Restore (a back arrow, tooltip "Restore") and trash. The chevron expands the row to show its identities read-only, one at a time. Delete has no confirmation: the
@@ -543,7 +560,7 @@ material as the accounts window: fills, hairlines and text, no shadow, gradient 
   with the rest of the user's config, each behind a muted check. Paths are monospace. Afterwards the rows read "no
   marker block" with a "✓ Removed" note. A failure is inline and names the file that could not be changed, including the
   case where one file was changed and the other not.
-- **Errors and feedback.** Errors are inline notes, never dialogs; the only alerts are the two confirmations above.
+- **Errors and feedback.** Errors are inline notes, never dialogs; the only alerts are the two confirmations above and the identity choice of the Keys pane.
   Success feedback is the 1.2 s label of the panel.
 
 ## Windows, menus and the tray

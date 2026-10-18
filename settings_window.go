@@ -1,10 +1,17 @@
 package main
 
 import (
+	"context"
 	"log/slog"
+	"slices"
+	"time"
 
 	"github.com/egoist/mygo"
 	"github.com/egoist/mygo/ui"
+	"github.com/yangflow/idset/internal/account"
+	"github.com/yangflow/idset/internal/diagnose"
+	"github.com/yangflow/idset/internal/keygen"
+	"github.com/yangflow/idset/internal/store"
 	"github.com/yangflow/idset/internal/ui/accounts"
 	"github.com/yangflow/idset/internal/ui/panel"
 	"github.com/yangflow/idset/internal/ui/settings"
@@ -15,6 +22,9 @@ const (
 	settingsWidth, settingsHeight       = 720, 480
 	settingsMinWidth, settingsMinHeight = 600, 400
 )
+
+// keygenTimeout bounds ssh-keygen; an RSA key of 4096 bits can take a while on a slow machine.
+const keygenTimeout = 60 * time.Second
 
 // settingsWindow is the settings window and its screen, for as long as the window is open.
 type settingsWindow struct {
@@ -40,6 +50,7 @@ func (a *app) openSettings(req settings.Request) {
 	w.screen.SetLanguage(a.prefs.Language())
 	if s := a.store; s != nil {
 		w.screen.SetReadOnly(s.ReadOnly() != nil)
+		w.screen.SetAccounts(s.Accounts())
 	}
 	w.screen.Open(req)
 	w.win = mygo.NewWindow(mygo.WindowOptions{
@@ -174,5 +185,62 @@ func (w *settingsWindow) actions() settings.Actions {
 				a.post(func() { w.screen.RemoveDone(before, after, err) })
 			}()
 		},
+		Generate: func(req settings.KeyRequest) {
+			go func() {
+				key, err := keygen.Generate(context.Background(), diagnose.System(keygenTimeout), a.sshTools().Keygen, a.env,
+					req.Type, req.Name, req.Comment)
+				if err != nil {
+					slog.Warn("Could not generate the key", "error", err)
+				}
+				a.post(func() { w.screen.GenerateDone(key, err) })
+			}()
+		},
+		LoadKey: func(keyPath string) {
+			go func() {
+				err := keygen.Load(context.Background(), diagnose.System(sshTimeout), a.sshTools().Add, a.env, keyPath)
+				if err != nil {
+					slog.Warn("Could not load the key", "error", err)
+				}
+				a.post(func() { w.screen.LoadDone(err) })
+			}()
+		},
+		UseKey: func(id, keyPath, fingerprint string) {
+			s := a.store
+			if s == nil {
+				return
+			}
+			go func() {
+				err := useKey(s.Accounts(), s.Update, id, keyPath, fingerprint)
+				if err != nil {
+					slog.Warn("Could not give the key to the identity", "error", err)
+				}
+				list, readErr, path := s.Accounts(), s.ReadOnly(), s.Path()
+				a.post(func() {
+					a.showAccounts(list, readErr, path)
+					w.screen.UseDone(id, err)
+					if err == nil {
+						a.checkAgain([]string{id})
+					}
+					a.recheckFolder()
+				})
+			}()
+		},
+		NewIdentity: func(d settings.KeyDraft) {
+			a.openAccounts(accounts.Request{New: true, Key: &accounts.Key{
+				Provider: d.Provider, Email: d.Email, Path: d.KeyPath, Fingerprint: d.Fingerprint,
+			}})
+		},
+		Reveal: func(keyPath string) { mygo.Shell.ShowItemInFolder(a.env.Native(keyPath)) },
 	}
+}
+
+// useKey gives the identity id the key at keyPath and its fingerprint.
+func useKey(list []account.Account, update func(account.Account) error, id, keyPath, fingerprint string) error {
+	i := slices.IndexFunc(list, func(x account.Account) bool { return x.ID == id })
+	if i < 0 {
+		return store.ErrNotFound
+	}
+	x := list[i]
+	x.KeyPath, x.KeyFingerprint = keyPath, fingerprint
+	return update(x)
 }
