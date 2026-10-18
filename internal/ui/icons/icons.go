@@ -29,6 +29,7 @@ var (
 	ChevronDown  = svg(`<path d="M4 6l4 4 4-4" stroke-width="1.6"/>`)
 	Sliders      = svg(`<path d="M2 4.5h7M12 4.5h2M2 11.5h2M7 11.5h7" stroke-width="1.4"/><circle cx="10.5" cy="4.5" r="1.5" stroke-width="1.4"/><circle cx="5.5" cy="11.5" r="1.5" stroke-width="1.4"/>`)
 	Clock        = svg(`<path d="M2.5 8a5.5 5.5 0 1 0 1.8-4.1M2.5 2.5v3h3" stroke-width="1.4"/><path d="M8 5v3.2l2 1.3" stroke-width="1.4"/>`)
+	Import       = svg(`<path d="M8 2v8M5 7l3 3 3-3" stroke-width="1.4"/><path d="M2.5 10.5v2a1 1 0 0 0 1 1h9a1 1 0 0 0 1-1v-2" stroke-width="1.4"/>`)
 	Doc          = svg(`<path d="M4 2h5l3 3v9H4z" stroke-width="1.4"/><path d="M9 2v3h3M6 8.5h4M6 11h4" stroke-width="1.4"/>`)
 	Restore      = svg(`<path d="M5.5 3L2.5 6l3 3" stroke-width="1.4"/><path d="M2.5 6H10a3.5 3.5 0 0 1 0 7H6.5" stroke-width="1.4"/>`)
 	Trash        = svg(`<path d="M2.5 4.5h11M6 4.5V3h4v1.5M4 4.5l.6 8.5h6.8l.6-8.5" stroke-width="1.4"/>`)

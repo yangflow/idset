@@ -35,6 +35,7 @@ type recorder struct {
 	prefilled []string
 	keys      []string
 	folders   []folderCall
+	imports   int
 }
 
 func (r *recorder) actions() Actions {
@@ -45,6 +46,7 @@ func (r *recorder) actions() Actions {
 		Prefill:      func(id string) { r.prefilled = append(r.prefilled, id) },
 		ChooseKey:    func(id string) { r.keys = append(r.keys, id) },
 		ChooseFolder: func(id string, i int) { r.folders = append(r.folders, folderCall{id, i}) },
+		OpenImport:   func() { r.imports++ },
 	}
 }
 

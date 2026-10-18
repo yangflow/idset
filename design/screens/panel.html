@@ -277,7 +277,7 @@ const TEXT = {
   zh: {
     quit:'退出', settings:'设置', about:'关于 Idset', recheck:'重新检查',
     loading:'正在读取配置…', dropLine:'拖入文件夹，或', dropHint:'看看这个目录会用哪个身份推送', choose:'选择文件夹…', chooseShort:'选择…',
-    empty:'还没有身份', emptyHint:'让每个文件夹用自己的 Git 和 SSH 身份。', add:'添加身份',
+    empty:'还没有身份', emptyHint:'让每个文件夹用自己的 Git 和 SSH 身份。', add:'添加身份', importExisting:'导入现有配置',
     filter:'筛选身份', none:'没有匹配的身份', unnamed:'（未命名）', readonly:'accounts.json 读不出来', readonlyShort:'修好前只读',
     readonlyHint:'修好文件或从备份恢复之前，Idset 不会写入它。', reload:'重新读取', restore:'从备份恢复', reveal:'在 Finder 中显示', copy:'复制完整路径', copied:'已复制', clear:'清除结果',
     uses:'Git 在这里用这个身份', alias:'别名', email:'邮箱', folders:'生效目录', global:'全局', noEmail:'没有邮箱',
@@ -316,7 +316,7 @@ const TEXT = {
   en: {
     quit:'Quit', settings:'Settings', about:'About Idset', recheck:'Re-check',
     loading:'Reading configuration…', dropLine:'Drop a folder, or', dropHint:'See which identity pushes from it', choose:'Choose Folder…', chooseShort:'Choose…',
-    empty:'No identities yet', emptyHint:'Give each folder its own Git and SSH identity.', add:'Add Identity',
+    empty:'No identities yet', emptyHint:'Give each folder its own Git and SSH identity.', add:'Add Identity', importExisting:'Import Existing Configuration',
     filter:'Filter identities', none:'No matching identities', unnamed:'(unnamed)', readonly:'accounts.json cannot be read', readonlyShort:'Read-only until fixed',
     readonlyHint:'Idset will not write to it until it is fixed or restored from a backup.', reload:'Read Again', restore:'Restore from Backup', reveal:'Show in Finder', copy:'Copy the full path', copied:'Copied', clear:'Clear result',
     uses:'Git uses this identity here', alias:'Alias', email:'Email', folders:'Folders', global:'Global', noEmail:'no email',
@@ -552,7 +552,7 @@ function panel(state, T) {
     readonly: `<div class="readonly"><div class="warn">${icon.warn}</div><div class="title">${T.readonly}</div><div class="path">~/.config/idset/accounts.json</div>
       ${clamp(jsonError, jsonError, 'reason')}<div class="hint" data-tip="${T.readonlyHint}">${T.readonlyShort}</div>
       <div class="actions"><button class="primary fixed full">${T.restore}</button><button class="fixed wide">${T.reveal}</button><button class="fixed wide">${T.reload}</button></div></div>`,
-    empty: `<div class="center"><strong class="big">${T.empty}</strong><span class="muted small">${T.emptyHint}</span><button class="primary pad">${T.add}</button></div>` + drop(),
+    empty: `<div class="center"><strong class="big">${T.empty}</strong><span class="muted small">${T.emptyHint}</span><button class="primary pad">${T.add}</button><button class="text" style="align-self:center">${T.importExisting}</button></div>` + drop(),
     list: drop() + list(),
     over: drop(true) + list(),
     filter: drop() + list(withGlobal, true),

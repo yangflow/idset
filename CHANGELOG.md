@@ -70,6 +70,11 @@ All notable user-facing changes are recorded here, following [Keep a Changelog](
   a link to the platform's SSH key settings, "Load into ssh-agent", and "Use for identity", which writes the key path
   and fingerprint to an identity or starts a new identity with them in the accounts window. "Generate Key" on a
   missing key's bar opens the pane filled in for that identity, and the new key goes to it at once.
+- The Import pane of the settings window reads `~/.ssh/config` and the global Git configuration each time it opens and
+  lists the identities found there: an SSH host with a key, joined with the Git name, email and folders that use it.
+  Those Idset does not have yet are checked; only one global identity comes in as global, the others as scoped.
+  "Import N Identities" adds them one by one, backing up first; the files are only read. The empty panel and the
+  empty accounts window have "Import Existing Configuration".
 
 ### Changed
 

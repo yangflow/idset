@@ -41,6 +41,7 @@ type recorder struct {
 	rewrites []string
 	regen    int
 	keygen   []string
+	imports  int
 }
 
 func (r *recorder) actions() Actions {
@@ -60,6 +61,7 @@ func (r *recorder) actions() Actions {
 		CloneCopied:    func(id, prefix string) { r.cloned = append(r.cloned, [2]string{id, prefix}) },
 		OpenSettings:   func() { r.settings++ },
 		OpenBackups:    func() { r.backups++ },
+		OpenImport:     func() { r.imports++ },
 		CheckAgain:     func(ids []string) { r.checked = append(r.checked, ids) },
 		Unlock:         func(id string) { r.unlocked = append(r.unlocked, id) },
 		CopyPublicKey:  func(id string) { r.pubs = append(r.pubs, id) },
@@ -203,8 +205,8 @@ func TestEmpty(t *testing.T) {
 	if err := tt.Click("Add Identity"); err != nil || r.newDraft != 1 {
 		t.Fatalf("add: %v %d", err, r.newDraft)
 	}
-	if tt.HasText("Import") {
-		t.Error("importing is not offered yet")
+	if err := tt.Click("Import Existing Configuration"); err != nil || r.imports != 1 {
+		t.Fatalf("import: %v %d", err, r.imports)
 	}
 }
 

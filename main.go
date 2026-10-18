@@ -113,6 +113,7 @@ func (a *app) ready() {
 		Reload:       func() { a.load() },
 		OpenSettings: func() { a.openSettings(settingsui.Request{}) },
 		OpenBackups:  func() { a.openSettings(settingsui.Request{Pane: settingsui.Backups}) },
+		OpenImport:   func() { a.openSettings(settingsui.Request{Pane: settingsui.Import}) },
 		Reveal:       mygo.Shell.ShowItemInFolder,
 		Open:         a.openFolder,
 		Run:          a.runBind,

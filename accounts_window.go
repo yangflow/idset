@@ -11,6 +11,7 @@ import (
 	"github.com/yangflow/idset/internal/account"
 	"github.com/yangflow/idset/internal/store"
 	"github.com/yangflow/idset/internal/ui/accounts"
+	settingsui "github.com/yangflow/idset/internal/ui/settings"
 )
 
 // The account window opens at accountsWidth x accountsHeight and may shrink to the minimum.
@@ -174,5 +175,6 @@ func (w *accountsWindow) actions() accounts.Actions {
 				a.post(func() { w.screen.SetFolder(id, index, chosen[0]) })
 			}()
 		},
+		OpenImport: func() { a.openSettings(settingsui.Request{Pane: settingsui.Import}) },
 	}
 }

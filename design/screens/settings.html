@@ -186,6 +186,19 @@ button.ghost svg { width:14px; height:14px }
 .dialog .picks .pk .t .ln { display:flex; align-items:center; gap:6px }
 .dialog .picks .pk .t .em { font-size:11px; color:var(--muted) }
 .dialog .picks .pk .t .sub { font-size:11px; color:var(--muted); overflow-wrap:anywhere }
+
+/* Import: a checkbox row per candidate (name over "alias · email", a mark at the end), the result list. */
+.r.cand { min-height:44px; padding:6px 12px; gap:10px }
+.r.cand .t { flex:1; min-width:0; display:flex; flex-direction:column; gap:1px }
+.r.cand .t .sub { font-size:11px; color:var(--muted); overflow-wrap:anywhere }
+.r.cand .mk { flex:none; font-size:11px; color:var(--muted) }
+.r.cand .mk.lim { display:inline-flex; align-items:center; gap:4px }
+.r.cand .mk svg { width:12px; height:12px }
+.r.cand.off .t > span:first-child { color:var(--muted) }
+.scroll.import-busy .g { opacity:.5 }
+.r.done { gap:8px }
+.r.done .em { flex:1; min-width:0; font-size:11px; color:var(--muted); overflow-wrap:anywhere }
+.center .spinner { margin-bottom:8px }
 </style>
 <aside class="controls">
   <div><h2>State</h2><div class="group" id="states"></div></div>
@@ -239,6 +252,18 @@ const TEXT = {
     useTitle:'这把密钥用于哪个身份？', useBody:'只写入密钥路径和指纹，身份的其他内容不变。',
     nowKey:f => `现在：${f}`, noKey:'还没有密钥', newId:'新建身份', newIdSub:(e, p) => `邮箱 ${e} · ${p}。在身份窗口里补全后保存。`,
     useNote:'取消不会改动任何身份，密钥文件留在 ~/.ssh/。', useBtn:'使用',
+    imports:'导入',
+    scanning:'正在读取 SSH 和 Git 配置…', scanningSub:'~/.ssh/config 和它 Include 的文件，以及 git config --global 和它 includeIf 的文件。',
+    found:n => `找到 ${n} 个身份`, exists:'已存在', asLimited:'导入为限定', noAlias:'没有别名',
+    importN:n => `导入 ${n} 个身份`, importing:'正在导入…', rescan:'重新扫描',
+    readNote:'只读取，不改动这些文件。已存在的身份默认不勾。',
+    limitedNote:'已经有全局身份，标「导入为限定」的身份导入后没有生效目录，之后在面板里拖入文件夹绑定。',
+    noneTitle:'在现有的 SSH 和 Git 配置里没找到身份', noneBody:'读取了 ~/.ssh/config（含 Include）和 git config --global（含 includeIf）。需要 Host 写了 IdentityFile。',
+    doneTitle:n => `已导入 ${n} 个身份`, doneNote:'每个身份新增前都备份了 accounts.json，配置已重新生成。',
+    openAccounts:'打开身份窗口',
+    scanFail:'无法读取 SSH 和 Git 配置：找不到 git 命令。安装 Git 后重新扫描。',
+    importFail:(n, d, e) => `导入 ${n} 时失败：${e}。前面的 ${d} 个已经导入，配置已重新生成。`,
+    importReadOnly:'accounts.json 读不出来，现在不能导入。先在「备份」里恢复一份备份。',
   },
   en: {
     window:'Idset · Settings', general:'General', backups:'Backups', config:'Configuration',
@@ -283,6 +308,18 @@ const TEXT = {
     useTitle:'Use this key for which identity?', useBody:'Only the key path and fingerprint are written; nothing else about the identity changes.',
     nowKey:f => `Now: ${f}`, noKey:'No key yet', newId:'New identity', newIdSub:(e, p) => `Email ${e} · ${p}. Finish and save it in the accounts window.`,
     useNote:'Cancel leaves every identity as it is; the key files stay in ~/.ssh/.', useBtn:'Use',
+    imports:'Import',
+    scanning:'Reading your SSH and Git configuration…', scanningSub:'~/.ssh/config and the files it includes, and git config --global with the files of its includeIf.',
+    found:n => `${n} ${n === 1 ? 'identity' : 'identities'} found`, exists:'Already added', asLimited:'Imported as scoped', noAlias:'No alias',
+    importN:n => `Import ${n} ${n === 1 ? 'Identity' : 'Identities'}`, importing:'Importing…', rescan:'Scan Again',
+    readNote:'These files are only read, never changed. Identities Idset already has are not checked.',
+    limitedNote:'There is already a global identity, so those marked “Imported as scoped” apply to no folder yet; bind folders to them in the panel later.',
+    noneTitle:'No identities found in your SSH and Git configuration', noneBody:'Idset read ~/.ssh/config with its Include files and git config --global with its includeIf files. A Host needs an IdentityFile.',
+    doneTitle:n => `${n} ${n === 1 ? 'identity' : 'identities'} imported`, doneNote:'accounts.json was backed up before each one was added, and the configuration was regenerated.',
+    openAccounts:'Open Identities',
+    scanFail:'Could not read your SSH and Git configuration: git command not found. Install Git and scan again.',
+    importFail:(n, d, e) => `Could not import ${n}: ${e}. The ${d} before it were imported and the configuration regenerated.`,
+    importReadOnly:'accounts.json cannot be read, so nothing can be imported. Restore a backup in Backups first.',
   },
 };
 const STATES = {
@@ -290,9 +327,10 @@ const STATES = {
   keys:'密钥 · 表单', keysinvalid:'密钥 · 文件名无效', keysexists:'密钥 · 已存在', keysrunning:'密钥 · 生成中', keysfail:'密钥 · 生成失败', keysdiag:'密钥 · 从诊断打开',
   keysdone:'密钥 · 结果', keyscopied:'密钥 · 已复制', keysnopub:'密钥 · 缺少公钥', keysagent:'密钥 · 已加载', keysagentfail:'密钥 · agent 不可用', keyscustom:'密钥 · 自定义平台', keysuse:'用于身份', keysused:'已用于身份',
   backups:'备份 · 列表', expanded:'备份 · 展开', unreadable:'备份 · 无法读取', confirm:'恢复确认', restoring:'恢复中', restored:'恢复成功', failed:'恢复失败', readonly:'只读状态打开', empty:'没有备份',
+  import:'导入 · 候选', importlimited:'导入 · 导入为限定', scanning:'导入 · 扫描中', importnone:'导入 · 没有候选', importing:'导入 · 导入中', imported:'导入 · 完成', importfail:'导入 · 导入失败', scanfail:'导入 · 扫描失败', importreadonly:'导入 · 只读',
   config:'配置', remove:'移除确认', removed:'已移除', removefail:'移除失败',
 };
-const PANE = { general:['general','manual','loginon','approve','loginfail'], keys:['keys','keysinvalid','keysexists','keysrunning','keysfail','keysdiag','keysdone','keyscopied','keysnopub','keysagent','keysagentfail','keyscustom','keysuse','keysused'], backups:['backups','expanded','unreadable','confirm','restoring','restored','failed','readonly','empty'], config:['config','remove','removed','removefail'] };
+const PANE = { general:['general','manual','loginon','approve','loginfail'], keys:['keys','keysinvalid','keysexists','keysrunning','keysfail','keysdiag','keysdone','keyscopied','keysnopub','keysagent','keysagentfail','keyscustom','keysuse','keysused'], import:['import','importlimited','scanning','importnone','importing','imported','importfail','scanfail','importreadonly'], backups:['backups','expanded','unreadable','confirm','restoring','restored','failed','readonly','empty'], config:['config','remove','removed','removefail'] };
 const paneOf = s => Object.keys(PANE).find(p => PANE[p].includes(s));
 const COLORS = { blue:'58,123,213', green:'46,158,91', orange:'224,122,31', purple:'142,68,173' };
 const LIGHT = { '58,123,213':'120,170,240', '46,158,91':'95,200,135', '224,122,31':'240,165,95', '142,68,173':'190,130,215' };
@@ -325,6 +363,7 @@ const icon = {
   key:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="5.5" cy="10.5" r="3"/><path d="M7.7 8.3L13.5 2.5M11 5l2 2M9.5 6.5l1.5 1.5"/></svg>',
   copy:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"><rect x="5.5" y="5.5" width="8" height="8" rx="1.5"/><path d="M10.5 5.5V3.5a1 1 0 0 0-1-1h-6a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2"/></svg>',
   ext:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h4v4M13 3L7.5 8.5M11.5 9.5V13h-8.5V4.5H6.5"/></svg>',
+  import:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v8M5 7l3 3 3-3"/><path d="M2.5 10.5v2a1 1 0 0 0 1 1h9a1 1 0 0 0 1-1v-2"/></svg>',
   doc:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 2h5l3 3v9H4z"/><path d="M9 2v3h3M6 8.5h4M6 11h4"/></svg>',
 };
 const q = new URLSearchParams(location.search);
@@ -338,7 +377,7 @@ function render() {
   const T = TEXT[view.lang], s = view.state, pane = paneOf(s);
   const dot = i => { const c = COLORS[i.color]; return `<span class="dot" style="--c:${c};--cl:${LIGHT[c]}"></span>`; };
   const ghost = (ic, label, off) => `<button class="ghost" title="${label}" aria-label="${label}"${off ? ' disabled' : ''}>${icon[ic]}</button>`;
-  const group = (title, rows, note = '') => `<div class="g"><h3>${title}</h3><div class="rows">${rows}</div>${note}</div>`;
+  const group = (title, rows, note = '') => `<div class="g">${title ? `<h3>${title}</h3>` : ''}<div class="rows">${rows}</div>${note}</div>`;
   const note = (kind, ic, text) => `<div class="note ${kind}">${ic ? icon[ic] : ''}<span>${text}</span></div>`;
   const spinner = '<div class="spinner"></div>';
 
@@ -435,6 +474,40 @@ function render() {
     `<div class="actrow"><button class="text">${T.another}</button></div>`;
   const keysPane = ['keys', 'keysinvalid', 'keysexists', 'keysrunning', 'keysfail', 'keysdiag'].includes(s) ? form : result;
 
+  // Import: scanned when the pane opens; one checkbox row per candidate, then the import button.
+  const CANDS = [
+    { name:'gh-work', alias:'gh-work', email:'bob@example.com', on:true },
+    { name:'github.com', alias:'', email:'bob@example.net', on:true, limited:s === 'importlimited' },
+    { name:'client', alias:'client', email:'bob@client.example', on:true, limited:s === 'importlimited' },
+    { name:'corp-git', alias:'corp-git', email:'', on:false },
+    { name:'gh-idset', alias:'gh-idset', email:'bob@example.org', on:false, exists:true },
+  ];
+  const box = on => `<span class="check${on ? ' on' : ''}" role="checkbox" aria-checked="${on}"><i>${on ? icon.check : ''}</i></span>`;
+  const checked = CANDS.filter(c => c.on).length;
+  const importing = s === 'importing';
+  const cand = c => {
+    const sub = [c.alias || T.noAlias, c.email].filter(Boolean).join(' · ');
+    let mk = '';
+    if (c.exists) mk = `<span class="mk">${T.exists}</span>`;
+    if (c.limited) mk = `<span class="mk lim">${icon.folder}${T.asLimited}</span>`;
+    return `<div class="r cand${c.on ? '' : ' off'}">${box(c.on)}<div class="t"><span>${c.name}</span><span class="sub">${sub}</span></div>${mk}</div>`;
+  };
+  let importNote = note('', '', T.readNote);
+  if (s === 'importlimited') importNote += note('', '', T.limitedNote);
+  if (s === 'importfail') importNote = note('err', 'warn', T.importFail('client', 2, 'accounts.json is a symbolic link'));
+  const importAct = `<div class="actrow split"><button class="text"${importing ? ' disabled' : ''}>${T.rescan}</button><span style="flex:1"></span>${importing ? `<span class="muted">${T.importing}</span>${spinner}` : ''}<button class="primary"${importing || s === 'importreadonly' ? ' disabled' : ''}>${T.importN(checked)}</button></div>`;
+  const centered = (head, body, acts = '') => `<div class="center">${head}<span class="muted" style="max-width:420px;line-height:1.45">${body}</span>${acts ? `<div class="acts">${acts}</div>` : ''}</div>`;
+  const IMPORTED = [IDS.work, { ...IDS.personal, label:'github.com' }, { ...IDS.client, label:'client' }];
+  let importPane = group(T.found(CANDS.length), CANDS.map(cand).join(''), importNote) + importAct;
+  if (s === 'importreadonly') importPane = `<div class="banner">${icon.warn}<span>${T.importReadOnly}</span></div>` + importPane;
+  if (s === 'scanning') importPane = centered(`${spinner}<strong>${T.scanning}</strong>`, T.scanningSub);
+  if (s === 'importnone') importPane = centered(`<strong>${T.noneTitle}</strong>`, T.noneBody, `<button>${T.rescan}</button>`);
+  if (s === 'scanfail') importPane = `<div class="banner">${icon.warn}<span>${T.scanFail}</span></div><div class="actrow"><button>${T.rescan}</button></div>`;
+  if (s === 'imported') importPane =
+    `<div class="keyhead">${icon.check}<h2>${T.doneTitle(IMPORTED.length)}</h2></div>` +
+    group('', IMPORTED.map(d => `<div class="r done">${dot(d)}<span>${d.label}</span><span class="em">${d.email}</span></div>`).join(''), note('ok', 'check', T.doneNote)) +
+    `<div class="actrow split"><button class="text">${T.rescan}</button><button>${T.openAccounts}</button></div>`;
+
   // Dialogs: the restore and remove confirmations and the identity picker, over the dimmed window.
   let dialog = '';
   if (s === 'keysuse') {
@@ -460,12 +533,12 @@ function render() {
       <div class="buttons"><button>${T.cancel}</button><button class="primary">${T.removeBtn}</button></div></div></div>`;
   }
 
-  const nav = [['general', 'sliders', T.general], ['keys', 'key', T.keys], ['backups', 'clock', T.backups], ['config', 'doc', T.config]]
+  const nav = [['general', 'sliders', T.general], ['keys', 'key', T.keys], ['import', 'import', T.imports], ['backups', 'clock', T.backups], ['config', 'doc', T.config]]
     .map(([id, ic, label]) => `<div class="tab${pane === id ? ' sel' : ''}" role="tab" aria-selected="${pane === id}">${icon[ic]}<span>${label}</span></div>`).join('');
-  const body = { general, keys:keysPane, backups:backupsPane, config:configPane }[pane];
+  const body = { general, keys:keysPane, import:importPane, backups:backupsPane, config:configPane }[pane];
   document.documentElement.dataset.scheme = view.scheme;
   document.getElementById('win').innerHTML = `<div class="band"><div class="titlebar">${T.window}</div><div class="tabs" role="tablist">${nav}</div></div>
-    <div class="body"><div class="detail"><div class="scroll pane${running ? ' form-busy' : ''}">${body}</div></div></div>${dialog}`;
+    <div class="body"><div class="detail"><div class="scroll pane${running ? ' form-busy' : ''}${importing ? ' import-busy' : ''}">${body}</div></div></div>${dialog}`;
 
   const buttons = (id, options, key) => {
     document.getElementById(id).innerHTML = Object.entries(options)

@@ -46,6 +46,8 @@ internal/keyfile/        whether a private key may be deleted with its identity 
 internal/sysexec/        running system commands: timeout, no stdin, no shell (ADR 0004)
 internal/bind/           binding a folder to an identity, unbinding, rebinding and undo: pure plans, and a runner that
                          writes one plan with one store write
+internal/importer/       candidate identities read from the existing ~/.ssh/config and Git configuration; read-only,
+                         the files and `git` are injectable
 internal/match/          which identity a dropped folder uses, or the gone gitdir path it replaced; the `git` calls are
                          injectable, tests use a fake
 internal/diagnose/       connectivity check with `ssh -T`, key state, problem bars and the diagnostics summary; the

@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"log/slog"
 	"slices"
 	"time"
@@ -230,9 +231,50 @@ func (w *settingsWindow) actions() settings.Actions {
 				Provider: d.Provider, Email: d.Email, Path: d.KeyPath, Fingerprint: d.Fingerprint,
 			}})
 		},
-		Reveal: func(keyPath string) { mygo.Shell.ShowItemInFolder(a.env.Native(keyPath)) },
+		Scan: func() {
+			b := settings.Backend{Store: a.store, Env: a.env}
+			go func() {
+				cands, err := b.Scan(context.Background(), diagnose.System(gitTimeout))
+				if err != nil {
+					slog.Warn("Could not read the configuration to import", "error", err)
+				}
+				a.post(func() { w.screen.ScanDone(cands, err) })
+			}()
+		},
+		Import: func(list []account.Account) {
+			b := backend()
+			if b == nil {
+				w.screen.ImportDone(nil, errNotLoaded)
+				return
+			}
+			go func() {
+				added, err := b.Import(list, time.Now())
+				if err != nil {
+					slog.Warn("Could not import the identities", "error", err)
+				}
+				s := b.Store
+				all, readErr, path := s.Accounts(), s.ReadOnly(), s.Path()
+				a.post(func() {
+					a.showAccounts(all, readErr, path)
+					w.screen.ImportDone(added, err)
+					if len(added) > 0 {
+						ids := make([]string, len(added))
+						for i, x := range added {
+							ids[i] = x.ID
+						}
+						a.checkAgain(ids)
+					}
+					a.recheckFolder()
+				})
+			}()
+		},
+		OpenAccounts: func(id string) { a.openAccounts(accounts.Request{ID: id}) },
+		Reveal:       func(keyPath string) { mygo.Shell.ShowItemInFolder(a.env.Native(keyPath)) },
 	}
 }
+
+// errNotLoaded is why nothing can be imported before accounts.json has been opened.
+var errNotLoaded = errors.New("accounts.json is not loaded yet")
 
 // useKey gives the identity id the key at keyPath and its fingerprint.
 func useKey(list []account.Account, update func(account.Account) error, id, keyPath, fingerprint string) error {
