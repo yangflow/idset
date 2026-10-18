@@ -1,4 +1,4 @@
-// Package trayicon draws the tray icon, an identity badge, so that no image file has to be maintained by hand.
+// Package trayicon draws the tray icon, the product icon's key, so that no image file has to be maintained by hand.
 package trayicon
 
 import (
@@ -13,7 +13,7 @@ import (
 type Badge int
 
 const (
-	// None: the card alone.
+	// None: the key alone.
 	None Badge = iota
 	// Warning: a triangle with "!".
 	Warning
@@ -29,46 +29,14 @@ var (
 
 // PNG returns a 32×32 icon. A template icon is black on transparent for macOS to tint to the menu bar; otherwise
 // it is a mid gray that stays visible on light and dark taskbars. A badge sits at the lower right, 1.5 apart from
-// the card: in a template its "!" is cut out, elsewhere it is in Warning or Danger with a white "!".
+// the key: in a template its "!" is cut out, elsewhere it is in Warning or Danger with a white "!".
 func PNG(template bool, badge Badge) []byte {
 	ink := color.NRGBA{R: 0x8a, G: 0x8a, B: 0x8a, A: 0xff}
 	if template {
 		ink = color.NRGBA{A: 0xff}
 	}
 	img := image.NewNRGBA(image.Rect(0, 0, 32, 32))
-	set := func(x, y int) { img.SetNRGBA(x, y, ink) }
-	// Card outline with rounded corners: 3 to 28 wide, 7 to 25 high, 2 pixels thick.
-	for x := 5; x <= 26; x++ {
-		for _, y := range []int{7, 8, 24, 25} {
-			set(x, y)
-		}
-	}
-	for y := 9; y <= 23; y++ {
-		for _, x := range []int{3, 4, 27, 28} {
-			set(x, y)
-		}
-	}
-	for _, p := range [][2]int{{4, 8}, {27, 8}, {4, 24}, {27, 24}} {
-		set(p[0], p[1])
-	}
-	// Head and shoulders on the left.
-	for y := 11; y <= 22; y++ {
-		for x := 7; x <= 15; x++ {
-			dx, dy := float64(x)-11, float64(y)-13.5
-			head := dx*dx+dy*dy <= 6.5
-			shoulders := y >= 18 && (dx*dx)/16+(float64(y)-22)*(float64(y)-22)/16 <= 1
-			if head || shoulders {
-				set(x, y)
-			}
-		}
-	}
-	// Two text lines on the right.
-	for _, row := range [][3]int{{18, 24, 13}, {18, 22, 18}} {
-		for x := row[0]; x <= row[1]; x++ {
-			set(x, row[2])
-			set(x, row[2]+1)
-		}
-	}
+	paint(img, inKey, ink)
 	drawBadge(img, template, ink, badge)
 	var b bytes.Buffer
 	if err := png.Encode(&b, img); err != nil {
@@ -77,7 +45,39 @@ func PNG(template bool, badge Badge) []byte {
 	return b.Bytes()
 }
 
-// drawBadge clears the badge's shape grown by 1.5 so that it stands apart from the card, fills the shape, then
+// inKey is the product icon's key as an outline, pointing right: a rounded diamond bow, 2 thick around a dot,
+// centered at (9, 14); a shaft 3 thick from the bow to 29.5; two bits 3 wide under the shaft. It sits 2 above the
+// middle so that a badge leaves the shaft whole.
+func inKey(x, y float64) bool {
+	const cy = 14
+	bow := diamond(x-9, y-cy, 7.5, 1.5)
+	switch {
+	case bow <= 0 && bow >= -2, math.Hypot(x-9, y-cy) <= 1.6:
+		return true
+	case y >= cy-1.5 && y <= cy+1.5 && x >= 15 && x <= 28:
+		return true
+	case math.Hypot(x-28, y-cy) <= 1.5:
+		return true
+	}
+	return bit(x, y, 20, 23, cy, cy+6.5) || bit(x, y, 25, 28, cy, cy+5)
+}
+
+// diamond is the signed distance from (x, y) to a diamond centered at the origin, its corners r from the center
+// before they are rounded by round: negative inside.
+func diamond(x, y, r, round float64) float64 {
+	u, v := math.Abs(x+y)/math.Sqrt2, math.Abs(y-x)/math.Sqrt2
+	half := r/math.Sqrt2 - round
+	qu, qv := u-half, v-half
+	return math.Hypot(max(qu, 0), max(qv, 0)) + min(max(qu, qv), 0) - round
+}
+
+// bit is a bit hanging from the shaft at top between left and right, rounded at the bottom.
+func bit(x, y, left, right, top, bottom float64) bool {
+	r := (right - left) / 2
+	return x >= left && x <= right && y >= top && y <= bottom-r || math.Hypot(x-left-r, y-bottom+r) <= r
+}
+
+// drawBadge clears the badge's shape grown by 1.5 so that it stands apart from the key, fills the shape, then
 // draws or cuts out the "!".
 func drawBadge(img *image.NRGBA, template bool, ink color.NRGBA, badge Badge) {
 	var shape func(x, y, grow float64) bool

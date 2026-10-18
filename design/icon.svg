@@ -1,7 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
-  <!-- Idset's product icon: a white Git key on a graphite tile, on the macOS grid (824 tile at 100, radius 185).
+  <!-- Idset's product icon: an ivory Git key on a graphite tile, on the macOS grid (824 tile at 100, radius 185).
        The key's bow is a rounded diamond with a Git branch in Git orange; the branch tip is a glowing mint commit.
-       Lines that would be perfectly straight end 0.1 off, since a gradient leaves an empty bounding box unpainted.
+       The bow is a path rather than a rotated rect, so that one gradient runs straight down the whole key and the bow,
+       the shaft and the bits read as one piece.
        design/export-icon.sh renders it to resources/icon.png. -->
   <defs>
     <linearGradient id="field" x1="0" y1="0" x2=".35" y2="1">
@@ -16,10 +17,10 @@
     <linearGradient id="rim" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0" stop-color="#fff" stop-opacity=".7"/><stop offset=".25" stop-color="#fff" stop-opacity="0"/>
     </linearGradient>
-    <linearGradient id="face" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="#e6e8ee"/>
+    <linearGradient id="face" gradientUnits="userSpaceOnUse" x1="0" y1="330" x2="0" y2="700">
+      <stop offset="0" stop-color="#f6f1e7"/><stop offset="1" stop-color="#dcd3c3"/>
     </linearGradient>
-    <linearGradient id="depth" x1="0" y1="0" x2="0" y2="1">
+    <linearGradient id="depth" gradientUnits="userSpaceOnUse" x1="0" y1="330" x2="0" y2="720">
       <stop offset="0" stop-color="#0e1014"/><stop offset="1" stop-color="#000"/>
     </linearGradient>
     <linearGradient id="ink" x1="0" y1="0" x2="0" y2="1">
@@ -32,27 +33,29 @@
       <feDropShadow dx="0" dy="14" stdDeviation="16" flood-color="#000" flood-opacity=".28"/>
     </filter>
     <filter id="lift" filterUnits="userSpaceOnUse" x="0" y="0" width="1024" height="1024">
-      <feDropShadow dx="0" dy="18" stdDeviation="16" flood-color="#081a5c" flood-opacity=".45"/>
+      <feDropShadow dx="0" dy="18" stdDeviation="16" flood-color="#000" flood-opacity=".45"/>
     </filter>
     <filter id="glow" x="-100%" y="-100%" width="300%" height="300%">
       <feGaussianBlur stdDeviation="24" result="b"/>
       <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
     </filter>
-    <!-- The key: the bow, the shaft and two bits; drawn twice, as the depth and as the face. -->
+    <!-- The key: the bow, fillets where the shaft meets it, the shaft and two bits; drawn twice, as the depth and as
+         the face. -->
     <g id="key">
-      <rect x="190" y="365" width="290" height="290" rx="64" transform="rotate(45 335 510)" stroke="none"/>
-      <path d="M520 510L840 510.1" fill="none" stroke-width="92"/>
-      <path d="M730 510L730.1 610M822 510L822.1 590" fill="none" stroke-width="80"/>
+      <path d="M289.7 350.2A64 64 0 0 1 380.3 350.2L494.8 464.7A64 64 0 0 1 494.8 555.3L380.3 669.8A64 64 0 0 1 289.7 669.8L175.2 555.3A64 64 0 0 1 175.2 464.7z"/>
+      <path d="M454 424Q486 456 528 456L486 456zM454 596Q486 564 528 564L486 564z"/>
+      <path d="M470 456H836a54 54 0 0 1 0 108H470z"/>
+      <path d="M680 510h90v110a45 45 0 0 1-90 0zM786 510h90v86a45 45 0 0 1-90 0z"/>
     </g>
   </defs>
   <g filter="url(#tile-shadow)"><rect x="100" y="100" width="824" height="824" rx="185" fill="url(#field)"/></g>
   <rect x="100" y="100" width="824" height="824" rx="185" fill="url(#sheen)"/>
   <rect x="100" y="100" width="824" height="824" rx="185" fill="url(#shade)"/>
   <rect x="102" y="102" width="820" height="820" rx="183" fill="none" stroke="url(#rim)" stroke-width="4"/>
-  <g transform="translate(26.96 40.96) scale(.92)" stroke-linecap="round">
-    <use href="#key" transform="translate(0 26)" fill="url(#depth)" stroke="url(#depth)"/>
-    <use href="#key" filter="url(#lift)" fill="url(#face)" stroke="url(#face)"/>
-    <path d="M280 410L390 410" stroke="#fff" stroke-width="12" opacity=".9" transform="rotate(45 335 510)"/>
+  <g transform="translate(10.4 9.5) scale(.96)" stroke-linecap="round">
+    <use href="#key" transform="translate(0 26)" fill="url(#depth)"/>
+    <use href="#key" filter="url(#lift)" fill="url(#face)"/>
+    <path d="M206 450L206 570" stroke="#fffaf0" stroke-width="12" opacity=".9" transform="rotate(45 335 510)"/>
     <path d="M300 418L300.1 600M300 556C300 486 380 500 380 450" fill="none" stroke="url(#ink)" stroke-width="30"/>
     <circle cx="300" cy="418" r="30" fill="url(#ink)"/>
     <circle cx="300" cy="600" r="30" fill="url(#ink)"/>
