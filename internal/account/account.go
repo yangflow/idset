@@ -4,6 +4,7 @@ package account
 import (
 	"crypto/rand"
 	"fmt"
+	"strings"
 	"time"
 )
 
@@ -44,6 +45,17 @@ func (p Provider) KeySettingsURL() string { return providers[p].settings }
 
 // Supports443 reports whether the platform serves SSH on port 443.
 func (p Provider) Supports443() bool { return providers[p].host443 != "" }
+
+// DefaultRewrites are the rules that send the platform's own addresses, HTTPS and SSH, to alias, in the order they
+// are added; none for Custom or without an alias.
+func DefaultRewrites(p Provider, alias string) []Rewrite {
+	host, alias := p.CanonicalHost(), strings.TrimSpace(alias)
+	if host == "" || alias == "" {
+		return nil
+	}
+	to := "git@" + alias + ":"
+	return []Rewrite{{From: "https://" + host + "/", To: to}, {From: "git@" + host + ":", To: to}}
+}
 
 // ReservedHosts are the real host names of every platform, which an alias must not shadow.
 func ReservedHosts() []string {

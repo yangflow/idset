@@ -48,12 +48,12 @@ Working now:
 - **Settings, backups and restore.** The settings window sets the language and opening at login, lists the backups
   to restore or delete (also when `accounts.json` cannot be read), and removes the `Include` blocks while keeping
   your accounts.
+- **Diagnostics.** Checks each identity with `ssh -T` in the background and shows the result as a dot on its row.
+  When a key is rejected, locked or missing, a host cannot be reached or `ssh` is not installed, the row says what to
+  do next; a summary under the list and a badge on the tray icon show the worst problem.
 
 Planned:
 
-- **Diagnostics** ([#30](https://github.com/yangflow/idset/issues/30)). Checks each identity with `ssh -T` and
-  says what to do when a key is rejected, locked or missing, or when a repository would commit as one identity
-  and push as another.
 - **Keys** ([#32](https://github.com/yangflow/idset/issues/32)) and **import**
   ([#33](https://github.com/yangflow/idset/issues/33)). Generate a key, load it into ssh-agent, and import
   identities from an existing `~/.ssh/config` and `~/.gitconfig`.

@@ -92,7 +92,7 @@ accent color and contrast settings, so mockups approximate it.
 | `AccentText` | `#ffffff` | `#ffffff` | text on the accent |
 | `Danger` | `#dc2626` | `#ef4444` | `git` failed card; read-only warning (fill at 14%); save error, field error, the Delete text button and the confirming Delete button; error glyph of a finding, outline of a matched card with an error finding |
 | `Warning` | `#d97706` | `#f59e0b` | outline of cards without a match; warning glyph of a finding, outline of a matched card whose worst finding is a warning |
-| `Success` | `#16a34a` | `#22c55e` | not used yet |
+| `Success` | `#16a34a` | `#22c55e` | connectivity dot of a passing check; check mark of "Configuration OK" |
 | `Selection` | `rgba(37, 99, 235, 0.25)` | `rgba(59, 130, 246, 0.4)` | drop zone fill while dragging over; selected text |
 | `Focus` | `rgba(37, 99, 235, 0.55)` | `rgba(96, 165, 250, 0.6)` | keyboard focus ring (also the clone helper's focused input, 2 DIPs) |
 | `Inverse` / `InverseText` | zero: `Text` / `Background` | zero: `Text` / `Background` | tooltips (every icon button has one) and toasts |
@@ -119,6 +119,9 @@ Any other `#RRGGBB` follows the same rule; an invalid value shows as blue (`inte
 |---|---|
 | macOS (template) | black on transparent; the system tints it |
 | Windows, Linux | `#8a8a8a` on transparent, visible on light and dark taskbars |
+| Warning badge | triangle, `#d97706` with a white "!" (template: ink with the mark cut out) |
+| Error badge | circle, `#dc2626` with a white "!" (template: ink with the mark cut out) |
+| Badge gap | 1.5 px cleared around the badge |
 
 ## Motion
 

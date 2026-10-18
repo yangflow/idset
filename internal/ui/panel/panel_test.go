@@ -35,6 +35,11 @@ type recorder struct {
 	cloned   [][2]string
 	settings int
 	backups  int
+	checked  [][]string
+	unlocked []string
+	pubs     []string
+	rewrites []string
+	regen    int
 }
 
 func (r *recorder) actions() Actions {
@@ -54,6 +59,11 @@ func (r *recorder) actions() Actions {
 		CloneCopied:    func(id, prefix string) { r.cloned = append(r.cloned, [2]string{id, prefix}) },
 		OpenSettings:   func() { r.settings++ },
 		OpenBackups:    func() { r.backups++ },
+		CheckAgain:     func(ids []string) { r.checked = append(r.checked, ids) },
+		Unlock:         func(id string) { r.unlocked = append(r.unlocked, id) },
+		CopyPublicKey:  func(id string) { r.pubs = append(r.pubs, id) },
+		AddRewrites:    func(id string) { r.rewrites = append(r.rewrites, id) },
+		Regenerate:     func() { r.regen++ },
 	}
 }
 
@@ -487,11 +497,12 @@ func TestTitleRowAndFooterAreCompactAndEquallyHigh(t *testing.T) {
 		if !same(add.W, add.H) || !same(add.W, quit.W) || !same(add.H, quit.H) || add.X >= quit.X || quit.H >= 2*bottom {
 			t.Errorf("%s: add %v quit %v in a footer of %v", goos, add, quit, 2*bottom)
 		}
-		// Only actions that work today.
-		for _, planned := range []string{"About Idset", "Re-check"} {
-			if _, ok := tt.Find(planned); ok {
-				t.Errorf("%s: %q is not built yet", goos, planned)
-			}
+		// Only actions that work today; Re-check sits just before Quit.
+		if _, ok := tt.Find("About Idset"); ok {
+			t.Errorf("%s: About is not built yet", goos)
+		}
+		if recheck, ok := tt.Find("Re-check"); !ok || !same(recheck.W, quit.W) || recheck.X >= quit.X {
+			t.Errorf("%s: re-check %v before quit %v", goos, recheck, quit)
 		}
 		if count(tt, "Quit") != 1 || count(tt, "Add Identity") != 1 {
 			t.Errorf("%s: one of each: %q", goos, tt.Texts())

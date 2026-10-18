@@ -167,6 +167,19 @@ func TestHosts(t *testing.T) {
 	}
 }
 
+func TestDefaultRewrites(t *testing.T) {
+	want := []Rewrite{{From: "https://gitlab.com/", To: "git@gl-work:"}, {From: "git@gitlab.com:", To: "git@gl-work:"}}
+	if got := DefaultRewrites(GitLab, " gl-work "); !reflect.DeepEqual(got, want) {
+		t.Errorf("gitlab = %+v", got)
+	}
+	if got := DefaultRewrites(Custom, "own"); got != nil {
+		t.Errorf("custom = %+v", got)
+	}
+	if got := DefaultRewrites(GitHub, " "); got != nil {
+		t.Errorf("no alias = %+v", got)
+	}
+}
+
 func TestNewID(t *testing.T) {
 	a, b := NewID(), NewID()
 	if !validID(a) || a == b || a[14] != '4' {
