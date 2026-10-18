@@ -47,6 +47,8 @@ internal/bind/           binding a folder to an identity, unbinding, rebinding a
                          writes one plan with one store write
 internal/match/          which identity a dropped folder uses, or the gone gitdir path it replaced; the `git` calls are
                          injectable, tests use a fake
+internal/diagnose/       connectivity check with `ssh -T`, key state, problem bars and the diagnostics summary; the
+                         commands are injectable, tests use a fake
 internal/trayicon/       the tray icon, drawn in code, no image files
 resources/               shipped licenses and product assets
 scripts/                 checks, version bump, secret scan, packaging
