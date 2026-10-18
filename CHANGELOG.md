@@ -78,6 +78,8 @@ All notable user-facing changes are recorded here, following [Keep a Changelog](
 - The about window shows the version, copyright and license, opens the GitHub repository and checks for updates. A
   copy that cannot update itself says so and points to GitHub. It opens from "About" in the tray menu, the About button
   in the panel footer and "About Idset" in the macOS app menu.
+- Releases are built for macOS (signed and notarized), Windows and Linux, and installed copies update themselves
+  from GitHub releases. On Linux, the Debian package needs `libayatana-appindicator3-1` for the tray.
 
 ### Changed
 

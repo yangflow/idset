@@ -2,7 +2,27 @@
   "name": "Idset",
   "identifier": "app.idset.app",
   "version": "0.1.0",
+  "copyright": "© 2026 yangflow",
   "main": ".",
   "out": "build",
-  "macos": {"minimumSystemVersion": "12.0", "infoPlist": {"LSUIElement": true}}
+  "macos": {
+    "minimumSystemVersion": "12.0",
+    "infoPlist": {
+      "LSUIElement": true
+    }
+  },
+  "linux": {
+    "maintainer": "yangflow <269347247+yangflow@users.noreply.github.com>",
+    "comment": "Use the right Git and SSH identity in every folder",
+    "categories": [
+      "Development"
+    ],
+    "depends": [
+      "libayatana-appindicator3-1"
+    ]
+  },
+  "updates": {
+    "publicKey": "2W7prOMtd8n3daHK99bGvn8DkJ1vUw5CD3UTKPKw+/U=",
+    "github": "yangflow/idset"
+  }
 }

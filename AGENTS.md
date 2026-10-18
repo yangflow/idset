@@ -14,6 +14,7 @@ Reference documents:
 - `design/tokens.md`: spacing, size and color values, mapped to MyGo theme roles.
 - `design/`: a mockup per screen with all its states.
 - `docs/adr/`: architecture decisions.
+- `docs/release.md`: the release workflow, its secrets and the steps of a release.
 
 When a document and the code disagree, decide which is wrong first: if the document records a changed decision,
 change the code; if the document is still valid and the code quietly falls short, change the code; change the
@@ -68,7 +69,7 @@ go test -race ./...
 python3 scripts/scan_secrets.py
 go tool mygo dev
 go tool mygo build
-python3 scripts/bump.py <version>
+python3 scripts/bump.py <version>   # then tag v<version>; see docs/release.md
 ```
 
 `scripts/check.sh --cross` must pass before merge.

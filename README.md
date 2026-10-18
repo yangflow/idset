@@ -59,6 +59,10 @@ Working now:
 Targets: macOS 12+, Windows 10/11 and Linux with GTK 3, on amd64 and arm64. Tray icons on Linux need
 AppIndicator.
 
+Releases are built and published from a version tag ([docs/release.md](docs/release.md)), and installed copies
+update themselves from them. The macOS app is signed and notarized. The Windows installers are not signed yet, so
+SmartScreen warns on first launch. The Debian package needs `libayatana-appindicator3-1`.
+
 ## Quick start
 
 There is no release yet. Build from source with the Go version in `.go-version` and Python 3:

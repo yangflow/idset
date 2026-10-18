@@ -32,6 +32,8 @@ Idset 把身份放在一个列表里，替你生成配置。它不改写你自�
 
 目标平台：macOS 12+、Windows 10/11、带 GTK 3 的 Linux，amd64 和 arm64。Linux 的托盘图标需要 AppIndicator。
 
+发布版由版本 tag 构建并发布（见 [docs/release.md](docs/release.md)），已安装的副本从发布版自动更新。macOS 应用经过签名和公证。Windows 安装包暂未签名，第一次启动时 SmartScreen 会警告。Debian 包需要 `libayatana-appindicator3-1`。
+
 ## 快速开始
 
 还没有发布。从源码构建，需要 `.go-version` 里的 Go 版本和 Python 3：
