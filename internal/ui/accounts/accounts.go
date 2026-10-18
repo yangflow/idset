@@ -27,7 +27,7 @@ var catalog []byte
 
 // Copy is the window's text in one language. Main reads the window title from it.
 type Copy struct {
-	Window, AddIdentity, Identities, Scoped, Global, Unnamed, NewTag, Loading, NoneTitle, NoneHint, Create,
+	Window, AddIdentity, Identities, Scoped, Global, Unnamed, NewTag, Loading, NoneTitle, NoneHint, Create, ImportExisting,
 	GroupIdentity, GroupSSH, GroupScope, GroupRewrites, GroupNotes, GroupTimes,
 	Name, Platform, Username, GitName, Email, Alias, Key, Port, Host, Custom, ChooseFile, ChooseFolder, Path, ChooseKeyTitle,
 	ChooseFolderTitle, RemovePath, RemoveRewrite, ColorLabel, Hex, Applies, ScopeGlobal, ScopeGitdir, ScopeHint,
@@ -65,6 +65,8 @@ type Actions struct {
 	// ChooseKey and ChooseFolder show the system pickers; the answers are SetKeyPath and SetFolder.
 	ChooseKey    func(id string)
 	ChooseFolder func(id string, index int)
+	// OpenImport opens the settings window on Import.
+	OpenImport func()
 }
 
 // Request says what the window should select when it opens.

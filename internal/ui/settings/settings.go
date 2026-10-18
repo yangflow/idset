@@ -1,8 +1,9 @@
-// Package settings is the settings window: a row of tabs over four panes. General holds the interface language and
-// the login item, Keys generates a new SSH key and puts it to use, Backups lists the snapshots of accounts.json to
-// restore or delete, and Configuration removes the Include blocks from the user's own files. State changes on the UI thread only; everything that touches the disk,
-// the system or a command runs in the owner's background work (see Actions and Backend) and reports back through
-// the setters and the Done methods.
+// Package settings is the settings window: a row of tabs over five panes. General holds the interface language and
+// the login item, Keys generates a new SSH key and puts it to use, Import adds identities found in the user's SSH
+// and Git configuration, Backups lists the snapshots of accounts.json to restore or delete, and Configuration
+// removes the Include blocks from the user's own files. State changes on the UI thread only; everything that
+// touches the disk, the system or a command runs in the owner's background work (see Actions and Backend) and
+// reports back through the setters and the Done methods.
 package settings
 
 import (
@@ -39,7 +40,10 @@ type Copy struct {
 	Keys, KNew, KType, KPlatform, KFile, KComment, Custom, KFormNote, Generate, Generating, KInvalid, KExists, KNoKeygen, KFail, KDiag,
 	Created, PubKey, CopyPub, Copied, NoPub, KFiles, Priv, Pub, Fp, Pass, None, PassNote, RevealFinder, RevealExplorer, RevealFiles,
 	KNext, AddOn, OpenSettings, AddCustom, AddCustomHint, Agent, Load, Loaded, AgentFail, LoadFail, UseFor, Choose, Change,
-	NextNote, NextCustom, UsedNote, UseFail, Another, UseTitle, UseBody, NowKey, NoKey, NewID, NewIDSub, NewIDSubPlain, UseNote, UseButton string
+	NextNote, NextCustom, UsedNote, UseFail, Another, UseTitle, UseBody, NowKey, NoKey, NewID, NewIDSub, NewIDSubPlain, UseNote, UseButton,
+	Imports, Scanning, ScanningSub, FoundOne, Found, Exists, AsLimited, NoAlias, ImportOne, ImportN, Importing, Rescan,
+	ReadNote, LimitedNote, ImportNone, ImportNoneBody, DoneOne, Done, DoneNote, OpenAccounts, ScanFail, ScanNoGit,
+	ImportFail, ImportFailFirst, ImportReadOnly, RegenFail string
 }
 
 var translations = func() map[string]Copy {
@@ -61,11 +65,12 @@ const (
 	Last Pane = iota
 	General
 	Keys
+	Import
 	Backups
 	Config
 )
 
-const paneCount = 4
+const paneCount = 5
 
 // Request says what the window should show when it opens. For, with the Keys pane, is the ID of an identity whose
 // private key is missing: the form is filled in for it, and the new key goes to it.
@@ -120,6 +125,12 @@ type Actions struct {
 	NewIdentity func(draft KeyDraft)
 	// Reveal shows a file, by its stored path, in the file manager.
 	Reveal func(keyPath string)
+	// Scan reads the SSH and Git configuration and answers with ScanDone.
+	Scan func()
+	// Import adds the identities one by one and answers with ImportDone.
+	Import func(list []account.Account)
+	// OpenAccounts opens the accounts window on an identity.
+	OpenAccounts func(id string)
 }
 
 // KeyRequest is the key the Keys form asks for.
@@ -199,6 +210,7 @@ type Screen struct {
 	accounts []account.Account
 	goos     string
 	keys     keys
+	imports  imports
 
 	announce string
 }
@@ -257,6 +269,8 @@ func (s *Screen) entered() {
 		s.act.LoadLogin()
 	case Backups:
 		s.act.LoadBackups()
+	case Import:
+		s.scan()
 	case Config:
 		s.act.LoadIncludes()
 	}

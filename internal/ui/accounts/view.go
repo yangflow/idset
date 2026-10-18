@@ -51,13 +51,16 @@ func (s *Screen) readOnly(c *ui.Context) {
 	})
 }
 
-// emptyState has no list and no footer; "Add Identity" stays in the toolbar. Importing is not offered yet.
+// emptyState has no list and no footer; "Add Identity" stays in the toolbar.
 func (s *Screen) emptyState(c *ui.Context) {
 	t := c.Theme()
 	ui.Column(c).Grow(1).Gap(t.Space(2)).AlignItems(ui.Center).Justify(ui.Center).Children(func() {
 		ui.Text(c, s.text.NoneTitle).FontSize(t.Rem(1.15)).FontWeight(600).Role(ui.RoleHeading).Level(2)
 		ui.Text(c, s.text.NoneHint).TextColor(t.TextMuted)
 		ui.Row(c).Gap(t.Space(2)).PaddingY(t.Space(1)).Children(func() {
+			if ui.Button(c, s.text.ImportExisting).Clicked() {
+				s.act.OpenImport()
+			}
 			if ui.PrimaryButton(c, s.text.Create).Clicked() {
 				s.newDraft("")
 			}

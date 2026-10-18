@@ -32,6 +32,9 @@ type recorder struct {
 	uses           [][3]string
 	drafts         []KeyDraft
 	reveals        []string
+	scans          int
+	imports        [][]account.Account
+	opened         []string
 }
 
 func (r *recorder) actions() Actions {
@@ -49,6 +52,9 @@ func (r *recorder) actions() Actions {
 		UseKey:         func(id, keyPath, fp string) { r.uses = append(r.uses, [3]string{id, keyPath, fp}) },
 		NewIdentity:    func(d KeyDraft) { r.drafts = append(r.drafts, d) },
 		Reveal:         func(keyPath string) { r.reveals = append(r.reveals, keyPath) },
+		Scan:           func() { r.scans++ },
+		Import:         func(list []account.Account) { r.imports = append(r.imports, list) },
+		OpenAccounts:   func(id string) { r.opened = append(r.opened, id) },
 	}
 }
 
@@ -199,13 +205,14 @@ func TestTabsSwitchByClickAndArrowKeys(t *testing.T) {
 	r.tt.Key(0, ui.KeyLeft)
 	r.tt.Key(0, ui.KeyLeft)
 	r.frame()
-	if r.s.Tab() != Keys {
-		t.Fatalf("tab %v after Left twice", r.s.Tab())
+	if r.s.Tab() != Import || r.rec.scans != 1 {
+		t.Fatalf("tab %v after Left twice, scans %d", r.s.Tab(), r.rec.scans)
 	}
+	r.tt.Key(0, ui.KeyLeft)
 	r.tt.Key(0, ui.KeyLeft)
 	r.frame()
 	if r.s.Tab() != General {
-		t.Fatalf("tab %v after Left three times", r.s.Tab())
+		t.Fatalf("tab %v after Left four times", r.s.Tab())
 	}
 	r.tt.Key(0, ui.KeyEnd)
 	r.frame()
@@ -651,6 +658,8 @@ func TestEveryPaneInBothLanguagesAndSchemes(t *testing.T) {
 		{General, nil, []string{"Language", "Open at login"}, []string{"界面语言", "登录时启动"}},
 		{Backups, func(s *Screen) { s.SetBackups(sampleBackups(), nil) }, []string{"4 identities", "Unreadable backup"}, []string{"4 个身份", "无法读取的备份"}},
 		{Backups, func(s *Screen) { s.SetBackups(nil, nil) }, []string{"No backups yet"}, []string{"还没有备份"}},
+		{Import, func(s *Screen) { s.ScanDone(sampleCandidates(), nil) }, []string{"5 identities found", "Import 4 Identities"}, []string{"找到 5 个身份", "导入 4 个身份"}},
+		{Import, func(s *Screen) { s.ScanDone(nil, nil) }, []string{"No identities found"}, []string{"没找到身份"}},
 		{Config, func(s *Screen) { s.SetIncludes(apply.IncludeState{}) }, []string{"No Include block"}, []string{"没有 Include 标记块"}},
 	}
 	for _, dark := range []bool{false, true} {

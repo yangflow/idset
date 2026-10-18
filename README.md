@@ -53,11 +53,8 @@ Working now:
   do next; a summary under the list and a badge on the tray icon show the worst problem.
 - **Keys.** The settings window generates an SSH key, copies its public key, loads it into ssh-agent and gives it to
   an identity, or starts a new identity with it. A missing key's bar opens it filled in for that identity.
-
-Planned:
-
-- **Import** ([#33](https://github.com/yangflow/idset/issues/33)). Import identities from an existing
-  `~/.ssh/config` and `~/.gitconfig`.
+- **Import.** The settings window reads your existing `~/.ssh/config` and Git configuration, lists the identities
+  found there, and adds the ones you check. Your files are only read.
 
 Targets: macOS 12+, Windows 10/11 and Linux with GTK 3, on amd64 and arm64. Tray icons on Linux need
 AppIndicator.

@@ -274,7 +274,7 @@ The tables below say what to reach for as the accounts, settings and about windo
 | Columns and rows of controls | [Grid](https://github.com/egoist/mygo/blob/v0.3.6/docs/ui/grid.md) |
 | List and detail of the accounts window | [Split view](https://github.com/egoist/mygo/blob/v0.3.6/docs/ui/split.md) |
 | Optional detail (the clone helper of an identity row, a backup's contents) | [Collapsible](https://github.com/egoist/mygo/blob/v0.3.6/docs/ui/collapsible.md), [Accordion](https://github.com/egoist/mygo/blob/v0.3.6/docs/ui/accordion.md) for several in a stack; only one identity row is expanded at a time, which the screen's state enforces |
-| The four panes of the settings window (General, Keys, Backups, Configuration) | [Tabs](https://github.com/egoist/mygo/blob/v0.3.6/docs/ui/tabs.md); `ui.TabsBase` for the icon over the label |
+| The five panes of the settings window (General, Keys, Import, Backups, Configuration) | [Tabs](https://github.com/egoist/mygo/blob/v0.3.6/docs/ui/tabs.md); `ui.TabsBase` for the icon over the label |
 
 ### Dialogs, messages and status
 
@@ -436,10 +436,10 @@ Only when even those do not fit is the last folder cut at its end. The full path
 Identity rows open the accounts window on their identity. "Add Identity" (the plus icon button) sits at the left of the
 fixed footer, so that it stays reachable however long the list is: the content between the title row and the footer is
 the scroll view. In the empty state the centered "Add Identity" button
-replaces it. Both open the accounts window on a new draft.
+replaces it. Both open the accounts window on a new draft. Under that button, "Import Existing Configuration" is an
+`Accent` text button that opens the settings window on Import.
 
-Planned (product.md): the About button (drawn in the mockup, shown once it works); "Import" when there are no
-identities. The expand arrow and the HTTPS row and clone
+Planned (product.md): the About button (drawn in the mockup, shown once it works). The expand arrow and the HTTPS row and clone
 helper are drawn in the mockup and shown once built (issue 26). Bind, unbind, rebind, "Use only" and undo on result
 cards are built as the mockup shows.
 
@@ -494,7 +494,7 @@ pane.
   success; the reason in `Danger` with the warning symbol, wrapping, when the write failed (Save stays available).
   Save and Revert are disabled while there is nothing to save.
 - **Empty.** No list and no footer: "No identities yet" (`Rem(1.15)`, 600), one sentence, "Import Existing
-  Configuration" and "New" (primary), centered, with no add bar: "New" is the only way to add.
+  Configuration" (bordered; opens the settings window on Import) and "New" (primary), centered, with no add bar.
 - **Delete confirmation.** An alert over the dimmed window, 360 wide, `Space(5)` padding, an outline and no shadow:
   "Delete identity <name>?" (`Rem(1.15)`, 600), a sentence, the private key path and the folders that are not
   deleted automatically between two hairlines (no box), a line that project folders are never touched, the "Also
@@ -511,8 +511,8 @@ languages. Behavior is in product.md, "设置窗口". 720×480, the system title
 material as the accounts window: fills, hairlines and text, no shadow, gradient or blur.
 
 - **Tabs.** A tab bar along the top, under the title bar and part of the same `Surface` band, one hairline at its
-  bottom. Four tabs centered as a group, each an icon over a label: General, Keys, Backups, Configuration (通用 / 密钥 /
-  备份 / 配置). A tab is 88 wide and 52 high (`Space(22)`, `Space(13)`) with a 20 DIP icon (`Space(5)`), the 11 label 4 below it,
+  bottom. Five tabs centered as a group, each an icon over a label: General, Keys, Import, Backups, Configuration (通用 /
+  密钥 / 导入 / 备份 / 配置). A tab is 88 wide and 52 high (`Space(22)`, `Space(13)`) with a 20 DIP icon (`Space(5)`), the 11 label 4 below it,
   and 4 DIP gaps; the bar has 4 above and 6 below. The selected tab has the `Pressed` fill, `Text` icon and label and a
   6 DIP radius; the others are `TextMuted` on no fill. Arrows, Home and End move the choice, as `ui.Tabs` does. The
   pane has no heading of its own: the selected tab names it.
@@ -539,6 +539,19 @@ material as the accounts window: fills, hairlines and text, no shadow, gradient 
   identity?", one sentence, the identities as radio rows (dot, name, muted email, and "Now: <key>" or "No key yet"
   under it) and "New identity" with the email and platform it starts from, between two hairlines, a muted note,
   Cancel (initial focus) and Use.
+- **Import.** Scanned each time the pane is entered; while it reads, a centered spinner, "Reading your SSH and Git
+  configuration…" (15, 600) and a muted line naming the files. The candidates are one grouped list under "N
+  identities found", rows 44 high: a checkbox, the Host name (muted when unchecked) over a muted "alias · email" (11;
+  "No alias" when there is none), and at the end a muted "Already added", or a folder icon and "Imported as scoped"
+  when that candidate is checked. Under the list, muted footnotes: the files are only read; the scoped ones apply to
+  no folder yet. Below, "Scan Again" as an `Accent` text button at the start and "Import N Identities" (primary) at the
+  end, disabled with nothing checked. While importing the list is dimmed to half and a muted "Importing…" and a
+  spinner stand before the button. A failure replaces the footnotes with a `Danger` note naming the identity, the
+  reason and how many came in before it; those are marked "Already added" and unchecked. Done is a heading with an
+  `Accent` check and "N identities imported", a group of the identities (dot, name, muted email), an `Accent` check note
+  that each was backed up first, then "Scan Again" and "Open Identities" (bordered). No candidates is a centered title,
+  a muted sentence and "Scan Again"; a failed scan is a `Danger` banner with the reason and "Scan Again". When
+  `accounts.json` cannot be read, a `Danger` banner tops the pane and the import button is disabled.
 - **Backups.** One grouped list, newest first. A row is 44 high: a chevron, the time (13), and a muted line "N identities
   · names · size" (11; the first three names and "+N" for the rest), then two ghost buttons in fixed 24 DIP slots:
   Restore (a back arrow, tooltip "Restore") and trash. The chevron expands the row to show its identities read-only, one at a time. Delete has no confirmation: the
@@ -560,7 +573,7 @@ material as the accounts window: fills, hairlines and text, no shadow, gradient 
   with the rest of the user's config, each behind a muted check. Paths are monospace. Afterwards the rows read "no
   marker block" with a "✓ Removed" note. A failure is inline and names the file that could not be changed, including the
   case where one file was changed and the other not.
-- **Errors and feedback.** Errors are inline notes, never dialogs; the only alerts are the two confirmations above and the identity choice of the Keys pane.
+- **Errors and feedback.** Errors are inline notes or banners, never dialogs; the only alerts are the two confirmations above and the identity choice of the Keys pane.
   Success feedback is the 1.2 s label of the panel.
 
 ## Windows, menus and the tray

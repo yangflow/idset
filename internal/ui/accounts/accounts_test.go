@@ -176,11 +176,15 @@ func TestListShowsEveryIdentityInPanelOrder(t *testing.T) {
 	r.want(t, "Global", "Used when no folder rule matches.")
 }
 
-func TestEmptyStateOffersNewOnly(t *testing.T) {
+func TestEmptyStateOffersImportAndNew(t *testing.T) {
 	r := open(t, "en", []account.Account{}, Request{})
-	r.want(t, "No identities yet", "New")
-	// No toolbar and no sidebar: the centered button is the only way to add.
-	r.wantNot(t, "Import", "Revert", "Save", "Add Identity")
+	r.want(t, "No identities yet", "Import your existing SSH and Git configuration, or create one.", "New")
+	// No toolbar and no sidebar: the centered buttons are the only way to add.
+	r.wantNot(t, "Revert", "Save", "Add Identity")
+	r.click(t, "Import Existing Configuration")
+	if r.rec.imports != 1 || r.s.Draft() != "" {
+		t.Fatalf("import asked %d times, draft %q", r.rec.imports, r.s.Draft())
+	}
 	r.click(t, "New")
 	if r.s.Draft() == "" || !slices.Equal(r.rec.prefilled, []string{r.s.Draft()}) {
 		t.Fatalf("the draft must ask for the signature: %v", r.rec.prefilled)

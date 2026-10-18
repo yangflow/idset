@@ -120,6 +120,9 @@ func (s *Screen) content(c *ui.Context) {
 					s.act.NewIdentity()
 				}
 			})
+			if s.textButton(c, "import", s.text.ImportExisting, "", nil, t.Accent).Clicked() {
+				s.act.OpenImport()
+			}
 		})
 		s.dropZone(c)
 		return

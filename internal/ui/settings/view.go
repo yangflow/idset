@@ -31,6 +31,8 @@ func (s *Screen) View(c *ui.Context) {
 					s.general(c)
 				case Keys:
 					s.keysPane(c)
+				case Import:
+					s.importPane(c)
 				case Backups:
 					s.backupsPane(c)
 				case Config:
@@ -54,7 +56,7 @@ func (s *Screen) tabBar(c *ui.Context) {
 	tabs := []struct {
 		name string
 		icon *ui.SVG
-	}{{s.text.General, icons.Sliders}, {s.text.Keys, icons.Key}, {s.text.Backups, icons.Clock}, {s.text.Config, icons.Doc}}
+	}{{s.text.General, icons.Sliders}, {s.text.Keys, icons.Key}, {s.text.Imports, icons.Import}, {s.text.Backups, icons.Clock}, {s.text.Config, icons.Doc}}
 	ui.Row(c).Justify(ui.Center).Padding(t.Space(1), t.Space(2), t.Space(1.5), t.Space(2)).Children(func() {
 		parts := ui.TabsBase(c, &s.tab, len(tabs))
 		parts.List.Gap(t.Space(1)).Label(s.text.Tabs).Children(func() {
