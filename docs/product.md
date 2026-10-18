@@ -12,7 +12,7 @@ Idset 管理一台机器上的多个 Git 和 SSH 身份：每个身份有自己�
 
 ## 范围
 
-按 [roadmap](roadmap.md) 的顺序逐项落地：
+按[里程碑](https://github.com/yangflow/idset/milestones)的顺序，一个 issue 一个 issue 地落地：
 
 - 身份列表，生成 SSH Host 别名、`includeIf "gitdir:"` 规则和 `insteadOf` 地址改写。
 - 托盘面板：身份列表、拖入文件夹看匹配结果、绑定和改绑、克隆命令助手。

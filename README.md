@@ -19,7 +19,8 @@ Private keys stay where they are; Idset only refers to them by path.
 ## Features
 
 Early development, version 0.1.0, with no release yet. The behavior to build is specified in
-[docs/product.md](docs/product.md) (in Chinese), in the order of the [roadmap](docs/roadmap.md).
+[docs/product.md](docs/product.md) (in Chinese), issue by issue, in the order of the
+[milestones](https://github.com/yangflow/idset/milestones).
 
 Working now:
 
@@ -50,10 +51,12 @@ Working now:
 
 Planned:
 
-- **Diagnostics.** Checks each identity with `ssh -T` and says what to do when a key is rejected, locked or
-  missing, or when a repository would commit as one identity and push as another.
-- **Keys and import.** Generate a key, load it into ssh-agent, and import identities from an existing
-  `~/.ssh/config` and `~/.gitconfig`.
+- **Diagnostics** ([#30](https://github.com/yangflow/idset/issues/30)). Checks each identity with `ssh -T` and
+  says what to do when a key is rejected, locked or missing, or when a repository would commit as one identity
+  and push as another.
+- **Keys** ([#32](https://github.com/yangflow/idset/issues/32)) and **import**
+  ([#33](https://github.com/yangflow/idset/issues/33)). Generate a key, load it into ssh-agent, and import
+  identities from an existing `~/.ssh/config` and `~/.gitconfig`.
 
 Targets: macOS 12+, Windows 10/11 and Linux with GTK 3, on amd64 and arm64. Tray icons on Linux need
 AppIndicator.
@@ -90,7 +93,7 @@ python3 scripts/scan_secrets.py   # secret scan of the whole history
 | Behavior, data model and generated files (in Chinese) | [docs/product.md](docs/product.md) |
 | Design language: layout, color, type, components, accessibility | [docs/design.md](docs/design.md) |
 | Screen mockups | [design/](design/README.md) |
-| Order of work (in Chinese) | [docs/roadmap.md](docs/roadmap.md) |
+| Order of work | [Milestones](https://github.com/yangflow/idset/milestones) and [issues](https://github.com/yangflow/idset/issues) |
 | Architecture decisions | [docs/adr/](docs/adr/README.md) |
 
 Repository rules for people and agents are in [AGENTS.md](AGENTS.md). Report vulnerabilities privately as

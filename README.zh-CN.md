@@ -13,7 +13,7 @@ Idset 把身份放在一个列表里，替你生成配置。它不改写你自�
 
 ## 功能
 
-早期开发，版本 0.1.0，还没有发布。要做的行为写在 [docs/product.md](docs/product.md)，按[路线图](docs/roadmap.md)的顺序落地。
+早期开发，版本 0.1.0，还没有发布。要做的行为写在 [docs/product.md](docs/product.md)，按[里程碑](https://github.com/yangflow/idset/milestones)的顺序，一个 issue 一个 issue 地落地。
 
 已经可用：
 
@@ -29,8 +29,8 @@ Idset 把身份放在一个列表里，替你生成配置。它不改写你自�
 
 计划中：
 
-- **诊断。** 用 `ssh -T` 检查每个身份。密钥被拒、被锁或缺失，或者仓库会用一个身份提交、用另一个身份推送时，告诉你下一步怎么做。
-- **密钥和导入。** 生成密钥、加载到 ssh-agent，从已有的 `~/.ssh/config` 和 `~/.gitconfig` 导入身份。
+- **诊断**（[#30](https://github.com/yangflow/idset/issues/30)）。用 `ssh -T` 检查每个身份。密钥被拒、被锁或缺失，或者仓库会用一个身份提交、用另一个身份推送时，告诉你下一步怎么做。
+- **密钥**（[#32](https://github.com/yangflow/idset/issues/32)）和**导入**（[#33](https://github.com/yangflow/idset/issues/33)）。生成密钥、加载到 ssh-agent，从已有的 `~/.ssh/config` 和 `~/.gitconfig` 导入身份。
 
 目标平台：macOS 12+、Windows 10/11、带 GTK 3 的 Linux，amd64 和 arm64。Linux 的托盘图标需要 AppIndicator。
 
@@ -64,7 +64,7 @@ python3 scripts/scan_secrets.py   # 扫描全部历史里的密钥
 | 行为、数据模型和生成的文件 | [docs/product.md](docs/product.md) |
 | 设计语言：布局、颜色、字体、组件、无障碍（英文） | [docs/design.md](docs/design.md) |
 | 界面画板 | [design/](design/README.md) |
-| 工作顺序 | [docs/roadmap.md](docs/roadmap.md) |
+| 工作顺序 | [里程碑](https://github.com/yangflow/idset/milestones)和 [issue](https://github.com/yangflow/idset/issues) |
 | 架构决定（英文） | [docs/adr/](docs/adr/README.md) |
 
 人和代理改仓库的规矩在 [AGENTS.md](AGENTS.md)。漏洞请按 [SECURITY.md](SECURITY.md) 私下报告，不要开公开 issue。
