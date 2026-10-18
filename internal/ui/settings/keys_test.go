@@ -298,6 +298,7 @@ func TestKeyReadOnlyWritesNoIdentity(t *testing.T) {
 
 func TestKeysInChinese(t *testing.T) {
 	r := keysOpen(t, "zh-Hans", keyIdentities(), Request{})
+	r.s.goos = "darwin"
 	r.want(t, "新密钥", "类型", "文件名", "注释", "保存为 ~/.ssh/id_idset 和 ~/.ssh/id_idset.pub。")
 	r.click(t, "生成")
 	r.s.GenerateDone(keygen.Key{Path: "~/.ssh/id_idset", Public: samplePub, Fingerprint: sampleFp}, nil)
