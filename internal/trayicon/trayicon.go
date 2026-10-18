@@ -27,17 +27,30 @@ var (
 	dangerInk  = color.NRGBA{R: 0xdc, G: 0x26, B: 0x26, A: 0xff}
 )
 
-// PNG returns a 32×32 icon. A template icon is black on transparent for macOS to tint to the menu bar; otherwise
-// it is a mid gray that stays visible on light and dark taskbars. A badge sits at the lower right, 1.5 apart from
-// the key: in a template its "!" is cut out, elsewhere it is in Warning or Danger with a white "!".
+// The key is drawn in units of a 54×36 box, 36 being the 18 points of the macOS menu bar at 2x.
+const keyWidth, keyHeight = 54, 36
+
+// PNG returns the tray icon. A template icon is the key at full size, 54×36, black on transparent for macOS to
+// tint to the menu bar, which scales it to 18 points tall. Otherwise it is 32×32, the key scaled to the width and
+// centered, in a mid gray that stays visible on light and dark taskbars, since Windows and Linux show a square. A
+// badge sits at the lower right, 1.5 apart from the key: in a template its "!" is cut out, elsewhere it is in
+// Warning or Danger with a white "!".
 func PNG(template bool, badge Badge) []byte {
 	ink := color.NRGBA{R: 0x8a, G: 0x8a, B: 0x8a, A: 0xff}
+	w, h := 32, 32
+	k, dy := float64(w)/keyWidth, (32-keyHeight*32.0/keyWidth)/2
 	if template {
 		ink = color.NRGBA{A: 0xff}
+		w, h, k, dy = keyWidth, keyHeight, 1, 0
 	}
-	img := image.NewNRGBA(image.Rect(0, 0, 32, 32))
-	paint(img, inKey, ink)
-	drawBadge(img, template, ink, badge)
+	img := image.NewNRGBA(image.Rect(0, 0, w, h))
+	paint(img, func(x, y float64) bool { return inKey(x/k, (y-dy)/k) }, ink)
+	paint(img, func(x, y float64) bool { return inBranch(x/k, (y-dy)/k) }, color.NRGBA{})
+	// The badge is laid out for a 32×32 icon; a template scales it to the height and moves it to the right edge.
+	bk := float64(h) / 32
+	drawBadge(img, template, ink, badge, func(x, y float64) (float64, float64) {
+		return (x - float64(w) + 32*bk) / bk, y / bk
+	})
 	var b bytes.Buffer
 	if err := png.Encode(&b, img); err != nil {
 		panic(err)
@@ -45,21 +58,35 @@ func PNG(template bool, badge Badge) []byte {
 	return b.Bytes()
 }
 
-// inKey is the product icon's key as an outline, pointing right: a rounded diamond bow, 2 thick around a dot,
-// centered at (9, 14); a shaft 3 thick from the bow to 29.5; two bits 3 wide under the shaft. It sits 2 above the
-// middle so that a badge leaves the shaft whole.
+// inKey is the product icon's key, solid and pointing right: a rounded diamond bow centered at (18, 18) whose
+// corners reach the top and the bottom, a shaft 9.2 thick from the bow to 53, and two bits under the shaft.
 func inKey(x, y float64) bool {
-	const cy = 14
-	bow := diamond(x-9, y-cy, 7.5, 1.5)
-	switch {
-	case bow <= 0 && bow >= -2, math.Hypot(x-9, y-cy) <= 1.6:
-		return true
-	case y >= cy-1.5 && y <= cy+1.5 && x >= 15 && x <= 28:
-		return true
-	case math.Hypot(x-28, y-cy) <= 1.5:
+	const cy = keyHeight / 2
+	return diamond(x-18, y-cy, 17.5, 3.5) <= 0 || roundRect(x, y, 28, cy-4.6, 53, cy+4.6, 2.8) ||
+		roundRect(x, y, 39, cy, 44, cy+10.6, 1.6) || roundRect(x, y, 46.5, cy, 51.5, cy+8.6, 1.6)
+}
+
+// inBranch is the Git branch cut out of the bow: a trunk with a node at each end, and a curve from it to a third
+// node at the upper right.
+func inBranch(x, y float64) bool {
+	const cy, s, half, node = keyHeight / 2, 8.0, 1.3, 2.5
+	trunk, tip := [2]float64{14.2, cy}, [2]float64{20.6, cy - s*0.45}
+	p := [2]float64{x, y}
+	if toSegment(p, [2]float64{trunk[0], cy - s}, [2]float64{trunk[0], cy + s}) <= half {
 		return true
 	}
-	return bit(x, y, 20, 23, cy, cy+6.5) || bit(x, y, 25, 28, cy, cy+5)
+	// The curve is a quadratic from the trunk to the tip, bent towards the upper right.
+	q := func(t float64) [2]float64 {
+		u := 1 - t
+		return [2]float64{u*u*trunk[0] + 2*u*t*tip[0] + t*t*tip[0], u*u*(cy+s*0.35) + 2*u*t*(cy-s*0.25) + t*t*tip[1]}
+	}
+	for i := range 24 {
+		if toSegment(p, q(float64(i)/24), q(float64(i+1)/24)) <= half {
+			return true
+		}
+	}
+	return math.Hypot(x-trunk[0], y-cy-s) <= node || math.Hypot(x-trunk[0], y-cy+s) <= node ||
+		math.Hypot(x-tip[0], y-tip[1]) <= node
 }
 
 // diamond is the signed distance from (x, y) to a diamond centered at the origin, its corners r from the center
@@ -71,15 +98,20 @@ func diamond(x, y, r, round float64) float64 {
 	return math.Hypot(max(qu, 0), max(qv, 0)) + min(max(qu, qv), 0) - round
 }
 
-// bit is a bit hanging from the shaft at top between left and right, rounded at the bottom.
-func bit(x, y, left, right, top, bottom float64) bool {
-	r := (right - left) / 2
-	return x >= left && x <= right && y >= top && y <= bottom-r || math.Hypot(x-left-r, y-bottom+r) <= r
+// roundRect reports whether (x, y) is inside the rectangle from (left, top) to (right, bottom) with corners rounded
+// by r.
+func roundRect(x, y, left, top, right, bottom, r float64) bool {
+	if x < left || x > right || y < top || y > bottom {
+		return false
+	}
+	cx, cy := max(left+r, min(right-r, x)), max(top+r, min(bottom-r, y))
+	return math.Hypot(x-cx, y-cy) <= r
 }
 
 // drawBadge clears the badge's shape grown by 1.5 so that it stands apart from the key, fills the shape, then
-// draws or cuts out the "!".
-func drawBadge(img *image.NRGBA, template bool, ink color.NRGBA, badge Badge) {
+// draws or cuts out the "!";
+// at maps a pixel position to the 32×32 layout.
+func drawBadge(img *image.NRGBA, template bool, ink color.NRGBA, badge Badge, at func(x, y float64) (float64, float64)) {
 	var shape func(x, y, grow float64) bool
 	top, dot := 21.2, 27.9
 	fill := dangerInk
@@ -100,11 +132,12 @@ func drawBadge(img *image.NRGBA, template bool, ink color.NRGBA, badge Badge) {
 		fill = ink
 	}
 	mark := func(x, y, _ float64) bool {
+		x, y = at(x, y)
 		return toSegment([2]float64{x, y}, [2]float64{24.5, top}, [2]float64{24.5, top + 3.6}) <= 0.9 ||
 			toSegment([2]float64{x, y}, [2]float64{24.5, dot}, [2]float64{24.5, dot + 0.1}) <= 0.9
 	}
-	paint(img, func(x, y float64) bool { return shape(x, y, 1.5) }, color.NRGBA{})
-	paint(img, func(x, y float64) bool { return shape(x, y, 0) }, fill)
+	paint(img, func(x, y float64) bool { x, y = at(x, y); return shape(x, y, 1.5) }, color.NRGBA{})
+	paint(img, func(x, y float64) bool { x, y = at(x, y); return shape(x, y, 0) }, fill)
 	white := color.NRGBA{R: 0xff, G: 0xff, B: 0xff, A: 0xff}
 	if template {
 		white = color.NRGBA{}
