@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>About window</title>
+<style>
+/* Colors are the MyGo default theme roles and sizes the 4 DIP spacing unit at 13 px text; see design/tokens.md.
+   No shadows, gradients or blur: everything is fills, hairlines and text. */
+:root { color-scheme:light; --background:#ffffff; --surface:#f4f4f5; --pressed:#dddde1; --text:#18181b; --muted:#71717a; --border:#d9d9de; --accent:#2563eb; --accent-text:#ffffff; --focus:rgba(37,99,235,.55); --danger:#dc2626 }
+:root[data-scheme=dark] { color-scheme:dark; --background:#18181b; --surface:#27272a; --pressed:#3c3c41; --text:#f4f4f5; --muted:#a1a1aa; --border:#3f3f46; --accent:#3b82f6; --focus:rgba(96,165,250,.6); --danger:#ef4444 }
+* { box-sizing:border-box }
+body { margin:0; font-family:system-ui,sans-serif; font-size:13px; color:var(--text); background:#888; display:flex; gap:24px; padding:24px; align-items:flex-start }
+.controls { width:220px; flex:none; display:flex; flex-direction:column; gap:14px; padding:14px; border-radius:10px; background:#f4f4f4; color:#242424; font-size:12px }
+.controls h2 { margin:0 0 6px; font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:.04em; color:#666 }
+.controls .group { display:flex; flex-wrap:wrap; gap:4px }
+.controls button { padding:4px 8px; border:1px solid #ccc; border-radius:5px; background:#fff; color:#242424; font:inherit; cursor:pointer; height:auto }
+.controls button.on { background:#006fdf; border-color:#006fdf; color:#fff }
+.controls .hint { color:#666; line-height:1.5 }
+.controls kbd { padding:0 4px; border:1px solid #ccc; border-radius:3px; background:#fff; font-size:11px }
+
+/* Window: the system title bar, then one centered column of 320x292. Not resizable. */
+.win { width:320px; height:320px; flex:none; display:flex; flex-direction:column; background:var(--background); border:1px solid var(--border); border-radius:10px; overflow:hidden }
+.titlebar { flex:none; height:28px; display:grid; place-items:center; font-size:11px; color:var(--muted); background:var(--surface); border-bottom:1px solid var(--border) }
+.body { flex:1; display:flex; flex-direction:column; align-items:center; text-align:center; padding:28px 24px 24px }
+/* The app icon: the tray icon's identity card, white on an Accent tile, until the product icon (#35) replaces it. */
+.icon { width:64px; height:64px; border-radius:14px; background:var(--accent); display:grid; place-items:center; color:#fff }
+.icon svg { width:44px; height:44px }
+h1 { margin:12px 0 0; font-size:18px; font-weight:600 }
+.version { margin-top:2px; color:var(--muted); user-select:text }
+.legal { margin-top:12px; font-size:11px; line-height:1.5; color:var(--muted) }
+.sp { flex:1; min-height:20px }
+.acts { display:flex; gap:8px }
+.note { margin-top:8px; max-width:260px; font-size:11px; line-height:1.4; color:var(--muted) }
+
+button { padding:0 12px; height:28px; border:1px solid var(--border); border-radius:6px; background:var(--background); color:var(--text); font:inherit; display:inline-flex; align-items:center; gap:4px; white-space:nowrap }
+button.primary { background:var(--accent); border-color:var(--accent); color:var(--accent-text) }
+button:disabled { opacity:.4 }
+button svg { width:12px; height:12px }
+button.focus { outline:2px solid var(--focus); outline-offset:1px }
+</style>
+<aside class="controls">
+  <div><h2>State</h2><div class="group" id="states"></div></div>
+  <div><h2>Scheme</h2><div class="group" id="schemes"></div></div>
+  <div><h2>Language</h2><div class="group" id="langs"></div></div>
+  <div class="hint">URL: <code>?state=…&amp;scheme=dark&amp;lang=zh</code><br><kbd>←</kbd> <kbd>→</kbd> switch state.</div>
+</aside>
+<div class="win" id="win"></div>
+<script>
+const TEXT = {
+  zh: {
+    window:'关于 Idset', version:v => `版本 ${v}`, copyright:'© 2026 yangflow', license:'以 MIT 许可发布',
+    github:'GitHub', check:'检查更新…', cannot:'这个版本不能自动更新，新版本请到 GitHub 下载。',
+  },
+  en: {
+    window:'About Idset', version:v => `Version ${v}`, copyright:'© 2026 yangflow', license:'Released under the MIT License',
+    github:'GitHub', check:'Check for Updates…', cannot:'This copy cannot update itself. Download new versions from GitHub.',
+  },
+};
+const STATES = { about:'可以更新', noupdate:'不能自动更新', focus:'键盘焦点' };
+const icon = {
+  card:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><rect x="1.5" y="3.5" width="13" height="9" rx="1.5"/><circle cx="5.5" cy="7" r="1.3"/><path d="M3.5 10.5a2 2 0 0 1 4 0M9.5 7h3M9.5 9.5h2"/></svg>',
+  external:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h4v4M13 3 7.5 8.5M11 9.5V13H3V5h3.5"/></svg>',
+};
+const q = new URLSearchParams(location.search);
+const view = {
+  state: STATES[q.get('state')] ? q.get('state') : 'about',
+  scheme: q.get('scheme') === 'dark' ? 'dark' : 'light',
+  lang: q.get('lang') === 'zh' ? 'zh' : 'en',
+};
+
+function render() {
+  const T = TEXT[view.lang], s = view.state;
+  document.documentElement.lang = view.lang === 'zh' ? 'zh-Hans' : 'en';
+  document.documentElement.dataset.scheme = view.scheme;
+  const cannot = s === 'noupdate';
+  // GitHub opens the repository in the browser; Check for Updates opens the updater's own window.
+  document.getElementById('win').innerHTML = `<div class="titlebar">${T.window}</div>
+    <div class="body">
+      <div class="icon" aria-hidden="true">${icon.card}</div>
+      <h1>Idset</h1>
+      <div class="version">${T.version('0.1.0')}</div>
+      <div class="legal">${T.copyright}<br>${T.license}</div>
+      <div class="sp"></div>
+      <div class="acts"><button${s === 'focus' ? ' class="focus"' : ''}>${icon.external}${T.github}</button><button class="primary"${cannot ? ' disabled' : ''}>${T.check}</button></div>
+      ${cannot ? `<div class="note">${T.cannot}</div>` : ''}
+    </div>`;
+
+  const buttons = (id, options, key) => {
+    document.getElementById(id).innerHTML = Object.entries(options)
+      .map(([value, label]) => `<button data-value="${value}" class="${view[key] === value ? 'on' : ''}">${label}</button>`).join('');
+    document.getElementById(id).onclick = e => { const v = e.target.dataset.value; if (v) { view[key] = v; render(); } };
+  };
+  buttons('states', STATES, 'state');
+  buttons('schemes', { light:'浅色', dark:'深色' }, 'scheme');
+  buttons('langs', { zh:'中文', en:'English' }, 'lang');
+  history.replaceState(null, '', `?state=${view.state}&scheme=${view.scheme}&lang=${view.lang}`);
+}
+
+onkeydown = e => {
+  if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+  const keys = Object.keys(STATES), i = keys.indexOf(view.state);
+  view.state = keys[(i + (e.key === 'ArrowRight' ? 1 : keys.length - 1)) % keys.length];
+  render();
+};
+render();
+</script>
+</html>

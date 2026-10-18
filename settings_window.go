@@ -13,6 +13,7 @@ import (
 	"github.com/yangflow/idset/internal/diagnose"
 	"github.com/yangflow/idset/internal/keygen"
 	"github.com/yangflow/idset/internal/store"
+	"github.com/yangflow/idset/internal/ui/about"
 	"github.com/yangflow/idset/internal/ui/accounts"
 	"github.com/yangflow/idset/internal/ui/panel"
 	"github.com/yangflow/idset/internal/ui/settings"
@@ -83,10 +84,14 @@ func (a *app) applyLanguage() {
 	loc := a.locale()
 	a.text = panel.Text(loc)
 	a.screen.SetText(a.text)
+	if a.appAboutItem != nil {
+		a.appAboutItem.SetLabel(a.text.About)
+	}
 	if a.openItem != nil {
 		a.openItem.SetLabel(a.text.Open)
 		a.hideItem.SetLabel(a.text.HidePanel)
 		a.settingsItem.SetLabel(a.text.SettingsMenu)
+		a.aboutItem.SetLabel(a.text.AboutMenu)
 		a.quitItem.SetLabel(a.text.Quit)
 	}
 	if w := a.accounts; w != nil {
@@ -98,6 +103,11 @@ func (a *app) applyLanguage() {
 		w.text = settings.Text(loc)
 		w.screen.SetText(w.text)
 		w.win.SetTitle(w.text.Window)
+	}
+	if w := a.about; w != nil {
+		text := about.Text(loc)
+		w.screen.SetText(text)
+		w.win.SetTitle(text.Window)
 	}
 	a.updateTray()
 }

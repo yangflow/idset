@@ -75,6 +75,9 @@ All notable user-facing changes are recorded here, following [Keep a Changelog](
   Those Idset does not have yet are checked; only one global identity comes in as global, the others as scoped.
   "Import N Identities" adds them one by one, backing up first; the files are only read. The empty panel and the
   empty accounts window have "Import Existing Configuration".
+- The about window shows the version, copyright and license, opens the GitHub repository and checks for updates. A
+  copy that cannot update itself says so and points to GitHub. It opens from "About" in the tray menu, the About button
+  in the panel footer and "About Idset" in the macOS app menu.
 
 ### Changed
 

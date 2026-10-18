@@ -49,15 +49,21 @@ type app struct {
 	menu      *mygo.Menu
 	openItem  *mygo.MenuItem
 	hideItem  *mygo.MenuItem
-	// settingsItem and quitItem are the other tray menu entries, kept to re-label them on a language change.
+	// settingsItem, aboutItem and quitItem are the other tray menu entries, kept to re-label them on a language
+	// change.
 	settingsItem *mygo.MenuItem
+	aboutItem    *mygo.MenuItem
 	quitItem     *mygo.MenuItem
+	// appAboutItem is "About Idset" in the macOS application menu, kept for the same reason.
+	appAboutItem *mygo.MenuItem
 	prefs        *settings.Settings
 	quitting     bool
 	// accounts is the account window while it is open, nil otherwise.
 	accounts *accountsWindow
 	// settings is the settings window while it is open, nil otherwise.
 	settings *settingsWindow
+	// about is the about window while it is open, nil otherwise.
+	about *aboutWindow
 	// diag keeps the connectivity checks, checking holds the identities whose check is running, userHosts the
 	// Host names of the user's ~/.ssh/config as the last check read them, and badge the mark on the tray icon.
 	diag      diagnose.Cache
@@ -114,6 +120,7 @@ func (a *app) ready() {
 		OpenSettings: func() { a.openSettings(settingsui.Request{}) },
 		OpenBackups:  func() { a.openSettings(settingsui.Request{Pane: settingsui.Backups}) },
 		OpenImport:   func() { a.openSettings(settingsui.Request{Pane: settingsui.Import}) },
+		OpenAbout:    a.openAbout,
 		Reveal:       mygo.Shell.ShowItemInFolder,
 		Open:         a.openFolder,
 		Run:          a.runBind,
@@ -132,9 +139,10 @@ func (a *app) ready() {
 		},
 	})
 	// The application menu keeps the standard editing shortcuts working in text fields.
+	a.appAboutItem = &mygo.MenuItem{Label: a.text.About, Click: func(*mygo.MenuItem, *mygo.Window) { a.openAbout() }}
 	mygo.App.SetMenu(mygo.NewMenu([]*mygo.MenuItem{
 		{Label: "Idset", Submenu: []*mygo.MenuItem{
-			{Role: mygo.RoleAbout}, updater.MenuItem(), mygo.Separator(), {Role: mygo.RoleQuit},
+			a.appAboutItem, updater.MenuItem(), mygo.Separator(), {Role: mygo.RoleQuit},
 		}},
 		{Role: mygo.RoleEditMenu},
 		{Role: mygo.RoleWindowMenu},
@@ -173,9 +181,10 @@ func (a *app) ready() {
 	a.settingsItem = &mygo.MenuItem{Label: a.text.SettingsMenu, Click: func(*mygo.MenuItem, *mygo.Window) {
 		a.openSettings(settingsui.Request{})
 	}}
+	a.aboutItem = &mygo.MenuItem{Label: a.text.AboutMenu, Click: func(*mygo.MenuItem, *mygo.Window) { a.openAbout() }}
 	a.quitItem = &mygo.MenuItem{Label: a.text.Quit, Click: func(*mygo.MenuItem, *mygo.Window) { mygo.App.Quit() }}
 	a.menu = mygo.NewMenu([]*mygo.MenuItem{
-		a.openItem, a.hideItem, a.settingsItem,
+		a.openItem, a.hideItem, a.settingsItem, a.aboutItem,
 		mygo.Separator(),
 		a.quitItem,
 	})
@@ -225,6 +234,9 @@ func (a *app) post(fn func()) {
 	}
 	if a.settings != nil {
 		a.settings.win.Update(func() {})
+	}
+	if a.about != nil {
+		a.about.win.Update(func() {})
 	}
 }
 

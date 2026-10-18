@@ -10,8 +10,8 @@ of its [UI guides](https://github.com/egoist/mygo/blob/v0.3.6/docs/ui/README.md)
 stay the authority on API details. Links point to MyGo v0.3.6, the version pinned in `go.mod`. When the pin moves,
 check the pages again and update the links and this document together.
 
-The panel (`internal/ui/panel/`) is the reference the values below call "the panel". The settings and about
-windows are described in product.md and are plans until their mockup and code are merged.
+The panel (`internal/ui/panel/`) is the reference the values below call "the panel". The accounts, settings and
+about windows follow it.
 
 Related files: [design/README.md](../design/README.md) (mockups and how a UI change is made) and
 [design/tokens.md](../design/tokens.md) (spacing, size and color values in one table).
@@ -27,12 +27,13 @@ Related files: [design/README.md](../design/README.md) (mockups and how a UI cha
 7. [The panel](#the-panel)
 8. [The accounts window](#the-accounts-window)
 9. [The settings window](#the-settings-window)
-10. [Windows, menus and the tray](#windows-menus-and-the-tray)
-11. [Accessibility checklist](#accessibility-checklist)
-12. [Motion](#motion)
-13. [Localization](#localization)
-14. [Design acceptance checklist](#design-acceptance-checklist)
-15. [References](#references)
+10. [The about window](#the-about-window)
+11. [Windows, menus and the tray](#windows-menus-and-the-tray)
+12. [Accessibility checklist](#accessibility-checklist)
+13. [Motion](#motion)
+14. [Localization](#localization)
+15. [Design acceptance checklist](#design-acceptance-checklist)
+16. [References](#references)
 
 ## Principles
 
@@ -235,7 +236,7 @@ The tables below say what to reach for as the accounts, settings and about windo
 |---|---|
 | The main action of a group, once (Save in the accounts window) | [Button](https://github.com/egoist/mygo/blob/v0.3.6/docs/ui/button.md) (`PrimaryButton`) |
 | Other actions | [Button](https://github.com/egoist/mygo/blob/v0.3.6/docs/ui/button.md) |
-| Open the GitHub page from the about window | [Link](https://github.com/egoist/mygo/blob/v0.3.6/docs/ui/link.md) |
+| Open the GitHub page from the about window | A bordered [Button](https://github.com/egoist/mygo/blob/v0.3.6/docs/ui/button.md) with the external icon and `c.OpenURL` |
 | "Rebind to" another identity | [Popover](https://github.com/egoist/mygo/blob/v0.3.6/docs/ui/popover.md) (`PopoverBase`) with entries of our own: a menu button's menu is the system's and cannot show a color dot and a monospace folder at 224 wide |
 | Actions on a specific identity, on right click | [Context menu](https://github.com/egoist/mygo/blob/v0.3.6/docs/ui/context-menu.md) |
 | Choose one of a few modes (global or limited scope) | [Segmented control](https://github.com/egoist/mygo/blob/v0.3.6/docs/ui/segmented.md) |
@@ -315,8 +316,7 @@ and Quit (`power`). The footer after the content:
 - With identities, all of them. Without identities, loading or read-only: no Add (the empty state has its own button;
   the other two cannot write) and no Re-check (nothing to check); About and Quit stay, so the footer still has a way
   out when the read-only error takes the whole panel.
-- Only buttons that work are shown: About joins when it is built (the mockup's "Built today" switch shows the footer
-  without it). Re-check checks every identity again and waits while a check runs. Settings is always in the title
+- Only buttons that work are shown. About opens the about window. Re-check checks every identity again and waits while a check runs. Settings is always in the title
   bar.
 
 The content, in order:
@@ -439,7 +439,7 @@ the scroll view. In the empty state the centered "Add Identity" button
 replaces it. Both open the accounts window on a new draft. Under that button, "Import Existing Configuration" is an
 `Accent` text button that opens the settings window on Import.
 
-Planned (product.md): the About button (drawn in the mockup, shown once it works). The expand arrow and the HTTPS row and clone
+Planned (product.md): the expand arrow and the HTTPS row and clone
 helper are drawn in the mockup and shown once built (issue 26). Bind, unbind, rebind, "Use only" and undo on result
 cards are built as the mockup shows.
 
@@ -576,6 +576,25 @@ material as the accounts window: fills, hairlines and text, no shadow, gradient 
 - **Errors and feedback.** Errors are inline notes or banners, never dialogs; the only alerts are the two confirmations above and the identity choice of the Keys pane.
   Success feedback is the 1.2 s label of the panel.
 
+## The about window
+
+Mockup: [design/screens/about.html](../design/screens/about.html), every state in light and dark and in both
+languages. Behavior is in product.md, "关于窗口". 320×292 under the system title bar ("About Idset"), not resizable,
+minimizable or full-screen; one centered column with `Space(7)` above and `Space(6)` at the sides and below.
+
+- **Identity.** A 64 DIP tile (`Space(16)`, radius 14) in `Accent` with the identity card icon at 44 (`Space(11)`)
+  in `AccentText`, until the product icon (issue 35) replaces it. Under it, 12 apart, "Idset" (18, 600, a level 1
+  heading), then the muted, selectable "Version 0.1.0", then 12 below the copyright and the license on two muted
+  11 lines.
+- **Actions.** At the bottom, 8 apart and centered: "GitHub", bordered, with the external icon, opens the repository
+  in the browser; "Check for Updates…" is the primary button and opens the updater's own window.
+- **Cannot update.** Whether this copy can update itself is found out in the background; until then the primary
+  button is disabled without a note. When it cannot (a development build, no update feed, or a copy a package manager
+  updates), the button stays disabled and a muted 11 line under the buttons, at most 260 wide, says to download new
+  versions from GitHub.
+- **One window.** The tray menu's "About", the panel footer's About and the macOS app menu's "About Idset" all open it;
+  when it is open they bring it to the front.
+
 ## Windows, menus and the tray
 
 - **The panel window.** 340×480, frameless, not resizable, minimizable, maximizable or full-screen, always on top and
@@ -587,17 +606,17 @@ material as the accounts window: fills, hairlines and text, no shadow, gradient 
   [window options](https://github.com/egoist/mygo/blob/v0.3.6/docs/windows.md).
 - **Without a tray** (Linux without AppIndicator), the panel is an ordinary window with the system title bar and the
   same content; Escape does not hide it, and closing it quits.
-- **Planned windows** (accounts 760×520, settings 720×480, about) keep the system title bar, set `MinWidth` and
-  `MinHeight` so content never clips, and hide the panel when they open. A hidden title bar
+- **Other windows** (accounts 760×520, settings 720×480, about 320×292) keep the system title bar, set `MinWidth` and
+  `MinHeight` so content never clips (the about window does not resize), and hide the panel when they open. A hidden title bar
   (`TitleBarStyle: mygo.TitleBarHidden`) needs a mockup that shows why.
 - **The tray.** A click opens the panel and a second click hides it. The right-click menu has "Open Idset" (or "Hide
-  Idset" while the panel shows) and "Quit"; the accounts window, settings and about join it when they exist. On Linux
+  Idset" while the panel shows) and "Quit", with the accounts window, settings and about between them. On Linux
   AppIndicator reports no clicks, so a click opens that menu and it is the only way to open and hide the panel. The
   tooltip is "Idset", "Idset · <identity>" after a match, or "Idset · no match". See
   [Menus and the tray](https://github.com/egoist/mygo/blob/v0.3.6/docs/menus.md#tray-icons).
 - **Menus.** The macOS menu bar has an app menu (About, check for updates, Quit) and the Edit menu (`RoleEditMenu`)
-  so copy, paste and the other editing shortcuts work in text fields. Use roles (`RoleAbout`, `RoleQuit` and the
-  others) for standard items: they carry the right label and shortcut. Give custom items an accelerator with
+  so copy, paste and the other editing shortcuts work in text fields. "About Idset" is a custom item that opens the
+  about window rather than `RoleAbout`'s system panel. Use roles (`RoleQuit` and the others) for standard items: they carry the right label and shortcut. Give custom items an accelerator with
   `CmdOrCtrl`. See [Menus](https://github.com/egoist/mygo/blob/v0.3.6/docs/menus.md).
 - **One instance.** A second launch opens the panel of the running instance and exits.
 - **Notifications.** System notifications only for what the user would want while the panel is hidden; the first
