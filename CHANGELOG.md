@@ -80,6 +80,8 @@ All notable user-facing changes are recorded here, following [Keep a Changelog](
   in the panel footer and "About Idset" in the macOS app menu.
 - Releases are built for macOS (signed and notarized), Windows and Linux, and installed copies update themselves
   from GitHub releases. On Linux, the Debian package needs `libayatana-appindicator3-1` for the tray.
+- Idset has its own icon, a Git key on a graphite tile, in the Dock, the taskbar, the installers and the about
+  window.
 
 ### Changed
 

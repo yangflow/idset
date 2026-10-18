@@ -56,13 +56,14 @@ type Actions struct {
 type Screen struct {
 	text    Copy
 	version string
+	icon    *ui.Bitmap
 	updates Updates
 	act     Actions
 }
 
-// New returns the screen for a version, such as "0.1.0".
-func New(text Copy, version string, act Actions) *Screen {
-	return &Screen{text: text, version: version, act: act}
+// New returns the screen for a version, such as "0.1.0", with the product icon.
+func New(text Copy, version string, icon *ui.Bitmap, act Actions) *Screen {
+	return &Screen{text: text, version: version, icon: icon, act: act}
 }
 
 // SetText changes the language.
@@ -75,11 +76,7 @@ func (s *Screen) SetUpdates(u Updates) { s.updates = u }
 func (s *Screen) View(c *ui.Context) {
 	t := c.Theme()
 	ui.Column(c).Fill().AlignItems(ui.Center).Padding(t.Space(7), t.Space(6), t.Space(6), t.Space(6)).Children(func() {
-		// The tray icon's identity card on an Accent tile, until the product icon replaces it.
-		ui.Column(c).Width(t.Space(16)).Height(t.Space(16)).Radius(14).Background(t.Accent).AlignItems(ui.Center).
-			Justify(ui.Center).Children(func() {
-			ui.Icon(c, icons.Card).FontSize(t.Space(11)).TextColor(t.AccentText)
-		})
+		ui.Image(c, s.icon).Width(t.Space(16)).Height(t.Space(16))
 		ui.Text(c, "Idset").FontSize(t.Space(4.5)).FontWeight(600).Role(ui.RoleHeading).Level(1).Margin(t.Space(3), 0, 0, 0)
 		ui.Text(c, fmt.Sprintf(s.text.Version, s.version)).TextColor(t.TextMuted).Selectable()
 		ui.Column(c).AlignItems(ui.Center).Margin(t.Space(3), 0, 0, 0).Children(func() {
