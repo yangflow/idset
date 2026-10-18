@@ -52,6 +52,9 @@ func (s *Screen) View(c *ui.Context) {
 				s.act.NewIdentity()
 			}
 			ui.Spacer(c)
+			if !s.loading && s.readErr == nil && len(s.accounts) > 0 {
+				s.recheckButton(c)
+			}
 			if ghost(c, s.text.Quit, icons.Power).Clicked() {
 				s.act.Quit()
 			}
@@ -121,6 +124,9 @@ func (s *Screen) content(c *ui.Context) {
 		s.dropZone(c)
 		return
 	}
+	if s.noSSH() {
+		s.noSSHNotice(c)
+	}
 	s.dropZone(c)
 	ui.Row(c).PaddingX(t.Space(0.5)).Children(func() {
 		ui.Text(c, s.text.Identities).FontSize(t.Rem(0.9)).FontWeight(600).TextColor(t.TextMuted).Grow(1).
@@ -140,6 +146,7 @@ func (s *Screen) content(c *ui.Context) {
 	visible := s.visible()
 	if len(visible) == 0 {
 		ui.Text(c, s.text.NoneMatch).TextColor(t.TextMuted).AlignSelf(ui.Center)
+		s.summary(c)
 		return
 	}
 	ui.Column(c).Radius(10).Background(t.Surface).Border(1, t.Border).Clip().Children(func() {
@@ -150,6 +157,7 @@ func (s *Screen) content(c *ui.Context) {
 			s.row(c.Key(a.ID), a)
 		}
 	})
+	s.summary(c)
 }
 
 // readOnly takes the whole panel: while accounts.json cannot be read there is nothing else to do.
@@ -295,8 +303,14 @@ func orDefault(v, fallback string) string {
 func (s *Screen) row(c *ui.Context, a account.Account) {
 	t := c.Theme()
 	open := s.openRow == a.ID && a.SSHAlias != ""
+	problem, check, hasProblem := s.problem(a)
 	ui.Column(c).Children(func() {
-		row := ui.Row(c).Focusable().Gap(t.Space(2.5)).Padding(t.Space(2.25), t.Space(2), t.Space(2.25), t.Space(3)).AlignItems(ui.Center)
+		// A problem bar sits close under its row, without a hairline, as part of it.
+		bottom := t.Space(2.25)
+		if hasProblem {
+			bottom = t.Space(0.75)
+		}
+		row := ui.Row(c).Focusable().Gap(t.Space(2.5)).Padding(t.Space(2.25), t.Space(2), bottom, t.Space(3)).AlignItems(ui.Center)
 		if row.Hovered() {
 			row.Background(t.SurfaceHover)
 		}
@@ -310,6 +324,9 @@ func (s *Screen) row(c *ui.Context, a account.Account) {
 				ui.Text(c, orDefault(a.GitUserEmail, s.text.NoEmail)).FontSize(t.Rem(0.9)).TextColor(t.TextMuted).SingleLine()
 			})
 			s.folderTag(c, a)
+			if s.diag.known {
+				s.connDot(c, a)
+			}
 			if a.SSHAlias == "" {
 				// The space stays, so that the folders line up.
 				ui.Column(c).Size(t.Space(6), t.Space(6)).Shrink(0)
@@ -325,6 +342,9 @@ func (s *Screen) row(c *ui.Context, a account.Account) {
 				s.toggleRow(a.ID)
 			}
 		})
+		if hasProblem {
+			s.problemBar(c, a, problem, check)
+		}
 		if open {
 			s.openRowClone(c, a)
 		}

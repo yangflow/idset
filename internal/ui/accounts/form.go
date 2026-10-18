@@ -144,12 +144,10 @@ func (f *form) syncHex() {
 
 // defaultRewrites are the rules the platform's own addresses need to reach the alias, in the order they are added.
 func (f *form) defaultRewrites() []account.Rewrite {
-	host := f.cur.provider.CanonicalHost()
-	if f.custom() || host == "" || strings.TrimSpace(f.cur.alias) == "" {
+	if f.custom() {
 		return nil
 	}
-	to := "git@" + strings.TrimSpace(f.cur.alias) + ":"
-	return []account.Rewrite{{From: "https://" + host + "/", To: to}, {From: "git@" + host + ":", To: to}}
+	return account.DefaultRewrites(f.cur.provider, f.cur.alias)
 }
 
 // nextDefaultRewrite is the first default rule the form does not have yet.

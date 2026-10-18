@@ -87,7 +87,7 @@ func (a *app) applyLanguage() {
 		w.screen.SetText(w.text)
 		w.win.SetTitle(w.text.Window)
 	}
-	a.updateTooltip()
+	a.updateTray()
 }
 
 // actions are the window's requests. Each starts background work and reports back on the UI thread.

@@ -5,8 +5,8 @@
 <title>Panel</title>
 <style>
 /* Colors are the MyGo default theme roles and sizes the 4 DIP spacing unit at 13 px text; see design/tokens.md. */
-:root { color-scheme:light; --background:#ffffff; --surface:#f4f4f5; --text:#18181b; --muted:#71717a; --border:#d9d9de; --accent:#2563eb; --accent-soft:rgba(37,99,235,.25); --danger:#dc2626; --warning:#d97706; --ghost-hover:#e9e9ec; --pressed:#dddde1; --focus:rgba(37,99,235,.55) }
-:root[data-scheme=dark] { color-scheme:dark; --background:#18181b; --surface:#27272a; --text:#f4f4f5; --muted:#a1a1aa; --border:#3f3f46; --accent:#3b82f6; --accent-soft:rgba(59,130,246,.4); --danger:#ef4444; --warning:#f59e0b; --ghost-hover:#323236; --pressed:#3c3c41; --focus:rgba(96,165,250,.6) }
+:root { color-scheme:light; --background:#ffffff; --surface:#f4f4f5; --text:#18181b; --muted:#71717a; --border:#d9d9de; --accent:#2563eb; --accent-soft:rgba(37,99,235,.25); --danger:#dc2626; --warning:#d97706; --success:#16a34a; --ghost-hover:#e9e9ec; --pressed:#dddde1; --focus:rgba(37,99,235,.55) }
+:root[data-scheme=dark] { color-scheme:dark; --background:#18181b; --surface:#27272a; --text:#f4f4f5; --muted:#a1a1aa; --border:#3f3f46; --accent:#3b82f6; --accent-soft:rgba(59,130,246,.4); --danger:#ef4444; --warning:#f59e0b; --success:#22c55e; --ghost-hover:#323236; --pressed:#3c3c41; --focus:rgba(96,165,250,.6) }
 * { box-sizing:border-box }
 body { margin:0; font-family:system-ui,sans-serif; font-size:13px; color:var(--text); background:#888; display:flex; gap:24px; padding:24px; align-items:flex-start }
 .controls { width:220px; flex:none; display:flex; flex-direction:column; gap:14px; padding:14px; border-radius:10px; background:#f4f4f4; color:#242424; font-size:12px }
@@ -206,6 +206,62 @@ h1 { flex:1; margin:0; font-size:13px; font-weight:600 }
 .panel button.fixed.full { width:248px }
 .panel button.pad { height:28px; padding:0 16px; margin-top:4px }
 .center .big { font-size:15px }
+/* Diagnostics (docs/product.md, "诊断"). The connectivity dot: 6 across, in a 14 DIP slot between the folders and the disclosure
+   button, so rows stay lined up: Success when the check passed, Danger when it failed, a Muted ring until the first round ends.
+   A row without an alias keeps the slot empty. The dot says nothing alone: its tooltip and accessible name say what it means. */
+.item .conn { flex:none; width:14px; height:14px; display:grid; place-items:center }
+.item .conn::before { content:""; width:6px; height:6px; border-radius:50%; box-sizing:border-box }
+.item .conn.ok::before { background:var(--success) }
+.item .conn.fail::before { background:var(--danger) }
+.item .conn.pending::before { border:1.5px solid var(--muted) }
+/* Problem bar: under its row inside the list, no hairline between them, lined up with the name (32) like the clone helper.
+   A 28 DIP line: a 14 glyph, 6, the sentence (the why is its tooltip), "Check Again" 8 from the edge. Then the next step:
+   Accent text buttons, or a command with its copy button, both lined up with the sentence (20 in). */
+.list .problem { display:flex; flex-direction:column; padding:0 8px 6px 32px; margin-top:-6px }
+.problem .pline { display:flex; align-items:center; gap:6px; height:28px; font-size:12px }
+.problem .pline > svg { flex:none; width:14px; height:14px }
+.problem.danger .pline > svg { color:var(--danger) }
+.problem.quiet .pline > svg { color:var(--muted) }
+.problem .says { flex:1 1 auto; min-width:0; display:flex; white-space:pre }
+.problem .says > span { flex:none }
+.problem .says > .mid { flex:0 1 auto; font-size:11px }
+.problem .pact { display:flex; align-items:center; gap:12px; height:24px; padding-left:20px }
+.problem .pact button.text { padding:2px 0; font-size:12px }
+.problem .hint { padding:0 4px 4px 20px; font-size:12px; color:var(--muted); line-height:1.4 }
+.problem .cmd { display:flex; align-items:center; gap:4px; height:28px; padding-left:20px }
+.problem .cmd .mid { flex:1 1 0; font-size:11px; color:var(--muted) }
+/* ssh missing is about the machine, not an identity: one bar above the heading instead of the same bar under every row. */
+.result.notice { padding:0 8px 6px 12px }
+.result.notice .pline { font-size:13px; font-weight:600 }
+.result.notice .hint { padding-left:20px }
+/* Diagnostics summary: the last block of the content. Healthy: one muted line. Otherwise a group whose 32 DIP heading
+   (the worst glyph, the counts, a disclosure chevron) opens one entry per problem: glyph, what, how (both 12, how in
+   TextMuted and wrapping), the code at the end in monospace 11; an action is an Accent text button under how. */
+.okline { display:flex; align-items:center; gap:6px; padding:0 2px; font-size:12px; color:var(--muted) }
+.okline svg { width:14px; height:14px; color:var(--success) }
+.summary { border:1px solid var(--border); border-radius:10px; background:var(--surface); overflow:hidden }
+.summary .shead { display:flex; align-items:center; gap:6px; height:32px; padding:0 8px 0 12px; font-size:12px; font-weight:600 }
+.summary .shead > svg { flex:none; width:14px; height:14px }
+.summary .shead .count { flex:1 }
+.summary .shead .chev { transform:rotate(-90deg); color:var(--muted) }
+.summary.open .shead .chev { transform:none }
+.summary .entry { display:flex; align-items:flex-start; gap:6px; padding:8px 12px; border-top:1px solid var(--border); font-size:12px }
+.summary .entry > svg { flex:none; width:14px; height:14px; margin-top:1px }
+.summary .entry .lines { flex:1; min-width:0; display:flex; flex-direction:column; gap:2px; line-height:1.4 }
+.summary .entry .how { color:var(--muted) }
+.summary .entry .code { flex:none; font-family:ui-monospace,monospace; font-size:11px; color:var(--muted); margin-top:1px }
+.summary .entry button.text { padding:2px 0; font-size:12px }
+.summary .warning > svg, .problem.warning .pline > svg { color:var(--warning) }
+.summary .danger > svg { color:var(--danger) }
+/* The tray icon beside the panel in the diagnostics states: not part of the panel, drawn like the controls. */
+.trayfig { width:300px; flex:none; display:flex; flex-direction:column; gap:10px; padding:14px; border-radius:10px; background:#f4f4f4; color:#242424; font-size:12px }
+.trayfig h2 { margin:0; font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:.04em; color:#666 }
+.trayfig .trow { display:grid; grid-template-columns:repeat(3, 1fr); gap:6px }
+.trayfig .strip { display:grid; place-items:center; height:44px; border-radius:6px }
+.trayfig .strip svg { width:32px; height:32px }
+.trayfig .strip.now { outline:2px solid #006fdf; outline-offset:1px }
+.trayfig .names { display:grid; grid-template-columns:repeat(3, 1fr); gap:6px; text-align:center; color:#666 }
+.trayfig .hint { color:#666; line-height:1.5 }
 </style>
 <aside class="controls">
   <div><h2>State</h2><div class="group" id="states"></div></div>
@@ -213,7 +269,7 @@ h1 { flex:1; margin:0; font-size:13px; font-weight:600 }
   <div><h2>Footer icons</h2><div class="group" id="icons"></div></div>
   <div><h2>Height</h2><div class="group" id="heights"></div></div>
   <div><h2>Language</h2><div class="group" id="langs"></div></div>
-  <div class="hint">URL: <code>?state=…&amp;scheme=dark&amp;lang=zh&amp;icons=today&amp;height=full</code><br><kbd>←</kbd> <kbd>→</kbd> switch state.<br>Pin a tooltip: <code>&amp;tip=quit</code> (settings, add, about, recheck, quit, finding, cmd, copyclone, clone).</div>
+  <div class="hint">URL: <code>?state=…&amp;scheme=dark&amp;lang=zh&amp;icons=today&amp;height=full</code><br><kbd>←</kbd> <kbd>→</kbd> switch state.<br>Pin a tooltip: <code>&amp;tip=quit</code> (settings, add, about, recheck, quit, finding, cmd, copyclone, clone, conn, problem, refresh).</div>
 </aside>
 <div id="stage" style="display:flex;gap:24px;align-items:flex-start"></div>
 <script>
@@ -239,6 +295,23 @@ const TEXT = {
     httpsRow:'远程地址是 HTTPS', httpsTip:'HTTPS 推送用不上这个身份的别名和密钥。', copyCmd:'复制改地址命令', copyCmdTip:c => `复制改地址命令：${c}`,
     cloneLabel:'要克隆的仓库', cloneTip:'可以输入 owner/repo、仓库地址或整条 git clone 命令，回车复制。', cloneHint:'输入 owner/repo 或仓库地址', cloneCopy:'复制克隆命令', cloneToggle:'用这个身份克隆',
     pushesWith:'推送会用 ', keyTip:(p, w) => `core.sshCommand 指定了 ${p}，不是 ${w} 的密钥。`, owner:n => `（${n}）`,
+    connOk:(p, u) => `已连通 · ${p} 用户 ${u}`, connPending:'正在检查连接…', connFail:s => `检查失败 · ${s}`, retry:'再检查一次',
+    noSSH:'找不到 ssh', noSSHHint:'Idset 用系统的 OpenSSH 客户端检查连接。在「设置 → 系统 → 可选功能」里添加「OpenSSH 客户端」，或安装 Git for Windows。',
+    noKey:'私钥不存在 ', noKeyTip:p => `${p} 不存在。在账户窗口里选一把已有的密钥。`,
+    locked:'密钥已锁定', lockedTip:'这把密钥有口令，ssh-agent 里还没有它。', unlock:'用钥匙串解锁',
+    unlockFailed:'钥匙串里没有它的口令，在终端运行一次：', cmdTip:'在终端运行，输入口令，然后再检查一次', copyUnlock:'复制 ssh-add 命令',
+    timeout:h => `连接 ${h} 超时`, timeoutTip:'5 秒内没有连上。检查网络和代理，再检查一次。',
+    hostkey:h => `${h} 的主机密钥不符`, hostkeyTip:h => `服务器的主机密钥和 known_hosts 里记下的不一样。确认没有被冒充后，运行 ssh-keygen -R ${h} 删掉旧记录。`,
+    denied:p => `${p} 拒绝了这把密钥`, deniedTip:p => `把公钥加到 ${p} 账号的 SSH 设置里，然后再检查一次。`,
+    copyPub:'复制公钥', openSettings:p => `打开 ${p} 设置`, openSettingsTip:p => `打开 ${p} 的 SSH 密钥页面`,
+    noPub:'没有 .pub 文件', noPubTip:p => `${p}.pub 不存在或是空的，什么也没复制。`,
+    httpsBar:'远程地址是 HTTPS', httpsBarTip:(f, t) => `加上把 ${f} 改写成 ${t} 的规则，这个仓库不改远程地址也会走这个身份。`, addRewrite:'添加改写', addRewriteTip:p => `添加 ${p} 的默认改写`,
+    allOK:'配置正常', count:(e, w) => [e && `${e} 个错误`, w && `${w} 个警告`].filter(Boolean).join(' · '),
+    net001:a => `${a} 检查失败`, net001How:a => `在终端运行 ssh -vT git@${a} 查看原因。`, copyDebug:'复制排查命令',
+    ssh001:a => `~/.ssh/config 里也有 Host ${a}`, ssh001How:'Idset 的块在最前面，会先生效。建议删掉手写的那个。',
+    git001:n => `当前文件夹和 ${n} 不一致`, git001How:'重新生成托管配置。', regen:'重新生成',
+    git001Global:n => `在仓库里设置 user.email，或给 ${n} 加上限定目录。`,
+    git002:n => `有 ${n} 个全局身份`, git002How:n => `生效的是 ${n}，把其余的改成限定目录。`,
   },
   en: {
     quit:'Quit', settings:'Settings', about:'About Idset', recheck:'Re-check',
@@ -261,6 +334,23 @@ const TEXT = {
     httpsRow:'Remote is HTTPS', httpsTip:'Pushes over HTTPS do not use this identity’s SSH alias or key.', copyCmd:'Copy command to use SSH', copyCmdTip:c => `Copy command to use SSH: ${c}`,
     cloneLabel:'Repository to clone', cloneTip:'Accepts owner/repo, a repository URL or a whole git clone command. Enter copies.', cloneHint:'Enter owner/repo or a repository URL', cloneCopy:'Copy the clone command', cloneToggle:'Clone with this identity',
     pushesWith:'Pushes use ', keyTip:(p, w) => `core.sshCommand picks ${p}, not ${w}’s key.`, owner:n => ` (${n})`,
+    connOk:(p, u) => `Connected · ${p} user ${u}`, connPending:'Checking the connection…', connFail:s => `Check failed · ${s}`, retry:'Check Again',
+    noSSH:'ssh not found', noSSHHint:'Idset checks connections with the system’s OpenSSH client. Add “OpenSSH Client” in Settings → System → Optional features, or install Git for Windows.',
+    noKey:'Key not found ', noKeyTip:p => `${p} does not exist. Choose an existing key in the accounts window.`,
+    locked:'Key is locked', lockedTip:'The key has a passphrase and ssh-agent does not hold it yet.', unlock:'Unlock with Keychain',
+    unlockFailed:'The keychain has no passphrase for it. Run this once in a terminal:', cmdTip:'Run it in a terminal, enter the passphrase, then check again', copyUnlock:'Copy the ssh-add command',
+    timeout:h => `${h} timed out`, timeoutTip:'No connection within 5 seconds. Check the network and any proxy, then check again.',
+    hostkey:h => `${h}’s host key changed`, hostkeyTip:h => `The server’s host key differs from the one in known_hosts. Once you know it is not an impostor, run ssh-keygen -R ${h} to remove the old entry.`,
+    denied:p => `${p} rejected the key`, deniedTip:p => `Add the public key to the SSH settings of your ${p} account, then check again.`,
+    copyPub:'Copy Public Key', openSettings:p => `Open ${p} Settings`, openSettingsTip:p => `Open ${p}’s SSH keys page`,
+    noPub:'No .pub file', noPubTip:p => `${p}.pub is missing or empty; nothing was copied.`,
+    httpsBar:'Remote is HTTPS', httpsBarTip:(f, t) => `A rule that rewrites ${f} to ${t} makes this repository use this identity without changing the remote.`, addRewrite:'Add Rewrite', addRewriteTip:p => `Add the default ${p} rewrites`,
+    allOK:'Configuration OK', count:(e, w) => [e && `${e} error${e > 1 ? 's' : ''}`, w && `${w} warning${w > 1 ? 's' : ''}`].filter(Boolean).join(' · '),
+    net001:a => `${a} failed its check`, net001How:a => `Run ssh -vT git@${a} in a terminal to see why.`, copyDebug:'Copy the Command',
+    ssh001:a => `~/.ssh/config also has Host ${a}`, ssh001How:'Idset’s block comes first, so it wins. Consider removing the one you wrote.',
+    git001:n => `This folder disagrees with ${n}`, git001How:'Write the managed configuration again.', regen:'Regenerate',
+    git001Global:n => `Set user.email in the repository, or give ${n} folders.`,
+    git002:n => `${n} global identities`, git002How:n => `${n} is the one in effect; give the others folders.`,
   },
 };
 const STATES = {
@@ -269,12 +359,16 @@ const STATES = {
   stale:'旧路径失效（改名）', 'stale-moved':'旧路径失效（挪位置）', 'stale-fixed':'改成这次的路径之后', 'stale-kept':'保留旧路径之后',
   'check-noemail':'核对：没有邮箱', 'check-other':'核对：别的身份', 'check-unknown':'核对：陌生邮箱', 'check-key':'核对：别的密钥', 'check-many':'核对：多条，长值',
   https:'HTTPS 远程', 'https-copied':'HTTPS：已复制', 'https-check':'HTTPS + 核对', clone:'克隆助手：有结果', 'clone-long':'克隆助手：长结果', 'clone-bad':'克隆助手：解释不了', 'clone-copied':'克隆助手：已复制', 'row-open':'身份行展开',
+  'diag-checking':'诊断：第一轮检查中', 'diag-ok':'诊断：配置正常', 'diag-denied':'问题条：认证被拒', 'diag-denied-copied':'认证被拒：已复制公钥', 'diag-nopub':'认证被拒：没有 .pub',
+  'diag-locked':'问题条：已锁定（macOS）', 'diag-unlock-failed':'已锁定：钥匙串解锁失败', 'diag-locked-cmd':'已锁定（Windows、Linux）', 'diag-nokey':'问题条：私钥不存在',
+  'diag-timeout':'问题条：连接超时', 'diag-hostkey':'问题条：主机密钥不符', 'diag-https':'问题条：HTTPS 远程', 'diag-nossh':'找不到 ssh',
+  'diag-summary':'汇总：展开', 'diag-summary-closed':'汇总：收起', 'diag-globals':'汇总：多个全局身份',
   nomatch:'没有匹配', confirm:'改绑到全局身份', notrepo:'不是仓库', notfolder:'不是文件夹', giterror:'git 失败', empty:'没有身份', loading:'读取中', readonly:'读不出来',
 };
 const ids = [
-  { label:'work', alias:'github-work', email:'bob@example.com', c:'58,123,213', cl:'120,170,240', scope:['~/work/', '~/src/new/'] },
-  { label:'personal', alias:'github-personal', email:'bob@example.net', c:'46,158,91', cl:'95,200,135', scope:null },
-  { label:'client', alias:'gitlab-client', email:'bob@client.example', c:'224,122,31', cl:'240,165,95', scope:['~/work/client/'] },
+  { label:'work', alias:'github-work', email:'bob@example.com', c:'58,123,213', cl:'120,170,240', scope:['~/work/', '~/src/new/'], provider:'GitHub', host:'github.com', user:'bob-acme', key:'~/.ssh/id_ed25519_work' },
+  { label:'personal', alias:'github-personal', email:'bob@example.net', c:'46,158,91', cl:'95,200,135', scope:null, provider:'GitHub', host:'github.com', user:'bob', key:'~/.ssh/id_ed25519' },
+  { label:'client', alias:'gitlab-client', email:'bob@client.example', c:'224,122,31', cl:'240,165,95', scope:['~/work/client/'], provider:'GitLab', host:'gitlab.client.example', user:'bob.client', key:'~/.ssh/id_ed25519_client' },
   { label:'', alias:'', email:'nobody@example.com', c:'142,68,173', cl:'190,130,215', scope:['~/misc/'] },
 ];
 // A path in one line: its start ("~/", "/" or a drive) and its last folder stay, what lies between them gives way to an ellipsis; the title carries the full text.
@@ -334,12 +428,20 @@ function panel(state, T) {
   const tag = i => i.scope ? mid(i.scope[0], i.scope.length > 1 ? ` +${i.scope.length - 1}` : '') : T.global;
   // A row with an alias ends in a disclosure button (right when closed, down when open); one without keeps the space so the folders line up. Only one row is open.
   const disclose = (i, open) => i.alias ? `<button class="tool tip-end${open && view.tip === 'clone' ? ' pinned' : ''}" data-tip="${T.cloneToggle}" aria-label="${T.cloneToggle}" aria-expanded="${!!open}">${icon.chev}</button>` : '<span class="gap"></span>';
-  const rows = (set, open) => set.map(i => `<div class="item${open && open.id === i ? ' open' : ''}"><span class="dot" style="--c:${i.c};--cl:${i.cl}"></span><div class="text"><span class="label">${i.label || T.unnamed}</span><span class="email">${i.email || T.noEmail}</span></div><span class="tag">${tag(i)}</span>${disclose(i, open && open.id === i)}</div>`
-    + (open && open.id === i ? clone(i, open.value, open) : '')).join('');
+  // Diagnostics states pass d: the dot of each identity with an alias (ok unless d.conn says otherwise) and its problem bar. ?tip=conn pins the first dot's tooltip.
+  const conn = (i, d) => {
+    if (!d) return '';
+    if (!i.alias) return '<span class="conn"></span>';
+    const s = d.conn[i.label] || 'ok', tip = s === 'ok' ? T.connOk(i.provider, i.user) : s === 'pending' ? T.connPending : T.connFail(d.why || '');
+    const pin = view.tip === 'conn' && i === ids.find(x => x.alias) ? ' pinned' : '';
+    return `<span class="conn ${s} tip-end${pin}" data-tip="${tip}" role="img" aria-label="${tip}"></span>`;
+  };
+  const rows = (set, open, d) => set.map(i => `<div class="item${open && open.id === i ? ' open' : ''}"><span class="dot" style="--c:${i.c};--cl:${i.cl}"></span><div class="text"><span class="label">${i.label || T.unnamed}</span><span class="email">${i.email || T.noEmail}</span></div><span class="tag">${tag(i)}</span>${conn(i, d)}${disclose(i, open && open.id === i)}</div>`
+    + (open && open.id === i ? clone(i, open.value, open) : '') + (d && d.bars && d.bars[i.label] || '')).join('');
   // The filter shows from three identities on; the platform buttons only in the filter state.
-  const list = (set = withGlobal, chips = false, open = null) => `<div class="section"><span>${T.identities}</span><span>${set.length}</span></div>` +
+  const list = (set = withGlobal, chips = false, open = null, d = null) => `<div class="section"><span>${T.identities}</span><span>${set.length}</span></div>` +
     (set.length >= 3 ? `<input class="search" placeholder="${T.filter}">` : '') + (chips ? `<div class="chips"><button class="chip on">GitHub</button><button class="chip">GitLab</button><button class="chip">Gitea</button></div>` : '') +
-    `<div class="list">${rows(set, open)}</div>`;
+    `<div class="list">${rows(set, open, d)}</div>`;
   // The drop zone is always one line; what it says beyond that is in the tooltip.
   const drop = over => `<div class="drop${over ? ' over' : ''}"><span class="muted small" data-tip="${T.dropHint}">${T.dropLine}</span><button class="tip-end" data-tip="${T.choose}" aria-label="${T.choose}">${T.chooseShort}</button></div>`;
   const filter = `<input class="search" placeholder="${T.filter}"><div class="chips"><button class="chip on">GitHub</button><button class="chip">GitLab</button><button class="chip">Gitea</button></div>`;
@@ -407,6 +509,44 @@ function panel(state, T) {
   const undoBar = who => `<div class="bar timed" style="--left:60%"><span>${T.boundTo(name(who))} ·</span>${btn(T.undo)}</div>`;
   const clamp = (text, full, cls) => `<div class="${cls}" data-tip="${full}"><span>${text}</span></div>`;
   const jsonError = `invalid character '}' looking for beginning of object key string`;
+  // Problem bars: the sentence (the why is its tooltip; ?tip=problem pins the first), Check Again at the end, then the next step.
+  const pbar = (sev, glyph, says, tip, o = {}) => `<div class="problem ${sev}"><div class="pline">${icon[glyph]}<span class="says tip-start${view.tip === 'problem' ? ' pinned' : ''}" data-tip="${tip}">${says}</span>`
+    + `${o.ack || ''}${o.retry === false ? '' : ghost('refresh', T.retry, true)}</div>${o.more || ''}</div>`;
+  const acts = (...b) => `<div class="pact">${b.join('')}</div>`;
+  const unlockCmd = i => `<div class="cmd"><span class="mid tip-start" data-tip="${T.cmdTip}"><span class="ml">ssh-add </span><span class="mh">~/.ssh/</span><span class="mt">${i.key.split('/').pop()}</span></span>`
+    + `<button class="tool tip-end" data-tip="${T.copyUnlock}" aria-label="${T.copyUnlock}">${icon.terminal}</button></div>`;
+  const bar = {
+    denied: (i, o = {}) => pbar('danger', 'error', `<span>${T.denied(i.provider)}</span>`, T.deniedTip(i.provider),
+      { ack: o.copied ? ack(T.copied).replace('class="copied"', 'class="ack"') : o.nopub ? `<span class="ack" data-tip="${T.noPubTip(i.key)}">${T.noPub}</span>` : '',
+        more: acts(btn(T.copyPub), btn(T.openSettings(i.provider), T.openSettingsTip(i.provider))) }),
+    locked: (i, o = {}) => pbar('danger', 'error', `<span>${T.locked}</span>`, T.lockedTip,
+      { more: o.cmd ? unlockCmd(i) : o.failed ? `<div class="hint">${T.unlockFailed}</div>` + unlockCmd(i) : acts(btn(T.unlock)) }),
+    // Generate Key joins Check Again once the settings window has its Keys pane.
+    nokey: i => pbar('danger', 'error', `<span>${T.noKey}</span>${mid(i.key, '', '')}`, T.noKeyTip(i.key)),
+    timeout: i => pbar('danger', 'error', `<span>${T.timeout(i.host)}</span>`, T.timeoutTip),
+    hostkey: i => pbar('danger', 'error', `<span>${T.hostkey(i.host)}</span>`, T.hostkeyTip(i.host)),
+    https: i => pbar('quiet', 'globe', `<span>${T.httpsBar}</span>`, T.httpsBarTip(`https://${i.host}/`, `git@${i.alias}:`),
+      { retry: false, more: acts(btn(T.addRewrite, T.addRewriteTip(i.provider))) }),
+  };
+  const noSSH = `<div class="result danger notice problem"><div class="pline">${icon.error}<span class="says">${T.noSSH}</span>${ghost('refresh', T.retry, true)}</div><div class="hint">${T.noSSHHint}</div></div>`;
+  // Summary entries, errors first. GIT001 takes the worst severity of the identity check; the counts count entries.
+  const entry = (sev, code, what, how, action = '') => ({ sev, html: `<div class="entry ${sev}">${icon[sev === 'danger' ? 'error' : 'warn']}<div class="lines"><span>${what}</span><span class="how">${how}</span>${action}</div><span class="code">${code}</span></div>` });
+  const net = i => entry('danger', 'NET001', T.net001(i.alias), T.net001How(i.alias), btn(T.copyDebug));
+  const shadowed = i => entry('warning', 'SSH001', T.ssh001(i.alias), T.ssh001How);
+  const git001 = (i, sev) => i.scope ? entry(sev, 'GIT001', T.git001(name(i)), T.git001How, btn(T.regen)) : entry(sev, 'GIT001', T.git001(name(i)), T.git001Global(name(i)));
+  const git002 = (n, last) => entry('danger', 'GIT002', T.git002(n), T.git002How(name(last)));
+  const summary = (es, open = false) => {
+    if (!es.length) return `<div class="okline">${icon.check}${T.allOK}</div>`;
+    const e = es.filter(x => x.sev === 'danger').length, worst = e ? 'danger' : 'warning';
+    return `<div class="summary${open ? ' open' : ''}"><div class="shead ${worst}" role="button" aria-expanded="${open}">${icon[e ? 'error' : 'warn']}<span class="count">${T.count(e, es.length - e)}</span>${icon.chev}</div>${open ? es.map(x => x.html).join('') : ''}</div>`;
+  };
+  // Every state is built on each render, so the worst severity travels in the markup for the tray figure to read.
+  const worstMark = w => `<span hidden data-worst="${w}"></span>`;
+  const diag = (es, open) => worstMark(es.some(x => x.sev === 'danger') ? 'danger' : es.length ? 'warning' : '') + summary(es, open);
+  const failed = (who, b, why) => ({ conn:{ [who.label]:'fail' }, bars:{ [who.label]:b }, why });
+  // Two global identities (only from a hand edit): the last one wins, so it is the match of every folder.
+  const clientGlobal = { ...client, scope:null }, twoGlobals = swap(withGlobal, client, clientGlobal);
+  const issues = [net(work), shadowed(client), git001(work, 'warning')];
   return {
     loading: `<div class="center"><div class="spinner"></div><span class="muted">${T.loading}</span></div>`,
     readonly: `<div class="readonly"><div class="warn">${icon.warn}</div><div class="title">${T.readonly}</div><div class="path">~/.config/idset/accounts.json</div>
@@ -436,6 +576,22 @@ function panel(state, T) {
     'clone-bad': matched({ clone:{ value:'acme repo', focus:true } }) + drop() + list(),
     'clone-copied': matched({ clone:{ value:'org/repo', copied:true } }) + drop() + list(),
     'row-open': drop() + list(withGlobal, false, { id:work, value:'acme/', focus:true }),
+    'diag-checking': drop() + list(withGlobal, false, null, { conn:{ work:'pending', personal:'pending', client:'pending' } }),
+    'diag-ok': drop() + list(withGlobal, false, null, { conn:{} }) + diag([]),
+    'diag-denied': drop() + list(withGlobal, false, null, failed(work, bar.denied(work), T.denied(work.provider))) + diag([net(work)]),
+    'diag-denied-copied': drop() + list(withGlobal, false, null, failed(work, bar.denied(work, { copied:true }), T.denied(work.provider))) + diag([net(work)]),
+    'diag-nopub': drop() + list(withGlobal, false, null, failed(work, bar.denied(work, { nopub:true }), T.denied(work.provider))) + diag([net(work)]),
+    'diag-locked': drop() + list(withGlobal, false, null, failed(work, bar.locked(work), T.locked)) + diag([net(work)]),
+    'diag-unlock-failed': drop() + list(withGlobal, false, null, failed(work, bar.locked(work, { failed:true }), T.locked)) + diag([net(work)]),
+    'diag-locked-cmd': drop() + list(withGlobal, false, null, failed(work, bar.locked(work, { cmd:true }), T.locked)) + diag([net(work)]),
+    'diag-nokey': drop() + list(withGlobal, false, null, failed(work, bar.nokey(work), T.noKey.trim())) + diag([net(work)]),
+    'diag-timeout': drop() + list(withGlobal, false, null, failed(client, bar.timeout(client), T.timeout(client.host))) + diag([net(client)]),
+    'diag-hostkey': drop() + list(withGlobal, false, null, failed(client, bar.hostkey(client), T.hostkey(client.host))) + diag([net(client)]),
+    'diag-https': matched({ https:true, clone:{ value:'org/repo' } }) + drop() + list(withGlobal, false, null, { conn:{}, bars:{ work:bar.https(work) } }) + diag([]),
+    'diag-nossh': noSSH + drop() + list(withGlobal, false, null, { conn:{ work:'fail', personal:'fail', client:'fail' }, why:T.noSSH }) + worstMark('danger'),
+    'diag-summary': matched({ finds:[check.noemail] }) + drop() + list(withGlobal, false, null, failed(work, bar.denied(work), T.denied(work.provider))) + diag(issues, true),
+    'diag-summary-closed': matched({ finds:[check.noemail] }) + drop() + list(withGlobal, false, null, failed(work, bar.denied(work), T.denied(work.provider))) + diag(issues),
+    'diag-globals': matched({ id:clientGlobal, finds:[check.noemail] }) + drop() + list(twoGlobals, false, null, { conn:{} }) + diag([git002(2, clientGlobal), git001(clientGlobal, 'warning')], true),
     overlap: overlap() + matched({ id:client, path:'~/work/client/app' }) + drop() + list(),
     covered: matched({ covered:true }) + drop() + list(),
     undo: matched({ id:workBound, path:'~/scratch/notes', exact:true, foot:undoBar(work) }) + drop() + list(swap(noGlobal, work, workBound)),
@@ -469,11 +625,37 @@ function chrome(T) {
       + (all ? tool('about', 'info', T.about) : '') + (all && !bare ? tool('recheck', 'refresh', T.recheck) : '') + tool('quit', 'power', T.quit, 'tip-end') + `</footer>` };
 }
 
+// The tray icon in its three versions: the card alone, and with a warning triangle or an error circle at its lower right,
+// 1.5 apart from the card. macOS: a template, one ink the system tints; the badge's mark and the gap are transparent in the PNG
+// (the strip color here). Windows and Linux: the gray card and a badge in Warning or Danger with a white mark.
+function trayIcon(sev, ink, bg, badge) {
+  const card = `<rect x="4" y="8" width="24" height="17" rx="2.5" fill="none" stroke="${ink}" stroke-width="2"/><g fill="${ink}"><circle cx="11.5" cy="13.8" r="2.6"/><path d="M7 22.5c0-2.6 2-4.3 4.5-4.3s4.5 1.7 4.5 4.3z"/><rect x="18" y="12.5" width="7" height="2"/><rect x="18" y="17.5" width="5" height="2"/></g>`;
+  if (!sev) return `<svg viewBox="0 0 32 32">${card}</svg>`;
+  const shape = sev === 'danger' ? f => `<circle cx="24.5" cy="24.5" r="6.5" ${f}/>` : f => `<path d="M24.5 17.2l7 12.8h-14z" stroke-linejoin="round" ${f}/>`;
+  const top = sev === 'danger' ? 21.2 : 21.8, dot = sev === 'danger' ? 27.9 : 28.2;
+  const mark = badge === ink ? bg : '#fff';
+  return `<svg viewBox="0 0 32 32">${card}${shape(`fill="${bg}" stroke="${bg}" stroke-width="3"`)}${shape(`fill="${badge}"`)}`
+    + `<path d="M24.5 ${top}v3.6M24.5 ${dot}v.1" stroke="${mark}" stroke-width="1.8" stroke-linecap="round"/></svg>`;
+}
+
+function trayFigure(worst, waiting) {
+  const strips = [
+    ['macOS', '#ececec', '#000', null], ['', '#2b2b2b', '#fff', null],
+    ['Windows / Linux', '#f3f3f3', '#8a8a8a', { warning:'#d97706', danger:'#dc2626' }], ['', '#202020', '#8a8a8a', { warning:'#d97706', danger:'#dc2626' }],
+  ];
+  const sevs = ['', 'warning', 'danger'];
+  const row = ([label, bg, ink, colors]) => (label ? `<div class="hint">${label}</div>` : '') + `<div class="trow">${sevs.map(s => `<div class="strip${s === worst ? ' now' : ''}" style="background:${bg}">${trayIcon(s, ink, bg, s ? (colors ? colors[s] : ink) : '')}</div>`).join('')}</div>`;
+  return `<div class="trayfig"><h2>Tray icon</h2>${strips.map(row).join('')}<div class="names"><span>正常 Normal</span><span>警告 Warning</span><span>错误 Error</span></div>`
+    + `<div class="hint">${waiting ? 'The first round is still running: the icon keeps what it showed and changes once, when every check is done.' : 'The outlined one is this state’s: the worst entry of the summary. An HTTPS remote is not in the summary and leaves it normal.'}</div></div>`;
+}
+
 function render() {
   const T = TEXT[view.lang];
   document.documentElement.dataset.scheme = view.scheme;
   const c = chrome(T);
-  document.getElementById('stage').innerHTML = `<div class="panel${view.height === 'full' ? ' full' : ''}">${c.head}<div class="content">${panel(view.state, T)}</div>${c.foot}</div>`;
+  const content = panel(view.state, T);
+  document.getElementById('stage').innerHTML = `<div class="panel${view.height === 'full' ? ' full' : ''}">${c.head}<div class="content">${content}</div>${c.foot}</div>`
+    + (view.state.startsWith('diag-') ? trayFigure((content.match(/data-worst="(\w*)"/) || [])[1] || '', view.state === 'diag-checking') : '');
   buttons('states', STATES, 'state');
   buttons('schemes', { light:'浅色', dark:'深色' }, 'scheme');
   buttons('icons', { all:'All planned', today:'Built today' }, 'icons');

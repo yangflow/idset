@@ -53,6 +53,18 @@ All notable user-facing changes are recorded here, following [Keep a Changelog](
   on this list.
 - Configuration shows whether `~/.ssh/config` and `~/.gitconfig` hold the Include block and removes both while
   keeping `accounts.json`.
+- Each identity with an SSH alias is checked with `ssh -T` in the background when the panel opens; a passing check
+  stands until the identity changes, a failed one is tried again after ten minutes, and "Re-check" in the footer
+  checks them all at once. A dot at the end of each row shows the result; its tooltip says as whom it connected or
+  why it failed.
+- A failed check shows a bar under the identity with the reason and the next step: a missing key file; a key with a
+  passphrase, which "Unlock with Keychain" loads into the agent on macOS (elsewhere, a copyable `ssh-add` command);
+  a key the server rejects, with "Copy Public Key" and a link to the platform's SSH key settings; or a host that
+  cannot be reached. When the matched repository's origin is HTTPS, "Add Rewrite" adds the identity's default URL
+  rewrites. When `ssh` is not installed, one notice says how to get it.
+- A summary under the list counts the errors and warnings (an identity that failed its check, an alias your own
+  `~/.ssh/config` also defines, a dropped folder that disagrees with its identity, several global identities) and says how to look into each; it copies the
+  `ssh -vT` command or regenerates the configuration. The tray icon gets a warning or error badge for the worst one.
 
 ### Changed
 

@@ -11,8 +11,7 @@ stay the authority on API details. Links point to MyGo v0.3.6, the version pinne
 check the pages again and update the links and this document together.
 
 The panel (`internal/ui/panel/`) is the reference the values below call "the panel". The settings and about
-windows and the problem bars of diagnostics are described in product.md and are plans until their mockup and code are
-merged.
+windows are described in product.md and are plans until their mockup and code are merged.
 
 Related files: [design/README.md](../design/README.md) (mockups and how a UI change is made) and
 [design/tokens.md](../design/tokens.md) (spacing, size and color values in one table).
@@ -112,7 +111,7 @@ and carries the user's accent color and contrast settings. See
   | `Selection` | the drop zone's fill while files are dragged over it |
   | `Warning` | the outline of the "no match", "not a Git repository" and "not a folder" cards; the warning glyph of an identity-check finding, and the matched card's outline when its worst finding is a warning |
   | `Danger` | outline and text of the card when `git` cannot run; the warning symbol of the read-only state, on a 14% `Danger` fill; the error glyph of an identity-check finding, and the matched card's outline when a finding is an error |
-  | `Success` | not used yet; planned for a passing connectivity check, always with text |
+  | `Success` | the connectivity dot of a passing check and the check mark of the "Configuration OK" line, always with text (the dot's tooltip and accessible name) |
   | `Focus` | the keyboard focus ring |
   | `Inverse`, `InverseText` | tooltips and toasts (left zero, they are `Text` and `Background`) |
   | `Scrollbar` | scroll bar thumbs |
@@ -183,8 +182,11 @@ and carries the user's accent color and contrast settings. See
   `Rem(1.7)` (about 22) in `Danger`.
 - **The tray icon** is drawn in code by `internal/trayicon/`, so no image file is maintained by hand: a 32×32 PNG of
   an identity card. On macOS it is a template icon, black on transparent, that the system tints for the menu bar;
-  elsewhere it is a mid gray that stays visible on light and dark taskbars. Planned: three versions for the worst
-  diagnostic severity (normal, warning, error), each for light and dark, changed once per completed round of checks.
+  elsewhere it is a mid gray that stays visible on light and dark taskbars. The worst entry of the diagnostics summary
+  adds a badge at the lower right: a triangle for a warning, a circle for an error (and when ssh is missing), with a
+  "!" in it, cut free of the card by a 1.5 px gap. Outside macOS the badge is `#d97706` or `#dc2626` with a white
+  mark; in the template it is the ink with the mark cut out, since the system tints a template icon as a whole. The
+  icon changes once a round of checks has finished, never while one runs, and does not flash.
 - **The product icon** is still to be designed (see [design/README.md](../design/README.md)).
 
 ## Component guide
@@ -214,6 +216,10 @@ What Idset uses today:
 | Overlap rows | In the overlap card: a row per identity in git's read order (dot, name, path in monospace `Rem(0.9)`), then the verdict: "Used" in `Accent` 600 with a check mark for the winner, "Overridden" in `TextMuted` for the others, whose names also lose their weight; and at the very end an icon button: a pin on the winner ("Use only <name> here"), a minus on each loser ("Remove <path> from <name>"). Title row: "<n> identities cover this folder" and an info icon button whose tooltip is "Git reads them in this order; the last one wins." |
 | Stale-path prompt | A card of its own above the no-match card: a 40 DIP header (color dot, "<name>'s folder is gone" / 「<name> 的路径已不在」, the name in 600, one line), two 28 DIP path rows under hairlines with no labels (the old path in `TextMuted`, then the new path after an arrow, monospace, one line, middle-truncated, full text in the tooltip), and a 36 DIP row with two text buttons at the right, "Update" in `Accent` and "Ignore" in `TextMuted`; their tooltips are "Change to This Path" and "Keep Old Path". The height is the same for any path. Plain `Border` outline, no clear button. |
 | Finding rows | In a matched card, under the details, in a section of their own: a hairline above, `Space(1)` (4) above and below the rows. One 28 DIP row per identity-check finding, email first, then key, like a path row: padding `Space(3)` (12), a `Rem(1.1)` (about 14) glyph, the warning triangle in `Warning` or the error circle in `Danger`, gap `Space(1.5)` (6), and one line of `Rem(0.9)` (about 12) `Text`: "Commits have no author", "Commits use <email> (<name>)", "Commits use <email>", "Pushes use <path>" (「提交没有作者」「提交会署名为 <邮箱>（<身份>）」「提交会署名为 <邮箱>」「推送会用 <路径>」). A long email gives way before its "@", so the domain and the identity name stay; a key path is middle-truncated in monospace like any path. The row's tooltip says why, with the full value: above the row, 6 DIPs away, its start under the row's start, at most 240 DIPs wide. No buttons: fixes belong to the diagnostics. The card's outline is `Danger` when any finding is an error, else `Warning`. |
+| Connectivity dot | At the end of an identity row, after the folders: a 14 DIP slot holding a 6 DIP dot, `Success` when the last `ssh -T` passed, `Danger` when it failed, a 1.5 DIP `TextMuted` ring while the first check runs. Its tooltip and accessible name say it in words: "Connected · <platform> user <user>", "Check failed · <why>", "Checking the connection…". A row without an alias keeps the empty slot so the folders line up; before the first report there are no dots. |
+| Problem bar | Under the row of an identity whose check failed, inside the same list, indented to the name (`Space(8)`, 32), 28 DIP line: the error circle in `Danger` (the globe in `TextMuted` for an HTTPS remote), one `Rem(0.9)` sentence (a missing key names its path in monospace, middle-truncated), the reason as its tooltip, and "Check Again" (the refresh icon button, disabled while the check runs). Below it, indented 20 more, at most one line of next step: "Unlock with Keychain" on macOS (an `Accent` text button); elsewhere, or after the unlock failed, the `ssh-add <path>` command with a copy button; "Copy Public Key" and "Open <platform> Settings" for a rejected key; "Add Rewrite" for an HTTPS remote. No hairline between the row and its bar. |
+| ssh notice | When the checks find no `ssh`, one card above the drop zone replaces every bar and the summary: `Danger` outline, the error circle, "ssh not found" (600), "Check Again" over all identities, and one muted line on how to install it for the platform. |
+| Diagnostics summary | After the identity list, once a round of checks has finished. Nothing wrong: one muted line with a `Success` check mark, "Configuration OK". Otherwise a `Surface` card with radius 10: a 32 DIP header, a button with `aria-expanded` (the worst glyph, "1 error · 2 warnings" in 600, a chevron), and when open one entry per problem under hairlines: the glyph, what is wrong, how to look into it in `TextMuted`, an optional `Accent` text button ("Copy the Command" for NET001, "Regenerate" for GIT001), and the code (NET001, SSH001, GIT001, GIT002) in monospace `Rem(0.85)` at the end. It opens by itself whenever its set of entries changes, and stays as the user left it otherwise. |
 | Undo bar | The last row of the result card, 36 DIPs high, hairline above: "Bound to <identity> ·" and an `Accent` "Undo" text button. A 2 DIP line on the bar's bottom edge, `Accent` at 45%, is as wide as the time left of the card's width, in fifths. |
 | Identity list | A group heading, then one `Surface` container with `Border` dividers between rows. |
 | Source list row | A color dot, name and email on two lines, an optional folder symbol; `SurfacePressed` fill when selected. |
@@ -309,8 +315,9 @@ and Quit (`power`). The footer after the content:
 - With identities, all of them. Without identities, loading or read-only: no Add (the empty state has its own button;
   the other two cannot write) and no Re-check (nothing to check); About and Quit stay, so the footer still has a way
   out when the read-only error takes the whole panel.
-- Only buttons that work are shown: About and Re-check join when they are built (the mockup's "Built today"
-  switch shows the footer without them). Settings is always in the title bar.
+- Only buttons that work are shown: About joins when it is built (the mockup's "Built today" switch shows the footer
+  without it). Re-check checks every identity again and waits while a check runs. Settings is always in the title
+  bar.
 
 The content, in order:
 
@@ -321,8 +328,9 @@ The content, in order:
    text is its tooltip), one short line "Read-only until fixed" (the sentence "Idset will not write to it until it is
    fixed or restored from a backup." is its tooltip), and three buttons: "Restore from Backup" (primary, 28×248, opens the Backups pane of the settings window), then
    "Show in Finder" (Explorer on Windows, the file manager on Linux) and "Read Again", 28×120 each on one row. There is no reason box.
-3. Otherwise: the result card (when there is a result), the one-line drop zone, the group heading "Identities" with the
-   count, the filter (from three identities on) and the identity list. Without identities there is one centered block
+3. Otherwise: the result card (when there is a result), the ssh notice (when `ssh` is missing), the one-line drop
+   zone, the group heading "Identities" with the count, the filter (from three identities on), the identity list with
+   its connectivity dots and problem bars, and the diagnostics summary. Without identities there is one centered block
    instead: "No identities yet" (`Rem(1.15)`, 600), one short line ("Give each folder its own Git and SSH identity.")
    and the filled "Add Identity" button (28 high); the drop zone sits under it, at the bottom of the content.
 
@@ -430,8 +438,8 @@ fixed footer, so that it stays reachable however long the list is: the content b
 the scroll view. In the empty state the centered "Add Identity" button
 replaces it. Both open the accounts window on a new draft.
 
-Planned (product.md): the About and Re-check buttons (drawn in the mockup, shown once they work); "Import" when there are no
-identities; a connectivity dot and problem bars on identity rows. The expand arrow and the HTTPS row and clone
+Planned (product.md): the About button (drawn in the mockup, shown once it works); "Import" when there are no
+identities; "Generate Key" on a missing key's bar, once the settings window has its Keys pane. The expand arrow and the HTTPS row and clone
 helper are drawn in the mockup and shown once built (issue 26). Bind, unbind, rebind, "Use only" and undo on result
 cards are built as the mockup shows.
 

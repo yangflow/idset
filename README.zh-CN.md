@@ -26,10 +26,10 @@ Idset 把身份放在一个列表里，替你生成配置。它不改写你自�
 - **生成配置。** SSH Host 别名、`includeIf` 规则和 `insteadOf` 地址改写都从列表生成，每次修改后重新生成，新增身份前先备份。你自己的 `~/.ssh/config` 和 `~/.gitconfig` 里只多一个带标记的 `Include` 块，别的都不动。
 - **克隆和改地址用 SSH 别名。** 仓库的远程地址是 HTTPS 时，卡片复制把它改成这个身份 SSH 别名的命令。克隆助手把 `owner/repo`、仓库地址或 `git clone` 命令变成这个身份的克隆命令。
 - **设置、备份和恢复。** 设置窗口可以选界面语言、设置开机启动，列出备份供恢复或删除（`accounts.json` 读不出来时也能用），并移除 `Include` 块，同时保留你的账户。
+- **诊断。** 在后台用 `ssh -T` 检查每个身份，结果是身份行上的一个圆点。密钥被拒、被锁或缺失，主机连不上，或者没装 `ssh` 时，告诉你下一步怎么做；列表下方的汇总和托盘图标上的角标显示最严重的问题。
 
 计划中：
 
-- **诊断**（[#30](https://github.com/yangflow/idset/issues/30)）。用 `ssh -T` 检查每个身份。密钥被拒、被锁或缺失，或者仓库会用一个身份提交、用另一个身份推送时，告诉你下一步怎么做。
 - **密钥**（[#32](https://github.com/yangflow/idset/issues/32)）和**导入**（[#33](https://github.com/yangflow/idset/issues/33)）。生成密钥、加载到 ssh-agent，从已有的 `~/.ssh/config` 和 `~/.gitconfig` 导入身份。
 
 目标平台：macOS 12+、Windows 10/11、带 GTK 3 的 Linux，amd64 和 arm64。Linux 的托盘图标需要 AppIndicator。

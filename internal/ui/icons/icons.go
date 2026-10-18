@@ -23,6 +23,7 @@ var (
 	Info         = svg(`<circle cx="8" cy="8" r="6.25" stroke-width="1.5"/><path d="M8 7.3v3.7" stroke-width="1.5"/><path d="M8 4.9v.1" stroke-width="1.8"/>`)
 	Power        = svg(`<path d="M4.4 4.1a5.5 5.5 0 1 0 7.2 0" stroke-width="1.5"/><path d="M8 1.8v5.6" stroke-width="1.5"/>`)
 	Globe        = svg(`<circle cx="8" cy="8" r="6.25" stroke-width="1.4"/><path d="M1.75 8h12.5" stroke-width="1.4"/><path d="M8 1.75c2.2 2 2.2 10.5 0 12.5M8 1.75c-2.2 2-2.2 10.5 0 12.5" stroke-width="1.4"/>`)
+	Refresh      = svg(`<path d="M13.25 8a5.25 5.25 0 1 1-1.54-3.71" stroke-width="1.5"/><path d="M12.9 1.9v2.8H10.1" stroke-width="1.5"/>`)
 	Terminal     = svg(`<path d="M3 4.5l4 3.5-4 3.5" stroke-width="1.5"/><path d="M8.5 12h4.5" stroke-width="1.5"/>`)
 	ChevronRight = svg(`<path d="M6 4l4 4-4 4" stroke-width="1.6"/>`)
 	ChevronDown  = svg(`<path d="M4 6l4 4 4-4" stroke-width="1.6"/>`)

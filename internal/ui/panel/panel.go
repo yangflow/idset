@@ -31,7 +31,7 @@ type Copy struct {
 	Unbind, OverlapTitle, OverlapHint, Used, Overridden, OnlyUse, RemoveFrom, Has, ConfirmShort, Covered, CoveredBy,
 	BoundTo, Undo, Undone, BindFailed, BindRegenFailed, StaleHead, Then, StaleUpdate, StaleIgnore, StaleFix, StaleKeep,
 	Updated, FindNoEmail, FindNoEmailTip, FindCommits, FindOwner, FindOtherTip, FindUnknownTip, FindPushes, FindKeyTip, HTTPSRow, HTTPSTip, CopyCmd, CopyCmdTip, CloneLabel, CloneTip, CloneHint, CloneCopy,
-	CloneToggle string
+	CloneToggle, ConnOK, ConnOKPlain, ConnPending, ConnFail, Retry, Recheck, NoSSH, NoSSHWindows, NoSSHMac, NoSSHLinux, NoKey, NoKeyTip, Locked, LockedTip, Unlock, UnlockFailed, UnlockCmdTip, CopyUnlock, TimedOut, TimedOutTip, NoHost, NoHostTip, Refused, RefusedTip, HostKey, HostKeyTip, Denied, DeniedTip, CopyPub, OpenKeys, OpenKeysTip, NoPub, NoPubTip, HTTPSBarTip, AddRewrite, AddRewriteTip, AllOK, OneError, Errors, OneWarning, Warnings, Net001, Net001How, CopyDebug, Ssh001, Ssh001How, Git001, Git001How, Git001Global, Regenerate, Git002, Git002How string
 }
 
 var translations = func() map[string]Copy {
@@ -68,6 +68,16 @@ type Actions struct {
 	// CloneCopied reports a clone command copied for an identity, with the owner prefix of the repository ("acme/",
 	// or "" when there is none): the owner remembers the prefix and records a use of the identity.
 	CloneCopied func(id, prefix string)
+	// CheckAgain checks identities again now, all of them when ids is empty; the owner reports through
+	// SetDiagnostics. Unlock loads the key of an identity into the agent with the keychain and reports through
+	// UnlockDone; CopyPublicKey copies the .pub file of its key and reports through PublicKeyDone.
+	CheckAgain    func(ids []string)
+	Unlock        func(id string)
+	CopyPublicKey func(id string)
+	// AddRewrites adds the default rewrites of an identity's platform that it does not have yet; Regenerate writes
+	// the managed files again. Both look at the folder again when they are done.
+	AddRewrites func(id string)
+	Regenerate  func()
 	Hide        func()
 	Quit        func()
 }
@@ -105,6 +115,7 @@ type Screen struct {
 	copiedUntil          time.Time
 	now                  func() time.Time
 	goos                 string
+	diag                 diagState
 
 	binding
 }
