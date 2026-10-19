@@ -4,6 +4,8 @@ All notable user-facing changes are recorded here, following [Keep a Changelog](
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-10-19
+
 ### Changed
 
 - The accent is now commit mint instead of orange, in tune with the app icon, and meets WCAG AA in light and dark.
