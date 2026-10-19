@@ -4,6 +4,10 @@ All notable user-facing changes are recorded here, following [Keep a Changelog](
 
 ## [Unreleased]
 
+### Fixed
+
+- The accounts window opens in the language chosen in Settings, not always in the system's.
+
 ## [0.1.0] - 2026-10-19
 
 ### Added
