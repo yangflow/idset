@@ -52,7 +52,7 @@ Mockups show the 4 DIP unit and 13 px text.
 | radius-hero | 14 | 14 | the empty state's key tile, 56 x 56 |
 | radius-search | capsule | 14 | the panel's filter field: 28 high, `Surface` fill, no outline, a 13 magnifier 10 from its left edge and the text 29 in; focus is the focus ring |
 | radius-dialog | system | 16 | dialog windows, whose corners the system draws; their buttons share the width, 28 high capsules |
-| radius-badge | 8 / 9 / 11 | 8 / 9 / 11 | list badge, result badge, warning badge |
+| radius-badge | 8 / 9 / 11 | 8 / 9 / 11 | list badge, result and accounts header badge, warning badge |
 | radius-filter | 12 | 12 | platform filter buttons |
 | outline-drop | 1, dashed | 1 | drop zone outline, `Accent` at 50% over a 6% tint; while dragging over, 1.5 solid `Accent` over accent-soft; the drop zone is 48 high: a 20 folder glyph, the line (`secondary`, `Text`) and a 24 high primary Choose button; it shows only while there is no result |
 | title | `t.Rem(1.15)`, 600 | about 15 / 16 | panel title "Idset", a level 1 heading; the identity name in the editor; pane, read-only and empty titles |
