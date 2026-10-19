@@ -63,8 +63,8 @@ func TestDotsWhileTheFirstRoundRuns(t *testing.T) {
 	if s.Worst() != 0 {
 		t.Errorf("worst %v", s.Worst())
 	}
-	// Re-check waits while a check runs.
-	if r, _ := tt.Find("Re-check"); r.W == 0 {
+	// Check Again waits while a check runs.
+	if r, _ := tt.Find("Check Again"); r.W == 0 {
 		t.Error("re-check is in the footer")
 	}
 }
@@ -80,7 +80,7 @@ func TestAHealthyRoundSaysSoOnce(t *testing.T) {
 	if s.Worst() != 0 {
 		t.Errorf("worst %v", s.Worst())
 	}
-	click(t, tt, "Re-check")
+	click(t, tt, "Check Again")
 	if len(rec.checked) != 1 || rec.checked[0] != nil {
 		t.Errorf("re-check checks all: %q", rec.checked)
 	}
@@ -161,9 +161,9 @@ func TestLockedKeyUnlocksWithTheKeychainOnMacOS(t *testing.T) {
 	// Without a passphrase in the keychain the bar gives the command to run instead.
 	s.UnlockDone("work", errFake)
 	tt.Frame()
-	want(t, tt, "The keychain has no passphrase for it. Run this once in a terminal:")
+	want(t, tt, "No passphrase in the keychain. Run once in a terminal:")
 	wantNot(t, tt, "Unlock with Keychain")
-	click(t, tt, "Copy the ssh-add command")
+	click(t, tt, "Copy ssh-add Command")
 	if !slices.Equal(rec.copied, []string{"ssh-add ~/.ssh/id_work"}) {
 		t.Errorf("copied %q", rec.copied)
 	}
@@ -176,8 +176,8 @@ func TestLockedKeyGivesTheCommandElsewhere(t *testing.T) {
 		s, tt, rec := diagScreen(t, c, passed("own", ""))
 		s.goos = goos
 		tt.Frame()
-		wantNot(t, tt, "Unlock with Keychain", "The keychain has no passphrase for it. Run this once in a terminal:")
-		click(t, tt, "Copy the ssh-add command")
+		wantNot(t, tt, "Unlock with Keychain", "No passphrase in the keychain. Run once in a terminal:")
+		click(t, tt, "Copy ssh-add Command")
 		if len(rec.copied) != 1 {
 			t.Errorf("%s: copied %q", goos, rec.copied)
 		}
@@ -186,7 +186,7 @@ func TestLockedKeyGivesTheCommandElsewhere(t *testing.T) {
 
 func TestMissingSSHIsSaidOnce(t *testing.T) {
 	for goos, hint := range map[string]string{
-		"windows": "Idset checks connections with the system’s OpenSSH client. Add “OpenSSH Client” in Settings → System → Optional features, or install Git for Windows.",
+		"windows": "Add “OpenSSH Client” in Settings › System › Optional features, or install Git for Windows.",
 		"darwin":  "Idset checks connections with the system’s OpenSSH client, /usr/bin/ssh. Check that it has not been removed or replaced.",
 		"linux":   "Idset checks connections with the system’s OpenSSH client. Install it with your package manager, usually the openssh-client package.",
 	} {
@@ -211,8 +211,8 @@ func TestMissingSSHIsSaidOnce(t *testing.T) {
 
 func TestSummaryOpensOnNewEntriesAndFolds(t *testing.T) {
 	s, tt, rec := diagScreen(t, failed("work", diagnose.Rejected), passed("own", ""))
-	want(t, tt, "1 error", "github-work failed its check", "Run ssh -vT git@github-work in a terminal to see why.", "NET001")
-	click(t, tt, "Copy the Command")
+	want(t, tt, "1 error", "github-work failed its check", "Details: ssh -vT git@github-work", "NET001")
+	click(t, tt, "Copy Command")
 	if !slices.Equal(rec.copied, []string{"ssh -vT git@github-work"}) {
 		t.Errorf("copied %q", rec.copied)
 	}
@@ -232,7 +232,7 @@ func TestShadowedAliasIsAWarning(t *testing.T) {
 	s, tt, _ := screen(t, diagList()...)
 	s.SetDiagnostics(Diagnostics{Checks: []diagnose.Check{passed("work", "bob"), passed("own", "")}, UserHosts: []string{"github-work"}})
 	tall(tt)
-	want(t, tt, "1 warning", "Idset’s block comes first, so it wins. Consider removing the one you wrote.")
+	want(t, tt, "1 warning", "Idset’s block comes first and wins; the other is unused.")
 	if s.Worst() != match.Warning {
 		t.Errorf("worst %v", s.Worst())
 	}
@@ -254,7 +254,7 @@ func TestTwoGlobalsNameTheOneInEffect(t *testing.T) {
 	s, tt, _ := screen(t, personal(), identity("zed", "", "z@example.com", account.GitHub, 0))
 	s.SetDiagnostics(Diagnostics{Checks: []diagnose.Check{passed("personal", "p")}})
 	tall(tt)
-	want(t, tt, "2 global identities", "zed is the one in effect; give the others folders.", "GIT002")
+	want(t, tt, "2 global identities", "zed is in effect; limit the others to folders.", "GIT002")
 }
 
 func TestHTTPSRemoteBarAddsTheRewrites(t *testing.T) {
@@ -265,7 +265,16 @@ func TestHTTPSRemoteBarAddsTheRewrites(t *testing.T) {
 	if !slices.Equal(rec.rewrites, []string{"work"}) {
 		t.Errorf("rewrites %q", rec.rewrites)
 	}
-	wantNot(t, tt, "Check Again")
+	// Only the footer has Check Again: the bar has the rewrite button instead.
+	n := 0
+	for _, text := range tt.Texts() {
+		if text == "Check Again" {
+			n++
+		}
+	}
+	if n != 1 {
+		t.Errorf("%d Check Again buttons", n)
+	}
 	// With the rule in place the bar goes.
 	list := diagList()
 	list[0].URLRewrites = account.DefaultRewrites(account.GitHub, "github-work")
@@ -280,5 +289,5 @@ func TestDiagnosticsInChinese(t *testing.T) {
 	s.SetAccounts(diagList(), nil, "")
 	s.SetDiagnostics(Diagnostics{Checks: []diagnose.Check{failed("work", diagnose.TimedOut), passed("own", "")}})
 	tt := ui.NewTester(s.View, 340, 480)
-	want(t, tt, "连接 github.com 超时", "1 个错误", "github-work 检查失败", "复制排查命令")
+	want(t, tt, "连接 github.com 超时", "1 个错误", "github-work 检查失败", "复制命令")
 }

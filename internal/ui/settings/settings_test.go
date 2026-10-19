@@ -139,14 +139,14 @@ func (r *rig) clickRow(t *testing.T, label, stamp string) {
 	r.frame()
 }
 
-// clickDialogPrimary clicks the button right of Cancel in the open dialog.
+// clickDialogPrimary clicks the button right of Cancel in the open dialog; the two share its width, so it is one button width and a gap from Cancel's center.
 func (r *rig) clickDialogPrimary(t *testing.T) {
 	t.Helper()
 	box, ok := r.tt.Find("Cancel")
 	if !ok {
 		t.Fatal("no dialog")
 	}
-	r.tt.ClickAt(box.X+box.W+50, box.Y+box.H/2)
+	r.tt.ClickAt(box.X+box.W/2+150, box.Y+box.H/2)
 	r.frame()
 }
 
@@ -249,7 +249,7 @@ func TestLanguageChoiceAppliesAndRelabels(t *testing.T) {
 	if !slices.Equal(r.rec.languages, []string{Chinese}) {
 		t.Fatalf("languages = %q", r.rec.languages)
 	}
-	r.want(t, "Changes apply immediately; no restart.")
+	r.want(t, "Applies immediately.")
 	r.wantNot(t, "Current: English", "Following the system now")
 	r.s.SetText(Text(Chinese))
 	r.frame()
@@ -336,7 +336,7 @@ func TestLoginNeedsApproval(t *testing.T) {
 	if r.s.login {
 		t.Error("the switch stays off until the user approves")
 	}
-	r.want(t, "macOS needs your approval first.")
+	r.want(t, "Needs approval: turn on Idset")
 	r.wantNot(t, "Could not change the login item")
 }
 
@@ -349,7 +349,7 @@ func TestLoginFailure(t *testing.T) {
 		t.Error("the switch stayed on after a failure")
 	}
 	r.want(t, "Could not change the login item: boom")
-	r.wantNot(t, "macOS needs your approval first.")
+	r.wantNot(t, "Needs approval: turn on Idset")
 	r.s.SetLoginState(true)
 	r.toggleLogin(t)
 	r.s.LoginDone(false, errors.New("unregister: boom"))
@@ -371,7 +371,7 @@ func TestBackupListShowsRowsNewestFirst(t *testing.T) {
 	r := loaded(t, "en")
 	r.want(t, "2026-10-12 09:07", "2026-10-11 07:07", "4 identities · work, personal, client +1 · 2.4 KB",
 		"3 identities · work, personal, client · 1.9 KB", "1 identity · work · 0.7 KB", "Unreadable backup · 0.2 KB",
-		"Idset backs up accounts.json before an identity is added")
+		"Backed up before adding an identity")
 	texts := r.tt.Texts()
 	if slices.Index(texts, "2026-10-12 09:07") > slices.Index(texts, "2026-10-11 07:07") {
 		t.Errorf("not newest first: %q", texts)
@@ -382,15 +382,15 @@ func TestBackupListShowsRowsNewestFirst(t *testing.T) {
 func TestBackupRowExpands(t *testing.T) {
 	r := loaded(t, "en")
 	r.wantNot(t, "Global")
-	r.click(t, "Show identities")
-	r.want(t, "personal", "personal@example.com", "Global", "(unnamed)", "Hide identities")
-	r.click(t, "Hide identities")
-	r.wantNot(t, "Global", "Hide identities")
+	r.click(t, "Show Identities")
+	r.want(t, "personal", "personal@example.com", "Global", "(unnamed)", "Hide Identities")
+	r.click(t, "Hide Identities")
+	r.wantNot(t, "Global", "Hide Identities")
 }
 
 func TestExpandedRowsFollowDeletedBackups(t *testing.T) {
 	r := loaded(t, "en")
-	r.click(t, "Show identities")
+	r.click(t, "Show Identities")
 	r.s.SetBackups(sampleBackups()[1:], nil)
 	if len(r.s.expanded) != 0 {
 		t.Errorf("expanded = %v", r.s.expanded)
@@ -400,7 +400,7 @@ func TestExpandedRowsFollowDeletedBackups(t *testing.T) {
 func TestUnreadableBackupCannotBeRestoredOrExpanded(t *testing.T) {
 	r := loaded(t, "en")
 	r.clickRow(t, "Restore", "2026-10-10 07:07")
-	r.clickRow(t, "Show identities", "2026-10-10 07:07")
+	r.clickRow(t, "Show Identities", "2026-10-10 07:07")
 	if r.s.confirmOpen || len(r.s.expanded) != 0 {
 		t.Fatalf("confirm %v, expanded %v", r.s.confirmOpen, r.s.expanded)
 	}
@@ -418,7 +418,7 @@ func TestUnreadableBackupCannotBeRestoredOrExpanded(t *testing.T) {
 func TestRestoreAsksFirstAndCancelLeavesEverything(t *testing.T) {
 	r := loaded(t, "en")
 	r.clickRow(t, "Restore", "2026-10-11 07:07")
-	r.want(t, "Restore backup 2026-10-11 07:07?", "Identities that are not in the backup are removed from the list.")
+	r.want(t, "Restore backup 2026-10-11 07:07?", "Identities not in this backup are removed.")
 	if !r.tt.Focused("Cancel") {
 		t.Error("Cancel does not have the initial focus")
 	}
@@ -455,7 +455,7 @@ func TestOtherRowsCannotExpandWhileRestoring(t *testing.T) {
 	r := loaded(t, "en")
 	r.clickRow(t, "Restore", "2026-10-11 07:07")
 	r.clickDialogPrimary(t)
-	r.clickRow(t, "Show identities", "2026-10-12 09:07")
+	r.clickRow(t, "Show Identities", "2026-10-12 09:07")
 	if len(r.s.expanded) != 0 {
 		t.Errorf("expanded = %v", r.s.expanded)
 	}
@@ -530,7 +530,7 @@ func TestEmptyList(t *testing.T) {
 	r := open(t, "en", Request{Pane: Backups})
 	r.s.SetBackups(nil, nil)
 	r.frame()
-	r.want(t, "No backups yet", "Editing, deleting and binding do not back up.")
+	r.want(t, "No backups yet", "Backups are made before adding an identity")
 	r.wantNot(t, "Idset backs up accounts.json before")
 }
 
@@ -547,7 +547,7 @@ func TestReadOnlyBanner(t *testing.T) {
 	r.wantNot(t, "Restore a backup to carry on.")
 	r.s.SetReadOnly(true)
 	r.frame()
-	r.want(t, "accounts.json cannot be read, so Idset is read-only. Restore a backup to carry on.")
+	r.want(t, "accounts.json cannot be read; Idset is read-only. Restore a backup.")
 	r.s.SetReadOnly(false)
 	r.frame()
 	r.wantNot(t, "Restore a backup to carry on.")
@@ -555,14 +555,14 @@ func TestReadOnlyBanner(t *testing.T) {
 
 func TestConfigurationShowsTheBlocksAndRemovesThem(t *testing.T) {
 	r := open(t, "en", Request{Pane: Config})
-	r.want(t, "Remove Include (keep accounts.json)")
+	r.want(t, "Remove Include…")
 	r.wantNot(t, "Include block present", "No Include block")
 	r.s.SetIncludes(apply.IncludeState{SSH: apply.FileState{Present: true}, Git: apply.FileState{Present: true}})
 	r.frame()
 	if got := countText(r.tt, "Include block present"); got != 2 {
 		t.Fatalf("present rows = %d in %q", got, r.tt.Texts())
 	}
-	r.click(t, "Remove Include (keep accounts.json)")
+	r.click(t, "Remove Include…")
 	r.want(t, "Remove Include?", "Will be removed", "Left as is", "The Idset marker block in", "~/.ssh/config",
 		"~/.gitconfig", "accounts.json", "and your identities", "Managed files in", "~/.config/idset/")
 	if !r.tt.Focused("Cancel") {
@@ -572,13 +572,13 @@ func TestConfigurationShowsTheBlocksAndRemovesThem(t *testing.T) {
 	if r.rec.removes != 0 {
 		t.Fatal("removed after Cancel")
 	}
-	r.click(t, "Remove Include (keep accounts.json)")
+	r.click(t, "Remove Include…")
 	r.tt.Key(0, ui.KeyEscape)
 	r.frame()
 	if r.rec.removes != 0 {
 		t.Fatal("removed after Escape")
 	}
-	r.click(t, "Remove Include (keep accounts.json)")
+	r.click(t, "Remove Include…")
 	r.clickDialogPrimary(t)
 	if r.rec.removes != 1 {
 		t.Fatalf("removes = %d", r.rec.removes)
@@ -588,7 +588,7 @@ func TestConfigurationShowsTheBlocksAndRemovesThem(t *testing.T) {
 	if got := countText(r.tt, "No Include block"); got != 2 {
 		t.Fatalf("absent rows = %d in %q", got, r.tt.Texts())
 	}
-	r.want(t, "Removed", "Your identities are unchanged")
+	r.want(t, "Removed", "Removed. They return when an identity changes.")
 	if got := countText(r.tt, "Removed"); got != 1 {
 		t.Errorf("Removed shown %d times in %q", got, r.tt.Texts())
 	}
@@ -624,12 +624,12 @@ func TestRemoveFailureNamesTheFile(t *testing.T) {
 	for _, c := range cases {
 		r := open(t, "en", Request{Pane: Config})
 		r.s.SetIncludes(c.before)
-		r.click(t, "Remove Include (keep accounts.json)")
+		r.click(t, "Remove Include…")
 		r.clickDialogPrimary(t)
 		r.s.RemoveDone(c.before, c.after, &wrapErr{errors.New("permission denied")})
 		r.frame()
 		r.want(t, c.want)
-		r.wantNot(t, "Your identities are unchanged")
+		r.wantNot(t, "Removed. They return when an identity changes.")
 	}
 }
 
@@ -640,7 +640,7 @@ func TestRemovingBlocksAskingAgain(t *testing.T) {
 		t.Error("asked before the files were read")
 	}
 	r.s.SetIncludes(apply.IncludeState{})
-	r.click(t, "Remove Include (keep accounts.json)")
+	r.click(t, "Remove Include…")
 	r.clickDialogPrimary(t)
 	r.s.askRemove()
 	if r.s.removeOpen {

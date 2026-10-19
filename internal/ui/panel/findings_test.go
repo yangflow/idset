@@ -40,7 +40,7 @@ func edge(t *testing.T, tt *ui.Tester, text string) color.RGBA {
 	if !ok {
 		t.Fatalf("no %q in %q", text, tt.Texts())
 	}
-	return tt.Image().RGBAAt(16, int(r.Y+r.H/2))
+	return tt.Image().RGBAAt(12, int(r.Y+r.H/2))
 }
 
 func TestFindingRowsOnTheMatchedCard(t *testing.T) {
@@ -51,7 +51,7 @@ func TestFindingRowsOnTheMatchedCard(t *testing.T) {
 		tips     []string
 	}{
 		{"no email", []match.Finding{noEmail}, []string{"Commits have no author"},
-			[]string{"This repository has no user.email, so Git will stop at the commit or guess an address."}},
+			[]string{"No user.email in this repository. Git refuses to commit or guesses an address."}},
 		{"another identity's email", []match.Finding{otherEmail}, []string{"Commits use", "carol@example.com", "(client)"},
 			[]string{"This repository’s user.email is carol@example.com, which belongs to client, not work."}},
 		{"an unknown email", []match.Finding{unknownEmail}, []string{"Commits use", "someone@example.org"},
@@ -91,8 +91,8 @@ func TestCardWithoutFindingsHasNoRows(t *testing.T) {
 	_, plain, _ := card(t, withFindings(), findingList()...)
 	_, with, _ := card(t, withFindings(noEmail), findingList()...)
 	wantNot(t, plain, "Commits have no author")
-	a, _ := plain.Find("Drop a folder, or")
-	b, _ := with.Find("Drop a folder, or")
+	a, _ := plain.Find("Drop a folder to see its identity")
+	b, _ := with.Find("Drop a folder to see its identity")
 	// A row is 28 high with 4 above and below it, and a hairline.
 	if got := b.Y - a.Y; !same(got, 28+8+1) {
 		t.Errorf("one finding adds %v DIPs", got)
@@ -112,7 +112,7 @@ func TestCardBorderTakesTheWorstSeverity(t *testing.T) {
 	}
 	plainEdge := edge(t, plain, "Alias")
 	if plainEdge == warn {
-		t.Fatal("a card without findings keeps the plain outline")
+		t.Fatal("a card without findings has no outline")
 	}
 	dangerEdge := edge(t, danger, "Alias")
 	if dangerEdge == warn || dangerEdge == plainEdge {
@@ -131,7 +131,7 @@ func TestFindingsInChinese(t *testing.T) {
 		tip   string
 		name  string
 	}{
-		{noEmail, []string{"提交没有作者"}, "这个仓库读不到 user.email，提交时 Git 会报错或自己猜一个地址。", "提交没有作者。这个仓库读不到 user.email，提交时 Git 会报错或自己猜一个地址。"},
+		{noEmail, []string{"提交没有作者"}, "这个仓库没有 user.email，Git 会拒绝提交或自己猜一个地址。", "提交没有作者。这个仓库没有 user.email，Git 会拒绝提交或自己猜一个地址。"},
 		{otherEmail, []string{"提交会署名为", "carol@example.com", "（client）"}, "仓库的 user.email 是 carol@example.com，属于 client，不是 work。", "提交会署名为 carol@example.com（client）。仓库的 user.email 是 carol@example.com，属于 client，不是 work。"},
 		{unknownEmail, []string{"提交会署名为", "someone@example.org"}, "仓库的 user.email 是 someone@example.org，没有身份用这个邮箱。", "提交会署名为 someone@example.org。仓库的 user.email 是 someone@example.org，没有身份用这个邮箱。"},
 		{otherKey, []string{"推送会用", "~/.ssh/id_other"}, "core.sshCommand 指定了 ~/.ssh/id_other，不是 work 的密钥。", "推送会用 ~/.ssh/id_other。core.sshCommand 指定了 ~/.ssh/id_other，不是 work 的密钥。"},

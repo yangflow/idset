@@ -63,7 +63,7 @@ func (a *app) openAccounts(req accounts.Request) {
 	w.screen.Open(req)
 	w.win = mygo.NewWindow(mygo.WindowOptions{
 		Title: w.text.Window, Width: accountsWidth, Height: accountsHeight, MinWidth: accountsMinWidth, MinHeight: accountsMinHeight,
-		StateKey: "accounts", Content: ui.View(w.screen.View),
+		StateKey: "accounts", TitleBarStyle: mygo.TitleBarHidden, Vibrancy: mygo.VibrancySidebar, Content: ui.View(w.screen.View),
 	})
 	a.accounts = w
 	w.win.OnClosed(func() {

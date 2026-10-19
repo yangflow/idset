@@ -14,18 +14,18 @@ All notable user-facing changes are recorded here, following [Keep a Changelog](
   `~/.ssh/config` and `~/.gitconfig` current. Recording a use does not regenerate.
 - The accounts window creates, edits and deletes identities. Click an identity in the panel to open it, or "Add
   Identity" for a new one. Saving (Ctrl or Command+S) checks the identity first,
-  writes it in the background and regenerates the configuration, and says "Written" or why it could not. A new
+  writes it in the background and regenerates the configuration, and says "Saved" or why it could not. A new
   identity starts with the name and email from `git config --global`.
 - Deleting an identity asks first and lists what stays. "Also delete the private key" is off by default and cannot be
   checked when the identity has no key path, another identity uses the key, or the path is a symbolic link, is
   missing or is not a regular file. The identity goes first; only the key file is removed, never its `.pub` file,
   and a key that cannot be removed is reported without bringing the identity back.
 - The result card for a dropped folder binds, unbinds and rebinds it. Without a match, tap an identity to bind the
-  folder to it, or "New Identity and Bind Here" to create one for this folder. With a match, "Unbind" (only when the
+  folder to it, or "New Identity for This Folder" to create one for this folder. With a match, "Unbind" (only when the
   identity lists this very folder) and "Rebind to" (a global identity first asks, since it then applies to this
   folder only). A bind that is already covered changes nothing and says which path covers it. When several identities
-  cover a folder, the card lists them in the order Git reads them, and offers "Use only <identity> here" and removing
-  a path from another one. Binding, rebinding and "Use only" show a five second "Undo" bar; unbinding has none. Each
+  cover a folder, the card lists them in the order Git reads them, and offers "Use Only <identity> Here" and removing
+  a path from another one. Binding, rebinding and "Use Only" show a five second "Undo" bar; unbinding has none. Each
   of these regenerates the configuration once.
 - When a dropped folder has no match but looks like an identity's folder that was renamed (same parent folder) or
   moved (same last folder name), and the old path is gone from the disk, a card above the result offers "Change to
@@ -54,7 +54,7 @@ All notable user-facing changes are recorded here, following [Keep a Changelog](
 - Configuration shows whether `~/.ssh/config` and `~/.gitconfig` hold the Include block and removes both while
   keeping `accounts.json`.
 - Each identity with an SSH alias is checked with `ssh -T` in the background when the panel opens; a passing check
-  stands until the identity changes, a failed one is tried again after ten minutes, and "Re-check" in the footer
+  stands until the identity changes, a failed one is tried again after ten minutes, and "Check Again" in the footer
   checks them all at once. A dot at the end of each row shows the result; its tooltip says as whom it connected or
   why it failed.
 - A failed check shows a bar under the identity with the reason and the next step: a missing key file; a key with a
@@ -74,7 +74,7 @@ All notable user-facing changes are recorded here, following [Keep a Changelog](
   lists the identities found there: an SSH host with a key, joined with the Git name, email and folders that use it.
   Those Idset does not have yet are checked; only one global identity comes in as global, the others as scoped.
   "Import N Identities" adds them one by one, backing up first; the files are only read. The empty panel and the
-  empty accounts window have "Import Existing Configuration".
+  empty accounts window have "Import Existing".
 - The about window shows the version, copyright and license, opens the GitHub repository and checks for updates. A
   copy that cannot update itself says so and points to GitHub. It opens from "About" in the tray menu, the About button
   in the panel footer and "About Idset" in the macOS app menu.
@@ -87,8 +87,12 @@ All notable user-facing changes are recorded here, following [Keep a Changelog](
 
 - The panel is more compact. The title row and the footer are 36 DIPs high, and the footer has icon buttons for Add
   Identity and Quit, with tooltips. On result cards, open, copy, a "⋯" menu (rebind, and unbind when the identity lists
-  this very folder) and clear are icon buttons next to the folder. The overlap card has a pin ("Use only") and minus
+  this very folder) and clear are icon buttons next to the folder. The overlap card has a pin ("Use Only") and minus
   ("Remove") button on each row. Shorter labels replace long ones, and tooltips carry the full text: the one-line drop
   zone, "Covered by …", the stale-path prompt's "Update" and "Ignore", and the read-only and `git` errors.
 - The tray icon is the product icon's key, solid and as tall as the menu bar's other icons, instead of an
   identity card.
+- A new look: the panel and the windows are translucent glass over the desktop (the system material on macOS and
+  Windows 11, a solid fill elsewhere or with reduced transparency), with Git orange as the accent, in light and dark.
+  Menus and dialogs are Liquid Glass. Text uses five sizes, and actions a common symbol names clearly are icon buttons
+  with tooltips. Labels and notes are shorter.

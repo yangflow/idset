@@ -32,7 +32,7 @@ Working now:
   `user.email` is missing, belongs to another identity or to none, or when its `core.sshCommand` picks a different
   key, so commits and pushes would not be as that identity.
 - **Bind from the result card.** Bind a folder to an identity, unbind it, move it to another one, or settle several
-  identities covering the same folder, all from the card for a dropped folder. Binding, rebinding and "Use only"
+  identities covering the same folder, all from the card for a dropped folder. Binding, rebinding and "Use Only"
   can be undone for five seconds.
 - **Follow a renamed or moved folder.** When nothing matches a dropped folder but it looks like a folder an identity
   still points to, renamed or moved, the panel offers to change that old path to the new one, or to keep it.

@@ -3,116 +3,175 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Panel, light and dark</title>
-<!-- Static comparison of the panel in both appearances. Colors are the MyGo default theme roles and sizes the
-     4 DIP spacing unit at 13 px text; see design/tokens.md. No scripts and no external resources.
-     Every state, in both languages, is in panel.html. -->
+<!-- Static comparison of the panel in both appearances, each over its own desktop. Colors are Idset's glass theme in
+     design/tokens.md and the rules are copied from panel.html; sizes are the 4 DIP spacing unit at 13 px text.
+     No scripts and no external resources. Every state, in both languages and both materials, is in panel.html. -->
 <style>
+.light { color-scheme:light; --material:rgba(246,246,248,.62); --text:#1d1d1f; --muted:#6b6b72; --sep:rgba(60,60,67,.18); --card:rgba(255,255,255,.2); --control:rgba(0,0,0,.05); --hover:rgba(0,0,0,.07); --pressed:rgba(0,0,0,.12); --field:rgba(255,255,255,.45); --accent:#c63a1c; --accent-hover:#ad3218; --accent-text:#ffffff; --accent-soft:rgba(240,80,51,.16); --danger:#c8102e; --warning:#b86e00; --success:#1e7d36; --focus:rgba(198,58,28,.55); --inverse:#1d1d1f; --inverse-text:#f5f5f7; --menu:rgba(250,250,252,.97) }
+.dark { color-scheme:dark; --material:rgba(36,36,40,.58); --text:#f5f5f7; --muted:#a3a3ab; --sep:rgba(255,255,255,.12); --card:rgba(255,255,255,.08); --control:rgba(255,255,255,.08); --hover:rgba(255,255,255,.11); --pressed:rgba(255,255,255,.16); --field:rgba(0,0,0,.22); --accent:#ff6a4a; --accent-hover:#ff8468; --accent-text:#1d1d1f; --accent-soft:rgba(255,106,74,.22); --danger:#ff5c74; --warning:#ffb340; --success:#3ccf62; --focus:rgba(255,132,104,.6); --inverse:#f5f5f7; --inverse-text:#1d1d1f; --menu:rgba(44,44,48,.97) }
 * { box-sizing:border-box }
-body { margin:0; padding:24px; font-family:system-ui,sans-serif; background:#e4e4e7; color:#18181b }
+body { margin:0; padding:24px; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI Variable Text","Segoe UI","PingFang SC","Microsoft YaHei UI",system-ui,sans-serif; font-size:13px; -webkit-font-smoothing:antialiased; background:#e4e4e7; color:#1d1d1f }
 h2 { margin:0 0 4px; font-size:16px }
 p.note { margin:0 0 20px; font-size:13px; color:#52525b }
 .row { display:flex; flex-wrap:wrap; gap:24px; align-items:flex-start }
 figure { margin:0 }
 figcaption { margin:8px 0 0; font-size:12px; color:#52525b }
-.light { --background:#ffffff; --surface:#f4f4f5; --hover:#e9e9ec; --text:#18181b; --muted:#71717a; --border:#d9d9de; --accent:#2563eb; --selection:rgba(37,99,235,.25); --focus:rgba(37,99,235,.55); --warning:#d97706; --danger:#dc2626 }
-.dark { --background:#18181b; --surface:#27272a; --hover:#323236; --text:#f4f4f5; --muted:#a1a1aa; --border:#3f3f46; --accent:#3b82f6; --selection:rgba(59,130,246,.4); --focus:rgba(96,165,250,.6); --warning:#f59e0b; --danger:#ef4444 }
-.panel { width:340px; height:480px; display:flex; flex-direction:column; font-size:13px; background:var(--background); color:var(--text); border:1px solid #a1a1aa; border-radius:10px; overflow:hidden }
-header, footer { display:flex; align-items:center; flex:none; height:36px }
-header { padding:0 8px 0 16px }
-footer { padding:0 8px; gap:4px }
-.tool { width:24px; height:24px; padding:0; display:grid; place-items:center; border:0; background:transparent; color:var(--muted) }
+/* Each appearance sits on its own simulated desktop; the stripes give the panel's blur something to show. */
+.desk { position:relative; isolation:isolate; padding:32px; border-radius:12px; color:var(--text) }
+.desk::before { content:""; position:absolute; inset:0; z-index:-1; border-radius:inherit; background:repeating-linear-gradient(45deg,rgba(255,255,255,.1) 0 14px,transparent 14px 40px) }
+.desk.light { background:radial-gradient(60% 50% at 15% 20%,#9fd8ff,transparent 70%),radial-gradient(50% 60% at 85% 30%,#b8f0c9,transparent 70%),radial-gradient(60% 60% at 50% 100%,#ffd8a8,transparent 70%),linear-gradient(135deg,#7cc4f5,#a7e3d0 60%,#f6e3b5) }
+.desk.dark { background:radial-gradient(60% 50% at 15% 20%,#2b4f8f,transparent 70%),radial-gradient(50% 60% at 85% 30%,#1f5e4a,transparent 70%),radial-gradient(60% 60% at 50% 100%,#6b3a2a,transparent 70%),linear-gradient(135deg,#14213d,#0f2a2a 60%,#2a1a14) }
+.panel { width:340px; height:480px; flex:none; display:flex; flex-direction:column; border-radius:12px; overflow:hidden; background:var(--material); backdrop-filter:blur(30px) saturate(180%); -webkit-backdrop-filter:blur(30px) saturate(180%); box-shadow:0 0 0 .5px rgba(0,0,0,.25),0 12px 40px rgba(0,0,0,.3) }
+header, footer { display:flex; align-items:center; flex:none }
+header { height:44px; gap:8px; padding:0 9px 0 16px }
+footer { height:40px; gap:4px; padding:0 8px; border-top:.5px solid var(--sep) }
+footer .spacer { flex:1 }
+h1 { flex:1; margin:0; font-size:15px; letter-spacing:-.01em; font-weight:600 }
+.panel button.tool { flex:none; position:relative; width:26px; height:26px; padding:0; display:grid; place-items:center; border:0; border-radius:6px; background:transparent; color:var(--muted); cursor:pointer }
+.panel button.tool:hover { background:var(--hover) }
+.panel button.tool:active { background:var(--pressed) }
 .tool svg { width:16px; height:16px }
-.spacer { flex:1 }
-header { border-bottom:1px solid var(--border) }
-footer { border-top:1px solid var(--border) }
-h1 { flex:1; margin:0; font-size:13px; font-weight:600 }
-.content { flex:1; padding:16px; display:flex; flex-direction:column; gap:12px; overflow:hidden }
+.content { flex:1; overflow:auto; padding:4px 12px 12px; display:flex; flex-direction:column; gap:10px }
 .content > * { flex-shrink:0 }
-button { padding:5px 10px; border:1px solid var(--border); border-radius:6px; background:var(--surface); color:var(--text); font:inherit }
-button.ghost { width:24px; height:24px; padding:0; display:grid; place-items:center; border:0; background:transparent; color:var(--muted) }
-button.focus { outline:2px solid var(--focus); outline-offset:1px }
-.ghost svg { width:16px; height:16px }
+.panel button { padding:5px 10px; border:0; border-radius:6px; background:var(--control); color:var(--text); font:inherit }
 .muted { color:var(--muted) }
 .small { font-size:12px }
-.mono { font-family:ui-monospace,monospace; font-size:12px }
-.drop { border:1.5px dashed var(--border); border-radius:10px; padding:8px 12px; display:flex; align-items:center; justify-content:space-between; gap:8px }
-.drop.over { border-color:var(--accent); background:var(--selection) }
-.avatar { flex:none; display:grid; place-items:center; font-weight:700; color:rgb(var(--c)); background:rgba(var(--c),.16) }
-.dark .avatar { color:rgb(var(--cl)); background:rgba(var(--c),.24) }
-.result { border:1px solid var(--border); border-radius:10px; background:var(--surface); overflow:hidden }
-.result.warning { border-color:var(--warning) }
-.result .top { display:flex; align-items:center; gap:4px; padding:8px 8px 8px 12px; border-bottom:1px solid var(--border) }
-.result .top .mono { flex:1; color:var(--muted) }
-.result .who { display:flex; align-items:center; gap:12px; padding:14px 12px 10px }
-.result .avatar { width:36px; height:36px; border-radius:9px; font-size:16px }
+.mono { font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace; font-size:11.5px }
+.drop { display:flex; align-items:center; gap:10px; height:48px; padding:0 10px 0 12px; border:1.5px dashed color-mix(in srgb, var(--accent) 55%, transparent); border-radius:10px; background:color-mix(in srgb, var(--accent) 8%, transparent) }
+.drop > svg { flex:none; width:20px; height:20px; color:var(--accent) }
+.drop .line { flex:1; min-width:0; font-size:12px; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis }
+.drop.over { border-style:solid; border-color:var(--accent); background:var(--accent-soft) }
+.panel .drop button { flex:none; height:24px; padding:0 10px; font-size:12px; font-weight:500 }
+.avatar { flex:none; display:grid; place-items:center; font-weight:600; color:var(--ink); background:rgb(var(--c)) }
+.result { border-radius:10px; background:var(--card) }
+.result.warning { box-shadow:inset 0 0 0 1px var(--warning) }
+.result.danger { box-shadow:inset 0 0 0 1px var(--danger) }
+.result .top { display:flex; align-items:center; gap:4px; height:36px; padding:0 6px 0 12px; border-bottom:.5px solid var(--sep) }
+.result .top .cluster { flex:0 1 auto; min-width:0; display:flex; align-items:center; gap:2px }
+.result .top .mid { flex:1 0 80px; color:var(--muted) }
+.result .copied { flex:0 1 auto; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:11px; color:var(--muted); margin-right:2px }
+.result .who { display:flex; align-items:center; gap:10px; padding:12px 12px 8px }
+.result .avatar { width:36px; height:36px; border-radius:10px; font-size:16px }
 .result .name { font-size:15px; font-weight:600 }
-.result .kv { display:grid; grid-template-columns:56px 1fr; gap:4px 8px; padding:0 12px 12px 60px; font-size:12px }
+.result .uses { font-size:12px; color:var(--muted) }
+.result .kv { display:grid; grid-template-columns:56px 1fr; align-items:start; gap:4px 8px; padding:0 12px 12px 58px; font-size:12px }
 .result .kv > :nth-child(odd) { color:var(--muted) }
-.result .say { padding:12px; font-weight:600 }
-.section { display:flex; justify-content:space-between; padding:0 2px; margin-bottom:-6px; font-size:12px; font-weight:600; color:var(--muted) }
-.list { border:1px solid var(--border); border-radius:10px; background:var(--surface); overflow:hidden }
-.item { display:flex; align-items:center; gap:10px; padding:9px 12px }
-.item + .item { border-top:1px solid var(--border) }
-.item .avatar { width:28px; height:28px; border-radius:7px; font-size:13px }
-.item .text { flex:1; display:flex; flex-direction:column; gap:1px }
-.item .label { font-weight:600 }
-.item .tag { font-family:ui-monospace,monospace; font-size:11px; color:var(--muted) }
+.result .finds { border-top:.5px solid var(--sep); padding:4px 0 }
+.result .find { display:flex; align-items:center; gap:6px; height:28px; padding:0 12px; font-size:12px }
+.result .find > svg { flex:none; width:14px; height:14px }
+.result .find.warning > svg { color:var(--warning) }
+.result .find.danger > svg { color:var(--danger) }
+.result .find.remote { padding-right:6px }
+.result .clone { border-top:.5px solid var(--sep) }
+.item .gap { flex:none; width:26px }
+.result .say { padding:12px; display:flex; align-items:center; gap:8px; font-weight:600 }
+.result .say.plain { font-weight:400 }
+.result .say.danger { color:var(--danger); font-weight:600 }
+.panel button.primary { background:var(--accent); color:var(--accent-text); font-weight:500 }
+.result .head { padding:0 12px 6px; font-size:11px; font-weight:600; color:var(--muted) }
+.result .say.tight { padding-bottom:8px }
+.result .say .tool { margin-left:auto }
+.result .why { padding:0 12px 12px; font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace; font-size:11px; color:var(--muted) }
+.result .row { position:relative; display:flex; align-items:center; gap:10px; height:44px; padding:0 12px }
+.result .row::before { content:""; position:absolute; top:0; left:12px; right:0; border-top:.5px solid var(--sep) }
+.result .row.short { height:40px; padding:0 8px }
+.result .row .dot { flex:none; width:10px; height:10px; border-radius:50%; background:rgb(var(--c)) }
+.result .row .lines { flex:1; min-width:0; display:flex; flex-direction:column; gap:1px }
+.result .row .label { font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
+.result .row .note { display:flex; font-size:12px; color:var(--muted) }
+.result .row .note > span { white-space:pre }
+.result .row .go { flex:none; width:44px; text-align:right; color:var(--accent); font-weight:500 }
+.result .row.lost .label { color:var(--muted); font-weight:400 }
+.result .row .verdict { flex:none; display:flex; align-items:center; gap:4px; font-size:12px; color:var(--muted) }
+.result .row .verdict.win { color:var(--accent); font-weight:600 }
+.result .row .verdict svg { width:14px; height:14px }
+.result .confirm { border-top:.5px solid var(--sep); padding:12px; display:flex; flex-direction:column; gap:10px }
+.result .confirm p { margin:0; line-height:1.45 }
+.result .buttons { display:flex; justify-content:flex-end; gap:8px }
+.result button.text { align-self:center }
+.result .kv .paths { display:flex; flex-direction:column; gap:2px }
+.result .actions { display:flex; align-items:center; justify-content:flex-end; gap:4px; height:36px; padding:0 8px; border-top:.5px solid var(--sep) }
+.result .menuwrap { position:relative; display:flex }
+.result .bar { position:relative; display:flex; align-items:center; gap:0; min-height:36px; padding:8px 12px; border-top:.5px solid var(--sep); line-height:1.4 }
+.result .bar.timed { height:36px; padding:0 8px 0 12px; border-radius:0 0 10px 10px; overflow:hidden }
+.result .bar.timed::after { content:""; position:absolute; left:0; bottom:0; height:2px; width:var(--left); background:color-mix(in srgb, var(--accent) 45%, transparent) }
+.result .bar button.text { padding:5px 4px }
+.result .stale-head { display:flex; align-items:center; gap:10px; height:40px; padding:0 12px }
+.result .stale-head .dot { flex:none; width:10px; height:10px; border-radius:50%; background:rgb(var(--c)) }
+.result .stale-head .rest { flex:1 1 auto; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
+.result .stale-head .name { font-weight:600 }
+.result .path-row.old { border-top:.5px solid var(--sep) }
+.result .path-row { display:flex; align-items:center; gap:6px; height:28px; padding:0 12px; }
+.result .path-row.old .mid { color:var(--muted) }
+.mid { position:relative; display:flex; min-width:0; white-space:pre; font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace; font-size:11.5px }
+.mid .ml { flex:none }
+.mid .mh { min-width:0; overflow:hidden; text-overflow:ellipsis }
+.mid .mt { flex:none }
+.result .path-row .mid { flex:1 1 0 }
+.panel .content { min-height:0 }
+.section { padding:6px 6px 0; margin-bottom:-4px; font-size:11px; font-weight:600; color:var(--muted); letter-spacing:.02em }
+.list { border-radius:10px; background:var(--card); overflow:hidden }
+.item { position:relative; display:flex; align-items:center; gap:10px; padding:8px 6px 8px 12px; min-height:48px }
+.list > .item:not(:first-child)::before { content:""; position:absolute; top:0; left:50px; right:0; border-top:.5px solid var(--sep) }
+.item .avatar { width:28px; height:28px; border-radius:8px; font-size:13px }
+.item .text { flex:1; min-width:0; display:flex; flex-direction:column; gap:1px }
+.item .label { font-weight:600; font-size:13px }
+.item .label, .item .email { overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
+.item .email { font-size:12px; color:var(--muted) }
+.item .tag { flex:none; max-width:42%; display:flex; font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace; font-size:11px; color:var(--muted) }
+.item .tag .mid { font-size:inherit; min-width:0 }
+.result .row .note .mid { font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace; font-size:11px }
+.search { width:100%; height:28px; padding:0 10px; border:0; border-radius:8px; background:var(--control); color:var(--text); font:inherit }
+.search::placeholder { color:var(--muted) }
+.result.notice { padding:0 6px 6px 12px }
+.result.notice .pline { font-size:13px; font-weight:600 }
+.result.notice .hint { padding-left:20px }
+.panel button.tool.focus { outline:3px solid var(--focus) }
+.result .top .mid { flex:1 0 80px; color:var(--muted) }
 </style>
 <h2>Panel: light and dark</h2>
-<p class="note">Top row: files dragged over the drop zone, then a matched folder with the keyboard focus on the copy
-button. Bottom row: the same states in dark, then a folder without a match.</p>
+<p class="note">Top row: files dragged over the drop zone, then a matched folder with the keyboard focus on the copy button. Bottom row: the same states in dark, then a folder without a match.</p>
 <div class="row">
-  <figure><div class="panel light"><header><h1>Idset</h1><button class="tool" aria-label="Settings"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M6.91 3.12L7.14 1.46L8.86 1.46L9.09 3.12L10.68 3.78L12.02 2.77L13.23 3.98L12.22 5.32L12.88 6.91L14.54 7.14L14.54 8.86L12.88 9.09L12.22 10.68L13.23 12.02L12.02 13.23L10.68 12.22L9.09 12.88L8.86 14.54L7.14 14.54L6.91 12.88L5.32 12.22L3.98 13.23L2.77 12.02L3.78 10.68L3.12 9.09L1.46 8.86L1.46 7.14L3.12 6.91L3.78 5.32L2.77 3.98L3.98 2.77L5.32 3.78z"/><circle cx="8" cy="8" r="2"/></svg></button></header><div class="content">
-    <div class="drop over"><span class="muted small">Drop a folder, or</span><button>Choose…</button></div>
-    <div class="section"><span>Identities</span><span>2</span></div>
-    <div class="list">
-      <div class="item"><div class="avatar" style="--c:58,123,213;--cl:120,170,240">W</div><div class="text"><span class="label">work</span><span class="muted small">bob@example.com</span></div><span class="tag">~/work/ +1</span></div>
-      <div class="item"><div class="avatar" style="--c:46,158,91;--cl:95,200,135">P</div><div class="text"><span class="label">personal</span><span class="muted small">bob@example.net</span></div><span class="tag">Global</span></div>
-    </div>
-  </div><footer><button class="tool" aria-label="Add Identity"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M8 3v10M3 8h10"/></svg></button><span class="spacer"></span><button class="tool" aria-label="About Idset"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="8" cy="8" r="6.25"/><path d="M8 7.3v3.7"/><path d="M8 4.9v.1" stroke-width="1.8"/></svg></button><button class="tool" aria-label="Re-check"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13.25 8a5.25 5.25 0 1 1-1.54-3.71"/><path d="M12.9 1.9v2.8H10.1"/></svg></button><button class="tool" aria-label="Quit"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M4.4 4.1a5.5 5.5 0 1 0 7.2 0"/><path d="M8 1.8v5.6"/></svg></button></footer></div><figcaption>Light, dragging over</figcaption></figure>
-
-  <figure><div class="panel light"><header><h1>Idset</h1><button class="tool" aria-label="Settings"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M6.91 3.12L7.14 1.46L8.86 1.46L9.09 3.12L10.68 3.78L12.02 2.77L13.23 3.98L12.22 5.32L12.88 6.91L14.54 7.14L14.54 8.86L12.88 9.09L12.22 10.68L13.23 12.02L12.02 13.23L10.68 12.22L9.09 12.88L8.86 14.54L7.14 14.54L6.91 12.88L5.32 12.22L3.98 13.23L2.77 12.02L3.78 10.68L3.12 9.09L1.46 8.86L1.46 7.14L3.12 6.91L3.78 5.32L2.77 3.98L3.98 2.77L5.32 3.78z"/><circle cx="8" cy="8" r="2"/></svg></button></header><div class="content">
-    <div class="result"><div class="top"><span class="mono">~/work/api</span>
-      <button class="ghost" aria-label="Open in Finder"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"><path d="M2 4.5a1 1 0 0 1 1-1h3l1.5 1.5H13a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1z"/></svg></button><button class="ghost focus" aria-label="Copy the full path"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="5.5" y="5.5" width="8" height="8" rx="1.5"/><path d="M10.5 3.5v-.5a1 1 0 0 0-1-1h-6a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h.5"/></svg></button><button class="ghost" aria-label="More"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M3.5 8h.01M8 8h.01M12.5 8h.01"/></svg></button>
-      <button class="ghost" aria-label="Clear result"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M4 4l8 8M12 4l-8 8"/></svg></button></div>
-      <div class="who"><div class="avatar" style="--c:58,123,213;--cl:120,170,240">W</div><div><div class="name">work</div><div class="muted small">Git uses this identity here</div></div></div>
-      <div class="kv"><span>Alias</span><span class="mono">github-work</span><span>Email</span><span>bob@example.com</span><span>Folders</span><span class="mono">~/work/ · ~/src/new/</span></div></div>
-    <div class="drop"><span class="muted small">Drop a folder, or</span><button>Choose…</button></div>
-    <div class="section"><span>Identities</span><span>2</span></div>
-    <div class="list"><div class="item"><div class="avatar" style="--c:58,123,213;--cl:120,170,240">W</div><div class="text"><span class="label">work</span><span class="muted small">bob@example.com</span></div><span class="tag">~/work/ +1</span></div></div>
-  </div><footer><button class="tool" aria-label="Add Identity"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M8 3v10M3 8h10"/></svg></button><span class="spacer"></span><button class="tool" aria-label="About Idset"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="8" cy="8" r="6.25"/><path d="M8 7.3v3.7"/><path d="M8 4.9v.1" stroke-width="1.8"/></svg></button><button class="tool" aria-label="Re-check"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13.25 8a5.25 5.25 0 1 1-1.54-3.71"/><path d="M12.9 1.9v2.8H10.1"/></svg></button><button class="tool" aria-label="Quit"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M4.4 4.1a5.5 5.5 0 1 0 7.2 0"/><path d="M8 1.8v5.6"/></svg></button></footer></div><figcaption>Light, matched, focus ring</figcaption></figure>
+  <figure><div class="desk light"><div class="panel">
+  <header><h1>Idset</h1><button class="tool" aria-label="Settings"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M6.91 3.12L7.14 1.46L8.86 1.46L9.09 3.12L10.68 3.78L12.02 2.77L13.23 3.98L12.22 5.32L12.88 6.91L14.54 7.14L14.54 8.86L12.88 9.09L12.22 10.68L13.23 12.02L12.02 13.23L10.68 12.22L9.09 12.88L8.86 14.54L7.14 14.54L6.91 12.88L5.32 12.22L3.98 13.23L2.77 12.02L3.78 10.68L3.12 9.09L1.46 8.86L1.46 7.14L3.12 6.91L3.78 5.32L2.77 3.98L3.98 2.77L5.32 3.78z"/><circle cx="8" cy="8" r="2"/></svg></button></header>
+  <div class="content">
+    <div class="drop over"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"><path d="M2 4.5a1 1 0 0 1 1-1h3l1.5 1.5H13a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1z"/></svg><span class="line">Drop a folder to see its identity</span><button class="primary">Choose…</button></div><div class="section">Identities · 2</div><div class="list"><div class="item"><div class="avatar" style="--c:58,123,213;--ink:#ffffff">W</div><div class="text"><span class="label">work</span><span class="email">bob@example.com</span></div><span class="tag"><span class="mid"><span class="ml">~/</span><span class="mh"></span><span class="mt">work/ +1</span></span></span><span class="gap"></span></div><div class="item"><div class="avatar" style="--c:46,158,91;--ink:#ffffff">P</div><div class="text"><span class="label">personal</span><span class="email">bob@example.net</span></div><span class="tag">Global</span><span class="gap"></span></div></div>
+  </div>
+  <footer><button class="tool" aria-label="Add Identity"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M8 3v10M3 8h10"/></svg></button><span class="spacer"></span><button class="tool" aria-label="About Idset"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="8" cy="8" r="6.25"/><path d="M8 7.3v3.7"/><path d="M8 4.9v.1" stroke-width="1.8"/></svg></button><button class="tool" aria-label="Check Again"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13.25 8a5.25 5.25 0 1 1-1.54-3.71"/><path d="M12.9 1.9v2.8H10.1"/></svg></button><button class="tool" aria-label="Quit"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M4.4 4.1a5.5 5.5 0 1 0 7.2 0"/><path d="M8 1.8v5.6"/></svg></button></footer>
+</div></div><figcaption>Light, dragging over</figcaption></figure>
+  <figure><div class="desk light"><div class="panel">
+  <header><h1>Idset</h1><button class="tool" aria-label="Settings"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M6.91 3.12L7.14 1.46L8.86 1.46L9.09 3.12L10.68 3.78L12.02 2.77L13.23 3.98L12.22 5.32L12.88 6.91L14.54 7.14L14.54 8.86L12.88 9.09L12.22 10.68L13.23 12.02L12.02 13.23L10.68 12.22L9.09 12.88L8.86 14.54L7.14 14.54L6.91 12.88L5.32 12.22L3.98 13.23L2.77 12.02L3.78 10.68L3.12 9.09L1.46 8.86L1.46 7.14L3.12 6.91L3.78 5.32L2.77 3.98L3.98 2.77L5.32 3.78z"/><circle cx="8" cy="8" r="2"/></svg></button></header>
+  <div class="content">
+    <div class="result"><div class="top"><span class="mid"><span class="ml">~/</span><span class="mh"></span><span class="mt">work/api</span></span><button class="tool" aria-label="Open in Finder"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"><path d="M2 4.5a1 1 0 0 1 1-1h3l1.5 1.5H13a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1z"/></svg></button><button class="tool focus" aria-label="Copy Path"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="5.5" y="5.5" width="8" height="8" rx="1.5"/><path d="M10.5 3.5v-.5a1 1 0 0 0-1-1h-6a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h.5"/></svg></button><button class="tool" aria-label="More"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M3.5 8h.01M8 8h.01M12.5 8h.01"/></svg></button><button class="tool" aria-label="Clear"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M4 4l8 8M12 4l-8 8"/></svg></button></div>
+      <div class="who"><div class="avatar" style="--c:58,123,213;--ink:#ffffff">W</div><div><div class="name">work</div><div class="uses">Git uses this identity here</div></div></div>
+      <div class="kv"><span>Alias</span><span class="mono">github-work</span><span>Email</span><span>bob@example.com</span><span>Folders</span><span class="mono">~/work/ · ~/src/new/</span></div></div><div class="drop"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"><path d="M2 4.5a1 1 0 0 1 1-1h3l1.5 1.5H13a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1z"/></svg><span class="line">Drop a folder to see its identity</span><button class="primary">Choose…</button></div><div class="section">Identities · 1</div><div class="list"><div class="item"><div class="avatar" style="--c:58,123,213;--ink:#ffffff">W</div><div class="text"><span class="label">work</span><span class="email">bob@example.com</span></div><span class="tag"><span class="mid"><span class="ml">~/</span><span class="mh"></span><span class="mt">work/ +1</span></span></span><span class="gap"></span></div></div>
+  </div>
+  <footer><button class="tool" aria-label="Add Identity"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M8 3v10M3 8h10"/></svg></button><span class="spacer"></span><button class="tool" aria-label="About Idset"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="8" cy="8" r="6.25"/><path d="M8 7.3v3.7"/><path d="M8 4.9v.1" stroke-width="1.8"/></svg></button><button class="tool" aria-label="Check Again"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13.25 8a5.25 5.25 0 1 1-1.54-3.71"/><path d="M12.9 1.9v2.8H10.1"/></svg></button><button class="tool" aria-label="Quit"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M4.4 4.1a5.5 5.5 0 1 0 7.2 0"/><path d="M8 1.8v5.6"/></svg></button></footer>
+</div></div><figcaption>Light, matched, focus ring</figcaption></figure>
 </div>
 <div class="row" style="margin-top:24px">
-  <figure><div class="panel dark"><header><h1>Idset</h1><button class="tool" aria-label="Settings"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M6.91 3.12L7.14 1.46L8.86 1.46L9.09 3.12L10.68 3.78L12.02 2.77L13.23 3.98L12.22 5.32L12.88 6.91L14.54 7.14L14.54 8.86L12.88 9.09L12.22 10.68L13.23 12.02L12.02 13.23L10.68 12.22L9.09 12.88L8.86 14.54L7.14 14.54L6.91 12.88L5.32 12.22L3.98 13.23L2.77 12.02L3.78 10.68L3.12 9.09L1.46 8.86L1.46 7.14L3.12 6.91L3.78 5.32L2.77 3.98L3.98 2.77L5.32 3.78z"/><circle cx="8" cy="8" r="2"/></svg></button></header><div class="content">
-    <div class="drop over"><span class="muted small">Drop a folder, or</span><button>Choose…</button></div>
-    <div class="section"><span>Identities</span><span>2</span></div>
-    <div class="list">
-      <div class="item"><div class="avatar" style="--c:58,123,213;--cl:120,170,240">W</div><div class="text"><span class="label">work</span><span class="muted small">bob@example.com</span></div><span class="tag">~/work/ +1</span></div>
-      <div class="item"><div class="avatar" style="--c:46,158,91;--cl:95,200,135">P</div><div class="text"><span class="label">personal</span><span class="muted small">bob@example.net</span></div><span class="tag">Global</span></div>
-    </div>
-  </div><footer><button class="tool" aria-label="Add Identity"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M8 3v10M3 8h10"/></svg></button><span class="spacer"></span><button class="tool" aria-label="About Idset"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="8" cy="8" r="6.25"/><path d="M8 7.3v3.7"/><path d="M8 4.9v.1" stroke-width="1.8"/></svg></button><button class="tool" aria-label="Re-check"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13.25 8a5.25 5.25 0 1 1-1.54-3.71"/><path d="M12.9 1.9v2.8H10.1"/></svg></button><button class="tool" aria-label="Quit"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M4.4 4.1a5.5 5.5 0 1 0 7.2 0"/><path d="M8 1.8v5.6"/></svg></button></footer></div><figcaption>Dark, dragging over</figcaption></figure>
-
-  <figure><div class="panel dark"><header><h1>Idset</h1><button class="tool" aria-label="Settings"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M6.91 3.12L7.14 1.46L8.86 1.46L9.09 3.12L10.68 3.78L12.02 2.77L13.23 3.98L12.22 5.32L12.88 6.91L14.54 7.14L14.54 8.86L12.88 9.09L12.22 10.68L13.23 12.02L12.02 13.23L10.68 12.22L9.09 12.88L8.86 14.54L7.14 14.54L6.91 12.88L5.32 12.22L3.98 13.23L2.77 12.02L3.78 10.68L3.12 9.09L1.46 8.86L1.46 7.14L3.12 6.91L3.78 5.32L2.77 3.98L3.98 2.77L5.32 3.78z"/><circle cx="8" cy="8" r="2"/></svg></button></header><div class="content">
-    <div class="result"><div class="top"><span class="mono">~/work/api</span>
-      <button class="ghost" aria-label="Open in Finder"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"><path d="M2 4.5a1 1 0 0 1 1-1h3l1.5 1.5H13a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1z"/></svg></button><button class="ghost focus" aria-label="Copy the full path"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="5.5" y="5.5" width="8" height="8" rx="1.5"/><path d="M10.5 3.5v-.5a1 1 0 0 0-1-1h-6a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h.5"/></svg></button><button class="ghost" aria-label="More"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M3.5 8h.01M8 8h.01M12.5 8h.01"/></svg></button>
-      <button class="ghost" aria-label="Clear result"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M4 4l8 8M12 4l-8 8"/></svg></button></div>
-      <div class="who"><div class="avatar" style="--c:58,123,213;--cl:120,170,240">W</div><div><div class="name">work</div><div class="muted small">Git uses this identity here</div></div></div>
-      <div class="kv"><span>Alias</span><span class="mono">github-work</span><span>Email</span><span>bob@example.com</span><span>Folders</span><span class="mono">~/work/ · ~/src/new/</span></div></div>
-    <div class="drop"><span class="muted small">Drop a folder, or</span><button>Choose…</button></div>
-    <div class="section"><span>Identities</span><span>2</span></div>
-    <div class="list"><div class="item"><div class="avatar" style="--c:58,123,213;--cl:120,170,240">W</div><div class="text"><span class="label">work</span><span class="muted small">bob@example.com</span></div><span class="tag">~/work/ +1</span></div></div>
-  </div><footer><button class="tool" aria-label="Add Identity"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M8 3v10M3 8h10"/></svg></button><span class="spacer"></span><button class="tool" aria-label="About Idset"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="8" cy="8" r="6.25"/><path d="M8 7.3v3.7"/><path d="M8 4.9v.1" stroke-width="1.8"/></svg></button><button class="tool" aria-label="Re-check"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13.25 8a5.25 5.25 0 1 1-1.54-3.71"/><path d="M12.9 1.9v2.8H10.1"/></svg></button><button class="tool" aria-label="Quit"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M4.4 4.1a5.5 5.5 0 1 0 7.2 0"/><path d="M8 1.8v5.6"/></svg></button></footer></div><figcaption>Dark, matched, focus ring</figcaption></figure>
-
-  <figure><div class="panel dark"><header><h1>Idset</h1><button class="tool" aria-label="Settings"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M6.91 3.12L7.14 1.46L8.86 1.46L9.09 3.12L10.68 3.78L12.02 2.77L13.23 3.98L12.22 5.32L12.88 6.91L14.54 7.14L14.54 8.86L12.88 9.09L12.22 10.68L13.23 12.02L12.02 13.23L10.68 12.22L9.09 12.88L8.86 14.54L7.14 14.54L6.91 12.88L5.32 12.22L3.98 13.23L2.77 12.02L3.78 10.68L3.12 9.09L1.46 8.86L1.46 7.14L3.12 6.91L3.78 5.32L2.77 3.98L3.98 2.77L5.32 3.78z"/><circle cx="8" cy="8" r="2"/></svg></button></header><div class="content">
-    <div class="result warning"><div class="top"><span class="mono">~/scratch/notes</span>
-      <button class="ghost" aria-label="Clear result"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M4 4l8 8M12 4l-8 8"/></svg></button></div>
-      <div class="say">No identity matches this folder</div></div>
-    <div class="drop"><span class="muted small">Drop a folder, or</span><button>Choose…</button></div>
-    <div class="section"><span>Identities</span><span>2</span></div>
-    <div class="list">
-      <div class="item"><div class="avatar" style="--c:58,123,213;--cl:120,170,240">W</div><div class="text"><span class="label">work</span><span class="muted small">bob@example.com</span></div><span class="tag">~/work/ +1</span></div>
-      <div class="item"><div class="avatar" style="--c:46,158,91;--cl:95,200,135">P</div><div class="text"><span class="label">personal</span><span class="muted small">bob@example.net</span></div><span class="tag">Global</span></div>
-    </div>
-  </div><footer><button class="tool" aria-label="Add Identity"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M8 3v10M3 8h10"/></svg></button><span class="spacer"></span><button class="tool" aria-label="About Idset"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="8" cy="8" r="6.25"/><path d="M8 7.3v3.7"/><path d="M8 4.9v.1" stroke-width="1.8"/></svg></button><button class="tool" aria-label="Re-check"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13.25 8a5.25 5.25 0 1 1-1.54-3.71"/><path d="M12.9 1.9v2.8H10.1"/></svg></button><button class="tool" aria-label="Quit"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M4.4 4.1a5.5 5.5 0 1 0 7.2 0"/><path d="M8 1.8v5.6"/></svg></button></footer></div><figcaption>Dark, no match</figcaption></figure>
+  <figure><div class="desk dark"><div class="panel">
+  <header><h1>Idset</h1><button class="tool" aria-label="Settings"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M6.91 3.12L7.14 1.46L8.86 1.46L9.09 3.12L10.68 3.78L12.02 2.77L13.23 3.98L12.22 5.32L12.88 6.91L14.54 7.14L14.54 8.86L12.88 9.09L12.22 10.68L13.23 12.02L12.02 13.23L10.68 12.22L9.09 12.88L8.86 14.54L7.14 14.54L6.91 12.88L5.32 12.22L3.98 13.23L2.77 12.02L3.78 10.68L3.12 9.09L1.46 8.86L1.46 7.14L3.12 6.91L3.78 5.32L2.77 3.98L3.98 2.77L5.32 3.78z"/><circle cx="8" cy="8" r="2"/></svg></button></header>
+  <div class="content">
+    <div class="drop over"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"><path d="M2 4.5a1 1 0 0 1 1-1h3l1.5 1.5H13a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1z"/></svg><span class="line">Drop a folder to see its identity</span><button class="primary">Choose…</button></div><div class="section">Identities · 2</div><div class="list"><div class="item"><div class="avatar" style="--c:58,123,213;--ink:#ffffff">W</div><div class="text"><span class="label">work</span><span class="email">bob@example.com</span></div><span class="tag"><span class="mid"><span class="ml">~/</span><span class="mh"></span><span class="mt">work/ +1</span></span></span><span class="gap"></span></div><div class="item"><div class="avatar" style="--c:46,158,91;--ink:#ffffff">P</div><div class="text"><span class="label">personal</span><span class="email">bob@example.net</span></div><span class="tag">Global</span><span class="gap"></span></div></div>
+  </div>
+  <footer><button class="tool" aria-label="Add Identity"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M8 3v10M3 8h10"/></svg></button><span class="spacer"></span><button class="tool" aria-label="About Idset"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="8" cy="8" r="6.25"/><path d="M8 7.3v3.7"/><path d="M8 4.9v.1" stroke-width="1.8"/></svg></button><button class="tool" aria-label="Check Again"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13.25 8a5.25 5.25 0 1 1-1.54-3.71"/><path d="M12.9 1.9v2.8H10.1"/></svg></button><button class="tool" aria-label="Quit"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M4.4 4.1a5.5 5.5 0 1 0 7.2 0"/><path d="M8 1.8v5.6"/></svg></button></footer>
+</div></div><figcaption>Dark, dragging over</figcaption></figure>
+  <figure><div class="desk dark"><div class="panel">
+  <header><h1>Idset</h1><button class="tool" aria-label="Settings"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M6.91 3.12L7.14 1.46L8.86 1.46L9.09 3.12L10.68 3.78L12.02 2.77L13.23 3.98L12.22 5.32L12.88 6.91L14.54 7.14L14.54 8.86L12.88 9.09L12.22 10.68L13.23 12.02L12.02 13.23L10.68 12.22L9.09 12.88L8.86 14.54L7.14 14.54L6.91 12.88L5.32 12.22L3.98 13.23L2.77 12.02L3.78 10.68L3.12 9.09L1.46 8.86L1.46 7.14L3.12 6.91L3.78 5.32L2.77 3.98L3.98 2.77L5.32 3.78z"/><circle cx="8" cy="8" r="2"/></svg></button></header>
+  <div class="content">
+    <div class="result"><div class="top"><span class="mid"><span class="ml">~/</span><span class="mh"></span><span class="mt">work/api</span></span><button class="tool" aria-label="Open in Finder"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"><path d="M2 4.5a1 1 0 0 1 1-1h3l1.5 1.5H13a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1z"/></svg></button><button class="tool focus" aria-label="Copy Path"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="5.5" y="5.5" width="8" height="8" rx="1.5"/><path d="M10.5 3.5v-.5a1 1 0 0 0-1-1h-6a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h.5"/></svg></button><button class="tool" aria-label="More"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M3.5 8h.01M8 8h.01M12.5 8h.01"/></svg></button><button class="tool" aria-label="Clear"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M4 4l8 8M12 4l-8 8"/></svg></button></div>
+      <div class="who"><div class="avatar" style="--c:58,123,213;--ink:#ffffff">W</div><div><div class="name">work</div><div class="uses">Git uses this identity here</div></div></div>
+      <div class="kv"><span>Alias</span><span class="mono">github-work</span><span>Email</span><span>bob@example.com</span><span>Folders</span><span class="mono">~/work/ · ~/src/new/</span></div></div><div class="drop"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"><path d="M2 4.5a1 1 0 0 1 1-1h3l1.5 1.5H13a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1z"/></svg><span class="line">Drop a folder to see its identity</span><button class="primary">Choose…</button></div><div class="section">Identities · 1</div><div class="list"><div class="item"><div class="avatar" style="--c:58,123,213;--ink:#ffffff">W</div><div class="text"><span class="label">work</span><span class="email">bob@example.com</span></div><span class="tag"><span class="mid"><span class="ml">~/</span><span class="mh"></span><span class="mt">work/ +1</span></span></span><span class="gap"></span></div></div>
+  </div>
+  <footer><button class="tool" aria-label="Add Identity"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M8 3v10M3 8h10"/></svg></button><span class="spacer"></span><button class="tool" aria-label="About Idset"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="8" cy="8" r="6.25"/><path d="M8 7.3v3.7"/><path d="M8 4.9v.1" stroke-width="1.8"/></svg></button><button class="tool" aria-label="Check Again"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13.25 8a5.25 5.25 0 1 1-1.54-3.71"/><path d="M12.9 1.9v2.8H10.1"/></svg></button><button class="tool" aria-label="Quit"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M4.4 4.1a5.5 5.5 0 1 0 7.2 0"/><path d="M8 1.8v5.6"/></svg></button></footer>
+</div></div><figcaption>Dark, matched, focus ring</figcaption></figure>
+  <figure><div class="desk dark"><div class="panel">
+  <header><h1>Idset</h1><button class="tool" aria-label="Settings"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M6.91 3.12L7.14 1.46L8.86 1.46L9.09 3.12L10.68 3.78L12.02 2.77L13.23 3.98L12.22 5.32L12.88 6.91L14.54 7.14L14.54 8.86L12.88 9.09L12.22 10.68L13.23 12.02L12.02 13.23L10.68 12.22L9.09 12.88L8.86 14.54L7.14 14.54L6.91 12.88L5.32 12.22L3.98 13.23L2.77 12.02L3.78 10.68L3.12 9.09L1.46 8.86L1.46 7.14L3.12 6.91L3.78 5.32L2.77 3.98L3.98 2.77L5.32 3.78z"/><circle cx="8" cy="8" r="2"/></svg></button></header>
+  <div class="content">
+    <div class="result warning"><div class="top"><span class="mid"><span class="ml">~/</span><span class="mh"></span><span class="mt">scratch/notes</span></span><button class="tool" aria-label="Clear"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M4 4l8 8M12 4l-8 8"/></svg></button></div><div class="say">No identity matches this folder</div></div><div class="drop"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"><path d="M2 4.5a1 1 0 0 1 1-1h3l1.5 1.5H13a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1z"/></svg><span class="line">Drop a folder to see its identity</span><button class="primary">Choose…</button></div><div class="section">Identities · 2</div><div class="list"><div class="item"><div class="avatar" style="--c:58,123,213;--ink:#ffffff">W</div><div class="text"><span class="label">work</span><span class="email">bob@example.com</span></div><span class="tag"><span class="mid"><span class="ml">~/</span><span class="mh"></span><span class="mt">work/ +1</span></span></span><span class="gap"></span></div><div class="item"><div class="avatar" style="--c:46,158,91;--ink:#ffffff">P</div><div class="text"><span class="label">personal</span><span class="email">bob@example.net</span></div><span class="tag">Global</span><span class="gap"></span></div></div>
+  </div>
+  <footer><button class="tool" aria-label="Add Identity"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M8 3v10M3 8h10"/></svg></button><span class="spacer"></span><button class="tool" aria-label="About Idset"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="8" cy="8" r="6.25"/><path d="M8 7.3v3.7"/><path d="M8 4.9v.1" stroke-width="1.8"/></svg></button><button class="tool" aria-label="Check Again"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13.25 8a5.25 5.25 0 1 1-1.54-3.71"/><path d="M12.9 1.9v2.8H10.1"/></svg></button><button class="tool" aria-label="Quit"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M4.4 4.1a5.5 5.5 0 1 0 7.2 0"/><path d="M8 1.8v5.6"/></svg></button></footer>
+</div></div><figcaption>Dark, no match</figcaption></figure>
 </div>
 </html>

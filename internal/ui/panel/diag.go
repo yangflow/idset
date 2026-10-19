@@ -409,7 +409,7 @@ func (s *Screen) noSSHNotice(c *ui.Context) {
 			ids = append(ids, a.ID)
 		}
 	}
-	ui.Column(c).Key("no-ssh").Radius(10).Background(t.Surface).Border(1, t.Danger).Padding(0, t.Space(2), t.Space(1.5), t.Space(3)).
+	fillCard(c, "no-ssh", t.Danger).Padding(0, t.Space(2), t.Space(1.5), t.Space(3)).
 		Children(func() {
 			ui.Row(c).Height(t.Space(7)).Gap(t.Space(1.5)).AlignItems(ui.Center).Children(func() {
 				ui.Icon(c, icons.Error).FontSize(t.Rem(1.1)).TextColor(t.Danger).Shrink(0)
@@ -449,7 +449,7 @@ func (s *Screen) summary(c *ui.Context) {
 		}
 	}
 	count := s.count(errs, len(entries)-errs)
-	ui.Column(c).Key("summary").Radius(10).Background(t.Surface).Border(1, t.Border).Clip().Children(func() {
+	fillCard(c, "summary", ui.Color{}).Children(func() {
 		head := ui.Row(c).Focusable().Role(ui.RoleButton).Label(count).Expanded(s.diag.open).Height(t.Space(8)).
 			Padding(0, t.Space(2), 0, t.Space(3)).Gap(t.Space(1.5)).AlignItems(ui.Center)
 		if head.Hovered() {

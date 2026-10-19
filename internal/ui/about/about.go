@@ -11,6 +11,7 @@ import (
 	"github.com/egoist/mygo/ui"
 	"github.com/yangflow/idset/internal/ui/icons"
 	"github.com/yangflow/idset/internal/ui/locale"
+	"github.com/yangflow/idset/internal/ui/theme"
 )
 
 //go:embed copy.json
@@ -72,26 +73,32 @@ func (s *Screen) SetText(text Copy) { s.text = text }
 // SetUpdates reports whether this copy can update itself.
 func (s *Screen) SetUpdates(u Updates) { s.updates = u }
 
-// View draws the window: one centered column, the buttons at the bottom.
+// View draws the window: its title in the hidden title bar, then one column centered under it, over the material.
 func (s *Screen) View(c *ui.Context) {
+	theme.Apply(c)
 	t := c.Theme()
-	ui.Column(c).Fill().AlignItems(ui.Center).Padding(t.Space(7), t.Space(6), t.Space(6), t.Space(6)).Children(func() {
+	theme.TitleBar(c, s.text.Window)
+	ui.Column(c).Grow(1).AlignItems(ui.Center).Justify(ui.Center).Padding(0, t.Space(6), t.Space(5), t.Space(6)).Children(func() {
 		ui.Image(c, s.icon).Width(t.Space(16)).Height(t.Space(16))
 		ui.Text(c, "Idset").FontSize(t.Space(4.5)).FontWeight(600).Role(ui.RoleHeading).Level(1).Margin(t.Space(3), 0, 0, 0)
-		ui.Text(c, fmt.Sprintf(s.text.Version, s.version)).TextColor(t.TextMuted).Selectable()
+		ui.Text(c, fmt.Sprintf(s.text.Version, s.version)).TextColor(t.TextMuted).Selectable().Margin(t.Space(0.5), 0, 0, 0)
 		ui.Column(c).AlignItems(ui.Center).Margin(t.Space(3), 0, 0, 0).Children(func() {
-			ui.Text(c, s.text.Copyright).FontSize(t.Space(2.75)).TextColor(t.TextMuted)
-			ui.Text(c, s.text.License).FontSize(t.Space(2.75)).TextColor(t.TextMuted)
+			ui.Text(c, s.text.Copyright).FontSize(t.Rem(0.85)).TextColor(t.TextMuted)
+			ui.Text(c, s.text.License).FontSize(t.Rem(0.85)).TextColor(t.TextMuted)
 		})
-		ui.Spacer(c)
-		ui.Row(c).Gap(t.Space(2)).Margin(t.Space(5), 0, 0, 0).Children(func() {
-			github := ui.Button(c.Key("github"), "").Label(s.text.GitHub)
+		ui.Row(c).Gap(t.Space(2)).AlignItems(ui.Center).Margin(t.Space(5), 0, 0, 0).Children(func() {
+			// GitHub is a link: Accent text with the external symbol, no fill.
+			github := ui.Button(c.Key("github"), "").Label(s.text.GitHub).Padding(0, t.Space(1)).Border(0, ui.Color{}).
+				Background(ui.Color{}).TextColor(t.Accent)
 			github.Children(func() {
 				ui.Row(c).Gap(t.Space(1)).AlignItems(ui.Center).Children(func() {
 					ui.Icon(c, icons.External).FontSize(t.Space(3))
-					ui.Text(c, s.text.GitHub).SingleLine()
+					ui.Text(c, s.text.GitHub).FontWeight(500).SingleLine()
 				})
 			})
+			if github.Hovered() {
+				github.TextColor(t.AccentHover)
+			}
 			if github.Clicked() {
 				c.OpenURL(Repository)
 			}
@@ -100,7 +107,7 @@ func (s *Screen) View(c *ui.Context) {
 			}
 		})
 		if s.updates == Unavailable {
-			ui.Text(c, s.text.Cannot).FontSize(t.Space(2.75)).TextColor(t.TextMuted).TextAlign(ui.Center).
+			ui.Text(c, s.text.Cannot).FontSize(t.Rem(0.92)).TextColor(t.TextMuted).TextAlign(ui.Center).
 				MaxWidth(t.Space(65)).Wrap().Margin(t.Space(2), 0, 0, 0)
 		}
 	})

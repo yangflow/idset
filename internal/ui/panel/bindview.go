@@ -10,6 +10,7 @@ import (
 	"github.com/yangflow/idset/internal/match"
 	"github.com/yangflow/idset/internal/remote"
 	"github.com/yangflow/idset/internal/ui/icons"
+	"github.com/yangflow/idset/internal/ui/theme"
 )
 
 // textButton is a borderless button in the given color. name is its accessible name and tooltip when it says more
@@ -94,7 +95,7 @@ func (s *Screen) matchedCard(c *ui.Context, r *match.Result, a account.Account) 
 			}
 		},
 	}
-	border := t.Border
+	var border ui.Color
 	switch match.Worst(r.Findings) {
 	case match.Error:
 		border = t.Danger
@@ -102,15 +103,15 @@ func (s *Screen) matchedCard(c *ui.Context, r *match.Result, a account.Account) 
 		border = t.Warning
 	}
 	s.frame(c, "result", border, r.Root, h, func() {
-		ui.Row(c).Gap(t.Space(3)).Padding(t.Space(3.5), t.Space(3), t.Space(2.5), t.Space(3)).AlignItems(ui.Center).Children(func() {
-			badge(c, a, t.Space(9), 9, t.Rem(1.25))
+		ui.Row(c).Gap(t.Space(3)).Padding(t.Space(3), t.Space(3), t.Space(2.5), t.Space(3)).AlignItems(ui.Center).Children(func() {
+			badge(c, a, t.Space(9), 10, t.Rem(1.1))
 			ui.Column(c).Gap(t.Space(0.25)).Children(func() {
-				ui.Text(c, s.label(a)).FontSize(t.Rem(1.15)).FontWeight(600)
-				ui.Text(c, s.text.UsesHere).FontSize(t.Rem(0.9)).TextColor(t.TextMuted)
+				ui.Text(c, s.label(a)).FontSize(t.Rem(1.1)).FontWeight(600)
+				ui.Text(c, s.text.UsesHere).FontSize(t.Rem(0.92)).TextColor(t.TextMuted)
 			})
 		})
 		// The left padding lines the details up with the identity name: badge plus gap.
-		ui.Column(c).Gap(t.Space(1)).Padding(0, t.Space(3), t.Space(3), t.Space(15)).Children(func() {
+		ui.Column(c).Gap(t.Space(1)).Padding(0, t.Space(3), t.Space(3), t.Space(14.5)).Children(func() {
 			detail := func(label string, values []string, mono bool) {
 				// Each label stands by the first line of its value, however many lines follow.
 				ui.Row(c).Gap(t.Space(2)).AlignItems(ui.Start).Children(func() {
@@ -148,18 +149,18 @@ func (s *Screen) matchedCard(c *ui.Context, r *match.Result, a account.Account) 
 func (s *Screen) rebindMenu(c *ui.Context, more ui.Element, r *match.Result, others []account.Account) {
 	t := c.Theme()
 	ui.PopoverBase(c, more, &s.menuOpen, func(panel ui.Element) {
+		theme.Menu(c, panel, t.Space(56))
 		panel.AttachTo(more, ui.AnchorBottomRight, ui.AnchorTopRight).Margin(t.Space(2.5), 0, 0, 0).
-			Width(t.Space(56)).Padding(t.Space(1)).Radius(8).Background(t.Background).Border(1, t.Border).
 			Role(ui.RoleMenu).Label(s.text.RebindTo)
 		if len(others) > 0 {
 			// The heading is as high as it needs and inset like the entries, so the space above and below it is even.
 			ui.Row(c).Height(t.Space(7)).PaddingX(t.Space(2)).AlignItems(ui.Center).Children(func() {
-				ui.Text(c, s.text.RebindTo).FontSize(t.Rem(0.9)).TextColor(t.TextMuted).SingleLine()
+				ui.Text(c, s.text.RebindTo).FontSize(t.Rem(0.85)).FontWeight(600).TextColor(t.TextMuted).SingleLine()
 			})
 		}
 		entry := func(key, label string, children func()) ui.Element {
 			e := ui.Row(c.Key(key)).Focusable().Role(ui.RoleMenuItem).Label(label).Gap(t.Space(2)).
-				Height(t.Space(8)).PaddingX(t.Space(2)).Radius(t.Radius).AlignItems(ui.Center)
+				Height(t.Space(6.5)).PaddingX(t.Space(2)).Radius(t.Radius).AlignItems(ui.Center)
 			if e.Hovered() {
 				e.Background(t.SurfaceHover)
 			}
@@ -169,7 +170,7 @@ func (s *Screen) rebindMenu(c *ui.Context, more ui.Element, r *match.Result, oth
 		for _, a := range others {
 			if entry("entry-"+a.ID, s.text.RebindTo+" "+s.label(a), func() {
 				dot(c, a, t.Space(2.5))
-				ui.Text(c, s.label(a)).Grow(1).SingleLine()
+				ui.Text(c, s.label(a)).FontSize(t.Rem(0.92)).Grow(1).SingleLine()
 				s.folderEnd(c, a)
 			}).Clicked() {
 				s.rebindTo(a.ID)
@@ -198,7 +199,7 @@ func (s *Screen) confirmBlock(c *ui.Context) {
 	ui.Column(c).Gap(t.Space(2.5)).Padding(t.Space(3)).Children(func() {
 		ui.Text(c, fmt.Sprintf(s.text.ConfirmShort, s.label(a)))
 		ui.Row(c).Gap(t.Space(2)).Justify(ui.End).Children(func() {
-			if ui.Button(c, s.text.Cancel).Label(s.text.Cancel).Size(t.Space(20), t.Space(7)).Padding(0).Background(t.Background).Clicked() {
+			if ui.Button(c, s.text.Cancel).Label(s.text.Cancel).Size(t.Space(20), t.Space(7)).Padding(0).Background(theme.Of(c).Field).Clicked() {
 				s.confirmTo = ""
 			}
 			if ui.PrimaryButton(c, s.text.Rebind).Label(s.text.Rebind).Size(t.Space(20), t.Space(7)).Padding(0).Disabled(s.busy).Clicked() {
@@ -297,7 +298,7 @@ func (s *Screen) bindRow(c *ui.Context, a account.Account) {
 // matched card under it shows the folder, and its clear button clears both.
 func (s *Screen) overlapCard(c *ui.Context, r *match.Result) {
 	t := c.Theme()
-	ui.Column(c).Key("overlap").Radius(10).Background(t.Surface).Border(1, t.Border).Clip().Children(func() {
+	fillCard(c, "overlap", ui.Color{}).Children(func() {
 		ui.Row(c).Gap(t.Space(1)).Padding(t.Space(3), t.Space(2), t.Space(2), t.Space(3)).AlignItems(ui.Center).Children(func() {
 			ui.Text(c, fmt.Sprintf(s.text.OverlapTitle, len(r.Covering))).FontWeight(600).Grow(1).MinWidth(0)
 			// The sentence about Git's order is the tooltip of the info icon.
@@ -353,7 +354,7 @@ func (s *Screen) staleShown() bool {
 // an arrow and the new path, and the two buttons.
 func (s *Screen) staleCard(c *ui.Context, st *match.Stale, a account.Account, root string) {
 	t := c.Theme()
-	ui.Column(c).Key("stale").Radius(10).Background(t.Surface).Border(1, t.Border).Clip().Children(func() {
+	fillCard(c, "stale", ui.Color{}).Children(func() {
 		ui.Row(c).Height(t.Space(10)).PaddingX(t.Space(3)).Gap(t.Space(2.5)).AlignItems(ui.Center).Children(func() {
 			dot(c, a, t.Space(2.5))
 			ui.Row(c).Grow(1).MinWidth(0).Children(func() {
@@ -439,7 +440,7 @@ func (s *Screen) findings(c *ui.Context, r *match.Result, a account.Account) {
 			}
 			row := ui.Row(c.Key(fmt.Sprintf("finding-%d", i))).Height(t.Space(7)).PaddingX(t.Space(3)).Gap(t.Space(1.5)).AlignItems(ui.Center).
 				MinWidth(0).Label(d.sentence() + s.text.Then + d.why).Description(d.why).Children(func() {
-				ui.Icon(c, icon).FontSize(t.Rem(1.1)).TextColor(color).Shrink(0)
+				ui.Icon(c, icon).FontSize(t.Space(3.5)).TextColor(color).Shrink(0)
 				s.findingLine(c, d)
 			})
 			tipAbove(c, row, d.why)
@@ -461,7 +462,7 @@ func (s *Screen) findingLine(c *ui.Context, d said) {
 		if strings.HasSuffix(text, " ") {
 			right = space
 		}
-		return ui.Text(c, strings.TrimSpace(text)).FontSize(t.Rem(0.9)).SingleLine().Shrink(0).Padding(0, right, 0, left)
+		return ui.Text(c, strings.TrimSpace(text)).FontSize(t.Rem(0.92)).SingleLine().Shrink(0).Padding(0, right, 0, left)
 	}
 	ui.Row(c).Grow(1).MinWidth(0).AlignItems(ui.Center).Children(func() {
 		piece(d.lead)

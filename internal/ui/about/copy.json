@@ -6,7 +6,7 @@
         "License": "Released under the MIT License",
         "GitHub": "GitHub",
         "Check": "Check for Updates…",
-        "Cannot": "This copy cannot update itself. Download new versions from GitHub."
+        "Cannot": "This copy cannot update itself. Get updates on GitHub."
     },
     "zh-Hans": {
         "Window": "关于 Idset",
@@ -15,6 +15,6 @@
         "License": "以 MIT 许可发布",
         "GitHub": "GitHub",
         "Check": "检查更新…",
-        "Cannot": "这个版本不能自动更新，新版本请到 GitHub 下载。"
+        "Cannot": "这个版本不能自动更新，请到 GitHub 下载。"
     }
 }

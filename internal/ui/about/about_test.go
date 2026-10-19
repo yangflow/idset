@@ -11,8 +11,8 @@ import (
 	"github.com/yangflow/idset/internal/ui/locale"
 )
 
-// The window's content is 320 x 292 DIPs, under the system title bar.
-const width, height = 320, 292
+// The window's content is 320 x 320 DIPs, its hidden title bar included.
+const width, height = 320, 320
 
 func open(t *testing.T, lang string, u Updates) (*ui.Tester, *int) {
 	t.Helper()
@@ -20,6 +20,7 @@ func open(t *testing.T, lang string, u Updates) (*ui.Tester, *int) {
 	s := New(Text(lang), "0.1.0", ui.NewBitmap(image.NewRGBA(image.Rect(0, 0, 64, 64))), Actions{CheckForUpdates: func() { checks++ }})
 	s.SetUpdates(u)
 	tt := ui.NewTester(s.View, width, height)
+	tt.SetTitleBar(ui.TitleBar{Height: 28, Left: 70})
 	tt.Frame()
 	return tt, &checks
 }
@@ -76,7 +77,7 @@ func TestCheckForUpdates(t *testing.T) {
 	}
 }
 
-// Everything fits the window, in both languages, also with the note.
+// Everything fits the window, in both languages, also with the note, and the title stays in the title bar.
 func TestFits(t *testing.T) {
 	for _, lang := range locale.Languages {
 		tt, _ := open(t, lang, Unavailable)
@@ -87,7 +88,8 @@ func TestFits(t *testing.T) {
 		if !ok || !ok2 || !ok3 {
 			t.Fatalf("%s: %q", lang, tt.Texts())
 		}
-		if note.Y+note.H > height || note.X < 0 || note.X+note.W > width || check.Y <= version.Y {
+		title, _ := tt.Find(text.Window)
+		if note.Y+note.H > height || note.X < 0 || note.X+note.W > width || check.Y <= version.Y || title.Y+title.H > 28 {
 			t.Errorf("%s: check %v, note %v in %d x %d", lang, check, note, width, height)
 		}
 	}

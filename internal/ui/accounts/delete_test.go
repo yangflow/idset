@@ -37,7 +37,7 @@ func TestDeleteConfirmationExplainsWhatStays(t *testing.T) {
 		t.Fatalf("the key must be inspected: %v", r.rec.inspected)
 	}
 	r.want(t, "Delete identity work?", "Private key", "~/.ssh/id_ed25519_work", "Folders", "~/work/", "~/src/new/", "~/clients/acme/",
-		"Project folders on disk are never touched.", "Also delete the private key", "Cancel")
+		"Project folders stay as they are.", "Also delete the private key", "Cancel")
 	r.wantNot(t, "Only the private key is deleted")
 	// Until the key is inspected the box and Delete wait.
 	r.click(t, "Also delete the private key")
@@ -49,7 +49,7 @@ func TestDeleteConfirmationExplainsWhatStays(t *testing.T) {
 	r.wantNot(t, "No key path", "uses the same key")
 	r.click(t, "Also delete the private key")
 	r.tt.Frame()
-	r.want(t, "Only the private key is deleted; the .pub file stays.")
+	r.want(t, "Deletes the private key; the .pub file stays.")
 	if !r.s.confirm.alsoKey {
 		t.Fatal("the box is checked")
 	}
@@ -113,7 +113,7 @@ func TestDeleteCheckboxIsDisabledForEveryReason(t *testing.T) {
 	}{
 		{"no key path", miscID, keyfile.NoPath, "", "This identity has no key path."},
 		{"shared", workID, keyfile.Shared, "personal", "Another identity (personal) uses the same key."},
-		{"symlink", workID, keyfile.Symlink, "", "The key path is a symbolic link; Idset will not delete it."},
+		{"symlink", workID, keyfile.Symlink, "", "The key path is a symbolic link."},
 		{"missing", workID, keyfile.Missing, "", "The key file does not exist."},
 		{"not a regular file", workID, keyfile.NotFile, "", "The key path is not a regular file."},
 	}
