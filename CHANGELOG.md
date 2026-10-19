@@ -16,6 +16,7 @@ All notable user-facing changes are recorded here, following [Keep a Changelog](
 ### Fixed
 
 - The accounts window opens in the language chosen in Settings, not always in the system's.
+- The badge in the accounts window header has the same rounded corners as the one on the result card.
 
 ## [0.1.0] - 2026-10-19
 

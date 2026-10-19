@@ -224,7 +224,7 @@ func (s *Screen) header(c *ui.Context, f *form) {
 	t := c.Theme()
 	ui.Column(c).Gap(t.Space(1.5)).Children(func() {
 		ui.Row(c).Gap(t.Space(2.5)).AlignItems(ui.Center).Children(func() {
-			badge(c, f.cur.color, f.cur.label, t.Space(8), 10, t.Rem(1.15), false)
+			badge(c, f.cur.color, f.cur.label, t.Space(8), 9, t.Rem(1.15), false)
 			ui.Text(c, s.labelOf(f.cur.label)).FontSize(t.Rem(1.15)).FontWeight(600).Role(ui.RoleHeading).Level(1)
 			mark := s.text.Scoped
 			if f.cur.global {
