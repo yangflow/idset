@@ -4,7 +4,8 @@
 `chore(release): X.Y.Z`, open with the next version in `mygo.json` and its section in `CHANGELOG.md`, both made from
 the Conventional Commit titles merged since the last release (`release-please-config.json`): before 1.0, `feat`
 raises the minor version and `fix` and `perf` the patch; `feat` lists under Added, `fix` under Fixed, `perf` under
-Performance, and the other types are left out. Only the maintainer merges it.
+Performance, and the other types are left out. Do not edit `CHANGELOG.md` or the version by hand on `main`; only
+the maintainer merges the release pull request.
 
 Merging it creates a draft release with that section as its notes and the tag `vX.Y.Z`. The tag runs
 `.github/workflows/release.yml`: the checks, then one build per platform that signs and uploads its installers and
