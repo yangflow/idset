@@ -39,7 +39,7 @@ func TestHTTPSRowCopiesTheRemoteCommand(t *testing.T) {
 	if tip := hover(t, tt, "Remote is HTTPS"); !tip("HTTPS pushes do not use this identity’s alias or key.") {
 		t.Errorf("the row explains itself: %q", tt.Texts())
 	}
-	if edge(t, tt, "Remote is HTTPS") != edge(t, tt, "Folders") {
+	if edge(t, tt, "Remote is HTTPS") != edge(t, tt, "bob@example.com") {
 		t.Error("an HTTPS remote is not a finding: the outline stays as it was")
 	}
 	click(t, tt, "Copy Switch-to-SSH Command")
@@ -90,9 +90,21 @@ func TestHTTPSRowSitsUnderTheFindings(t *testing.T) {
 	}
 }
 
+// openCardClone opens the clone helper of the result card with its toggle, the first of the panel, and checks
+// the input has the focus.
+func openCardClone(t *testing.T, tt *ui.Tester) {
+	t.Helper()
+	click(t, tt, "Clone with This Identity")
+	if !tt.Focused("Repository to clone") {
+		t.Errorf("the input has the focus on open: %q", tt.Texts())
+	}
+}
+
 func TestCloneHelperStartsWithTheOrigin(t *testing.T) {
 	s, tt, rec := card(t, httpsResult(httpsURL), cloneList()...)
 	clock(s)
+	wantNot(t, tt, "Repository to clone")
+	openCardClone(t, tt)
 	want(t, tt, "acme/api", "git clone git@github-work:acme/api.git")
 	click(t, tt, "Copy Clone Command")
 	if !slices.Equal(rec.copied, []string{"git clone git@github-work:acme/api.git"}) {
@@ -111,6 +123,7 @@ func TestCloneHelperStartsWithTheRememberedPrefix(t *testing.T) {
 	s.Drop([]string{"/home/ada/work/api"})
 	s.SetResult("/home/ada/work/api", httpsResult("git@github.com:solo"), nil)
 	tt.Frame()
+	openCardClone(t, tt)
 	// A prefix alone is not a repository: nothing to copy, and a quiet hint instead of an error.
 	want(t, tt, "Type owner/repo or a URL")
 	wantNot(t, tt, "git clone git@github-work:")
@@ -130,7 +143,7 @@ func TestCloneHelperTakesWhatTheUserTypes(t *testing.T) {
 	} {
 		s, tt, rec := card(t, httpsResult(""), cloneList()...)
 		clock(s)
-		click(t, tt, "Repository to clone")
+		openCardClone(t, tt)
 		tt.Type(c.in)
 		tt.Key(0, ui.KeyEnter)
 		if !slices.Equal(rec.copied, []string{c.out}) || !slices.Equal(rec.cloned, [][2]string{{"work", c.prefix}}) {
@@ -143,6 +156,7 @@ func TestCloneHelperDoesNotCopyWhatItCannotRead(t *testing.T) {
 	for _, in := range []string{"", "acme/", "web"} {
 		s, tt, rec := card(t, httpsResult(""), cloneList()...)
 		clock(s)
+		openCardClone(t, tt)
 		if in != "" {
 			click(t, tt, "Repository to clone")
 			tt.Type(in)
@@ -199,6 +213,22 @@ func TestIdentityRowsOpenOneHelperAtATime(t *testing.T) {
 	}
 }
 
+func TestCardAndRowHelpersOpenOneAtATime(t *testing.T) {
+	s, tt, _ := card(t, httpsResult(""), cloneList()...)
+	clock(s)
+	openCardClone(t, tt)
+	toggle(t, tt, "personal")
+	if count(tt, "Repository to clone") != 1 || s.cardCloneOpen {
+		t.Fatalf("a row's helper closes the card's: %q", tt.Texts())
+	}
+	openCardClone(t, tt)
+	if count(tt, "Repository to clone") != 1 || s.openRow != "" {
+		t.Fatalf("the card's helper closes a row's: %q", tt.Texts())
+	}
+	click(t, tt, "Clone with This Identity")
+	wantNot(t, tt, "Repository to clone")
+}
+
 // toggle clicks the disclosure button at the end of the row of an identity.
 func toggle(t *testing.T, tt *ui.Tester, label string) {
 	t.Helper()
@@ -230,6 +260,7 @@ func TestCloneTextsInChinese(t *testing.T) {
 	s.Drop([]string{"/home/ada/work/api"})
 	s.SetResult("/home/ada/work/api", httpsResult(httpsURL), nil)
 	tt.Frame()
+	click(t, tt, "用这个身份克隆")
 	want(t, tt, "远程地址是 HTTPS", "复制改用 SSH 的命令", "要克隆的仓库", "复制克隆命令", "用这个身份克隆")
 }
 
@@ -252,7 +283,7 @@ func TestCopiedIsSaidOnceAndTheButtonKeepsItsPlainLook(t *testing.T) {
 
 func TestLongCloneCommandGivesWayInTheMiddle(t *testing.T) {
 	_, tt, _ := card(t, httpsResult(""), cloneList()...)
-	click(t, tt, "Repository to clone")
+	openCardClone(t, tt)
 	tt.Type("acme/platform/payments/api")
 	tt.SetSize(260, 480)
 	tt.Frame()

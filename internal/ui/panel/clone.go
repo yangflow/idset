@@ -82,7 +82,7 @@ func (s *Screen) cloneBlock(c *ui.Context, key string, a account.Account, f *clo
 	ui.Column(c.Key(key)).Gap(t.Space(1)).Padding(t.Space(2), t.Space(3), t.Space(2.5), left).Children(func() {
 		ui.Row(c).Gap(t.Space(1.5)).AlignItems(ui.Center).Children(func() {
 			in := ui.TextInput(c.Key(key+"-input"), &f.value).Label(s.text.CloneLabel).Placeholder(repoPlaceholder).
-				Tooltip(s.text.CloneTip).Font("monospace").FontSize(t.Rem(0.88)).Height(t.Space(7)).Radius(6).Background(theme.Of(c).Field).Grow(1).MinWidth(0)
+				Tooltip(s.text.CloneTip).Font("monospace").FontSize(t.Rem(0.88)).Height(t.Space(7)).Radius(theme.FieldRadius).Border(0.5, t.Border).Background(theme.Of(c).Field).Grow(1).MinWidth(0)
 			if focus {
 				in.AutoFocus()
 			}
@@ -119,21 +119,30 @@ func (s *Screen) openRowClone(c *ui.Context, a account.Account) {
 	s.cloneBlock(c, "row-clone", a, &s.rowClone, t.Space(8), true)
 }
 
-// toggleRow opens the clone helper of an identity row, or closes it; only one row is open at a time.
+// toggleRow opens the clone helper of an identity row, or closes it; only one helper is open at a time.
 func (s *Screen) toggleRow(id string) {
 	if s.openRow == id {
 		s.openRow = ""
 		return
 	}
 	s.openRow = id
+	s.cardCloneOpen = false
 	s.rowClone = cloneField{value: s.prefixes[id]}
 }
 
-// cardClone is the helper at the bottom of the matched card, under a hairline.
+// toggleCardClone opens the clone helper of the matched card, or closes it; opening it closes a row's helper.
+func (s *Screen) toggleCardClone() {
+	s.cardCloneOpen = !s.cardCloneOpen
+	if s.cardCloneOpen {
+		s.openRow = ""
+	}
+}
+
+// cardClone is the helper at the bottom of the matched card, under a hairline, opened by the card's toggle.
 func (s *Screen) cardClone(c *ui.Context, a account.Account) {
 	if a.SSHAlias == "" {
 		return
 	}
 	ui.Divider(c)
-	s.cloneBlock(c, "clone", a, &s.matchClone, c.Theme().Space(3), false)
+	s.cloneBlock(c, "clone", a, &s.matchClone, c.Theme().Space(3), true)
 }

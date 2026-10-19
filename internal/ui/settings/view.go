@@ -122,7 +122,7 @@ func (s *Screen) section(c *ui.Context, title string, body func(r *rows), after 
 		if title != "" {
 			ui.Text(c, title).FontSize(t.Rem(0.85)).FontWeight(600).TextColor(t.TextMuted).Role(ui.RoleHeading).Level(2).PaddingX(t.Space(3))
 		}
-		ui.Column(c).Radius(10).Background(theme.Of(c).Card).Clip().Children(func() { body(&rows{c: c}) })
+		theme.Card(c, ui.Column(c)).Clip().Children(func() { body(&rows{c: c}) })
 		if after != nil {
 			after()
 		}
@@ -217,7 +217,7 @@ func (s *Screen) general(c *ui.Context) {
 // ghost is a borderless 24 DIP symbol button.
 func ghost(c *ui.Context, key, label string, icon *ui.SVG) ui.Element {
 	t := c.Theme()
-	b := ui.Button(c.Key(key), "").Label(label).Size(t.Space(6), t.Space(6)).Padding(0).Radius(t.Radius).Border(0, ui.Color{}).
+	b := ui.Button(c.Key(key), "").Label(label).Size(t.Space(6), t.Space(6)).Padding(0).Radius(t.Space(3)).Border(0, ui.Color{}).
 		Background(ui.Color{}).TextColor(t.TextMuted).Tooltip(label).Children(func() { ui.Icon(c, icon).FontSize(t.Rem(1.1)) })
 	if b.Hovered() {
 		b.Background(t.SurfaceHover)
@@ -227,7 +227,7 @@ func ghost(c *ui.Context, key, label string, icon *ui.SVG) ui.Element {
 
 // dialogButton makes the two buttons of a dialog share its width, 28 DIPs high.
 func dialogButton(b ui.Element, t *ui.Theme) ui.Element {
-	return b.Grow(1).Height(t.Space(7)).Radius(8)
+	return b.Grow(1).Height(t.Space(7))
 }
 
 // dot is an identity's color, lighter on a dark theme for contrast.
@@ -244,7 +244,7 @@ func dot(c *ui.Context, color string) {
 func (s *Screen) backupsPane(c *ui.Context) {
 	t := c.Theme()
 	if s.readOnly {
-		ui.Row(c).Gap(t.Space(2)).Padding(t.Space(2.5), t.Space(3), t.Space(2.5), t.Space(3)).Radius(10).Background(t.Danger.Alpha(0.12)).Children(func() {
+		ui.Row(c).Gap(t.Space(2)).Padding(t.Space(2.5), t.Space(3), t.Space(2.5), t.Space(3)).Radius(theme.CardRadius).Background(t.Danger.Alpha(0.12)).Children(func() {
 			ui.Icon(c, icons.Warn).FontSize(t.Space(3.5)).TextColor(t.Danger)
 			ui.Text(c, s.text.ReadOnlyBanner).Grow(1)
 		})
@@ -479,7 +479,7 @@ func (s *Screen) removeDialog(c *ui.Context) ui.Element {
 			})
 		}
 		box := func(title string, items func()) {
-			ui.Column(c).Gap(t.Space(1.5)).Padding(t.Space(2.5), t.Space(3), t.Space(2.5), t.Space(3)).Radius(8).Background(theme.Of(c).Card).Children(func() {
+			theme.Card(c, ui.Column(c)).Gap(t.Space(1.5)).Padding(t.Space(2.5), t.Space(3), t.Space(2.5), t.Space(3)).Children(func() {
 				ui.Text(c, title).FontSize(t.Rem(0.85)).FontWeight(600).TextColor(t.TextMuted)
 				items()
 			})

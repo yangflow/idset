@@ -137,7 +137,7 @@ func (s *Screen) sidebar(c *ui.Context) {
 
 func (s *Screen) item(c *ui.Context, id, label, email, color string, scoped, draft bool) {
 	t := c.Theme()
-	row := ui.Row(c).Key("item-"+id).Focusable().Gap(t.Space(2.5)).Padding(t.Space(1.5), t.Space(2)).Radius(t.Radius).AlignItems(ui.Center)
+	row := ui.Row(c).Key("item-"+id).Focusable().Gap(t.Space(2.5)).Padding(t.Space(1.5), t.Space(2)).Radius(theme.FieldRadius).AlignItems(ui.Center)
 	selected := id == s.sel
 	secondary := t.TextMuted
 	switch {
@@ -236,7 +236,7 @@ func (s *Screen) header(c *ui.Context, f *form) {
 				for _, name := range account.ColorPresets {
 					s.colorChoice(c, f, name)
 				}
-				ui.TextInput(c.Key("hex"), &f.hex).Label(s.text.Hex).Font("monospace").FontSize(t.Rem(0.85)).Width(t.Space(22)).Disabled(s.busy)
+				ui.TextInput(c.Key("hex"), &f.hex).Label(s.text.Hex).Font("monospace").FontSize(t.Rem(0.85)).Width(t.Space(22)).Radius(theme.FieldRadius).Disabled(s.busy)
 			})
 		})
 		s.notes(c, s.problemTexts(f, "color"))
@@ -312,7 +312,7 @@ func (s *Screen) section(c *ui.Context, title, help string, errs []string, body 
 	t := c.Theme()
 	ui.Column(c).Gap(t.Space(1)).Children(func() {
 		ui.Text(c, title).FontSize(t.Rem(0.85)).FontWeight(600).TextColor(t.TextMuted).Role(ui.RoleHeading).Level(2).PaddingX(t.Space(3))
-		ui.Column(c).Radius(10).Background(theme.Of(c).Card).Clip().Children(func() { body(&rows{c: c}) })
+		theme.Card(c, ui.Column(c)).Clip().Children(func() { body(&rows{c: c}) })
 		s.notes(c, errs)
 		if help != "" {
 			s.footnote(c, help)
@@ -337,7 +337,7 @@ func (s *Screen) footnote(c *ui.Context, text string) {
 
 // input is a text input drawn as plain text in a row.
 func (s *Screen) input(c *ui.Context, key string, value *string, label string) ui.Element {
-	return ui.TextInput(c.Key(key), value).Label(label).Grow(1).TextAlign(ui.End).Background(ui.Color{}).Border(0, ui.Color{}).Disabled(s.busy)
+	return ui.TextInput(c.Key(key), value).Label(label).Grow(1).TextAlign(ui.End).Radius(theme.FieldRadius).Background(ui.Color{}).Border(0, ui.Color{}).Disabled(s.busy)
 }
 
 func (s *Screen) identityGroup(c *ui.Context, f *form) {
@@ -519,7 +519,7 @@ func (s *Screen) rewriteGroup(c *ui.Context, f *form) {
 func (s *Screen) notesGroup(c *ui.Context, f *form) {
 	s.section(c, s.text.GroupNotes, "", nil, func(r *rows) {
 		r.line(func() {
-			ui.TextArea(c.Key("notes"), &f.cur.notes).Label(s.text.GroupNotes).Grow(1).TextAlign(ui.Start).Background(ui.Color{}).Border(0, ui.Color{}).Disabled(s.busy)
+			ui.TextArea(c.Key("notes"), &f.cur.notes).Label(s.text.GroupNotes).Grow(1).TextAlign(ui.Start).Radius(theme.FieldRadius).Background(ui.Color{}).Border(0, ui.Color{}).Disabled(s.busy)
 		})
 	})
 }
@@ -543,7 +543,7 @@ func (s *Screen) timesGroup(c *ui.Context, f *form) {
 // ghost is a borderless square symbol button.
 func ghost(c *ui.Context, label string, icon *ui.SVG) ui.Element {
 	t := c.Theme()
-	b := ui.Button(c.Key("ghost-"+label), "").Label(label).Size(t.Space(6), t.Space(6)).Padding(0).Radius(t.Radius).Border(0, ui.Color{}).
+	b := ui.Button(c.Key("ghost-"+label), "").Label(label).Size(t.Space(6), t.Space(6)).Padding(0).Radius(t.Space(3)).Border(0, ui.Color{}).
 		Background(ui.Color{}).TextColor(t.TextMuted).Tooltip(label).Children(func() { ui.Icon(c, icon).FontSize(t.Rem(1.1)) })
 	if b.Hovered() {
 		b.Background(t.SurfaceHover)

@@ -9,8 +9,9 @@ All notable user-facing changes are recorded here, following [Keep a Changelog](
 - The accent is now commit mint instead of orange, in tune with the app icon, and meets WCAG AA in light and dark.
 - Windows and dialogs follow the macOS 26 glass look: 16 DIP corners, a light rim on the material, capsule buttons and
   a capsule filter with a focus ring.
-- In the panel, the drop zone steps aside while a result shows, so the identity list stays in view; the result card
-  leads with the identity and puts the open and copy actions in its menu.
+- In the panel, the drop zone steps aside while a result shows, so the identity list stays in view, and the whole
+  panel takes the next folder; the result card leads with the identity, puts the open and copy actions in its menu
+  with "Choose Another Folder…", and opens its clone helper from a button.
 
 ### Fixed
 

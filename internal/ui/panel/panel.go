@@ -23,9 +23,9 @@ var catalog []byte
 
 // Copy is the panel's text in one language. Main reads the tray texts from it too.
 type Copy struct {
-	HidePanel, Quit, About, AboutMenu, Loading, DropLine, DropHint, Choose, ChooseShort, ChooseTitle, Empty, EmptyHint, Filter, NoneMatch,
-	Unnamed, NoAlias, NoEmail, ReadOnly, ReadOnlyShort, ReadOnlyHint, CopyPath, Copied, Clear, Checking, NoMatch, NotRepo, NotFolder,
-	GitFailed, Matched, TooltipIdle, TooltipMatch, TooltipNoMatch, Open, Custom, UsesHere, Alias, Email, Folders, Global,
+	HidePanel, Quit, About, AboutMenu, Loading, DropLine, DropHint, DropRelease, Choose, ChooseOther, ChooseShort, ChooseTitle, Empty, EmptyHint, Filter, NoneMatch,
+	Unnamed, NoEmail, ReadOnly, ReadOnlyShort, ReadOnlyHint, CopyPath, Copied, Clear, Checking, NoMatch, NotRepo, NotFolder,
+	GitFailed, Matched, TooltipIdle, TooltipMatch, TooltipNoMatch, Open, Custom, UsesHere, Global,
 	NoFolders, Identities, Reload, Settings, SettingsMenu, RestoreBackup, RevealFinder, RevealExplorer, RevealFiles, AddIdentity, ImportExisting,
 	OpenFinder, OpenExplorer, OpenFiles, More, BindTo, Bind, BindLabel, NewShort, NewBound, Cancel, Rebind, RebindTo,
 	Unbind, OverlapTitle, OverlapHint, Used, Overridden, OnlyUse, RemoveFrom, Has, ConfirmShort, Covered, CoveredBy,
@@ -113,14 +113,16 @@ type Screen struct {
 	// remembered owner prefixes by identity.
 	matchClone, rowClone cloneField
 	openRow              string
-	prefixes             map[string]string
-	httpsUntil           time.Time
-	query                string
-	providers            []account.Provider
-	copiedUntil          time.Time
-	now                  func() time.Time
-	goos                 string
-	diag                 diagState
+	// cardCloneOpen shows the clone helper on the matched card.
+	cardCloneOpen bool
+	prefixes      map[string]string
+	httpsUntil    time.Time
+	query         string
+	providers     []account.Provider
+	copiedUntil   time.Time
+	now           func() time.Time
+	goos          string
+	diag          diagState
 
 	binding
 }
@@ -161,7 +163,7 @@ func (s *Screen) SetResult(dir string, r match.Result, err error) {
 	}
 	s.checking = ""
 	s.resultSeq++
-	s.matchClone, s.httpsUntil = cloneField{}, time.Time{}
+	s.matchClone, s.httpsUntil, s.cardCloneOpen = cloneField{}, time.Time{}, false
 	if err != nil {
 		s.result, s.resultErr = nil, err
 		return
@@ -202,7 +204,7 @@ func (s *Screen) resultMessage() string {
 }
 
 func (s *Screen) clear() {
-	s.checking, s.result, s.resultErr = "", nil, nil
+	s.checking, s.result, s.resultErr, s.cardCloneOpen = "", nil, nil, false
 	s.binding = binding{busy: s.busy}
 }
 

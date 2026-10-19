@@ -77,7 +77,7 @@ func TestFindingRowsComeEmailFirstThenKey(t *testing.T) {
 	_, tt, _ := card(t, withFindings(otherEmail, otherKey), findingList()...)
 	email, _ := tt.Find("Commits use")
 	key, _ := tt.Find("Pushes use")
-	details, _ := tt.Find("Folders")
+	details, _ := tt.Find("bob@example.com")
 	if !(details.Y < email.Y && email.Y < key.Y) {
 		t.Errorf("details %v, email %v, key %v", details.Y, email.Y, key.Y)
 	}
@@ -91,8 +91,8 @@ func TestCardWithoutFindingsHasNoRows(t *testing.T) {
 	_, plain, _ := card(t, withFindings(), findingList()...)
 	_, with, _ := card(t, withFindings(noEmail), findingList()...)
 	wantNot(t, plain, "Commits have no author")
-	a, _ := plain.Find("Drop a folder to see its identity")
-	b, _ := with.Find("Drop a folder to see its identity")
+	a, _ := plain.Find("Identities")
+	b, _ := with.Find("Identities")
 	// A row is 28 high with 4 above and below it, and a hairline.
 	if got := b.Y - a.Y; !same(got, 28+8+1) {
 		t.Errorf("one finding adds %v DIPs", got)
@@ -107,18 +107,18 @@ func TestCardBorderTakesTheWorstSeverity(t *testing.T) {
 	_, dangerOnly, _ := card(t, withFindings(otherEmail), list...)
 	_, noMatch, _ := card(t, match.Result{Kind: match.NoMatch, Root: "/home/ada/scratch"}, list...)
 	warn := edge(t, noMatch, "No identity matches this folder")
-	if got := edge(t, warning, "Alias"); got != warn {
+	if got := edge(t, warning, "bob@example.com"); got != warn {
 		t.Errorf("warnings use the Warning outline: %v, want %v", got, warn)
 	}
-	plainEdge := edge(t, plain, "Alias")
+	plainEdge := edge(t, plain, "bob@example.com")
 	if plainEdge == warn {
 		t.Fatal("a card without findings has no outline")
 	}
-	dangerEdge := edge(t, danger, "Alias")
+	dangerEdge := edge(t, danger, "bob@example.com")
 	if dangerEdge == warn || dangerEdge == plainEdge {
 		t.Errorf("an error finding uses the Danger outline: %v (warning %v, plain %v)", dangerEdge, warn, plainEdge)
 	}
-	if got := edge(t, dangerOnly, "Alias"); got != dangerEdge {
+	if got := edge(t, dangerOnly, "bob@example.com"); got != dangerEdge {
 		t.Errorf("one error is enough: %v, want %v", got, dangerEdge)
 	}
 }

@@ -46,7 +46,7 @@ func (s *Screen) keyForm(c *ui.Context) {
 	t := c.Theme()
 	busy := s.keys.busy
 	if a, ok := s.identity(s.keys.target); ok {
-		ui.Row(c).Gap(t.Space(2)).Padding(t.Space(2.5), t.Space(3), t.Space(2.5), t.Space(3)).Radius(10).Background(theme.Of(c).Card).Children(func() {
+		theme.Card(c, ui.Row(c)).Gap(t.Space(2)).Padding(t.Space(2.5), t.Space(3), t.Space(2.5), t.Space(3)).Children(func() {
 			ui.Icon(c, icons.Key).FontSize(t.Space(3.5)).TextColor(t.TextMuted)
 			ui.Text(c, fmt.Sprintf(s.text.KDiag, s.label(a), s.env.Tilde(a.KeyPath))).Grow(1).Wrap()
 		})
@@ -56,7 +56,7 @@ func (s *Screen) keyForm(c *ui.Context) {
 		names = append(names, s.providerName(p))
 	}
 	field := func(key string, value *string, label string, mono bool) {
-		in := ui.TextInput(c.Key(key), value).Label(label).Grow(1).TextAlign(ui.End).Radius(6).Background(theme.Of(c).Field).Border(0.5, t.Border).Disabled(busy)
+		in := ui.TextInput(c.Key(key), value).Label(label).Grow(1).TextAlign(ui.End).Radius(theme.FieldRadius).Background(theme.Of(c).Field).Border(0.5, t.Border).Disabled(busy)
 		if mono {
 			in.Font("monospace").FontSize(t.Rem(0.88))
 		}

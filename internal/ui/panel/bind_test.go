@@ -173,33 +173,41 @@ func TestNoMatchWithoutIdentitiesStillOffersANewOne(t *testing.T) {
 
 func TestMatchedByAParentOffersRebindButNotUnbind(t *testing.T) {
 	s, tt, r := card(t, matched(api, "work", false), work(), client(), personal())
-	want(t, tt, "work", s.openLabel(), s.text.More)
-	wantNot(t, tt, "Unbind", "Undo")
-	click(t, tt, s.openLabel())
+	want(t, tt, "work", s.text.More)
+	wantNot(t, tt, "Unbind", "Undo", s.openLabel(), "Copy Path")
+	// The menu opens the folder, copies its path and chooses another, then lists the others, and has no Unbind:
+	// only a parent folder covers this one.
+	if got := openMenu(t, s, tt); !slices.Equal(got, []string{"Open in Finder", "Copy Path", "Choose Another Folder…", "-", "Rebind to", "client", "personal"}) {
+		t.Errorf("menu %q", got)
+	}
+	choose(t, tt, s.openLabel())
 	if !slices.Equal(r.folders, []string{api}) {
 		t.Fatalf("open: %v", r.folders)
 	}
-	// The menu lists the others, and has no Unbind: only a parent folder covers this one.
-	if got := openMenu(t, s, tt); !slices.Equal(got, []string{"Rebind to", "client", "personal"}) {
+	openMenu(t, s, tt)
+	choose(t, tt, "Copy Path")
+	if !slices.Equal(r.copied, []string{api}) {
+		t.Errorf("copied %q", r.copied)
+	}
+	want(t, tt, "Copied")
+	// With nobody to rebind to and nothing to unbind, the menu keeps the folder's entries and no separator.
+	s, tt, _ = card(t, matched(api, "work", false), work())
+	if got := openMenu(t, s, tt); !slices.Equal(got, []string{"Open in Finder", "Copy Path", "Choose Another Folder…"}) {
 		t.Errorf("menu %q", got)
 	}
-	// With nobody to rebind to and nothing to unbind, the menu has no entries, and there is no "⋯".
-	_, tt, _ = card(t, matched(api, "work", false), work())
-	want(t, tt, s.openLabel(), "Copy Path", "Clear")
-	wantNot(t, tt, s.text.More)
 }
 
 func TestExactMatchOffersUnbind(t *testing.T) {
 	s, tt, r := card(t, matched(api, "work", true), work(), client())
 	wantNot(t, tt, "Unbind")
-	wo, hOpen := size(t, tt, s.openLabel())
+	wo, hClone := size(t, tt, s.text.CloneToggle)
 	wm, hMore := size(t, tt, s.text.More)
 	wc, hClear := size(t, tt, s.text.Clear)
-	if !same(hOpen, hMore) || !same(hMore, hClear) || !same(wo, wm) || !same(wm, wc) {
-		t.Errorf("the icon buttons are the same size: %v x %v, %v x %v, %v x %v", wo, hOpen, wm, hMore, wc, hClear)
+	if !same(hClone, hMore) || !same(hMore, hClear) || !same(wo, wm) || !same(wm, wc) {
+		t.Errorf("the icon buttons are the same size: %v x %v, %v x %v, %v x %v", wo, hClone, wm, hMore, wc, hClear)
 	}
 	// Unbind is in the menu, below the identities, only when the identity lists this very folder.
-	if got := openMenu(t, s, tt); !slices.Equal(got, []string{"Rebind to", "client", "-", "Unbind"}) {
+	if got := openMenu(t, s, tt); !slices.Equal(got[4:], []string{"Rebind to", "client", "-", "Unbind"}) {
 		t.Errorf("Unbind comes last: %q", got)
 	}
 	choose(t, tt, "Unbind")
@@ -217,7 +225,7 @@ func TestExactMatchOffersUnbind(t *testing.T) {
 
 func TestRebindMenuListsTheOtherIdentities(t *testing.T) {
 	s, tt, r := card(t, matched(api, "work", true), work(), client(), personal())
-	if got := openMenu(t, s, tt); !slices.Equal(got, []string{"Rebind to", "client", "personal", "-", "Unbind"}) {
+	if got := openMenu(t, s, tt); !slices.Equal(got[4:], []string{"Rebind to", "client", "personal", "-", "Unbind"}) {
 		t.Fatalf("menu %q", got)
 	}
 	choose(t, tt, "client")
@@ -287,11 +295,11 @@ func TestCoveredBindChangesNothingAndSaysWhy(t *testing.T) {
 	// The card keeps its answer; its context line says "Covered by …" for a moment, the full sentence is a tooltip.
 	want(t, tt, "Covered by ~/work/")
 	wantNot(t, tt, "Undo", "Nothing changed")
-	// The status sits in the context line before the buttons, whole.
+	// The status sits in the answer row before the buttons, whole.
 	status, _ := tt.Find("Covered by ~/work/")
-	open, _ := tt.Find(s.openLabel())
-	if status.X+status.W > open.X || status.Y+status.H < open.Y || status.Y > open.Y+open.H {
-		t.Errorf("status %v, open %v", status, open)
+	more, _ := tt.Find(s.text.More)
+	if status.X+status.W > more.X || status.Y+status.H < more.Y || status.Y > more.Y+more.H {
+		t.Errorf("status %v, more %v", status, more)
 	}
 	within(t, tt, "Covered by ~/work/")
 	if tip := hover(t, tt, "Covered by ~/work/"); !tip("work already covers this folder with ~/work/. Nothing changed.") {
@@ -315,7 +323,7 @@ func TestOverlapListsGitsOrderAndOffersToSettleIt(t *testing.T) {
 	res := matched("/home/ada/work/client/app", "client", false, match.Cover{ID: "work", Path: "~/work/"}, match.Cover{ID: "client", Path: "~/work/client/"})
 	s, tt, r := card(t, res, work(), client())
 	want(t, tt, "2 identities cover this folder", "Git reads them in order; the last one wins.", "Used", "Overridden",
-		"Use Only client Here", "Remove ~/work/ from work", s.openLabel())
+		"Use Only client Here", "Remove ~/work/ from work", s.text.More)
 	first, _ := tt.Find("~/work/")
 	second, _ := tt.Find("~/work/client/")
 	if first.Y >= second.Y {
@@ -350,7 +358,7 @@ func TestOverlapListsGitsOrderAndOffersToSettleIt(t *testing.T) {
 	res.Exact = true
 	_, tt, _ = card(t, res, work(), client())
 	wantNot(t, tt, "cover this folder", "Use Only client Here", "Remove ~/work/ from work")
-	want(t, tt, s.openLabel())
+	want(t, tt, s.text.More)
 	s.OpDone(bind.Outcome{Op: r.ran[1], Result: res})
 	tt.Frame()
 	wantNot(t, tt, "cover this folder")
@@ -531,7 +539,10 @@ func TestRecheckLooksAtTheFolderAgainOnlyForTheCardsFolder(t *testing.T) {
 	ws.goos = "windows"
 	ws.SetResult(`C:\Users\Ada\Work\Notes`, matched("C:/Users/Ada/Work/Notes", "work", false), nil)
 	tt = ui.NewTester(ws.View, 340, 480)
-	want(t, tt, "Open in Explorer", "~/Work/Notes")
+	want(t, tt, "~/Work/Notes")
+	if got := openMenu(t, ws, tt); got[0] != "Open in Explorer" {
+		t.Errorf("menu %q", got)
+	}
 }
 
 func TestBindingTextInChinese(t *testing.T) {
@@ -548,7 +559,11 @@ func TestBindingTextInChinese(t *testing.T) {
 	s.Drop([]string{res.Root})
 	s.SetResult(res.Root, res, nil)
 	tt.Frame()
-	want(t, tt, "2 个身份覆盖这里", "这里只用 client", "从 work 去掉 ~/work/", "生效", "被覆盖", "更多", "复制路径", "清除")
+	want(t, tt, "2 个身份覆盖这里", "这里只用 client", "从 work 去掉 ~/work/", "生效", "被覆盖", "更多", "清除")
+	if got := openMenu(t, s, tt); !slices.Equal(got[:3], []string{"在 Finder 中打开", "复制路径", "选择其他文件夹…"}) {
+		t.Errorf("menu %q", got)
+	}
+	tt.CloseMenu()
 	s.OpDone(bind.Outcome{Op: bind.Op{Dir: res.Root}, CoveredID: "work", CoveredBy: "~/work/", Result: res})
 	tt.Frame()
 	want(t, tt, "已由 ~/work/ 覆盖")
@@ -602,28 +617,34 @@ func band(tt *ui.Tester, x, y int) int {
 }
 
 func TestCardHeaderIsThe36DIPContextLine(t *testing.T) {
-	_, tt, _ := card(t, matched(api, "work", true), work(), client())
+	_, tt, _ := card(t, noMatch(), work(), client())
 	clear, _ := tt.Find("Clear")
-	// Between the buttons, from the card's top edge to its hairline.
+	// Left of the clear button, from the card's top edge to its hairline.
 	header := band(tt, int(clear.X)-2, int(clear.Y+clear.H/2))
 	if d := header - 36; d > 1 || d < -1 {
 		t.Errorf("the card header is %d high, want 36", header)
 	}
 }
 
-func TestDetailLabelsStandByTheFirstLineOfTheirValue(t *testing.T) {
-	_, tt, _ := card(t, matched(api, "work", false), work(), client())
-	mid := func(name string) float32 {
-		r, ok := tt.Find(name)
-		if !ok {
-			t.Fatalf("no %q in %q", name, tt.Texts())
-		}
-		return r.Y + r.H/2
+func TestMatchedCardPutsTheAnswerFirstAndTheDetailsUnderIt(t *testing.T) {
+	s, tt, _ := card(t, matched(api, "work", false), work(), client())
+	name, _ := tt.Find("work")
+	path, _ := tt.Find("work/api")
+	email, _ := tt.Find("bob@example.com")
+	alias, _ := tt.Find(" · github-work")
+	if !(name.Y < path.Y && path.Y < email.Y) {
+		t.Errorf("name %v, folder %v, email %v from top to bottom", name, path, email)
 	}
-	label, first, second := mid("Folders"), mid("~/work/"), mid("~/src/new/")
-	if d := label - first; d > 2 || d < -2 || second-label < first-label+1 {
-		t.Errorf("Folders at %v, its lines at %v and %v", label, first, second)
+	if d := email.X - name.X; d > 1 || d < -1 {
+		t.Errorf("the details start under the name: %v %v", email, name)
 	}
+	if d := (alias.Y + alias.H/2) - (email.Y + email.H/2); d > 1 || d < -1 || alias.X < email.X+email.W-1 {
+		t.Errorf("the alias follows the email on its line: %v %v", alias, email)
+	}
+	if tip := hover(t, tt, "work"); !tip(s.text.UsesHere) {
+		t.Errorf("the name's tooltip says what it means: %q", tt.Texts())
+	}
+	wantNot(t, tt, "Folders", "Alias", "Email")
 }
 
 func TestOverlapShowsTheFolderOnce(t *testing.T) {

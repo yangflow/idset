@@ -6,12 +6,13 @@ import (
 
 	"github.com/egoist/mygo/ui"
 	"github.com/yangflow/idset/internal/ui/icons"
+	"github.com/yangflow/idset/internal/ui/theme"
 )
 
 func (s *Screen) importPane(c *ui.Context) {
 	t := c.Theme()
 	if s.readOnly {
-		ui.Row(c).Gap(t.Space(2)).Padding(t.Space(2.5), t.Space(3), t.Space(2.5), t.Space(3)).Radius(10).Background(t.Danger.Alpha(0.12)).Children(func() {
+		ui.Row(c).Gap(t.Space(2)).Padding(t.Space(2.5), t.Space(3), t.Space(2.5), t.Space(3)).Radius(theme.CardRadius).Background(t.Danger.Alpha(0.12)).Children(func() {
 			ui.Icon(c, icons.Warn).FontSize(t.Space(3.5)).TextColor(t.Danger)
 			ui.Text(c, s.text.ImportReadOnly).Grow(1)
 		})
@@ -24,7 +25,7 @@ func (s *Screen) importPane(c *ui.Context) {
 			ui.Text(c, s.text.Scanning).FontSize(t.Rem(1.15)).FontWeight(600).Role(ui.RoleHeading).Level(2)
 		}, s.text.ScanningSub, false)
 	case im.scanErr != "":
-		ui.Row(c).Gap(t.Space(2)).Padding(t.Space(2.5), t.Space(3), t.Space(2.5), t.Space(3)).Radius(10).Background(t.Danger.Alpha(0.12)).Children(func() {
+		ui.Row(c).Gap(t.Space(2)).Padding(t.Space(2.5), t.Space(3), t.Space(2.5), t.Space(3)).Radius(theme.CardRadius).Background(t.Danger.Alpha(0.12)).Children(func() {
 			ui.Icon(c, icons.Warn).FontSize(t.Space(3.5)).TextColor(t.Danger)
 			ui.Text(c, im.scanErr).Grow(1)
 		})

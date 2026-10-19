@@ -186,7 +186,7 @@ func TestAfterChangingThePathTheFolderMatchesWithUpdated(t *testing.T) {
 	s.SetAccounts([]account.Account{fixed, client()}, nil, "")
 	s.OpDone(bind.Outcome{Op: r.ran[0], Result: matched(newRoot, "work", true)})
 	tt.Frame()
-	want(t, tt, "Updated", "Git uses this identity here", "More", s.openLabel())
+	want(t, tt, "Updated", "work", "More")
 	wantNot(t, tt, "’s folder is gone", "Use New Path", "Keep Old Path", "Undo", "Bound to work")
 	if got := tt.Announcements(); !slices.Contains(got, "Updated") {
 		t.Errorf("announced %q", got)
@@ -195,7 +195,7 @@ func TestAfterChangingThePathTheFolderMatchesWithUpdated(t *testing.T) {
 	clock.at = clock.at.Add(updatedFor + time.Millisecond)
 	tt.Frame()
 	wantNot(t, tt, "Updated")
-	want(t, tt, "Git uses this identity here")
+	want(t, tt, "work", "More")
 	if s.busy {
 		t.Error("the wait is over")
 	}
