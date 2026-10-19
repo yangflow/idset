@@ -29,9 +29,19 @@ func (s *Screen) View(c *ui.Context) {
 			s.act.Hide()
 		}
 	}
-	ui.Column(c).Fill().Children(func() {
+	root := ui.Column(c).Fill()
+	// While a result shows, the drop zone is gone and the whole panel takes a dropped folder; dragging one over it
+	// shows an overlay that says what releasing does.
+	dropOver := false
+	if s.showsResult() {
+		dropOver = root.FileDragOver()
+		if files := root.DroppedFiles(); len(files) > 0 {
+			s.Drop(files)
+		}
+	}
+	root.Children(func() {
 		// No hide button: the tray icon and Escape hide the panel, as with other tray panels. The title bar and the
-		// footer give the rest to the content: the title bar is 44 high with no hairline, the footer 40 with one above.
+		// footer give the rest to the content: the title bar is 44 high and the footer 40, neither with a hairline.
 		ui.Row(c).Height(t.Space(11)).Padding(0, t.Space(2.25), 0, t.Space(4)).Gap(t.Space(2)).AlignItems(ui.Center).Children(func() {
 			ui.Text(c, "Idset").FontSize(t.Rem(1.15)).FontWeight(600).Role(ui.RoleHeading).Level(1)
 			ui.Spacer(c)
@@ -46,7 +56,6 @@ func (s *Screen) View(c *ui.Context) {
 		} else {
 			ui.Scroll(c).Grow(1).Padding(t.Space(1), t.Space(3), t.Space(3)).Gap(t.Space(2.5)).Children(func() { s.content(c) })
 		}
-		ui.Divider(c)
 		ui.Row(c).Height(t.Space(10)).PaddingX(t.Space(2)).Gap(t.Space(1)).AlignItems(ui.Center).Children(func() {
 			// Add Identity stays in the fixed footer, reachable however long the list is. Without a list the
 			// empty state has its own button. Only actions that work are here.
@@ -64,6 +73,9 @@ func (s *Screen) View(c *ui.Context) {
 				s.act.Quit()
 			}
 		})
+		if dropOver {
+			s.dropOverlay(c)
+		}
 	})
 	if s.say != "" {
 		c.Announce(s.say)
@@ -78,7 +90,24 @@ func (s *Screen) View(c *ui.Context) {
 	}
 }
 
-// ghost is a borderless square symbol button, 26 DIPs at the default spacing, with a 16 DIP glyph. Its label is
+// dropOverlay covers the content while a folder is dragged over a panel with a result: a tinted card with the
+// folder icon and what releasing does.
+func (s *Screen) dropOverlay(c *ui.Context) {
+	t := c.Theme()
+	ui.Column(c).Key("drop-over").Absolute().Top(t.Space(11)).Left(t.Space(2)).Right(t.Space(2)).Bottom(t.Space(11.5)).
+		Radius(t.Space(3.5)).Border(1.5, t.Accent.Alpha(0.7)).Background(theme.Of(c).AccentSoft).Gap(t.Space(2)).
+		AlignItems(ui.Center).Justify(ui.Center).Children(func() {
+		ui.Icon(c, icons.Folder).FontSize(t.Space(7)).TextColor(t.Accent)
+		ui.Text(c, s.text.DropRelease).FontWeight(600).TextAlign(ui.Center)
+	})
+}
+
+// showsResult reports whether a result card, or the check before it, is on the panel; the drop zone is then gone.
+func (s *Screen) showsResult() bool {
+	return !s.loading && s.readErr == nil && (s.result != nil || s.checking != "" || s.resultErr != nil)
+}
+
+// ghost is a borderless circular symbol button, 26 DIPs at the default spacing, with a 16 DIP glyph. Its label is
 // its accessible name and its tooltip.
 func ghost(c *ui.Context, label string, icon *ui.SVG) ui.Element {
 	return tooltipGhost(c, "ghost-"+label, label, label, icon)
@@ -93,7 +122,7 @@ func tooltipGhost(c *ui.Context, key, label, tip string, icon *ui.SVG) ui.Elemen
 // its plain look even while the pointer is still over it.
 func symbolButton(c *ui.Context, key, label string, icon *ui.SVG, done bool) ui.Element {
 	t := c.Theme()
-	b := ui.Button(c.Key(key), "").Label(label).Size(t.Space(6.5), t.Space(6.5)).Padding(0).Radius(t.Radius).Border(0, ui.Color{}).
+	b := ui.Button(c.Key(key), "").Label(label).Size(t.Space(6.5), t.Space(6.5)).Padding(0).Radius(t.Space(6.5)/2).Border(0, ui.Color{}).
 		Background(ui.Color{}).TextColor(t.TextMuted).Children(func() { ui.Icon(c, icon).FontSize(t.Space(4)) })
 	if b.Hovered() && !done {
 		b.Background(t.SurfaceHover)
@@ -133,21 +162,31 @@ func (s *Screen) content(c *ui.Context) {
 				s.act.OpenImport()
 			}
 		})
-		s.dropZone(c)
+		if !s.showsResult() {
+			s.dropZone(c)
+		}
 		return
 	}
 	if s.noSSH() {
 		s.noSSHNotice(c)
 	}
-	s.dropZone(c)
+	if !s.showsResult() {
+		s.dropZone(c)
+	}
 	ui.Row(c).PaddingX(t.Space(1.5)).Children(func() {
 		ui.Text(c, s.text.Identities).FontSize(t.Rem(0.85)).FontWeight(600).TextColor(t.TextMuted).Grow(1).
 			Role(ui.RoleHeading).Level(2)
 		ui.Textf(c, "%d", len(s.accounts)).FontSize(t.Rem(0.85)).FontWeight(600).TextColor(t.TextMuted)
 	})
 	if len(s.accounts) >= FilterThreshold {
-		ui.TextInput(c.Key("filter"), &s.query).Label(s.text.Filter).Placeholder(s.text.Filter).Height(t.Space(7)).Radius(8).
-			Background(theme.Of(c).Field)
+		// A capsule search field with a magnifier inside its start, as macOS 26 draws one.
+		ui.Row(c).Height(t.Space(7)).AlignItems(ui.Center).Children(func() {
+			ui.TextInput(c.Key("filter"), &s.query).Label(s.text.Filter).Placeholder(s.text.Filter).Fill().Radius(theme.Capsule).
+				Border(0, ui.Color{}).Background(t.Surface).Padding(0, t.Space(2.5), 0, t.Space(7.25))
+			ui.Row(c).Absolute().Top(0).Bottom(0).Left(t.Space(2.5)).AlignItems(ui.Center).Children(func() {
+				ui.Icon(c, icons.Search).FontSize(t.Rem(1)).TextColor(t.TextMuted)
+			})
+		})
 		if used := account.ProvidersInUse(s.accounts); len(used) > 1 {
 			ui.Row(c).Gap(t.Space(1.5)).Children(func() {
 				for _, p := range used {
@@ -257,10 +296,10 @@ func badge(c *ui.Context, a account.Account, size, radius, font float32) {
 	})
 }
 
-// fillCard is a result card or the identity list: a fill, not an outline. One that needs attention adds a 1 DIP inner
+// fillCard is a result card or the identity list: a fill with the card rim, not an outline. One that needs attention adds a 1 DIP inner
 // outline in Warning or Danger.
 func fillCard(c *ui.Context, key string, attention ui.Color) ui.Element {
-	e := ui.Column(c).Key(key).Radius(10).Background(theme.Of(c).Card).Clip()
+	e := theme.Card(c, ui.Column(c).Key(key)).Clip()
 	if attention.A != 0 {
 		e.InsetShadow(0, 0, 0, 1, attention)
 	}
@@ -300,18 +339,6 @@ func (s *Screen) folderTag(c *ui.Context, a account.Account) {
 		}
 		pathLine(c, folders[0], suffix, "", face).MaxWidthPercent(42).Shrink(0)
 	}
-}
-
-// folderLines are the folders an identity applies to, one per line: "Global" or "no folders" in a line of their own.
-func (s *Screen) folderLines(a account.Account) []string {
-	paths := usablePaths(a)
-	switch {
-	case a.Scope.Global:
-		return []string{s.text.Global}
-	case len(paths) == 0:
-		return []string{s.text.NoFolders}
-	}
-	return paths
 }
 
 func orDefault(v, fallback string) string {
@@ -375,11 +402,11 @@ func (s *Screen) row(c *ui.Context, a account.Account) {
 	})
 }
 
-// dropZone is always one line; what it says beyond that is in the tooltip.
+// dropZone is always one line, and only there while no result shows; what it says beyond that is in the tooltip.
 func (s *Screen) dropZone(c *ui.Context) {
 	t := c.Theme()
-	zone := ui.Column(c).Key("drop").Height(t.Space(12)).Radius(10).Border(1.5, t.Accent.Alpha(0.55)).BorderStyle(ui.BorderDashed).
-		Background(t.Accent.Alpha(0.08))
+	zone := ui.Column(c).Key("drop").Height(t.Space(12)).Radius(theme.CardRadius).Border(1, t.Accent.Alpha(0.5)).BorderStyle(ui.BorderDashed).
+		Background(t.Accent.Alpha(0.06))
 	if zone.FileDragOver() {
 		zone.Border(1.5, t.Accent).BorderStyle(ui.BorderSolid).Background(theme.Of(c).AccentSoft)
 	}
@@ -406,7 +433,7 @@ func (s *Screen) resultCard(c *ui.Context) {
 	}
 	switch {
 	case checking != "":
-		s.frame(c, "result", ui.Color{}, checking, head{}, func() {
+		s.frame(c, "result", ui.Color{}, checking, func() {
 			ui.Row(c).Gap(t.Space(2)).Padding(t.Space(3)).AlignItems(ui.Center).Children(func() {
 				ui.Spinner(c)
 				ui.Text(c, s.text.Checking)
@@ -414,7 +441,7 @@ func (s *Screen) resultCard(c *ui.Context) {
 		})
 	case resultErr != nil:
 		// The headline is short; the reason is at most two lines, and the tooltip has all of it.
-		s.frame(c, "result", t.Danger, dir, head{}, func() {
+		s.frame(c, "result", t.Danger, dir, func() {
 			ui.Column(c).Gap(t.Space(1)).Padding(t.Space(3)).Children(func() {
 				ui.Text(c, s.text.GitFailed).TextColor(t.Danger)
 				ui.Text(c, resultErr.Error()).Font("monospace").FontSize(t.Rem(0.85)).TextColor(t.TextMuted).MaxLines(2).
@@ -442,19 +469,13 @@ func (s *Screen) resultCard(c *ui.Context) {
 		if path == "" {
 			path = r.Dir
 		}
-		s.frame(c, "result", t.Warning, path, head{}, say(s.unresolved(r.Kind), t.Text, 600))
+		s.frame(c, "result", t.Warning, path, say(s.unresolved(r.Kind), t.Text, 600))
 	}
 }
 
-// head says what the context line of a result card holds besides the folder and the clear button.
-type head struct {
-	// actions are the icon buttons before the clear button; a card with them can be copied from.
-	actions func()
-}
-
-// frame is a result card: the folder with its status and icon buttons, a hairline, then the body. border is the
-// outline of a card that needs attention, Warning or Danger, and zero for any other.
-func (s *Screen) frame(c *ui.Context, key string, border ui.Color, path string, h head, body func()) {
+// frame is a result card without an answer: the folder with its status and the clear button, a hairline, then the
+// body. border is the outline of a card that needs attention, Warning or Danger, and zero for any other.
+func (s *Screen) frame(c *ui.Context, key string, border ui.Color, path string, body func()) {
 	t := c.Theme()
 	checking := s.checking
 	fillCard(c, key, border).Children(func() {
@@ -462,10 +483,7 @@ func (s *Screen) frame(c *ui.Context, key string, border ui.Color, path string, 
 			face := pathFace{mono: true, size: t.Rem(0.88), color: t.TextMuted}
 			// The folder keeps at least 80 DIPs; the status gives way first.
 			pathLine(c, s.env.Tilde(path), "", "", face).Grow(1).MinWidth(t.Space(20)).Shrink(0)
-			s.status(c, h.actions != nil)
-			if h.actions != nil {
-				h.actions()
-			}
+			s.status(c, false)
 			if checking == "" && ghost(c, s.text.Clear, icons.Close).Clicked() {
 				s.clear()
 			}
@@ -499,17 +517,10 @@ func (s *Screen) status(c *ui.Context, copyable bool) {
 	}
 }
 
-// copyButton copies the full path; for a moment afterwards it shows a check mark, and the status says "Copied".
-func (s *Screen) copyButton(c *ui.Context, path string) {
-	icon := icons.Copy
-	if s.now().Before(s.copiedUntil) {
-		icon = icons.Check
-	}
-	if ghost(c, s.text.CopyPath, icon).Clicked() {
-		s.act.CopyText(path)
-		s.copiedUntil = s.now().Add(copiedFor)
-		c.After(copiedFor)
-		// The focus stays on the button, whose name does not change, so say that the copy worked.
-		c.Announce(s.text.Copied)
-	}
+// copyPath copies the full path; for a moment afterwards the status says "Copied".
+func (s *Screen) copyPath(c *ui.Context, path string) {
+	s.act.CopyText(path)
+	s.copiedUntil = s.now().Add(copiedFor)
+	c.After(copiedFor)
+	c.Announce(s.text.Copied)
 }

@@ -18,20 +18,39 @@ type Fills struct {
 	Card ui.Color
 	// Field fills text inputs.
 	Field ui.Color
-	// AccentSoft is Git orange as a tint.
+	// AccentSoft is the mint accent as a tint.
 	AccentSoft ui.Color
+	// CardRim is the light line along the top edge of a card, inside it, so a card reads as a sheet of glass.
+	CardRim ui.Color
 }
 
 var (
 	lightFills = Fills{
 		Solid: ui.Hex("#f2f2f5"), SolidDetail: ui.Hex("#fbfbfd"), Detail: ui.RGBA(255, 255, 255, 0.45),
-		Card: ui.RGBA(255, 255, 255, 0.2), Field: ui.RGBA(255, 255, 255, 0.22), AccentSoft: ui.RGBA(240, 80, 51, 0.16),
+		Card: ui.RGBA(255, 255, 255, 0.2), Field: ui.RGBA(255, 255, 255, 0.22), AccentSoft: ui.RGBA(20, 184, 150, 0.15),
+		CardRim: ui.RGBA(255, 255, 255, 0.45),
 	}
 	darkFills = Fills{
 		Solid: ui.Hex("#2a2a2e"), SolidDetail: ui.Hex("#323236"), Detail: ui.RGBA(0, 0, 0, 0.18),
-		Card: ui.RGBA(255, 255, 255, 0.08), Field: ui.RGBA(0, 0, 0, 0.22), AccentSoft: ui.RGBA(255, 106, 74, 0.22),
+		Card: ui.RGBA(255, 255, 255, 0.08), Field: ui.RGBA(0, 0, 0, 0.22), AccentSoft: ui.RGBA(79, 220, 184, 0.18),
+		CardRim: ui.RGBA(255, 255, 255, 0.06),
 	}
 )
+
+const (
+	// Capsule is the theme radius, so push buttons and drop-downs are capsules; a symbol button is a circle.
+	Capsule = 999
+	// FieldRadius rounds text inputs, which set it themselves, and the rows of the accounts sidebar.
+	FieldRadius = 8
+	// CardRadius rounds cards, settings groups, banners and the drop zone.
+	CardRadius = 12
+)
+
+// Card gives e the card shape: CardRadius, the card fill and the card rim along its top edge, inside it.
+func Card(c *ui.Context, e ui.Element) ui.Element {
+	f := Of(c)
+	return e.Radius(CardRadius).Background(f.Card).InsetShadow(0, 0.5, 0, 0, f.CardRim)
+}
 
 // Of returns the fills of the frame's appearance.
 func Of(c *ui.Context) *Fills {
@@ -68,9 +87,9 @@ func Build(t ui.Theme, highContrast bool) ui.Theme {
 		t.Surface, t.SurfaceHover, t.SurfacePressed = ui.RGBA(255, 255, 255, 0.08), ui.RGBA(255, 255, 255, 0.11), ui.RGBA(255, 255, 255, 0.16)
 		t.Border = ui.RGBA(255, 255, 255, 0.12)
 		t.Text, t.TextMuted = ui.Hex("#f5f5f7"), ui.Hex("#a3a3ab")
-		t.Accent, t.AccentHover, t.AccentPressed, t.AccentText = ui.Hex("#ff6a4a"), ui.Hex("#ff8468"), ui.Hex("#ff9a83"), ui.Hex("#1d1d1f")
+		t.Accent, t.AccentHover, t.AccentPressed, t.AccentText = ui.Hex("#4fdcb8"), ui.Hex("#72e5c8"), ui.Hex("#94ecd5"), ui.Hex("#10201c")
 		t.Danger, t.Warning, t.Success = ui.Hex("#ff5c74"), ui.Hex("#ffb340"), ui.Hex("#3ccf62")
-		t.Selection, t.Focus = ui.RGBA(255, 106, 74, 0.35), ui.RGBA(255, 132, 104, 0.6)
+		t.Selection, t.Focus = ui.RGBA(79, 220, 184, 0.32), ui.RGBA(79, 220, 184, 0.45)
 		t.Inverse, t.InverseText = ui.Hex("#f5f5f7"), ui.Hex("#1d1d1f")
 		t.Scrollbar = ui.RGBA(255, 255, 255, 0.35)
 	} else {
@@ -78,13 +97,13 @@ func Build(t ui.Theme, highContrast bool) ui.Theme {
 		t.Surface, t.SurfaceHover, t.SurfacePressed = ui.RGBA(0, 0, 0, 0.05), ui.RGBA(0, 0, 0, 0.07), ui.RGBA(0, 0, 0, 0.12)
 		t.Border = ui.RGBA(60, 60, 67, 0.18)
 		t.Text, t.TextMuted = ui.Hex("#1d1d1f"), ui.Hex("#6b6b72")
-		t.Accent, t.AccentHover, t.AccentPressed, t.AccentText = ui.Hex("#c63a1c"), ui.Hex("#ad3218"), ui.Hex("#962a14"), ui.Hex("#ffffff")
+		t.Accent, t.AccentHover, t.AccentPressed, t.AccentText = ui.Hex("#0a7a68"), ui.Hex("#086a5a"), ui.Hex("#075a4d"), ui.Hex("#ffffff")
 		t.Danger, t.Warning, t.Success = ui.Hex("#c8102e"), ui.Hex("#b86e00"), ui.Hex("#1e7d36")
-		t.Selection, t.Focus = ui.RGBA(240, 80, 51, 0.25), ui.RGBA(198, 58, 28, 0.55)
+		t.Selection, t.Focus = ui.RGBA(20, 184, 150, 0.25), ui.RGBA(10, 122, 104, 0.4)
 		t.Inverse, t.InverseText = ui.Hex("#1d1d1f"), ui.Hex("#f5f5f7")
 		t.Scrollbar = ui.RGBA(0, 0, 0, 0.32)
 	}
-	t.Radius = 6
+	t.Radius = Capsule
 	t.ScrollbarWidth = 6
 	if highContrast {
 		t.Border = t.Border.Mix(t.Text, 0.45)

@@ -4,9 +4,12 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Panel</title>
 <style>
-/* Glass and Git orange; see design/tokens.md. The panel draws no background of its own: the window's Popover material
+/* Glass and commit mint; see design/tokens.md. The panel draws no background of its own: the window's Popover material
    (simulated here by .panel over the desktop) shows through, and cards sit on it as translucent fills. */
-:root { color-scheme:light; --material:rgba(246,246,248,.62); --text:#1d1d1f; --muted:#6b6b72; --sep:rgba(60,60,67,.18); --card:rgba(255,255,255,.2); --control:rgba(0,0,0,.05); --hover:rgba(0,0,0,.07); --pressed:rgba(0,0,0,.12); --field:rgba(255,255,255,.22); --accent:#c63a1c; --accent-hover:#ad3218; --accent-text:#ffffff; --accent-soft:rgba(240,80,51,.16); --danger:#c8102e; --warning:#b86e00; --success:#1e7d36; --focus:rgba(198,58,28,.55); --inverse:#1d1d1f; --inverse-text:#f5f5f7; --material:rgba(36,36,40,.58); --text:#f5f5f7; --muted:#a3a3ab; --sep:rgba(255,255,255,.12); --card:rgba(255,255,255,.08); --control:rgba(255,255,255,.08); --hover:rgba(255,255,255,.11); --pressed:rgba(255,255,255,.16); --field:rgba(0,0,0,.22); --accent:#ff6a4a; --accent-hover:#ff8468; --accent-text:#1d1d1f; --accent-soft:rgba(255,106,74,.22); --danger:#ff5c74; --warning:#ffb340; --success:#3ccf62; --focus:rgba(255,132,104,.6); --inverse:#f5f5f7; --inverse-text:#1d1d1f; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI Variable Text","Segoe UI","PingFang SC","Microsoft YaHei UI",system-ui,sans-serif; font-size:13px; -webkit-font-smoothing:antialiased; color:var(--text); display:flex; gap:24px; padding:24px; align-items:flex-start; min-height:100vh;
+:root { color-scheme:light; --material:rgba(246,246,248,.62); --text:#1d1d1f; --muted:#6b6b72; --sep:rgba(60,60,67,.18); --card:rgba(255,255,255,.2); --control:rgba(0,0,0,.05); --hover:rgba(0,0,0,.07); --pressed:rgba(0,0,0,.12); --field:rgba(255,255,255,.22); --accent:#0a7a68; --accent-hover:#086a5a; --accent-text:#ffffff; --accent-soft:rgba(20,184,150,.15); --danger:#c8102e; --warning:#b86e00; --success:#1e7d36; --focus:rgba(10,122,104,.4); --inverse:#1d1d1f; --inverse-text:#f5f5f7; --rim:rgba(255,255,255,.7); --card-rim:rgba(255,255,255,.45); --menu:rgba(250,250,252,.74); }
+:root[data-scheme=dark] { color-scheme:dark; --material:rgba(36,36,40,.58); --text:#f5f5f7; --muted:#a3a3ab; --sep:rgba(255,255,255,.12); --card:rgba(255,255,255,.08); --control:rgba(255,255,255,.08); --hover:rgba(255,255,255,.11); --pressed:rgba(255,255,255,.16); --field:rgba(0,0,0,.22); --accent:#4fdcb8; --accent-hover:#72e5c8; --accent-text:#10201c; --accent-soft:rgba(79,220,184,.18); --danger:#ff5c74; --warning:#ffb340; --success:#3ccf62; --focus:rgba(79,220,184,.45); --inverse:#f5f5f7; --inverse-text:#1d1d1f; --rim:rgba(255,255,255,.16); --card-rim:rgba(255,255,255,.06); --menu:rgba(44,44,48,.7); }
+* { box-sizing:border-box }
+body { margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI Variable Text","Segoe UI","PingFang SC","Microsoft YaHei UI",system-ui,sans-serif; font-size:13px; -webkit-font-smoothing:antialiased; color:var(--text); display:flex; gap:24px; padding:24px; align-items:flex-start; min-height:100vh;
   background:radial-gradient(60% 50% at 15% 20%,#9fd8ff,transparent 70%),radial-gradient(50% 60% at 85% 30%,#b8f0c9,transparent 70%),radial-gradient(60% 60% at 50% 100%,#ffd8a8,transparent 70%),linear-gradient(135deg,#7cc4f5,#a7e3d0 60%,#f6e3b5) }
 :root[data-scheme=dark] body { background:radial-gradient(60% 50% at 15% 20%,#2b4f8f,transparent 70%),radial-gradient(50% 60% at 85% 30%,#1f5e4a,transparent 70%),radial-gradient(60% 60% at 50% 100%,#6b3a2a,transparent 70%),linear-gradient(135deg,#14213d,#0f2a2a 60%,#2a1a14) }
 /* Stripes on the desktop, so the blur behind the panel shows. */
@@ -18,65 +21,76 @@ body::before { content:""; position:fixed; inset:0; z-index:-1; background:repea
 .controls button.on { background:#006fdf; border-color:#006fdf; color:#fff }
 .controls .hint { color:#666; line-height:1.5 }
 .controls kbd { padding:0 4px; border:1px solid #ccc; border-radius:3px; background:#fff; font-size:11px }
-/* The window: 340 x 480, 12 corners, the material and the system's shadow. "Reduce transparency" makes it opaque. */
-.panel { isolation:isolate; position:relative; width:340px; height:480px; flex:none; display:flex; flex-direction:column; border-radius:12px; overflow:hidden; background:var(--material); box-shadow:0 0 0 .5px rgba(0,0,0,.25),0 12px 40px rgba(0,0,0,.3) }
+/* The window: 340 x 480, 16 corners, a light rim on the top edge, the material and the system's shadow. "Reduce transparency" makes it opaque. */
+.panel { isolation:isolate; position:relative; width:340px; height:480px; flex:none; display:flex; flex-direction:column; border-radius:16px; overflow:hidden; background:var(--material); box-shadow:inset 0 .5px 0 var(--rim),0 0 0 .5px rgba(0,0,0,.18),0 14px 44px rgba(0,0,0,.22) }
 /* The material is drawn under the window rather than on it, so that a translucent element inside can blur the window's content. */
 .panel::before { content:""; position:absolute; inset:0; z-index:-1; border-radius:inherit; backdrop-filter:blur(30px) saturate(180%); -webkit-backdrop-filter:blur(30px) saturate(180%) }
 .solid .panel { background:#f2f2f5 }
 .solid .panel::before { display:none }
 :root[data-scheme=dark] .solid .panel { background:#2a2a2e }
-/* Chrome: the title row is 44 high with no hairline, the footer 40 with a hairline; icon buttons 26 x 26 with 16 glyphs, 4 apart. */
+/* Chrome: the title row is 44 high, the footer 40, neither with a hairline; icon buttons 26 x 26 and round, 16 glyphs, 4 apart. */
 header, footer { display:flex; align-items:center; flex:none }
 header { height:44px; gap:8px; padding:0 9px 0 16px }
-footer { height:40px; gap:4px; padding:0 8px; border-top:.5px solid var(--sep) }
+footer { height:40px; gap:4px; padding:0 8px }
 footer .spacer { flex:1 }
 h1 { flex:1; margin:0; font-size:15px; letter-spacing:-.01em; font-weight:600 }
-.panel button.tool { flex:none; position:relative; width:26px; height:26px; padding:0; display:grid; place-items:center; border:0; border-radius:6px; background:transparent; color:var(--muted); cursor:pointer }
+.panel button.tool { flex:none; position:relative; width:26px; height:26px; padding:0; display:grid; place-items:center; border:0; border-radius:50%; background:transparent; color:var(--muted); cursor:pointer }
 .panel button.tool:hover { background:var(--hover) }
 .panel button.tool:active { background:var(--pressed) }
 .panel button.tool.pinned { background:var(--hover) }
 .tool svg { width:16px; height:16px }
 /* Tooltip: Inverse fill, no shadow; shows on hover, or pinned with ?tip=<name>. */
 .panel [data-tip] { position:relative }
-[data-tip]::after { content:attr(data-tip); position:absolute; z-index:5; display:none; padding:4px 8px; border-radius:6px; background:var(--inverse); color:var(--inverse-text); font-size:12px; font-weight:400; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI Variable Text","Segoe UI","PingFang SC","Microsoft YaHei UI",system-ui,sans-serif; line-height:16px; white-space:normal; width:max-content; max-width:240px; text-align:left; pointer-events:none; bottom:calc(100% + 6px); left:50% ; transform:translateX(-50%) }
+[data-tip]::after { content:attr(data-tip); position:absolute; z-index:5; display:none; padding:4px 9px; border-radius:8px; background:var(--inverse); color:var(--inverse-text); font-size:12px; font-weight:400; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI Variable Text","Segoe UI","PingFang SC","Microsoft YaHei UI",system-ui,sans-serif; line-height:16px; white-space:normal; width:max-content; max-width:240px; text-align:left; pointer-events:none; bottom:calc(100% + 6px); left:50% ; transform:translateX(-50%) }
 [data-tip].tip-start::after { left:0; transform:none }
 [data-tip].tip-end::after { left:auto; right:0; transform:none }
 [data-tip].tip-below::after { bottom:auto; top:calc(100% + 6px) }
 [data-tip]:hover::after, [data-tip].pinned::after { display:block }
 /* Content: 12 at the sides, cards 10 apart; a group heading sits 12 above its card. */
 .content { flex:1; overflow:auto; padding:4px 12px 12px; display:flex; flex-direction:column; gap:10px }
+.content, .scroll, .side .items { scrollbar-width:none }
+.content::-webkit-scrollbar, .scroll::-webkit-scrollbar, .side .items::-webkit-scrollbar { display:none }
 .content > * { flex-shrink:0 }
-.panel button { padding:5px 10px; border:0; border-radius:6px; background:var(--control); color:var(--text); font:inherit }
+.panel button { padding:5px 12px; border:0; border-radius:999px; background:var(--control); color:var(--text); font:inherit }
 .panel button.icon { width:28px; padding:5px 0 }
 .panel button.text { background:transparent; padding:5px 4px; color:var(--accent); font-weight:500; display:inline-flex; align-items:center; gap:4px; align-self:flex-start }
 .panel button.text svg { width:14px; height:14px }
 .muted { color:var(--muted) }
 .small { font-size:12px }
 .mono { font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace; font-size:11.5px }
-/* Drop zone: the accent's dashed outline at 55% over an 8% tint, a folder glyph, the line and a small primary button. */
-.drop { display:flex; align-items:center; gap:10px; height:48px; padding:0 10px 0 12px; border:1.5px dashed color-mix(in srgb, var(--accent) 55%, transparent); border-radius:10px; background:color-mix(in srgb, var(--accent) 8%, transparent) }
+/* Drop zone: the accent's 1 px dashed outline at 50% over a 6% tint, 12 corners, a folder glyph, the line and a small primary button. */
+.drop { display:flex; align-items:center; gap:10px; height:48px; padding:0 10px 0 12px; border:1px dashed color-mix(in srgb, var(--accent) 50%, transparent); border-radius:12px; background:color-mix(in srgb, var(--accent) 6%, transparent) }
 .drop > svg { flex:none; width:20px; height:20px; color:var(--accent) }
 .drop .line { flex:1; min-width:0; font-size:12px; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis }
-.drop.over { border-style:solid; border-color:var(--accent); background:var(--accent-soft) }
+.drop.over { border-width:1.5px; border-style:solid; border-color:var(--accent); background:var(--accent-soft) }
 .panel .drop button { flex:none; height:24px; padding:0 10px; font-size:12px; font-weight:500 }
 /* Initial badge: the identity's color, solid, the letter in white or near black, whichever reads better on it. */
 .avatar { flex:none; display:grid; place-items:center; font-weight:600; color:var(--ink); background:rgb(var(--c)) }
 
 /* Result card: a context line with the folder and its actions, then the answer. Cards are fills, not outlines;
    a card that needs attention adds a 1 DIP inner outline in Warning or Danger. */
-.result { border-radius:10px; background:var(--card) }
-.result.warning { box-shadow:inset 0 0 0 1px var(--warning) }
-.result.danger { box-shadow:inset 0 0 0 1px var(--danger) }
+.result { border-radius:12px; background:var(--card); box-shadow:inset 0 .5px 0 var(--card-rim) }
+.result.warning { box-shadow:inset 0 0 0 1px color-mix(in srgb, var(--warning) 70%, transparent) }
+.result.danger { box-shadow:inset 0 0 0 1px color-mix(in srgb, var(--danger) 70%, transparent) }
 .result .top { display:flex; align-items:center; gap:4px; height:36px; padding:0 6px 0 12px; border-bottom:.5px solid var(--sep) }
 .result .top .cluster { flex:0 1 auto; min-width:0; display:flex; align-items:center; gap:2px }
 .result .top .mid { flex:1 0 80px; color:var(--muted) }
 .result .copied { flex:0 1 auto; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:11px; color:var(--muted); margin-right:2px }
-.result .who { display:flex; align-items:center; gap:10px; padding:12px 12px 8px }
-.result .avatar { width:36px; height:36px; border-radius:10px; font-size:16px }
-.result .name { font-size:15px; font-weight:600 }
-.result .uses { font-size:12px; color:var(--muted) }
-.result .kv { display:grid; grid-template-columns:56px 1fr; align-items:start; gap:4px 8px; padding:0 12px 12px 58px; font-size:12px }
-.result .kv > :nth-child(odd) { color:var(--muted) }
+/* The answer: one block of two lines beside a 32 badge, the identity's name over the dropped folder, then one muted line
+   with the email and the alias, lined up with the name (12 + 32 + 10 = 54). The actions sit at the end of the first line. */
+.result .answer { display:flex; align-items:center; gap:10px; padding:10px 6px 0 12px }
+.result .answer .avatar { width:32px; height:32px; border-radius:9px; font-size:15px }
+.result .answer .lines { flex:1; min-width:0; display:flex; flex-direction:column; gap:1px }
+.result .answer .cluster { flex:none; align-self:flex-start; display:flex; align-items:center; gap:2px }
+.result .name { font-size:14px; font-weight:600; align-self:flex-start; max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
+.result .answer .mid { color:var(--muted) }
+.result .meta { display:flex; min-width:0; padding:6px 12px 10px 54px; font-size:12px; color:var(--muted); white-space:pre }
+.result .meta > span { min-width:0; overflow:hidden; text-overflow:ellipsis }
+.result .meta > .mono { flex:none }
+.panel button.tool[aria-expanded="true"] { background:var(--hover); color:var(--text) }
+/* Dragging a folder over the panel while a result shows: the content takes the drop zone's look and says what releasing does. */
+.dropover { position:absolute; z-index:3; top:44px; left:8px; right:8px; bottom:46px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; border:1.5px solid color-mix(in srgb, var(--accent) 70%, transparent); border-radius:14px; background:color-mix(in srgb, var(--accent-soft) 60%, var(--menu)); backdrop-filter:blur(16px) saturate(180%); -webkit-backdrop-filter:blur(16px) saturate(180%); box-shadow:inset 0 .5px 0 var(--rim); font-weight:600 }
+.dropover svg { width:28px; height:28px; color:var(--accent) }
 .result .finds { border-top:.5px solid var(--sep); padding:4px 0 }
 .result .find { display:flex; align-items:center; gap:6px; height:28px; padding:0 12px; font-size:12px }
 .result .find > svg { flex:none; width:14px; height:14px }
@@ -95,9 +109,9 @@ h1 { flex:1; margin:0; font-size:15px; letter-spacing:-.01em; font-weight:600 }
 .result .clone { border-top:.5px solid var(--sep) }
 .clone .line { display:flex; align-items:center; gap:4px }
 .clone .inputwrap { flex:1; min-width:0; display:flex }
-.panel input.field { width:100%; height:28px; padding:0 8px; border:.5px solid var(--sep); border-radius:6px; background:var(--field); color:var(--text); font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace; font-size:11.5px }
+.panel input.field { width:100%; height:28px; padding:0 10px; border:.5px solid var(--sep); border-radius:8px; outline:0; background:var(--field); color:var(--text); font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace; font-size:11.5px }
 .panel input.field::placeholder { color:var(--muted) }
-.panel input.field.focus { outline:3px solid var(--focus); outline-offset:0; border-color:var(--accent) }
+.panel input.field.focus, .panel input.field:focus { box-shadow:0 0 0 3px var(--focus); border-color:var(--accent) }
 .clone .out { display:flex; align-items:center; height:16px; padding:0 2px; font-size:11px; color:var(--muted) }
 .clone .out .mid { flex:1 1 0; font-size:11px }
 .clone .out .hint { white-space:nowrap; overflow:hidden; text-overflow:ellipsis }
@@ -137,19 +151,17 @@ h1 { flex:1; margin:0; font-size:15px; letter-spacing:-.01em; font-weight:600 }
 .result .confirm p { margin:0; line-height:1.45 }
 .result .buttons { display:flex; justify-content:flex-end; gap:8px }
 .result button.text { align-self:center }
-.result .kv .paths { display:flex; flex-direction:column; gap:2px }
 .result .actions { display:flex; align-items:center; justify-content:flex-end; gap:4px; height:36px; padding:0 8px; border-top:.5px solid var(--sep) }
 .result .menuwrap { position:relative; display:flex }
 .panel button.text.quiet { color:var(--muted) }
-/* A native system menu (the same for every pop-up): plain text items, a disabled heading, 22 px items, the accent on the highlighted one. */
-.menu { position:absolute; z-index:4; top:calc(100% + 9px); right:0; min-width:180px; padding:5px; border-radius:8px; background:rgba(246,246,248,.8); backdrop-filter:blur(30px) saturate(180%); -webkit-backdrop-filter:blur(30px) saturate(180%); box-shadow:0 0 0 .5px rgba(0,0,0,.2),0 10px 30px rgba(0,0,0,.25) }
-:root[data-scheme=dark] .menu { background:rgba(40,40,44,.8) }
-.menu .mhead { height:22px; padding:0 8px; display:flex; align-items:center; font-size:13px; color:var(--muted) }
-.menu .msep { height:.5px; margin:4px 8px; background:var(--sep) }
-.menu .entry { display:flex; align-items:center; height:22px; padding:0 8px; border-radius:4px; font-size:13px; white-space:nowrap }
+/* A native system menu (the same for every pop-up), as macOS 26 draws it: Liquid Glass, 12 corners, 24 px items with 7 corners, the accent on the highlighted one. */
+.menu { position:absolute; z-index:4; top:calc(100% + 6px); right:0; min-width:188px; padding:6px; border-radius:12px; background:var(--menu); backdrop-filter:blur(36px) saturate(200%); -webkit-backdrop-filter:blur(36px) saturate(200%); box-shadow:inset 0 .5px 0 var(--rim),0 0 0 .5px rgba(0,0,0,.12),0 12px 32px rgba(0,0,0,.18) }
+.menu .mhead { height:22px; padding:0 10px; display:flex; align-items:center; font-size:11px; font-weight:600; color:var(--muted) }
+.menu .msep { height:.5px; margin:5px 10px; background:var(--sep) }
+.menu .entry { display:flex; align-items:center; height:24px; padding:0 10px; border-radius:7px; font-size:13px; white-space:nowrap }
 .menu .entry.hot { background:var(--accent); color:var(--accent-text) }
 .result .bar { position:relative; display:flex; align-items:center; gap:0; min-height:36px; padding:8px 12px; border-top:.5px solid var(--sep); line-height:1.4 }
-.result .bar.timed { height:36px; padding:0 8px 0 12px; border-radius:0 0 10px 10px; overflow:hidden }
+.result .bar.timed { height:36px; padding:0 8px 0 12px; border-radius:0 0 12px 12px; overflow:hidden }
 /* The countdown: a 2 DIP line on the bottom edge of the bar, as wide as the time left of the card's width (here 3 of 5 seconds), Accent at 45%. */
 .result .bar.timed::after { content:""; position:absolute; left:0; bottom:0; height:2px; width:var(--left); background:color-mix(in srgb, var(--accent) 45%, transparent) }
 .result .bar button.text { padding:5px 4px }
@@ -173,8 +185,9 @@ h1 { flex:1; margin:0; font-size:15px; letter-spacing:-.01em; font-weight:600 }
 
 /* Identity list: a group heading with the count, then one card; rows carry the initial badge, hairlines start at the name. */
 .section { padding:6px 6px 0; margin-bottom:-4px; font-size:11px; font-weight:600; color:var(--muted); letter-spacing:.02em }
-.list { border-radius:10px; background:var(--card); overflow:hidden }
+.list { border-radius:12px; background:var(--card); box-shadow:inset 0 .5px 0 var(--card-rim); overflow:hidden }
 .item { position:relative; display:flex; align-items:center; gap:10px; padding:8px 6px 8px 12px; min-height:48px }
+.item:hover { background:var(--hover) }
 .list > .item:not(:first-child)::before { content:""; position:absolute; top:0; left:50px; right:0; border-top:.5px solid var(--sep) }
 .item .avatar { width:28px; height:28px; border-radius:8px; font-size:13px }
 .item .text { flex:1; min-width:0; display:flex; flex-direction:column; gap:1px }
@@ -185,8 +198,12 @@ h1 { flex:1; margin:0; font-size:15px; letter-spacing:-.01em; font-weight:600 }
 .item .tag .mid { font-size:inherit; min-width:0 }
 .result .row .note .mid { font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace; font-size:11px }
 
-.search { width:100%; height:28px; padding:0 10px; border:0; border-radius:8px; background:var(--control); color:var(--text); font:inherit }
-.search::placeholder { color:var(--muted) }
+/* Filter: a capsule search field with a magnifier, as macOS 26 draws one; focus is the same soft ring as a text field. */
+.search { position:relative; display:flex; align-items:center; height:28px }
+.search svg { position:absolute; left:10px; width:13px; height:13px; color:var(--muted); pointer-events:none }
+.search input { width:100%; height:100%; padding:0 10px 0 29px; border:0; border-radius:999px; background:var(--control); color:var(--text); font:inherit; outline:0 }
+.search input:focus { box-shadow:0 0 0 3px var(--focus) }
+.search input::placeholder { color:var(--muted) }
 .chips { display:flex; gap:6px }
 .panel .chip { height:24px; padding:0 10px; border-radius:12px; font-size:12px }
 .panel .chip.on { background:var(--accent); color:var(--accent-text); font-weight:500 }
@@ -207,7 +224,7 @@ h1 { flex:1; margin:0; font-size:15px; letter-spacing:-.01em; font-weight:600 }
 .panel button.fixed.full { width:248px }
 .panel button.pad { height:28px; padding:0 16px; margin-top:4px }
 /* Empty: the product icon's key in a tinted tile, the title, the hint, Add and Import. */
-.hero { width:56px; height:56px; border-radius:14px; display:grid; place-items:center; background:var(--accent-soft); color:var(--accent); margin-bottom:4px }
+.hero { width:56px; height:56px; border-radius:16px; display:grid; place-items:center; background:var(--accent-soft); color:var(--accent); margin-bottom:4px }
 .hero svg { width:34px; height:24px }
 .center .big { font-size:15px }
 /* Diagnostics. The connectivity dot: 7 across in a 14 DIP slot: Success, Danger, or a Muted ring until the first round ends. */
@@ -237,7 +254,7 @@ h1 { flex:1; margin:0; font-size:15px; letter-spacing:-.01em; font-weight:600 }
 /* Diagnostics summary: the last block of the content. Healthy: one muted line. Otherwise a card whose 32 DIP heading opens one entry per problem. */
 .okline { display:flex; align-items:center; gap:6px; padding:0 6px; font-size:12px; color:var(--muted) }
 .okline svg { width:14px; height:14px; color:var(--success) }
-.summary { border-radius:10px; background:var(--card); overflow:hidden }
+.summary { border-radius:12px; background:var(--card); box-shadow:inset 0 .5px 0 var(--card-rim); overflow:hidden }
 .summary .shead { display:flex; align-items:center; gap:6px; height:32px; padding:0 8px 0 12px; font-size:12px; font-weight:600 }
 .summary .shead > svg { flex:none; width:14px; height:14px }
 .summary .shead .count { flex:1 }
@@ -276,11 +293,11 @@ h1 { flex:1; margin:0; font-size:15px; letter-spacing:-.01em; font-weight:600 }
 const TEXT = {
   zh: {
     quit:'退出', settings:'设置', about:'关于 Idset', recheck:'重新检查',
-    loading:'正在读取配置…', dropLine:'拖入文件夹，看用哪个身份', dropHint:'显示文件夹使用的身份', choose:'选择文件夹…', chooseShort:'选择…',
+    loading:'正在读取配置…', dropLine:'拖入文件夹，看用哪个身份', dropHint:'显示文件夹使用的身份', choose:'选择文件夹…', chooseShort:'选择…', chooseOther:'选择其他文件夹…', dropRelease:'松开，看这个文件夹用哪个身份',
     empty:'还没有身份', emptyHint:'每个文件夹用自己的 Git 和 SSH 身份。', add:'添加身份', importExisting:'导入现有配置',
     filter:'筛选身份', none:'没有匹配的身份', unnamed:'（未命名）', readonly:'accounts.json 读不出来', readonlyShort:'修好前只读',
     readonlyHint:'修好或恢复前，Idset 不写入它。', reload:'重新读取', restore:'从备份恢复', reveal:'在 Finder 中显示', copy:'复制路径', copied:'已复制', clear:'清除',
-    uses:'Git 在这里用这个身份', alias:'别名', email:'邮箱', folders:'生效目录', global:'全局', noEmail:'没有邮箱',
+    uses:'Git 在这里用这个身份', global:'全局', noEmail:'没有邮箱',
     noMatch:'没有身份匹配这个目录', notRepo:'不是 Git 仓库', notFolder:'不是文件夹', checking:'正在查看…',
     gitFailed:'无法运行 git', gitReason:'exec: "git": executable file not found in $PATH', identities:'身份',
     bindTo:'绑定到', bind:'绑定', newId:'新建身份并绑定这个文件夹', newShort:'新建身份', cancel:'取消', rebindDo:'改绑', unbind:'解绑', rebind:'改绑到', openFinder:'在 Finder 中打开', more:'更多',
@@ -315,11 +332,11 @@ const TEXT = {
   },
   en: {
     quit:'Quit', settings:'Settings', about:'About Idset', recheck:'Check Again',
-    loading:'Reading configuration…', dropLine:'Drop a folder to see its identity', dropHint:'Shows which identity a folder uses', choose:'Choose Folder…', chooseShort:'Choose…',
+    loading:'Reading configuration…', dropLine:'Drop a folder to see its identity', dropHint:'Shows which identity a folder uses', choose:'Choose Folder…', chooseShort:'Choose…', chooseOther:'Choose Another Folder…', dropRelease:'Release to see the folder’s identity',
     empty:'No identities yet', emptyHint:'Each folder uses its own Git and SSH identity.', add:'Add Identity', importExisting:'Import Existing',
     filter:'Filter identities', none:'No matching identities', unnamed:'(unnamed)', readonly:'accounts.json cannot be read', readonlyShort:'Read-only until fixed',
     readonlyHint:'Idset does not write to it until it is fixed or restored.', reload:'Reload', restore:'Restore from Backup', reveal:'Show in Finder', copy:'Copy Path', copied:'Copied', clear:'Clear',
-    uses:'Git uses this identity here', alias:'Alias', email:'Email', folders:'Folders', global:'Global', noEmail:'no email',
+    uses:'Git uses this identity here', global:'Global', noEmail:'no email',
     noMatch:'No identity matches this folder', notRepo:'Not a Git repository', notFolder:'Not a folder', checking:'Checking…',
     gitFailed:'Could not run git', gitReason:'exec: "git": executable file not found in $PATH', identities:'Identities',
     bindTo:'Bind to', bind:'Bind', newId:'New Identity for This Folder', newShort:'New Identity', cancel:'Cancel', rebindDo:'Rebind', unbind:'Unbind', rebind:'Rebind to', openFinder:'Open in Finder', more:'More',
@@ -354,7 +371,7 @@ const TEXT = {
   },
 };
 const STATES = {
-  list:'有身份', over:'拖着经过', filter:'筛选', nofilter:'筛选无结果', checking:'正在查看', matched:'已匹配（父目录）', exact:'已匹配（可解绑）', rebind:'⋯ 菜单', copied:'已复制',
+  list:'有身份', over:'拖着经过', filter:'筛选', nofilter:'筛选无结果', checking:'正在查看', matched:'已匹配（父目录）', 'over-result':'有结果时拖着经过', exact:'已匹配（可解绑）', rebind:'⋯ 菜单', copied:'已复制',
   overlap:'多个身份覆盖', covered:'已覆盖，没改', undo:'撤销条', undone:'撤销之后',
   stale:'旧路径失效（改名）', 'stale-moved':'旧路径失效（挪位置）', 'stale-fixed':'改成这次的路径之后', 'stale-kept':'保留旧路径之后',
   'check-noemail':'核对：没有邮箱', 'check-other':'核对：别的身份', 'check-unknown':'核对：陌生邮箱', 'check-key':'核对：别的密钥', 'check-many':'核对：多条，长值',
@@ -398,6 +415,7 @@ const icon = {
   terminal:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4.5l4 3.5-4 3.5"/><path d="M8.5 12h4.5"/></svg>',
   globe:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><circle cx="8" cy="8" r="6.25"/><path d="M1.75 8h12.5"/><path d="M8 1.75c2.2 2 2.2 10.5 0 12.5M8 1.75c-2.2 2-2.2 10.5 0 12.5"/></svg>',
   plus:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M8 3v10M3 8h10"/></svg>',
+  search:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="7" cy="7" r="4.75"/><path d="M10.5 10.5l3.5 3.5"/></svg>',
   folder:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"><path d="M2 4.5a1 1 0 0 1 1-1h3l1.5 1.5H13a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1z"/></svg>',
   more:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M3.5 8h.01M8 8h.01M12.5 8h.01"/></svg>',
   arrow:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9.5 4.5L13 8l-3.5 3.5"/></svg>',
@@ -441,13 +459,14 @@ function panel(state, T) {
   };
   const rows = (set, open, d) => set.map(i => `<div class="item${open && open.id === i ? ' open' : ''}">${avatar(i)}<div class="text"><span class="label">${i.label || T.unnamed}</span><span class="email">${i.email || T.noEmail}</span></div><span class="tag">${tag(i)}</span>${conn(i, d)}${disclose(i, open && open.id === i)}</div>`
     + (open && open.id === i ? clone(i, open.value, open) : '') + (d && d.bars && d.bars[i.label] || '')).join('');
+  const search = `<label class="search">${icon.search}<input placeholder="${T.filter}" aria-label="${T.filter}"></label>`;
   // The filter shows from three identities on; the platform buttons only in the filter state.
   const list = (set = withGlobal, chips = false, open = null, d = null) => `<div class="section">${T.identities} · ${set.length}</div>` +
-    (set.length >= 3 ? `<input class="search" placeholder="${T.filter}">` : '') + (chips ? `<div class="chips"><button class="chip on">GitHub</button><button class="chip">GitLab</button><button class="chip">Gitea</button></div>` : '') +
+    (set.length >= 3 ? search : '') + (chips ? `<div class="chips"><button class="chip on">GitHub</button><button class="chip">GitLab</button><button class="chip">Gitea</button></div>` : '') +
     `<div class="list">${rows(set, open, d)}</div>`;
   // The drop zone is always one line; what it says beyond that is in the tooltip.
   const drop = over => `<div class="drop${over ? ' over' : ''}">${icon.folder}<span class="line tip-start" data-tip="${T.dropHint}">${T.dropLine}</span><button class="primary tip-end" data-tip="${T.choose}" aria-label="${T.choose}">${T.chooseShort}</button></div>`;
-  const filter = `<input class="search" placeholder="${T.filter}"><div class="chips"><button class="chip on">GitHub</button><button class="chip">GitLab</button><button class="chip">Gitea</button></div>`;
+  const filter = `${search}<div class="chips"><button class="chip on">GitHub</button><button class="chip">GitLab</button><button class="chip">Gitea</button></div>`;
   const filtered = `<div class="section">${T.identities} · 4</div>` + filter;
   const top = (path, actions) => `<div class="top">${mid(path)}<span class="cluster">${actions}</span></div>`;
   const result = (kind, path, body, actions = ghost('x', T.clear, true)) => `<div class="result ${kind}">${top(path, actions)}${body}</div>`;
@@ -471,17 +490,22 @@ function panel(state, T) {
   const switchCmd = i => `git remote set-url origin git@${i.alias}:org/repo.git`;
   const remoteRow = (i, copied) => `<div class="find remote"><span class="says tip-start" data-tip="${T.httpsTip}">${icon.globe}<span class="give">${T.httpsRow}</span></span>${copied ? `<span class="ack">${T.copied}</span>` : ''}`
     + `<button class="tool tip-end${view.tip === 'cmd' ? ' pinned' : ''}" data-tip="${T.copyCmdTip(switchCmd(i))}" aria-label="${T.copyCmd}">${icon[copied ? 'check' : 'terminal']}</button></div>`;
-  // A matched card. The header holds every action: open, copy, the menu (rebind, and unbind when the identity lists this very folder), clear.
+  // A matched card: the answer first (badge, name, the folder under it, then email and alias), its actions at the end of
+  // the first line: the clone helper's toggle (only with an alias), the menu (open, copy, choose another folder, rebind,
+  // and unbind when the identity lists this very folder) and clear. The folders an identity covers are on its list row.
   const confirmBlock = `<div class="confirm"><p>${T.confirmShort(name(personal))}</p><div class="buttons"><button class="field fixed">${T.cancel}</button><button class="primary fixed">${T.rebindDo}</button></div></div>`;
   const matched = (o = {}) => {
     const i = o.id || work, path = o.path || '~/work/api';
-    const menu = `<div class="menu"><div class="mhead">${T.rebind}</div>${[personal, client, unnamed].map((m, n) => `<div class="entry${n === 0 ? ' hot' : ''}">${name(m)}</div>`).join('')}${o.exact ? `<div class="msep"></div><div class="entry">${T.unbind}</div>` : ''}</div>`;
+    const menu = `<div class="menu"><div class="entry">${T.openFinder}</div><div class="entry">${T.copy}</div><div class="entry">${T.chooseOther}</div><div class="msep"></div>`
+      + `<div class="mhead">${T.rebind}</div>${[personal, client, unnamed].map((m, n) => `<div class="entry${n === 0 ? ' hot' : ''}">${name(m)}</div>`).join('')}${o.exact ? `<div class="msep"></div><div class="entry">${T.unbind}</div>` : ''}</div>`;
     const status = o.ack ? ack(T.updated) : o.covered ? ack(T.coveredBy('~/work/'), T.coveredNote(name(work), '~/work/')) : o.copied ? ack(T.copied) : '';
-    return result(o.finds ? findsKind(o.finds) : '', path, `
-      <div class="who">${avatar(i)}<div><div class="name">${name(i)}</div><div class="uses">${T.uses}</div></div></div>
-      <div class="kv"><span>${T.alias}</span><span class="mono">${i.alias}</span><span>${T.email}</span><span>${i.email}</span><span>${T.folders}</span><span class="mono paths">${i.scope ? i.scope.map(p => `<span>${p}</span>`).join('') : T.global}</span></div>${findings(o.finds || [], o.https ? remoteRow(i, o.httpsCopied) : '')}${o.confirm ? confirmBlock : ''}${i.alias && o.clone ? clone(i, o.clone.value, o.clone) : ''}${o.foot || ''}`,
-      status + ghost('folder', T.openFinder) + ghost(o.copied ? 'check' : 'copy', T.copy) + `<span class="menuwrap">${ghost('more', T.more)}${o.menu ? menu : ''}</span>` + ghost('x', T.clear, true));
+    const toggle = i.alias ? `<button class="tool tip-below${view.tip === 'clone' ? ' pinned' : ''}" data-tip="${T.cloneToggle}" aria-label="${T.cloneToggle}" aria-expanded="${!!o.clone}">${icon.terminal}</button>` : '';
+    const meta = `<div class="meta"><span>${i.email || T.noEmail}</span>${i.alias ? `<span class="mono"> · ${i.alias}</span>` : ''}</div>`;
+    return `<div class="result ${o.finds ? findsKind(o.finds) : ''}"><div class="answer">${avatar(i)}<div class="lines"><span class="name tip-start" data-tip="${T.uses}">${name(i)}</span>${mid(path)}</div>`
+      + `<span class="cluster">${status}${toggle}<span class="menuwrap">${ghost('more', T.more)}${o.menu ? menu : ''}</span>${ghost('x', T.clear, true)}</span></div>${meta}`
+      + `${findings(o.finds || [], o.https ? remoteRow(i, o.httpsCopied) : '')}${o.confirm ? confirmBlock : ''}${i.alias && o.clone ? clone(i, o.clone.value, o.clone) : ''}${o.foot || ''}</div>`;
   };
+  const dropOver = `<div class="dropover">${icon.folder}<span>${T.dropRelease}</span></div>`;
   // Identity check: one line per finding, a severity glyph and a short sentence; the explanation, with the full value, is the row's tooltip.
   // ?tip=finding pins the first row's tooltip. The card's outline takes the highest severity.
   const findsKind = fs => fs.some(f => f.sev === 'danger') ? 'danger' : 'warning';
@@ -560,24 +584,25 @@ function panel(state, T) {
     over: drop(true) + list(),
     filter: drop() + list(withGlobal, true),
     nofilter: drop() + filtered + `<span class="muted center">${T.none}</span>`,
-    checking: result('', '~/work/api', `<div class="say plain"><div class="spinner"></div>${T.checking}</div>`, '') + drop() + list(),
-    matched: matched() + drop() + list(),
-    exact: matched({ id:workExact, exact:true }) + drop() + list(swap(withGlobal, work, workExact)),
-    rebind: matched({ id:workExact, exact:true, menu:true }) + drop() + list(swap(withGlobal, work, workExact)),
-    confirm: matched({ id:workExact, exact:true, confirm:true }) + drop() + list(swap(withGlobal, work, workExact)),
-    copied: matched({ copied:true }) + drop() + list(),
-    'check-noemail': matched({ finds:[check.noemail] }) + drop() + list(),
-    'check-other': matched({ finds:[check.other(client)] }) + drop() + list(),
-    'check-unknown': matched({ finds:[check.unknown] }) + drop() + list(),
-    'check-key': matched({ finds:[check.key(otherKey)] }) + drop() + list(),
-    'check-many': matched({ finds:[check.other(clientLong), check.key(longKey)] }) + drop() + list(swap(withGlobal, client, clientLong)),
-    https: matched({ https:true, clone:{ value:'org/repo' } }) + drop() + list(),
-    'https-copied': matched({ https:true, httpsCopied:true, clone:{ value:'org/repo' } }) + drop() + list(),
-    'https-check': matched({ finds:[check.other(client)], https:true, clone:{ value:'org/repo' } }) + drop() + list(),
-    clone: matched({ clone:{ value:'org/repo', focus:true } }) + drop() + list(),
-    'clone-long': matched({ clone:{ value:'acme/platform/payments/api', focus:true } }) + drop() + list(),
-    'clone-bad': matched({ clone:{ value:'acme repo', focus:true } }) + drop() + list(),
-    'clone-copied': matched({ clone:{ value:'org/repo', copied:true } }) + drop() + list(),
+    checking: result('', '~/work/api', `<div class="say plain"><div class="spinner"></div>${T.checking}</div>`, '') + list(),
+    matched: matched() + list(),
+    'over-result': matched() + list() + dropOver,
+    exact: matched({ id:workExact, exact:true }) + list(swap(withGlobal, work, workExact)),
+    rebind: matched({ id:workExact, exact:true, menu:true }) + list(swap(withGlobal, work, workExact)),
+    confirm: matched({ id:workExact, exact:true, confirm:true }) + list(swap(withGlobal, work, workExact)),
+    copied: matched({ copied:true }) + list(),
+    'check-noemail': matched({ finds:[check.noemail] }) + list(),
+    'check-other': matched({ finds:[check.other(client)] }) + list(),
+    'check-unknown': matched({ finds:[check.unknown] }) + list(),
+    'check-key': matched({ finds:[check.key(otherKey)] }) + list(),
+    'check-many': matched({ finds:[check.other(clientLong), check.key(longKey)] }) + list(swap(withGlobal, client, clientLong)),
+    https: matched({ https:true }) + list(),
+    'https-copied': matched({ https:true, httpsCopied:true }) + list(),
+    'https-check': matched({ finds:[check.other(client)], https:true }) + list(),
+    clone: matched({ clone:{ value:'org/repo', focus:true } }) + list(),
+    'clone-long': matched({ clone:{ value:'acme/platform/payments/api', focus:true } }) + list(),
+    'clone-bad': matched({ clone:{ value:'acme repo', focus:true } }) + list(),
+    'clone-copied': matched({ clone:{ value:'org/repo', copied:true } }) + list(),
     'row-open': drop() + list(withGlobal, false, { id:work, value:'acme/', focus:true }),
     'diag-checking': drop() + list(withGlobal, false, null, { conn:{ work:'pending', personal:'pending', client:'pending' } }),
     'diag-ok': drop() + list(withGlobal, false, null, { conn:{} }) + diag([]),
@@ -590,23 +615,23 @@ function panel(state, T) {
     'diag-nokey': drop() + list(withGlobal, false, null, failed(work, bar.nokey(work), T.noKey.trim())) + diag([net(work)]),
     'diag-timeout': drop() + list(withGlobal, false, null, failed(client, bar.timeout(client), T.timeout(client.host))) + diag([net(client)]),
     'diag-hostkey': drop() + list(withGlobal, false, null, failed(client, bar.hostkey(client), T.hostkey(client.host))) + diag([net(client)]),
-    'diag-https': matched({ https:true, clone:{ value:'org/repo' } }) + drop() + list(withGlobal, false, null, { conn:{}, bars:{ work:bar.https(work) } }) + diag([]),
+    'diag-https': matched({ https:true }) + list(withGlobal, false, null, { conn:{}, bars:{ work:bar.https(work) } }) + diag([]),
     'diag-nossh': noSSH + drop() + list(withGlobal, false, null, { conn:{ work:'fail', personal:'fail', client:'fail' }, why:T.noSSH }) + worstMark('danger'),
-    'diag-summary': matched({ finds:[check.noemail] }) + drop() + list(withGlobal, false, null, failed(work, bar.denied(work), T.denied(work.provider))) + diag(issues, true),
-    'diag-summary-closed': matched({ finds:[check.noemail] }) + drop() + list(withGlobal, false, null, failed(work, bar.denied(work), T.denied(work.provider))) + diag(issues),
-    'diag-globals': matched({ id:clientGlobal, finds:[check.noemail] }) + drop() + list(twoGlobals, false, null, { conn:{} }) + diag([git002(2, clientGlobal), git001(clientGlobal, 'warning')], true),
-    overlap: overlap() + matched({ id:client, path:'~/work/client/app' }) + drop() + list(),
-    covered: matched({ covered:true }) + drop() + list(),
-    undo: matched({ id:workBound, path:'~/scratch/notes', exact:true, foot:undoBar(work) }) + drop() + list(swap(noGlobal, work, workBound)),
-    stale: stale('~/projects/api-old', '~/projects/api') + noMatch(false, { path:'~/projects/api', work:staleRename }) + drop() + list(swap(noGlobal, work, staleRename)),
-    'stale-moved': stale(staleMoved.scope[0].slice(0, -1), '~/projects/payments-gateway') + noMatch(false, { path:'~/projects/payments-gateway', work:staleMoved }) + drop() + list(swap(noGlobal, work, staleMoved)),
-    'stale-fixed': matched({ id:staleFixed, path:'~/projects/api', exact:true, ack:true }) + drop() + list(swap(noGlobal, work, staleFixed)),
-    'stale-kept': noMatch(false, { path:'~/projects/api', work:staleRename }) + drop() + list(swap(noGlobal, work, staleRename)),
-    undone: noMatch(true) + drop() + list(noGlobal),
-    nomatch: noMatch(false) + drop() + list(noGlobal),
-    notrepo: result('warning', '~/scratch/notes', `<div class="say">${T.notRepo}</div>`) + drop() + list(),
-    notfolder: result('warning', '~/Downloads/report.pdf', `<div class="say">${T.notFolder}</div>`) + drop() + list(),
-    giterror: result('danger', '~/work/api', `<div class="say danger tight">${T.gitFailed}</div>` + clamp(T.gitReason, T.gitReason, 'why')) + drop() + list(),
+    'diag-summary': matched({ finds:[check.noemail] }) + list(withGlobal, false, null, failed(work, bar.denied(work), T.denied(work.provider))) + diag(issues, true),
+    'diag-summary-closed': matched({ finds:[check.noemail] }) + list(withGlobal, false, null, failed(work, bar.denied(work), T.denied(work.provider))) + diag(issues),
+    'diag-globals': matched({ id:clientGlobal, finds:[check.noemail] }) + list(twoGlobals, false, null, { conn:{} }) + diag([git002(2, clientGlobal), git001(clientGlobal, 'warning')], true),
+    overlap: overlap() + matched({ id:client, path:'~/work/client/app' }) + list(),
+    covered: matched({ covered:true }) + list(),
+    undo: matched({ id:workBound, path:'~/scratch/notes', exact:true, foot:undoBar(work) }) + list(swap(noGlobal, work, workBound)),
+    stale: stale('~/projects/api-old', '~/projects/api') + noMatch(false, { path:'~/projects/api', work:staleRename }) + list(swap(noGlobal, work, staleRename)),
+    'stale-moved': stale(staleMoved.scope[0].slice(0, -1), '~/projects/payments-gateway') + noMatch(false, { path:'~/projects/payments-gateway', work:staleMoved }) + list(swap(noGlobal, work, staleMoved)),
+    'stale-fixed': matched({ id:staleFixed, path:'~/projects/api', exact:true, ack:true }) + list(swap(noGlobal, work, staleFixed)),
+    'stale-kept': noMatch(false, { path:'~/projects/api', work:staleRename }) + list(swap(noGlobal, work, staleRename)),
+    undone: noMatch(true) + list(noGlobal),
+    nomatch: noMatch(false) + list(noGlobal),
+    notrepo: result('warning', '~/scratch/notes', `<div class="say">${T.notRepo}</div>`) + list(),
+    notfolder: result('warning', '~/Downloads/report.pdf', `<div class="say">${T.notFolder}</div>`) + list(),
+    giterror: result('danger', '~/work/api', `<div class="say danger tight">${T.gitFailed}</div>` + clamp(T.gitReason, T.gitReason, 'why')) + list(),
   }[state];
 }
 

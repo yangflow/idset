@@ -37,4 +37,5 @@ var (
 	Key          = svg(`<circle cx="5.5" cy="10.5" r="3" stroke-width="1.4"/><path d="M7.7 8.3L13.5 2.5M11 5l2 2M9.5 6.5l1.5 1.5" stroke-width="1.4"/>`)
 	Card         = svg(`<rect x="1.5" y="3.5" width="13" height="9" rx="1.5" stroke-width="1.2"/><circle cx="5.5" cy="7" r="1.3" stroke-width="1.2"/><path d="M3.5 10.5a2 2 0 0 1 4 0M9.5 7h3M9.5 9.5h2" stroke-width="1.2"/>`)
 	External     = svg(`<path d="M9 3h4v4M13 3L7.5 8.5M11.5 9.5V13h-8.5V4.5H6.5" stroke-width="1.4"/>`)
+	Search       = svg(`<circle cx="7" cy="7" r="4.75" stroke-width="1.6"/><path d="M10.5 10.5l3.5 3.5" stroke-width="1.6"/>`)
 )

@@ -204,7 +204,8 @@ func TestEmpty(t *testing.T) {
 	for _, h := range []int{480, 700} {
 		tall := ui.NewTester(s.View, 340, h)
 		line, _ := tall.Find("Drop a folder to see its identity")
-		if zone := band(tall, 18, int(line.Y+line.H/2)); zone < 46 || zone > 49 {
+		// Between the icon and the line, clear of the rounded corners.
+		if zone := band(tall, int(line.X)-4, int(line.Y+line.H/2)); zone < 46 || zone > 49 {
 			t.Errorf("at %d high the drop zone is %d high, want 48", h, zone)
 		}
 	}
@@ -303,7 +304,8 @@ func TestDropAndMatchedResult(t *testing.T) {
 		t.Fatalf("resolve: %v", r.resolved)
 	}
 	tt.Frame()
-	if !tt.HasText("Checking…") || !shows(tt, "~/work/api") || !tt.HasText("Drop a folder to see its identity") || tt.HasText("Clear") {
+	// While a folder has a card, the drop zone gives its room to the list; the whole panel takes the next folder.
+	if !tt.HasText("Checking…") || !shows(tt, "~/work/api") || tt.HasText("Drop a folder to see its identity") || tt.HasText("Clear") {
 		t.Fatalf("checking: %v", tt.Texts())
 	}
 	s.SetResult("/home/ada/elsewhere", match.Result{Kind: match.NoMatch}, nil)
@@ -312,8 +314,7 @@ func TestDropAndMatchedResult(t *testing.T) {
 	}
 	s.SetResult("/home/ada/work/api", match.Result{Kind: match.Matched, Root: "/home/ada/work/api", ID: "work"}, nil)
 	tt.Frame()
-	for _, want := range []string{"W", "work", "Git uses this identity here", "Alias", "github-work", "Email", "bob@example.com",
-		"Folders", "~/work/", "~/src/new/", "~/work/api", "~/work/ +1"} {
+	for _, want := range []string{"W", "work", " · github-work", "bob@example.com", "~/work/api", "~/work/ +1"} {
 		if !shows(tt, want) {
 			t.Fatalf("missing %q: %v", want, tt.Texts())
 		}
@@ -328,9 +329,8 @@ func TestDropAndMatchedResult(t *testing.T) {
 	if got := tt.Announcements(); len(got) != 0 {
 		t.Fatalf("announced again: %v", got)
 	}
-	if err := tt.Click("Copy Path"); err != nil {
-		t.Fatal(err)
-	}
+	openMenu(t, s, tt)
+	choose(t, tt, "Copy Path")
 	if !slices.Equal(r.copied, []string{"/home/ada/work/api"}) || !tt.HasText("Copied") {
 		t.Fatalf("copy: %v %v", r.copied, tt.Texts())
 	}

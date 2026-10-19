@@ -83,17 +83,18 @@ Layout uses flexbox in device-independent pixels (DIPs); see
   else.
 - **Scrolling.** Content that can exceed the window goes in a
   [scroll view](https://github.com/egoist/mygo/blob/v0.4.1/docs/ui/scroll.md). The panel scrolls when it shows the
-  identity list. The loading, read-only and no-identity states never need to scroll and are not in a scroll view, so
+  identity list. No scroll bar takes room or shows at rest: the thumb floats over the content only while the pointer
+  is over it (the scroll view's own behavior), so the cards keep their full width. The loading, read-only and no-identity states never need to scroll and are not in a scroll view, so
   their content can be centered vertically (centering only works in a container of fixed height).
-- **The panel.** Fixed 340×480. The title row is `Space(11)` (44) high with no divider, the footer `Space(10)` (40)
-  with a hairline above it; the content is the point, and the chrome takes 84 DIPs of the 480. Content padding
+- **The panel.** Fixed 340×480. The title row is `Space(11)` (44) high and the footer `Space(10)` (40), neither with
+  a divider; the content is the point, and the chrome takes 84 DIPs of the 480. Content padding
   `Space(1)` (4) on top and `Space(3)` (12) at the sides and below, gap between blocks `Space(2.5)` (10). Cards, the
-  identity list and the drop zone have a 10 DIP corner radius. The full measurements are in [The panel](#the-panel) and
+  identity list and the drop zone have a 12 DIP corner radius, windows and dialogs 16. The full measurements are in [The panel](#the-panel) and
   [tokens.md](../design/tokens.md).
 
 ## Color and dark mode
 
-Idset draws on the system's material and colors it with its own glass theme in Git orange. Every window sets the
+Idset draws on the system's material and colors it with its own glass theme in commit mint. Every window sets the
 theme as a copy of the default (`t := *c.Theme()`, then its colors, `c.SetTheme(&t)`), so spacing, font size and text
 scale still follow the desktop; the values are in [tokens.md](../design/tokens.md). See
 [Styling and themes](https://github.com/egoist/mygo/blob/v0.4.1/docs/ui/styling.md) and
@@ -109,8 +110,14 @@ scale still follow the desktop; the values are in [tokens.md](../design/tokens.m
 - **Fills, not outlines.** Content sits on the material as translucent fills: cards, the identity list and settings
   groups use the card fill with no outline; buttons and the filter field use `Surface`. Dividers are 0.5 DIP
   hairlines in `Border`. A card that needs attention adds a 1 DIP inner outline in `Warning` or `Danger`.
+- **Glass, as macOS 26 draws it.** The system draws the material, and on macOS 26 the panel, dialogs and menus are
+  Liquid Glass; Idset adds no blur of its own. What it adds is light: a 0.5 DIP rim along the top edge, inside a
+  window or dialog (rim) and inside a card or the identity list (card-rim), so each reads as a sheet of glass lit
+  from above rather than a box. Corners are round: windows and dialogs 16, cards 12, push buttons, segmented
+  controls and the filter field capsules, symbol buttons circles. Text fields keep radius 8, so a field to type in
+  never looks like a button.
 - **Always use theme roles, never literals.** Views read `c.Theme()`; the theme alone holds the values. The exceptions
-  are identity colors, below, and the few fills the theme has no role for (card, field, accent-soft),
+  are identity colors, below, and the few fills the theme has no role for (card, card-rim, rim, field, accent-soft),
   which are named once beside the theme and switch with `c.Theme().Dark`.
 
   | Role | Use in Idset |
@@ -120,19 +127,21 @@ scale still follow the desktop; the values are in [tokens.md](../design/tokens.m
   | `SurfaceHover`, `SurfacePressed` | hovered and pressed controls and rows; the hover fill of borderless symbol buttons |
   | `Border` | hairlines; the outline of a text field |
   | `Text`, `TextMuted` | primary text; secondary text, hints, group headings, paths, symbols |
-  | `Accent`, `AccentText` | primary buttons (the drop zone's Choose, Save, Bind, Rebind), the selected list row and menu entry, text buttons and links, switch on, choices, the drop zone's outline (55%) and tint (8%) |
-  | accent-soft | Git orange as a tint: the selected settings tab, the drop zone while files are dragged over it, the empty state's key tile |
+  | `Accent`, `AccentText` | primary buttons (the drop zone's Choose, Save, Bind, Rebind), the selected list row and menu entry, text buttons and links, switch on, choices, the drop zone's outline (50%) and tint (6%) |
+  | accent-soft | mint as a tint: the selected settings tab, the drop zone while files are dragged over it, the empty state's key tile |
   | `Warning` | the inner outline of the "no match", "not a Git repository" and "not a folder" cards; the warning glyph of a finding, and the matched card's outline when its worst finding is a warning; never text |
   | `Danger` | the outline and text of the card when `git` cannot run; the read-only warning, on a 14% `Danger` fill; the error glyph of a finding and the outline of a card with one; Delete |
-  | `Success` | the connectivity dot of a passing check and the check mark of the "Configuration OK" line, always with text (the dot's tooltip and accessible name) |
-  | `Focus` | the keyboard focus ring, 3 DIPs |
+  | `Success` | the connectivity dot of a passing check and the check mark of the "Configuration OK" line, always with text (the dot's tooltip and accessible name); its green is close to the accent, so it never stands alone |
+  | `Focus` | the keyboard focus ring, 3 DIPs outside the control's own shape: a capsule, a circle, a field |
   | `Inverse`, `InverseText` | tooltips and toasts |
   | `Scrollbar` | scroll bar thumbs |
 
-- **Git orange.** The brand color is Git's `#f05033`. It is a tint, never a fill under text: white on it is 3.6:1.
-  `Accent` is a darker `#c63a1c` in light (white text 5.2:1) and a lighter `#ff6a4a` in dark, where `AccentText` is
-  near black (5.9:1), as MyGo itself does for a light accent. Idset does not follow the system accent color: the
-  orange is the product's, and only its values were checked against the material.
+- **Commit mint.** The brand color is the mint of the commit at the tip of the product icon's key, `#14b896`. It is a
+  tint, never a fill under text: white on it is 2.5:1. `Accent` is a deeper `#0a7a68` in light (white text 5.3:1, 4.7:1
+  as text on the solid color) and a lighter `#4fdcb8` in dark, where `AccentText` is a near-black green `#10201c`
+  (9.9:1), as MyGo itself does for a light accent. The icon's orange stays in the icon: as an accent beside identity
+  colors and warnings it was too loud. Idset does not follow the system accent color: the mint is the product's, and
+  only its values were checked against the material.
 - **Identity colors.** An identity's color is data the user chose, not a theme role. The six preset names map to
   fixed values (blue `#3A7BD5`, green `#2E9E5B`, orange `#E07A1F`, red `#D64545`, purple `#8E44AD`, yellow
   `#D4A017`); any other value is its own `#RRGGBB`. The initial badge is the color itself, solid, in a list row, a
@@ -142,7 +151,7 @@ scale still follow the desktop; the values are in [tokens.md](../design/tokens.m
 - **Appearance.** Do not implement your own dark mode switch; build the light or dark glass theme from
   `c.Theme().Dark`, which follows the system.
 - **Selection.** A selected list row (the accounts window) is filled with `Accent`, its text in `AccentText`, inset
-  8 DIPs from the list's sides with radius 6, like the system's source lists.
+  8 DIPs from the list's sides with radius 8, like the system's source lists.
 - **Accent.** One primary action per group uses `PrimaryButton`; the panel's is the drop zone's Choose.
 - **Contrast.** Text meets WCAG 2.1 AA, 4.5:1, and glyphs, outlines and control boundaries 3:1, on the solid color
   and on a card over it. Under the desktop's high contrast setting (`c.Preferences().HighContrast`) the theme does
@@ -230,16 +239,16 @@ What Idset uses today:
 | `ui.Button` | Secondary actions. A button that shows only a symbol must give a readable name with `.Label()`. |
 | `ui.PrimaryButton` | The main action of a group of buttons; at most one. In the panel: "Add Identity" of the empty state, and "Rebind" of the confirm block (never on screen together). |
 | `ui.Text` | Text. Secondary explanations use `TextMuted`. |
-| `ui.TextInput` | The identity filter, shown from three identities on, with the placeholder "Filter identities": 28 DIPs high, `Surface` fill, radius 8, no outline. Not `ui.SearchField`: its placeholder ("Search") is fixed English. |
+| `ui.TextInput` | The identity filter, shown from three identities on, with the placeholder "Filter identities": 28 DIPs high, a capsule with a magnifier glyph at the start, `Surface` fill, no outline; focused, a 3 DIP ring in `Focus`. Not `ui.SearchField`: its placeholder ("Search") is fixed English. |
 | `ui.Spinner` | Reading the configuration and checking a folder. |
-| `ui.Divider` | A 0.5 DIP `Border` hairline: above the footer (the title row has none); between the two parts of a result card; between list rows. |
-| Drop zone | A 48 DIP `ui.Row` with a 1.5 DIP dashed outline (`BorderStyle(ui.BorderDashed)`) in `Accent` at 55% over a fill of `Accent` at 8%, taking files with `DroppedFiles`; a 20 DIP folder glyph in `Accent`, the line, and a 24 DIP high `PrimaryButton` "Choose…" at the end. While `FileDragOver`, the outline is solid `Accent` and the fill accent-soft. See [Dropped files](https://github.com/egoist/mygo/blob/v0.4.1/docs/ui/input.md#dropped-files). |
-| Initial badge | A rounded square with the first letter of the identity's name ("?" without a name), in the identity's color, solid (see [Color](#color-and-dark-mode)): 28 DIPs with radius 8 in a list row, 36 with radius 10 in a result card. |
+| `ui.Divider` | A 0.5 DIP `Border` hairline between list rows and between the sections of a result card. The title row and the footer have none. |
+| Drop zone | A 48 DIP `ui.Row` with a 1 DIP dashed outline (`BorderStyle(ui.BorderDashed)`) in `Accent` at 50% over a fill of `Accent` at 6%, taking files with `DroppedFiles`; a 20 DIP folder glyph in `Accent`, the line, and a 24 DIP high `PrimaryButton` "Choose…" at the end. While `FileDragOver`, the outline is solid `Accent` and the fill accent-soft. See [Dropped files](https://github.com/egoist/mygo/blob/v0.4.1/docs/ui/input.md#dropped-files). |
+| Initial badge | A rounded square with the first letter of the identity's name ("?" without a name), in the identity's color, solid (see [Color](#color-and-dark-mode)): 28 DIPs with radius 8 in a list row, 32 with radius 9 in a result card. |
 | Borderless symbol button | `Space(6.5)` square (26), transparent, icon `Rem(1.1)` in `TextMuted`, `SurfaceHover` fill on hover, `SurfacePressed` while pressed. Must have a `.Label()`. After the path is copied, the icon turns into a check mark with "Copied" before it for 1.2 seconds. |
-| Icon button (title row, footer) | The same 26×26 button with a `Rem(1.2)` (about 16) glyph, radius `Theme.Radius`. Always has `.Label()` and a `.Tooltip()` with the same text, in both languages: Settings, Add Identity, About Idset, Check Again, Quit (设置 / 添加身份 / 关于 Idset / 重新检查 / 退出 in Chinese). The tooltip is the `Inverse` fill, no shadow, above the button (below the title row's). Same size, 4 DIPs apart, so a missing button never moves another. |
-| Result card | A context line (the path in monospace `TextMuted`, then the copy and clear buttons) and below it the answer. Card fill, no outline, radius 10; the cards without a match add a 1 DIP inner outline in `Warning`, the card for a failed `git` one in `Danger`; a matched card with findings takes the color of the worst one. |
+| Icon button (title row, footer) | The same 26×26 button with a `Rem(1.2)` (about 16) glyph, round. Always has `.Label()` and a `.Tooltip()` with the same text, in both languages: Settings, Add Identity, About Idset, Check Again, Quit (设置 / 添加身份 / 关于 Idset / 重新检查 / 退出 in Chinese). The tooltip is the `Inverse` fill, no shadow, above the button (below the title row's). Same size, 4 DIPs apart, so a missing button never moves another. |
+| Result card | An answer row (the 32 DIP initial badge, the name at `Rem(1.08)` 600 with the path in monospace `TextMuted` under it, then the clone toggle (only with an alias), ⋯ and clear buttons, 2 DIPs apart) and under it one muted line, email · alias, indented 54 DIPs to the name. Card fill with the 1 DIP card rim, radius 12; the cards without a match add a 1 DIP inner outline in `Warning`, the card for a failed `git` one in `Danger`; a matched card with findings takes the color of the worst one. |
 | Bind row | In a result card: color dot (10 DIPs), name and one line of `TextMuted` (the identity's first folder in monospace `Rem(0.85)`, like the identity list's folders, middle-truncated; "Has <path> · adds another" is its tooltip), "Bind" in `Accent` at the end. 44 DIPs high, hairline above. The whole row is the target. |
-| Card menu | The "⋯" icon button's menu in a matched card: the system's menu (`Element.Menu`), opened by the button on pointer down. A disabled "Rebind to" heading, the other identities by name, and under a separator "Unbind" (only when the identity lists this very folder). The system draws it on its own material, so it has the platform's look, keyboard and screen reader behavior; it cannot show color dots or folders. There is no actions row: open, copy, the menu and clear are icon buttons in the context line, in that order. |
+| Card menu | The "⋯" icon button's menu in a matched card: the system's menu (`Element.Menu`), opened by the button on pointer down. A disabled "Rebind to" heading, the other identities by name, and under a separator "Unbind" (only when the identity lists this very folder). The system draws it on its own material, so it has the platform's look, keyboard and screen reader behavior; it cannot show color dots or folders. It opens with "Open in Finder", "Copy Path" and "Choose Another Folder…" above the rebind part. There is no actions row: the clone toggle, the menu and clear are icon buttons in the answer row, in that order. |
 | Confirm block | In a matched card, under the details, hairline above: one line ("<name> will apply only here") and two 80×28 buttons at the right, the plain one first ("Cancel"), then the filled one (`Accent`, "Rebind"). No extra identity row. |
 | Overlap rows | In the overlap card: a row per identity in git's read order (dot, name, path in monospace `Rem(0.88)`), then the verdict: "Used" in `Accent` 600 with a check mark for the winner, "Overridden" in `TextMuted` for the others, whose names also lose their weight; and at the very end an icon button: a pin on the winner ("Use Only <name> Here"), a minus on each loser ("Remove <path> from <name>"). Title row: "<n> identities cover this folder" and an info icon button whose tooltip is "Git reads them in order; the last one wins." |
 | Stale-path prompt | A card of its own above the no-match card: a 40 DIP header (color dot, "<name>'s folder is gone" / 「<name> 的路径已不在」, the name in 600, one line), two 28 DIP path rows under hairlines with no labels (the old path in `TextMuted`, then the new path after an arrow, monospace, one line, middle-truncated, full text in the tooltip), and a 36 DIP row with two text buttons at the right, "Update" in `Accent` and "Ignore" in `TextMuted`; their tooltips are "Change to This Path" and "Keep Old Path". The height is the same for any path. Card fill, no outline, no clear button. |
@@ -247,12 +256,12 @@ What Idset uses today:
 | Connectivity dot | At the end of an identity row, after the folders: a 14 DIP slot holding a 6 DIP dot, `Success` when the last `ssh -T` passed, `Danger` when it failed, a 1.5 DIP `TextMuted` ring while the first check runs. Its tooltip and accessible name say it in words: "Connected · <platform> user <user>", "Check failed · <why>", "Checking the connection…". A row without an alias keeps the empty slot so the folders line up; before the first report there are no dots. |
 | Problem bar | Under the row of an identity whose check failed, inside the same list, indented to the name (50 DIPs: 12 + the 28 DIP badge + 10), 28 DIP line: the error circle in `Danger` (the globe in `TextMuted` for an HTTPS remote), one `Rem(0.92)` sentence (a missing key names its path in monospace, middle-truncated), the reason as its tooltip, and "Check Again" (the refresh icon button, disabled while the check runs). Below it, indented 20 more, at most one line of next step: "Unlock with Keychain" on macOS (an `Accent` text button); elsewhere, or after the unlock failed, the `ssh-add <path>` command with a copy button; "Copy Public Key" (a copy icon button) and "Open <platform>" for a rejected key; "Add Rewrite" for an HTTPS remote; "Generate Key" for a missing key, which opens the Keys pane of the settings window filled in for the identity. No hairline between the row and its bar. |
 | ssh notice | When the checks find no `ssh`, one card above the drop zone replaces every bar and the summary: card fill with a 1 DIP inner `Danger` outline, the error circle, "ssh not found" (600), "Check Again" over all identities, and one muted line on how to install it for the platform. |
-| Diagnostics summary | After the identity list, once a round of checks has finished. Nothing wrong: one muted line with a `Success` check mark, "Configuration OK". Otherwise a card (card fill, radius 10): a 32 DIP header, a button with `aria-expanded` (the worst glyph, "1 error · 2 warnings" in 600, a chevron), and when open one entry per problem under hairlines: the glyph, what is wrong, how to look into it in `TextMuted`, an optional action ("Copy Command" as a terminal icon button for NET001, "Regenerate" as an `Accent` text button for GIT001), and the code (NET001, SSH001, GIT001, GIT002) in monospace `Rem(0.85)` at the end. It opens by itself whenever its set of entries changes, and stays as the user left it otherwise. |
+| Diagnostics summary | After the identity list, once a round of checks has finished. Nothing wrong: one muted line with a `Success` check mark, "Configuration OK". Otherwise a card (card fill, radius 12): a 32 DIP header, a button with `aria-expanded` (the worst glyph, "1 error · 2 warnings" in 600, a chevron), and when open one entry per problem under hairlines: the glyph, what is wrong, how to look into it in `TextMuted`, an optional action ("Copy Command" as a terminal icon button for NET001, "Regenerate" as an `Accent` text button for GIT001), and the code (NET001, SSH001, GIT001, GIT002) in monospace `Rem(0.85)` at the end. It opens by itself whenever its set of entries changes, and stays as the user left it otherwise. |
 | Undo bar | The last row of the result card, 36 DIPs high, hairline above: "Bound to <identity> ·" and an `Accent` "Undo" text button. A 2 DIP line on the bar's bottom edge, `Accent` at 45%, is as wide as the time left of the card's width, in fifths. |
-| Identity list | A group heading "Identities · N" (`Rem(0.85)`, 600, `TextMuted`), then one card container (card fill, radius 10, no outline) with 0.5 DIP hairlines between rows, starting at the name (50 DIPs from the edge). |
+| Identity list | A group heading "Identities · N" (`Rem(0.85)`, 600, `TextMuted`), then one card container (card fill, card rim, radius 12) with 0.5 DIP hairlines between rows, starting at the name (50 DIPs from the edge). |
 | Source list row | A 28 DIP initial badge, name and email on two lines, an optional folder symbol; `Accent` fill with `AccentText` when selected. |
 | Color choice | A 14 DIP dot in the preset color with its name as `Label`; the chosen one has a ring and a check mark. |
-| Settings row | Label left, value right, 32 DIPs high, hairline between rows inside a card-fill group with radius 10. |
+| Settings row | Label left, value right, 32 DIPs high, hairline between rows inside a card-fill group with radius 12. |
 | Platform filter | A row of `ui.Button`s, one per platform in use when more than one is; the selected one is `Accent` with `AccentText` and is `Selected(true)` so screen readers read it as selected. |
 
 The tables below say what to reach for as the accounts, settings and about windows are added.
@@ -342,7 +351,7 @@ Mockup: [design/screens/panel.html](../design/screens/panel.html), and both appe
 
 From top to bottom: the title row ("Idset", `Rem(1.15)` / 600, a level 1 heading, and the Settings icon
 button at the right; no close button: the tray icon and Escape hide the panel), the content, and the footer. The title
-row is `Space(11)` (44) high with no divider; the footer is `Space(10)` (40) with a hairline above it. The title row
+row is `Space(11)` (44) high with no divider; the footer is `Space(10)` (40), also with no divider: the list's end and the material separate them. The title row
 has `Space(4)` left and `Space(2.25)` right padding; the footer has `Space(2)` at both sides. The icon buttons are
 26×26 with a 16 glyph, 4 apart. The footer is four icon buttons: "Add Identity" (plus) at the left, then at the right About (`info.circle`), Check Again (`arrow.clockwise`)
 and Quit (`power`). The footer after the content:
@@ -368,28 +377,27 @@ The content, in order:
    instead: a 56×56 tile (radius 14, accent-soft) with the key glyph in `Accent`, then "No identities yet" (`Rem(1.15)`, 600), one short line ("Each folder uses its own Git and SSH identity.")
    and the filled "Add Identity" button (28 high); the drop zone sits under it, at the bottom of the content.
 
-The drop zone is always one row, with or without a result, 48 DIPs high: a 20 DIP folder glyph in `Accent`, the line
+The drop zone is one row, 48 DIPs high, and shows only while there is no result: the result card takes its place, and clearing the result brings it back. It holds a 20 DIP folder glyph in `Accent`, the line
 "Drop a folder to see its identity" (「拖入文件夹，看用哪个身份」, `Rem(0.92)`), and at the end a 24 DIP high primary
-"Choose…" button. The box has a dashed 1.5 DIP `Accent` outline at 55% over a fill of `Accent` at 8%; while a folder
+"Choose…" button. The box has a dashed 1 DIP `Accent` outline at 50% over a fill of `Accent` at 6%; while a folder
 is dragged over it the outline is solid `Accent` and the fill accent-soft. "Shows which identity a folder uses" is the
 tooltip of the line and "Choose Folder…" that of the button. Words that only explain are tooltips throughout the panel: the full sentence of
 "Covered by …", the reason of "Read-only until fixed", the "adds another" of a bind row, the why of a finding.
 
-The result card has two parts with a divider between them:
+The result card leads with the answer, padding `Space(3)` (12), radius 12, card fill with the card rim:
 
-- The context line: the folder (the repository root, or the dropped path when it is not a repository) in monospace,
-  middle-truncated, then a short transient status ("Copied", "Updated", "Undone", "Covered by …"), the icon buttons of
-  a matched card (open, copy, "⋯") and the clear button (not while checking). 36 DIPs high with its hairline;
-  padding about 6 right, `Space(3)` left (12).
-- The answer, padding `Space(3)` (12). Checking: a spinner and "Checking…". Matched: a `Space(9)` (36) initial
-  badge (radius 10, solid, its letter near black or white), the identity's name and "Git uses this identity here", gap `Space(3)`; below them three rows,
-  "Alias", "Email" and "Folders", with a label column `Space(14)` (56) wide, lined up with the name (left padding
-  `Space(15)`, 60). Each label is top-aligned with the first line of its value, so "Folders" stays by the first
-  folder however many follow. Without a match: the sentence for the case, 600, with a 1 DIP inner `Warning` outline. `git` failed: "Could not
+- The answer row. Checking: a spinner and "Checking…". Matched: a 32 DIP initial badge (radius 9, solid, its letter
+  near black or white), then two lines: the identity's name (`Rem(1.08)`, 600; "Git uses this identity here" is its
+  tooltip) and the folder (the repository root, or the dropped path when it is not a repository) in monospace
+  `TextMuted`, middle-truncated. At the end a cluster, 2 DIPs apart: a short transient status ("Copied", "Updated",
+  "Undone", "Covered by …"), the clone toggle (only with an alias), "⋯" and the clear button (not while checking).
+  Open in Finder and Copy Path are in the "⋯" menu.
+- One muted line under it, indented 54 DIPs to the name: the email (or "No email") · the alias in monospace. The
+  identity's folders are in the identity list, not in the card. Without a match: the sentence for the case, 600, with a 1 DIP inner `Warning` outline. `git` failed: "Could not
   run git" in `Danger`, then the reason in monospace `Rem(0.85)` `TextMuted`, at most two lines (the full text is its
-  tooltip), with a 1 DIP inner `Danger` outline. In "Folders" each path has its own line.
+  tooltip), with a 1 DIP inner `Danger` outline.
 - Identity check (docs/product.md): when the repository's own `user.email` or `core.sshCommand` disagrees with the
-  matched identity, the finding rows follow the details inside the same card, and the outline takes the worst
+  matched identity, the finding rows follow the muted line inside the same card, and the outline takes the worst
   severity. Without findings the card is exactly the plain matched card. Mockup states: no email, another identity's
   email, an email no identity has, another key, and two findings with long values; `&tip=finding` pins the first
   row's tooltip.
@@ -401,12 +409,12 @@ The result card has two parts with a divider between them:
   it has a hairline and a section of its own at the bottom, where the eye ends and where a pasted address is
   typed. Both appear only for an identity with an alias, and the helper is the one block that is always there.
   - HTTPS row: "Remote is HTTPS", with one icon button at the end (`terminal` glyph, 26 x 26, 6 from the edge like
-    the context line). The button's name is "Copy Switch-to-SSH Command"; its tooltip is that name and the whole command
+    the answer row's buttons). The button's name is "Copy Switch-to-SSH Command"; its tooltip is that name and the whole command
     (`git remote set-url origin git@github-work:org/repo.git`), so nothing on the card has to show a long mono
     string. Why it matters ("HTTPS pushes do not use this identity's alias or key.") is the text's tooltip.
     After the copy the glyph is a check and "Copied" (`Rem(0.85)`, `TextMuted`) stands before it for 1.2 seconds.
   - Clone helper: padding `Space(2)`x`Space(3)`, bottom `Space(2.5)`. A 28 DIP input (monospace `Rem(0.88)`, field fill,
-    0.5 DIP `Border`, radius 6) with the copy button (`terminal` glyph, the same glyph as the HTTPS row, since both copy
+    0.5 DIP `Border`, radius 8) with the copy button (`terminal` glyph, the same glyph as the HTTPS row, since both copy
     a command) at its end; under them a 16 DIP line, monospace `Rem(0.85)` `TextMuted`: the output, `git clone
     git@github-work:org/repo.git`, middle-truncated like a path ("git clone git@github-work:" and the last segment
     stay; the full command is its tooltip). Enter copies. When the input cannot be read the copy button is
@@ -426,14 +434,14 @@ The result card has two parts with a divider between them:
   - Rebinding to a global identity: choosing it in the "Rebind to" menu closes the menu and adds, under the card's
     details, the confirm block: one line "<name> will apply only here" and two 80×28 buttons, "Cancel" (closes the
     block, as Escape does) and the filled "Rebind".
-  - Matched: the actions are icon buttons in the context line (open, copy, "⋯", clear). "Unbind" is absent from the menu
-    when only a parent folder covers the folder; nothing else explains it, since "Folders" lists the covering path. "Rebind
+  - Matched: the actions are icon buttons in the answer row (clone, "⋯", clear). "Unbind" is absent from the menu
+    when only a parent folder covers the folder; nothing else explains it, since the identity list shows the covering path. "Rebind
     to" lists every other identity.
-  - Already covered: the bind did not change anything. The card keeps its answer and its context line shows "Covered by
+  - Already covered: the bind did not change anything. The card keeps its answer and its answer row shows "Covered by
     <path>" (`Rem(0.85)`, `TextMuted`, one line, ending in an ellipsis when short of room) before the buttons for 1.2 seconds,
     like "Copied"; the full sentence "<name> already covers this folder with <path>.
     Nothing changed." is its tooltip. The path keeps at least 80 DIPs; the status shortens first.
-  - Overlap: a card of its own above the matched one, without a context line (the matched card under it shows the
+  - Overlap: a card of its own above the matched one, without a path or clear button (the matched card under it shows the
     folder, and its one clear button clears both); its first row is "<n> identities cover this
     folder" with an info icon (the order sentence is its tooltip), and the overlap rows with their pin and minus buttons.
     The card has no outline, since nothing is wrong. It shows only while the winner has no path of the folder's own; once it has one (after "Use only" or a rebind) the choice is explicit and the card is gone.
@@ -468,7 +476,7 @@ the same list and without a hairline between them, by the clone helper described
 another closes the first. Nothing else about the row changes while it is open.
 
 A path on one line is shortened in the middle only, the same way everywhere (the stale-path prompt's rows, the first
-folder of a bind row, the folder of an identity row, the context line of a result card): its start ("~/", "/" or a drive such
+folder of a bind row, the folder of an identity row, the path in a result card): its start ("~/", "/" or a drive such
 as "C:/") and its last folder always stay, and what lies between gives way to an ellipsis, "~/…/payments-gateway/".
 Only when even those do not fit is the last folder cut at its end. The full path is in the tooltip.
 
@@ -492,16 +500,16 @@ languages. Behavior is in product.md, "账户窗口" and "删除确认". The mod
 color rather than from boxes. Everything is a material, a translucent fill, a hairline or text; only dialogs have a
 shadow.
 
-The window is 760×520 with radius 12 corners the system draws. The title bar is transparent, with no hairline and no
+The window is 760×520 with radius 16 corners the system draws. The title bar is transparent, with no hairline and no
 toolbar: below it, a source list and a detail pane.
 
 - **Source list** (left, `Space(58)`, 232, straight on the material: `Sidebar` on macOS, no fill of its own). Its
   content starts 16 under the title bar, level with the detail pane's. Group heading "Identities" with the count (11, 600, `TextMuted`), then rows in the panel's order, inset 8 DIPs from the
-  list's sides: `Space(1.5)`×`Space(2)` padding, radius 6, a 28 DIP initial badge (radius 8), the name (13, 600) and
+  list's sides: `Space(1.5)`×`Space(2)` padding, radius 8, a 28 DIP initial badge (radius 8), the name (13, 600) and
   the email (`Rem(0.92)`, `TextMuted`) below. Text wraps. An identity limited to folders has
   a folder symbol at the end of its row, named "Scoped" for assistive technology; a draft shows "New" there. The
   selected row is filled with `Accent` and its text is `AccentText`, like the system's source lists; its badge gets a
-  1.5 DIP `AccentText` ring so an orange or red identity stays apart from the fill. The list scrolls above an
+  1.5 DIP `AccentText` ring so a green identity stays apart from the fill. The list scrolls above an
   add bar fixed to the bottom edge of the sidebar: a hairline, then a borderless "+" symbol button named "Add
   Identity" (also its tooltip), `Space(11)` (44) high with the button centered.
 - **Detail** (right, scrolls on a slightly more opaque layer, the detail fill, separated from the list by a 0.5 DIP
@@ -509,7 +517,7 @@ toolbar: below it, a source list and a detail pane.
   Header: a 32 DIP initial badge (radius 10), the title (`Rem(1.15)`, 600, level 1), "Global" or "Scoped" (`Rem(0.92)`, `TextMuted`), and at the
   end the six preset colors as 14 DIP dots (the chosen one ringed and ticked, each named for assistive technology)
   and the hex value.
-- **Groups.** A section title (11, 600, `TextMuted`, level 2) over an inset group in the card fill with radius 10 and no outline: Identity,
+- **Groups.** A section title (11, 600, `TextMuted`, level 2) over an inset group in the card fill with radius 12 and the card rim: Identity,
   SSH, Scope, URL rewrites, Notes, Times (not for a draft). A row is 32 DIPs high with `Space(3)` (12) side padding:
   the label on the left (a fixed label column, so rows line up), the value on the right, right-aligned. Rows are
   separated by a hairline inset 12 from the left. Values are plain text, not boxed text fields; a focused one shows

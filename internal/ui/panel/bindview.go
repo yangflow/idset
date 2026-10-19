@@ -51,23 +51,12 @@ func (s *Screen) bar(c *ui.Context, text string, color ui.Color) {
 	ui.Text(c, text).FontSize(t.Rem(0.9)).TextColor(color).Padding(t.Space(2), t.Space(3))
 }
 
-// matchedCard is the answer and what the last action left: a confirmation, a failure or the undo bar. Its
-// actions are icon buttons in the context line: open, copy, the menu (rebind, and unbind when the identity lists
-// this very folder) and clear.
+// matchedCard is the answer and what the last action left: a confirmation, a failure or the undo bar. The answer
+// is the identity's name over the dropped folder beside its badge, then its email and alias; the actions are at
+// the end of the answer: the clone toggle, the menu (open, copy, another folder, rebind and unbind) and clear.
 func (s *Screen) matchedCard(c *ui.Context, r *match.Result, a account.Account) {
 	t := c.Theme()
 	others := s.others(r)
-	h := head{
-		actions: func() {
-			if ghost(c, s.openLabel(), icons.Folder).Clicked() {
-				s.act.Open(r.Root)
-			}
-			s.copyButton(c, r.Root)
-			if len(others) > 0 || r.Exact {
-				ghost(c, s.text.More, icons.More).Disabled(s.busy).Menu(func(m *ui.Menu) { s.rebindMenu(m, r, others) })
-			}
-		},
-	}
 	var border ui.Color
 	switch match.Worst(r.Findings) {
 	case match.Error:
@@ -75,38 +64,40 @@ func (s *Screen) matchedCard(c *ui.Context, r *match.Result, a account.Account) 
 	case match.Warning:
 		border = t.Warning
 	}
-	s.frame(c, "result", border, r.Root, h, func() {
-		ui.Row(c).Gap(t.Space(3)).Padding(t.Space(3), t.Space(3), t.Space(2.5), t.Space(3)).AlignItems(ui.Center).Children(func() {
-			badge(c, a, t.Space(9), 10, t.Rem(1.1))
-			ui.Column(c).Gap(t.Space(0.25)).Children(func() {
-				ui.Text(c, s.label(a)).FontSize(t.Rem(1.1)).FontWeight(600)
-				ui.Text(c, s.text.UsesHere).FontSize(t.Rem(0.92)).TextColor(t.TextMuted)
+	fillCard(c, "result", border).Children(func() {
+		ui.Row(c).Gap(t.Space(2.5)).Padding(t.Space(2.5), t.Space(1.5), 0, t.Space(3)).AlignItems(ui.Center).Children(func() {
+			badge(c, a, t.Space(8), 9, t.Rem(0.95))
+			ui.Column(c).Grow(1).MinWidth(0).Gap(t.Space(0.25)).Children(func() {
+				ui.Text(c, s.label(a)).FontSize(t.Rem(1.08)).FontWeight(600).SingleLine().Tooltip(s.text.UsesHere)
+				pathLine(c, s.env.Tilde(r.Root), "", "", pathFace{mono: true, size: t.Rem(0.88), color: t.TextMuted})
+			})
+			ui.Row(c).AlignSelf(ui.Start).Gap(t.Space(0.5)).AlignItems(ui.Center).Shrink(0).Children(func() {
+				s.status(c, true)
+				if a.SSHAlias != "" {
+					toggle := symbolButton(c, "card-clone", s.text.CloneToggle, icons.Terminal, false).Expanded(s.cardCloneOpen)
+					tipAboveEnd(c, toggle, s.text.CloneToggle)
+					if toggle.Clicked() {
+						s.toggleCardClone()
+					}
+				}
+				ghost(c, s.text.More, icons.More).Disabled(s.busy).Menu(func(m *ui.Menu) { s.cardMenu(c, m, r, others) })
+				if ghost(c, s.text.Clear, icons.Close).Clicked() {
+					s.clear()
+				}
 			})
 		})
-		// The left padding lines the details up with the identity name: badge plus gap.
-		ui.Column(c).Gap(t.Space(1)).Padding(0, t.Space(3), t.Space(3), t.Space(14.5)).Children(func() {
-			detail := func(label string, values []string, mono bool) {
-				// Each label stands by the first line of its value, however many lines follow.
-				ui.Row(c).Gap(t.Space(2)).AlignItems(ui.Start).Children(func() {
-					ui.Text(c, label).FontSize(t.Rem(0.9)).TextColor(t.TextMuted).Width(t.Space(14))
-					ui.Column(c).Grow(1).Gap(t.Space(0.5)).Children(func() {
-						for _, value := range values {
-							v := ui.Text(c, value).FontSize(t.Rem(0.9))
-							if mono {
-								v.Font("monospace")
-							}
-						}
-					})
-				})
+		// The meta line starts under the name: the card's padding, the badge and the gap.
+		ui.Row(c).MinWidth(0).Padding(t.Space(1.5), t.Space(3), t.Space(2.5), t.Space(13.5)).Children(func() {
+			ui.Text(c, orDefault(a.GitUserEmail, s.text.NoEmail)).FontSize(t.Rem(0.92)).TextColor(t.TextMuted).SingleLine().MinWidth(0)
+			if a.SSHAlias != "" {
+				ui.Text(c, " · "+a.SSHAlias).Font("monospace").FontSize(t.Rem(0.88)).TextColor(t.TextMuted).SingleLine().Shrink(0)
 			}
-			detail(s.text.Alias, []string{orDefault(a.SSHAlias, s.text.NoAlias)}, a.SSHAlias != "")
-			detail(s.text.Email, []string{orDefault(a.GitUserEmail, s.text.NoEmail)}, false)
-			// Each folder has its own line.
-			detail(s.text.Folders, s.folderLines(a), !a.Scope.Global && len(usablePaths(a)) > 0)
 		})
 		s.findings(c, r, a)
 		s.confirmBlock(c)
-		s.cardClone(c, a)
+		if s.cardCloneOpen {
+			s.cardClone(c, a)
+		}
 		if s.failure != "" {
 			s.bar(c, s.failure, t.Danger)
 		}
@@ -116,8 +107,26 @@ func (s *Screen) matchedCard(c *ui.Context, r *match.Result, a account.Account) 
 	})
 }
 
-// rebindMenu is the menu of the "⋯" button, one of the system's: the identities to rebind to under a heading, and
-// "Unbind" when the identity lists this very folder.
+// cardMenu is the menu of the "⋯" button, one of the system's: open the folder, copy its path, choose another
+// folder, then the rebind part.
+func (s *Screen) cardMenu(c *ui.Context, m *ui.Menu, r *match.Result, others []account.Account) {
+	if m.Item(s.openLabel()).Chosen() {
+		s.act.Open(r.Root)
+	}
+	if m.Item(s.text.CopyPath).Chosen() {
+		s.copyPath(c, r.Root)
+	}
+	if m.Item(s.text.ChooseOther).Chosen() {
+		s.act.ChooseFolder()
+	}
+	if len(others) > 0 || r.Exact {
+		m.Separator()
+		s.rebindMenu(m, r, others)
+	}
+}
+
+// rebindMenu is the rebind part of the card's menu: the identities to rebind to under a heading, and "Unbind" when
+// the identity lists this very folder.
 func (s *Screen) rebindMenu(m *ui.Menu, r *match.Result, others []account.Account) {
 	if len(others) > 0 {
 		m.Item(s.text.RebindTo).Disabled(true)
@@ -190,7 +199,7 @@ func (s *Screen) noMatchCard(c *ui.Context, r *match.Result) {
 	if path == "" {
 		path = r.Dir
 	}
-	s.frame(c, "result", t.Warning, path, head{}, func() {
+	s.frame(c, "result", t.Warning, path, func() {
 		ui.Text(c, s.text.NoMatch).FontWeight(600).Padding(t.Space(3), t.Space(3), t.Space(2), t.Space(3))
 		if len(s.accounts) > 0 {
 			ui.Text(c, s.text.BindTo).FontSize(t.Rem(0.9)).FontWeight(600).TextColor(t.TextMuted).Padding(0, t.Space(3), t.Space(1.5), t.Space(3)).
