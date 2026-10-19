@@ -1,4 +1,6 @@
-# Idset
+<p align="center"><img src="design/icon.svg" alt="" width="128"></p>
+
+<h1 align="center">Idset</h1>
 
 English | [中文](README.zh-CN.md)
 
@@ -15,6 +17,17 @@ push is rejected.
 Idset keeps your identities in one list and writes the configuration for you. It never rewrites the files you
 maintain: it generates its own files and adds a single `Include` line to `~/.ssh/config` and `~/.gitconfig`.
 Private keys stay where they are; Idset only refers to them by path.
+
+<p align="center">
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/panel-dark.png">
+  <img src="docs/images/panel-light.png" alt="The panel: a dropped folder resolved to the Acme Work identity, above the identity list" width="240">
+</picture>
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/accounts-dark.png">
+  <img src="docs/images/accounts-light.png" alt="The account window: the identity list beside the editor for Acme Work" width="496">
+</picture>
+</p>
 
 ## Features
 
