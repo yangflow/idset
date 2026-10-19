@@ -4,6 +4,8 @@ All notable user-facing changes are recorded here, following [Keep a Changelog](
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-10-19
+
 ### Added
 
 - A tray icon opens a panel listing your identities, most recently used first, with a filter for three or more.
