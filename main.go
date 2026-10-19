@@ -231,9 +231,11 @@ func (a *app) post(fn func()) {
 	a.win.Update(fn)
 	if a.accounts != nil {
 		a.accounts.win.Update(func() {})
+		a.accounts.dialog.update()
 	}
 	if a.settings != nil {
 		a.settings.win.Update(func() {})
+		a.settings.dialog.update()
 	}
 	if a.about != nil {
 		a.about.win.Update(func() {})

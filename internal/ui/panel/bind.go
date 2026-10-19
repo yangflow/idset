@@ -37,8 +37,7 @@ type undoBar struct {
 type binding struct {
 	// busy is set while the owner works on a request.
 	busy bool
-	// menuOpen is the rebind menu; confirmTo is the global identity whose rebind waits for confirmation.
-	menuOpen  bool
+	// confirmTo is the global identity whose rebind waits for confirmation.
 	confirmTo string
 	// A bind that changed nothing shows coveredBy in the context line until coveredUntil; note is the full sentence.
 	// failure says why a request failed.
@@ -68,7 +67,6 @@ func (s *Screen) bindTo(id string) { s.run(bind.Op{Kind: bind.KindBind, To: id})
 
 // rebindTo moves the folder to another identity; a global one first asks for confirmation.
 func (s *Screen) rebindTo(id string) {
-	s.menuOpen = false
 	if a, ok := s.find(id); ok && a.Scope.Global {
 		s.confirmTo = id
 		return
@@ -83,7 +81,6 @@ func (s *Screen) confirmRebind() {
 }
 
 func (s *Screen) unbind() {
-	s.menuOpen = false
 	s.run(bind.Op{Kind: bind.KindUnbind, From: s.result.ID})
 }
 
@@ -154,7 +151,7 @@ func (s *Screen) OpDone(o bind.Outcome) {
 		s.say = s.failure
 		return
 	}
-	s.menuOpen, s.confirmTo, s.coveredBy, s.note, s.undo = false, "", "", "", nil
+	s.confirmTo, s.coveredBy, s.note, s.undo = "", "", "", nil
 	if o.ResultErr != nil {
 		s.result, s.resultErr = nil, o.ResultErr
 		return

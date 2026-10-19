@@ -28,7 +28,7 @@ Mockups show the 4 DIP unit and 13 px text.
 | context-line | `t.Space(9)` | 36 | context line of a result card, its hairline included |
 | chrome-inset | `t.Space(2)` / `t.Space(2.25)` | 8 / 9 | the footer's side insets / the title row's right inset |
 | chrome-gap | `t.Space(1)` | 4 | between the footer's icon buttons |
-| menu-entry | `t.Space(8)` | 32 | the stacked actions of the overlap card; an entry of the card menu is 26 (`t.Space(6.5)`) |
+| menu-entry | `t.Space(8)` | 32 | the stacked actions of the overlap card |
 | bar-undo | `t.Space(9)` | 36 | undo bar of a result card; the stale-path prompt's Update and Ignore row |
 | bar-actions | `t.Space(10)` | 40 | the stale-path prompt's header; the "New Identity" row of the bind list |
 | path-row | `t.Space(7)` | 28 | the two path rows of the stale-path prompt; a finding row of the identity check; the HTTPS row (8 right inset, its icon button 24) |
@@ -38,7 +38,6 @@ Mockups show the 4 DIP unit and 13 px text.
 | finding-section | `t.Space(1)` | 4 | above and below the finding rows, under their hairline |
 | row-bind | `t.Space(11)` | 44 | bind row, overlap row |
 | button-confirm | `t.Space(7)` high, `t.Space(20)` wide | 28 x 80 | Cancel and Bind of the confirm block; both the same size |
-| menu-width | `t.Space(56)` | 224 | the card menu ("Rebind to", identities, "Unbind"); its heading is 28 high |
 | button-readonly | `t.Space(7)` high, `t.Space(30)` wide | 28 x 120 | Show in Finder and Read Again of the read-only state; both the same size |
 | countdown | `t.Space(0.5)` | 2 | undo bar's countdown line on its bottom edge, `Accent` at 45%, in fifths of the card's width |
 | badge-result | `t.Space(9)` | 36 | initial badge in a result card |
@@ -52,8 +51,7 @@ Mockups show the 4 DIP unit and 13 px text.
 | radius-window | system | 12 | the windows; the system draws the corners |
 | radius-hero | 14 | 14 | the empty state's key tile, 56 x 56 |
 | radius-search | 8 | 8 | the panel's filter field, 28 high, `Surface` fill, no outline |
-| radius-menu | 10 | 10 | the card menu; its entries 6 |
-| radius-dialog | 16 | 16 | dialogs; their buttons share the width, 28 high, radius 8 |
+| radius-dialog | system | 12 | dialog windows, whose corners the system draws; their buttons share the width, 28 high, radius 8 |
 | radius-badge | 8 / 10 / 11 | 8 / 10 / 11 | list badge, result badge, warning badge |
 | radius-filter | 12 | 12 | platform filter buttons |
 | outline-drop | 1.5, dashed | 1.5 | drop zone outline, `Accent` at 55% over an 8% tint; the drop zone is 48 high: a 20 folder glyph, the line (`secondary`) and a 24 high primary Choose button |
@@ -62,7 +60,7 @@ Mockups show the 4 DIP unit and 13 px text.
 | hairline | 0.5 | 0.5 (1 at 1x) | every divider and the outline of a field; cards have none |
 | secondary | `t.Rem(0.92)` | about 12 / 13 | hints, notes, emails, status lines, the drop zone line |
 | mono | `t.Rem(0.88)` / `t.Rem(0.85)`, monospace | about 11.5 / 11 | paths, aliases, commands and key names next to secondary text / next to small text |
-| caption | `t.Rem(0.85)`, 600 | about 11 / 12 | group heading ("Identities · 3"), menu heading |
+| caption | `t.Rem(0.85)`, 600 | about 11 / 12 | group heading ("Identities · 3") |
 | small | `t.Rem(0.85)` | about 11 / 12 | folders in a list row, the read-only reason, "Copied" |
 | badge-letter | `t.Rem(1.25)`, 600 | 16 | initial in a result badge |
 | icon | `t.Rem(1.2)` / `t.Rem(1.7)` | about 16 / 22 | glyphs of every icon button (cards, title bar, footer) / the read-only warning |
@@ -70,11 +68,11 @@ Mockups show the 4 DIP unit and 13 px text.
 | accounts-list | `t.Space(58)` | 232 | source list of the accounts window |
 | accounts-row | `t.Space(8)` | 32 | height of a settings row |
 | accounts-label | `t.Space(42)` | 168 | label column of a settings row |
-| dot | `t.Space(2.5)` / `t.Space(3.5)` | 10 / 14 | color dot in a menu entry / color choices |
+| dot | `t.Space(2.5)` / `t.Space(3.5)` | 10 / 14 | color dot in a bind row / color choices |
 | conn | `t.Space(1.75)` | 7 | connectivity dot of a list row |
 | accounts-bar | `t.Space(11)` | 44 | height of the sidebar's add bar and of the detail's footer; their hairlines are one line |
 | accounts-button | `t.Space(7)` high, `t.Space(25)` wide | 28 x 100 | footer buttons; Revert and Save share the width, Delete is a text button of the same height |
-| accounts-dialog | `t.Space(85)` | 340 | width of the delete confirmation; the settings window's two confirmations reuse it |
+| accounts-dialog | `theme.DialogWidth` | 340 | width of a dialog window: the delete confirmation, the settings window's two confirmations and the key's identity choice; its height is its content's |
 | settings-tab | `t.Space(22)` wide, `t.Space(13)` high | 88 x 52 | a tab of the settings window: an icon over a label, 4 apart; the bar pads 4 above, 6 below, 8 at the sides |
 | settings-tab-icon | `t.Space(5)` | 20 | icon of a tab; the label is the small text size |
 | settings-pane | `t.Space(140)` max width | 560 | content of a settings pane, centered, 16 above and 20 at the sides |
@@ -95,7 +93,8 @@ fallback itself.
 | panel | `Popover` | `Acrylic` | solid |
 | accounts | `Sidebar` | `Mica` | solid |
 | settings, about | `Popover` | `Mica` | solid |
-| card menu, select menus, dialogs | `glass.Glass{}`, drawn by MyGo inside the window | same | same |
+| dialogs | `Popover`, a modal child window | `Acrylic` | solid |
+| card menu, select menus | the system's menu | the system's menu | the system's menu |
 
 | Name | Light | Dark | Used for |
 |---|---|---|---|
@@ -104,9 +103,6 @@ fallback itself.
 | solid-detail | `#fbfbfd` | `#323236` | the accounts detail pane on the solid fallback |
 | detail | `rgba(255, 255, 255, 0.45)` | `rgba(0, 0, 0, 0.18)` | the accounts detail pane over the material |
 | card | `rgba(255, 255, 255, 0.2)` | `rgba(255, 255, 255, 0.08)` | result cards, the identity list, settings groups; no outline |
-| menu | `glass.Glass{}` (white at 54% over a 10 DIP blur) | `glass.Glass{}` (gray at 64% over a 10 DIP blur) | the card menu and dialogs: Liquid Glass from MyGo's glass plugin (`Material(glass.Glass{})` on the `PopoverBase` and `DialogBase` panel), which blurs the window's content under it on every platform; the values in brackets are how the mockups imitate it |
-| rim | `rgba(255, 255, 255, 0.7)` | `rgba(255, 255, 255, 0.18)` | the inner edge of the card menu and dialogs |
-| scrim | `rgba(0, 0, 0, 0.1)` | `rgba(0, 0, 0, 0.28)` | behind a dialog, light enough that the window's glass still shows |
 
 macOS turns the material opaque by itself when Reduce transparency is on; the theme does not change.
 
@@ -124,7 +120,7 @@ outlines) on the solid color and on a card over it.
 | `Surface` | `rgba(0, 0, 0, 0.05)` | `rgba(255, 255, 255, 0.08)` | buttons, the filter field, segmented control track (`control` in mockups) |
 | `SurfaceHover` | `rgba(0, 0, 0, 0.07)` | `rgba(255, 255, 255, 0.11)` | hovered control, symbol button, list row |
 | `SurfacePressed` | `rgba(0, 0, 0, 0.12)` | `rgba(255, 255, 255, 0.16)` | pressed control; the row being confirmed in a result card |
-| field | `rgba(255, 255, 255, 0.45)` | `rgba(0, 0, 0, 0.22)` | text inputs, with a hairline `Border` |
+| field | `rgba(255, 255, 255, 0.22)` | `rgba(0, 0, 0, 0.22)` | text inputs, with a hairline `Border`; light enough that the material shows through and a field does not read as a white box |
 | `Border` | `rgba(60, 60, 67, 0.18)` | `rgba(255, 255, 255, 0.12)` | hairlines (`sep` in mockups) |
 | `Text` | `#1d1d1f` | `#f5f5f7` | primary text |
 | `TextMuted` | `#6b6b72` (4.7:1) | `#a3a3ab` (5.6:1) | hints, paths, group headings, symbols, the glyphs of the title row and footer |

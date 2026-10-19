@@ -6,10 +6,7 @@
 <style>
 /* Glass and Git orange; see design/tokens.md. The panel draws no background of its own: the window's Popover material
    (simulated here by .panel over the desktop) shows through, and cards sit on it as translucent fills. */
-:root { color-scheme:light; --material:rgba(246,246,248,.62); --text:#1d1d1f; --muted:#6b6b72; --sep:rgba(60,60,67,.18); --card:rgba(255,255,255,.2); --control:rgba(0,0,0,.05); --hover:rgba(0,0,0,.07); --pressed:rgba(0,0,0,.12); --field:rgba(255,255,255,.45); --accent:#c63a1c; --accent-hover:#ad3218; --accent-text:#ffffff; --accent-soft:rgba(240,80,51,.16); --danger:#c8102e; --warning:#b86e00; --success:#1e7d36; --focus:rgba(198,58,28,.55); --inverse:#1d1d1f; --inverse-text:#f5f5f7; --menu:rgba(255,255,255,.54); --glass:blur(10px) saturate(110%); --rim:rgba(255,255,255,.7) }
-:root[data-scheme=dark] { color-scheme:dark; --material:rgba(36,36,40,.58); --text:#f5f5f7; --muted:#a3a3ab; --sep:rgba(255,255,255,.12); --card:rgba(255,255,255,.08); --control:rgba(255,255,255,.08); --hover:rgba(255,255,255,.11); --pressed:rgba(255,255,255,.16); --field:rgba(0,0,0,.22); --accent:#ff6a4a; --accent-hover:#ff8468; --accent-text:#1d1d1f; --accent-soft:rgba(255,106,74,.22); --danger:#ff5c74; --warning:#ffb340; --success:#3ccf62; --focus:rgba(255,132,104,.6); --inverse:#f5f5f7; --inverse-text:#1d1d1f; --menu:rgba(60,60,60,.64); --glass:blur(10px) saturate(220%); --rim:rgba(255,255,255,.18) }
-* { box-sizing:border-box }
-body { margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI Variable Text","Segoe UI","PingFang SC","Microsoft YaHei UI",system-ui,sans-serif; font-size:13px; -webkit-font-smoothing:antialiased; color:var(--text); display:flex; gap:24px; padding:24px; align-items:flex-start; min-height:100vh;
+:root { color-scheme:light; --material:rgba(246,246,248,.62); --text:#1d1d1f; --muted:#6b6b72; --sep:rgba(60,60,67,.18); --card:rgba(255,255,255,.2); --control:rgba(0,0,0,.05); --hover:rgba(0,0,0,.07); --pressed:rgba(0,0,0,.12); --field:rgba(255,255,255,.22); --accent:#c63a1c; --accent-hover:#ad3218; --accent-text:#ffffff; --accent-soft:rgba(240,80,51,.16); --danger:#c8102e; --warning:#b86e00; --success:#1e7d36; --focus:rgba(198,58,28,.55); --inverse:#1d1d1f; --inverse-text:#f5f5f7; --material:rgba(36,36,40,.58); --text:#f5f5f7; --muted:#a3a3ab; --sep:rgba(255,255,255,.12); --card:rgba(255,255,255,.08); --control:rgba(255,255,255,.08); --hover:rgba(255,255,255,.11); --pressed:rgba(255,255,255,.16); --field:rgba(0,0,0,.22); --accent:#ff6a4a; --accent-hover:#ff8468; --accent-text:#1d1d1f; --accent-soft:rgba(255,106,74,.22); --danger:#ff5c74; --warning:#ffb340; --success:#3ccf62; --focus:rgba(255,132,104,.6); --inverse:#f5f5f7; --inverse-text:#1d1d1f; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI Variable Text","Segoe UI","PingFang SC","Microsoft YaHei UI",system-ui,sans-serif; font-size:13px; -webkit-font-smoothing:antialiased; color:var(--text); display:flex; gap:24px; padding:24px; align-items:flex-start; min-height:100vh;
   background:radial-gradient(60% 50% at 15% 20%,#9fd8ff,transparent 70%),radial-gradient(50% 60% at 85% 30%,#b8f0c9,transparent 70%),radial-gradient(60% 60% at 50% 100%,#ffd8a8,transparent 70%),linear-gradient(135deg,#7cc4f5,#a7e3d0 60%,#f6e3b5) }
 :root[data-scheme=dark] body { background:radial-gradient(60% 50% at 15% 20%,#2b4f8f,transparent 70%),radial-gradient(50% 60% at 85% 30%,#1f5e4a,transparent 70%),radial-gradient(60% 60% at 50% 100%,#6b3a2a,transparent 70%),linear-gradient(135deg,#14213d,#0f2a2a 60%,#2a1a14) }
 /* Stripes on the desktop, so the blur behind the panel shows. */
@@ -23,7 +20,7 @@ body::before { content:""; position:fixed; inset:0; z-index:-1; background:repea
 .controls kbd { padding:0 4px; border:1px solid #ccc; border-radius:3px; background:#fff; font-size:11px }
 /* The window: 340 x 480, 12 corners, the material and the system's shadow. "Reduce transparency" makes it opaque. */
 .panel { isolation:isolate; position:relative; width:340px; height:480px; flex:none; display:flex; flex-direction:column; border-radius:12px; overflow:hidden; background:var(--material); box-shadow:0 0 0 .5px rgba(0,0,0,.25),0 12px 40px rgba(0,0,0,.3) }
-/* The material is drawn under the window rather than on it, so that the glass of a menu or dialog inside can blur the window's content. */
+/* The material is drawn under the window rather than on it, so that a translucent element inside can blur the window's content. */
 .panel::before { content:""; position:absolute; inset:0; z-index:-1; border-radius:inherit; backdrop-filter:blur(30px) saturate(180%); -webkit-backdrop-filter:blur(30px) saturate(180%) }
 .solid .panel { background:#f2f2f5 }
 .solid .panel::before { display:none }
@@ -144,17 +141,13 @@ h1 { flex:1; margin:0; font-size:15px; letter-spacing:-.01em; font-weight:600 }
 .result .actions { display:flex; align-items:center; justify-content:flex-end; gap:4px; height:36px; padding:0 8px; border-top:.5px solid var(--sep) }
 .result .menuwrap { position:relative; display:flex }
 .panel button.text.quiet { color:var(--muted) }
-/* The menu: the system's Menu material, 8 corners and a shadow; it opens 4 below the context line. */
-.menu { position:absolute; z-index:4; top:calc(100% + 9px); right:0; width:224px; padding:5px; border-radius:10px; background:var(--menu); backdrop-filter:var(--glass); -webkit-backdrop-filter:var(--glass); box-shadow:inset 0 0 0 .5px var(--rim),0 0 0 .5px rgba(0,0,0,.2),0 10px 30px rgba(0,0,0,.25) }
-.menu .mhead { height:24px; padding:0 8px; display:flex; align-items:center; font-size:11px; font-weight:600; color:var(--muted) }
+/* A native system menu (the same for every pop-up): plain text items, a disabled heading, 22 px items, the accent on the highlighted one. */
+.menu { position:absolute; z-index:4; top:calc(100% + 9px); right:0; min-width:180px; padding:5px; border-radius:8px; background:rgba(246,246,248,.8); backdrop-filter:blur(30px) saturate(180%); -webkit-backdrop-filter:blur(30px) saturate(180%); box-shadow:0 0 0 .5px rgba(0,0,0,.2),0 10px 30px rgba(0,0,0,.25) }
+:root[data-scheme=dark] .menu { background:rgba(40,40,44,.8) }
+.menu .mhead { height:22px; padding:0 8px; display:flex; align-items:center; font-size:13px; color:var(--muted) }
 .menu .msep { height:.5px; margin:4px 8px; background:var(--sep) }
-.menu .entry { display:flex; align-items:center; gap:8px; height:26px; padding:0 8px; border-radius:6px }
+.menu .entry { display:flex; align-items:center; height:22px; padding:0 8px; border-radius:4px; font-size:13px; white-space:nowrap }
 .menu .entry.hot { background:var(--accent); color:var(--accent-text) }
-.menu .entry.hot .tag { color:inherit; opacity:.8 }
-.menu .entry .dot { flex:none; width:10px; height:10px; border-radius:50%; background:rgb(var(--c)) }
-:root[data-scheme=dark] .menu .entry .dot { background:rgb(var(--cl)) }
-.menu .entry .label { flex:1 }
-.menu .entry .tag { font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace; font-size:11px; color:var(--muted) }
 .result .bar { position:relative; display:flex; align-items:center; gap:0; min-height:36px; padding:8px 12px; border-top:.5px solid var(--sep); line-height:1.4 }
 .result .bar.timed { height:36px; padding:0 8px 0 12px; border-radius:0 0 10px 10px; overflow:hidden }
 /* The countdown: a 2 DIP line on the bottom edge of the bar, as wide as the time left of the card's width (here 3 of 5 seconds), Accent at 45%. */
@@ -482,7 +475,7 @@ function panel(state, T) {
   const confirmBlock = `<div class="confirm"><p>${T.confirmShort(name(personal))}</p><div class="buttons"><button class="field fixed">${T.cancel}</button><button class="primary fixed">${T.rebindDo}</button></div></div>`;
   const matched = (o = {}) => {
     const i = o.id || work, path = o.path || '~/work/api';
-    const menu = `<div class="menu"><div class="mhead">${T.rebind}</div>${[personal, client, unnamed].map((m, n) => `<div class="entry${n === 0 ? ' hot' : ''}">${dot(m)}<span class="label">${name(m)}</span><span class="tag">${m.scope ? m.scope[0] : T.global}</span></div>`).join('')}${o.exact ? `<div class="msep"></div><div class="entry"><span class="label">${T.unbind}</span></div>` : ''}</div>`;
+    const menu = `<div class="menu"><div class="mhead">${T.rebind}</div>${[personal, client, unnamed].map((m, n) => `<div class="entry${n === 0 ? ' hot' : ''}">${name(m)}</div>`).join('')}${o.exact ? `<div class="msep"></div><div class="entry">${T.unbind}</div>` : ''}</div>`;
     const status = o.ack ? ack(T.updated) : o.covered ? ack(T.coveredBy('~/work/'), T.coveredNote(name(work), '~/work/')) : o.copied ? ack(T.copied) : '';
     return result(o.finds ? findsKind(o.finds) : '', path, `
       <div class="who">${avatar(i)}<div><div class="name">${name(i)}</div><div class="uses">${T.uses}</div></div></div>

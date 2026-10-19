@@ -44,21 +44,6 @@ func (s *Screen) openLabel() string {
 	return s.text.OpenFiles
 }
 
-// folderEnd is the first folder of a scoped identity, or "Global", for the end of a menu entry.
-func (s *Screen) folderEnd(c *ui.Context, a account.Account) {
-	t := c.Theme()
-	face := pathFace{mono: true, size: t.Rem(0.85), color: t.TextMuted}
-	if p := usablePaths(a); !a.Scope.Global && len(p) > 0 {
-		pathLine(c, p[0], "", "", face).MaxWidthPercent(50).Shrink(0)
-		return
-	}
-	text := s.text.Global
-	if !a.Scope.Global {
-		text = s.text.NoFolders
-	}
-	face.apply(ui.Text(c, text)).SingleLine()
-}
-
 // bar is a row of a result card under a hairline: a note, a failure or the undo bar.
 func (s *Screen) bar(c *ui.Context, text string, color ui.Color) {
 	t := c.Theme()
@@ -72,10 +57,6 @@ func (s *Screen) bar(c *ui.Context, text string, color ui.Color) {
 func (s *Screen) matchedCard(c *ui.Context, r *match.Result, a account.Account) {
 	t := c.Theme()
 	others := s.others(r)
-	var (
-		more    ui.Element
-		hasMore bool
-	)
 	h := head{
 		actions: func() {
 			if ghost(c, s.openLabel(), icons.Folder).Clicked() {
@@ -83,15 +64,7 @@ func (s *Screen) matchedCard(c *ui.Context, r *match.Result, a account.Account) 
 			}
 			s.copyButton(c, r.Root)
 			if len(others) > 0 || r.Exact {
-				more, hasMore = ghost(c, s.text.More, icons.More).Disabled(s.busy), true
-				if more.Clicked() {
-					s.menuOpen = !s.menuOpen
-				}
-			}
-		},
-		menu: func() {
-			if hasMore {
-				s.rebindMenu(c, more, r, others)
+				ghost(c, s.text.More, icons.More).Disabled(s.busy).Menu(func(m *ui.Menu) { s.rebindMenu(m, r, others) })
 			}
 		},
 	}
@@ -143,48 +116,25 @@ func (s *Screen) matchedCard(c *ui.Context, r *match.Result, a account.Account) 
 	})
 }
 
-// rebindMenu lists under the "⋯" button the identities to rebind to, each with its color and first folder, and
-// "Unbind" when the identity lists this very folder. Its right edge is the button's, and it opens just below the
-// card's context line: the button is centered in the 36 DIP line, so 6 DIPs above its bottom, plus a 4 DIP gap.
-func (s *Screen) rebindMenu(c *ui.Context, more ui.Element, r *match.Result, others []account.Account) {
-	t := c.Theme()
-	ui.PopoverBase(c, more, &s.menuOpen, func(panel ui.Element) {
-		theme.Menu(c, panel, t.Space(56))
-		panel.AttachTo(more, ui.AnchorBottomRight, ui.AnchorTopRight).Margin(t.Space(2.5), 0, 0, 0).
-			Role(ui.RoleMenu).Label(s.text.RebindTo)
+// rebindMenu is the menu of the "⋯" button, one of the system's: the identities to rebind to under a heading, and
+// "Unbind" when the identity lists this very folder.
+func (s *Screen) rebindMenu(m *ui.Menu, r *match.Result, others []account.Account) {
+	if len(others) > 0 {
+		m.Item(s.text.RebindTo).Disabled(true)
+	}
+	for _, a := range others {
+		if m.Item(s.label(a)).Chosen() {
+			s.rebindTo(a.ID)
+		}
+	}
+	if r.Exact {
 		if len(others) > 0 {
-			// The heading is as high as it needs and inset like the entries, so the space above and below it is even.
-			ui.Row(c).Height(t.Space(7)).PaddingX(t.Space(2)).AlignItems(ui.Center).Children(func() {
-				ui.Text(c, s.text.RebindTo).FontSize(t.Rem(0.85)).FontWeight(600).TextColor(t.TextMuted).SingleLine()
-			})
+			m.Separator()
 		}
-		entry := func(key, label string, children func()) ui.Element {
-			e := ui.Row(c.Key(key)).Focusable().Role(ui.RoleMenuItem).Label(label).Gap(t.Space(2)).
-				Height(t.Space(6.5)).PaddingX(t.Space(2)).Radius(t.Radius).AlignItems(ui.Center)
-			if e.Hovered() {
-				e.Background(t.SurfaceHover)
-			}
-			e.Children(children)
-			return e
+		if m.Item(s.text.Unbind).Chosen() {
+			s.unbind()
 		}
-		for _, a := range others {
-			if entry("entry-"+a.ID, s.text.RebindTo+" "+s.label(a), func() {
-				dot(c, a, t.Space(2.5))
-				ui.Text(c, s.label(a)).FontSize(t.Rem(0.92)).Grow(1).SingleLine()
-				s.folderEnd(c, a)
-			}).Clicked() {
-				s.rebindTo(a.ID)
-			}
-		}
-		if r.Exact {
-			if len(others) > 0 {
-				ui.Divider(c).Margin(t.Space(1), 0)
-			}
-			if entry("unbind", s.text.Unbind, func() { ui.Text(c, s.text.Unbind).Grow(1) }).Clicked() {
-				s.unbind()
-			}
-		}
-	})
+	}
 }
 
 // confirmBlock asks before a global identity becomes one that applies to a single folder: one line, and two

@@ -450,8 +450,6 @@ func (s *Screen) resultCard(c *ui.Context) {
 type head struct {
 	// actions are the icon buttons before the clear button; a card with them can be copied from.
 	actions func()
-	// menu is called after the context line, to attach a menu to one of its buttons.
-	menu func()
 }
 
 // frame is a result card: the folder with its status and icon buttons, a hairline, then the body. border is the
@@ -472,9 +470,6 @@ func (s *Screen) frame(c *ui.Context, key string, border ui.Color, path string, 
 				s.clear()
 			}
 		})
-		if h.menu != nil {
-			h.menu()
-		}
 		ui.Divider(c)
 		body()
 	})

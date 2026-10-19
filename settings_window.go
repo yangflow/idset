@@ -35,6 +35,7 @@ type settingsWindow struct {
 	text   settings.Copy
 	screen *settings.Screen
 	win    *mygo.Window
+	dialog *dialogWindow
 }
 
 // openSettings shows the settings window, creating it when it is not open, and hides the panel. Closing the
@@ -56,10 +57,12 @@ func (a *app) openSettings(req settings.Request) {
 		w.screen.SetAccounts(s.Accounts())
 	}
 	w.screen.Open(req)
+	w.dialog = &dialogWindow{screen: w.screen}
 	w.win = mygo.NewWindow(mygo.WindowOptions{
 		Title: w.text.Window, Width: settingsWidth, Height: settingsHeight, MinWidth: settingsMinWidth, MinHeight: settingsMinHeight,
-		StateKey: "settings", TitleBarStyle: mygo.TitleBarHidden, Vibrancy: formMaterial(), Content: ui.View(w.screen.View),
+		StateKey: "settings", TitleBarStyle: mygo.TitleBarHidden, Vibrancy: formMaterial(), Content: ui.View(w.dialog.view),
 	})
+	w.dialog.parent = w.win
 	a.settings = w
 	w.win.OnClosed(func() {
 		if a.settings == w {

@@ -45,14 +45,31 @@ func (s *Screen) View(c *ui.Context) {
 			})
 		})
 	})
-	s.restoreDialog(c)
-	s.removeDialog(c)
-	s.pickDialog(c)
 	if s.announce != "" {
 		c.Announce(s.announce)
 		s.announce = ""
 	}
 }
+
+// DialogOpen reports whether a dialog asks something: restoring a backup, removing the Include blocks or the
+// identity of a new key. The owner shows it in a window of its own, which Dialog draws.
+func (s *Screen) DialogOpen() bool { return s.confirmOpen || s.removeOpen || s.keys.pickOpen }
+
+// Dialog draws the dialog that is open and returns its column, or a zero element when none is.
+func (s *Screen) Dialog(c *ui.Context) ui.Element {
+	switch {
+	case s.confirmOpen:
+		return s.restoreDialog(c)
+	case s.removeOpen:
+		return s.removeDialog(c)
+	case s.keys.pickOpen:
+		return s.pickDialog(c)
+	}
+	return ui.Element{}
+}
+
+// CloseDialog closes the dialog without doing what it asks, as Cancel does; its window was closed.
+func (s *Screen) CloseDialog() { s.confirmOpen, s.removeOpen, s.keys.pickOpen = false, false, false }
 
 // tabBar is the row of tabs over the panes: an icon over a label, the chosen one in the accent-soft fill.
 func (s *Screen) tabBar(c *ui.Context) {
@@ -341,17 +358,15 @@ func (s *Screen) identityRow(c *ui.Context, a account.Account) {
 }
 
 // restoreDialog asks before restoring and lists the identities there will be afterwards.
-func (s *Screen) restoreDialog(c *ui.Context) {
+func (s *Screen) restoreDialog(c *ui.Context) ui.Element {
 	b := s.backup(s.confirmPath)
-	if !s.confirmOpen || b == nil {
+	if b == nil {
 		s.confirmOpen = false
-		return
+		return ui.Element{}
 	}
 	t := c.Theme()
 	title := fmt.Sprintf(s.text.ConfirmTitle, s.stamp(b.Time))
-	ui.DialogBase(c, &s.confirmOpen, func(backdrop, panel ui.Element) {
-		theme.Dialog(c, backdrop, panel, t.Space(85))
-		panel.Role(ui.RoleAlertDialog).Label(title)
+	return theme.Dialog(c, &s.confirmOpen, ui.RoleAlertDialog, title, func() {
 		ui.Text(c, title).FontWeight(600).Role(ui.RoleHeading).Level(2).Wrap()
 		ui.Text(c, s.text.ConfirmBody).Wrap()
 		ui.Divider(c)
@@ -438,14 +453,9 @@ type fileState struct {
 }
 
 // removeDialog asks before the Include blocks are removed and says what goes and what stays.
-func (s *Screen) removeDialog(c *ui.Context) {
-	if !s.removeOpen {
-		return
-	}
+func (s *Screen) removeDialog(c *ui.Context) ui.Element {
 	t := c.Theme()
-	ui.DialogBase(c, &s.removeOpen, func(backdrop, panel ui.Element) {
-		theme.Dialog(c, backdrop, panel, t.Space(85))
-		panel.Role(ui.RoleAlertDialog).Label(s.text.RemoveTitle)
+	return theme.Dialog(c, &s.removeOpen, ui.RoleAlertDialog, s.text.RemoveTitle, func() {
 		ui.Text(c, s.text.RemoveTitle).FontWeight(600).Role(ui.RoleHeading).Level(2).Wrap()
 		ui.Text(c, s.text.RemoveBody).Wrap()
 		// item is a line of a box: a 12 DIP icon, then the text, whose path (mono) sits between the two plain parts.

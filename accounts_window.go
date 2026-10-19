@@ -26,6 +26,7 @@ type accountsWindow struct {
 	text   accounts.Copy
 	screen *accounts.Screen
 	win    *mygo.Window
+	dialog *dialogWindow
 }
 
 // openIdentity opens the account window on an identity and records the use, which moves it up the list.
@@ -61,10 +62,12 @@ func (a *app) openAccounts(req accounts.Request) {
 		w.screen.SetAccounts(s.Accounts(), s.ReadOnly(), s.Path())
 	}
 	w.screen.Open(req)
+	w.dialog = &dialogWindow{screen: w.screen}
 	w.win = mygo.NewWindow(mygo.WindowOptions{
 		Title: w.text.Window, Width: accountsWidth, Height: accountsHeight, MinWidth: accountsMinWidth, MinHeight: accountsMinHeight,
-		StateKey: "accounts", TitleBarStyle: mygo.TitleBarHidden, Vibrancy: mygo.VibrancySidebar, Content: ui.View(w.screen.View),
+		StateKey: "accounts", TitleBarStyle: mygo.TitleBarHidden, Vibrancy: mygo.VibrancySidebar, Content: ui.View(w.dialog.view),
 	})
+	w.dialog.parent = w.win
 	a.accounts = w
 	w.win.OnClosed(func() {
 		if a.accounts == w {

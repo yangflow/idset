@@ -39,7 +39,6 @@ func (s *Screen) View(c *ui.Context) {
 		// The title band lies over the top of both panes, where the window's controls are.
 		ui.Column(c).Absolute().Top(0).Left(0).Right(0).Children(func() { theme.TitleBar(c, s.text.Window) })
 	})
-	s.deleteDialog(c)
 	if s.announce != "" {
 		c.Announce(s.announce)
 		s.announce = ""
@@ -632,21 +631,34 @@ func (s *Screen) status(c *ui.Context, f *form, dirty bool) {
 	}
 }
 
+// DialogOpen reports whether the delete confirmation shows. The owner shows it in a window of its own, which Dialog
+// draws.
+func (s *Screen) DialogOpen() bool { return s.confirmOpen }
+
+// Dialog draws the delete confirmation and returns its column, or a zero element when it is closed.
+func (s *Screen) Dialog(c *ui.Context) ui.Element {
+	if !s.confirmOpen {
+		return ui.Element{}
+	}
+	return s.deleteDialog(c)
+}
+
+// CloseDialog closes the delete confirmation without deleting, as Cancel does; its window was closed.
+func (s *Screen) CloseDialog() { s.confirmOpen, s.confirm = false, nil }
+
 // deleteDialog asks before deleting the selected identity and says what is not deleted with it.
-func (s *Screen) deleteDialog(c *ui.Context) {
+func (s *Screen) deleteDialog(c *ui.Context) ui.Element {
 	cf := s.confirm
 	if cf == nil {
-		return
+		return ui.Element{}
 	}
 	a := s.stored(cf.id)
 	if a == nil {
 		s.confirmOpen, s.confirm = false, nil
-		return
+		return ui.Element{}
 	}
 	t := c.Theme()
-	ui.DialogBase(c, &s.confirmOpen, func(backdrop, panel ui.Element) {
-		theme.Dialog(c, backdrop, panel, t.Space(85))
-		panel.Role(ui.RoleAlertDialog).Label(fmt.Sprintf(s.text.DelTitle, s.label(*a)))
+	pane := theme.Dialog(c, &s.confirmOpen, ui.RoleAlertDialog, fmt.Sprintf(s.text.DelTitle, s.label(*a)), func() {
 		ui.Text(c, fmt.Sprintf(s.text.DelTitle, s.label(*a))).FontWeight(600).Role(ui.RoleHeading).Level(2)
 		ui.Text(c, s.text.DelBody).FontSize(t.Rem(0.92)).TextColor(t.TextMuted).Wrap()
 		ui.Column(c).Children(func() {
@@ -703,6 +715,7 @@ func (s *Screen) deleteDialog(c *ui.Context) {
 	if !s.confirmOpen {
 		s.confirm = nil
 	}
+	return pane
 }
 
 func usablePaths(a account.Account) []string {

@@ -97,10 +97,20 @@ func size(t *testing.T, tt *ui.Tester, text string) (w, h float32) {
 // same compares sizes, which differ in the last bits of a float.
 func same(a, b float32) bool { return a-b < 0.01 && b-a < 0.01 }
 
-// openMenu opens the card's "⋯" menu.
-func openMenu(t *testing.T, s *Screen, tt *ui.Tester) {
+// openMenu opens the card's "⋯" menu and returns its entries, "-" for a separator.
+func openMenu(t *testing.T, s *Screen, tt *ui.Tester) []string {
 	t.Helper()
 	click(t, tt, s.text.More)
+	return tt.Menu()
+}
+
+// choose chooses an entry of the open menu.
+func choose(t *testing.T, tt *ui.Tester, label string) {
+	t.Helper()
+	if err := tt.ChooseMenuItem(label); err != nil {
+		t.Fatal(err)
+	}
+	tt.Frame()
 }
 
 // fakeClock is a clock the test moves.
@@ -170,9 +180,9 @@ func TestMatchedByAParentOffersRebindButNotUnbind(t *testing.T) {
 		t.Fatalf("open: %v", r.folders)
 	}
 	// The menu lists the others, and has no Unbind: only a parent folder covers this one.
-	openMenu(t, s, tt)
-	want(t, tt, "Rebind to", "Rebind to client", "Rebind to personal")
-	wantNot(t, tt, "Rebind to work", "Unbind")
+	if got := openMenu(t, s, tt); !slices.Equal(got, []string{"Rebind to", "client", "personal"}) {
+		t.Errorf("menu %q", got)
+	}
 	// With nobody to rebind to and nothing to unbind, the menu has no entries, and there is no "⋯".
 	_, tt, _ = card(t, matched(api, "work", false), work())
 	want(t, tt, s.openLabel(), "Copy Path", "Clear")
@@ -189,14 +199,10 @@ func TestExactMatchOffersUnbind(t *testing.T) {
 		t.Errorf("the icon buttons are the same size: %v x %v, %v x %v, %v x %v", wo, hOpen, wm, hMore, wc, hClear)
 	}
 	// Unbind is in the menu, below the identities, only when the identity lists this very folder.
-	openMenu(t, s, tt)
-	want(t, tt, "Rebind to client", "Unbind")
-	entry, _ := tt.Find("Rebind to client")
-	unbind, _ := tt.Find("Unbind")
-	if unbind.Y <= entry.Y {
-		t.Errorf("Unbind comes last: %v %v", entry, unbind)
+	if got := openMenu(t, s, tt); !slices.Equal(got, []string{"Rebind to", "client", "-", "Unbind"}) {
+		t.Errorf("Unbind comes last: %q", got)
 	}
-	click(t, tt, "Unbind")
+	choose(t, tt, "Unbind")
 	if len(r.ran) != 1 || r.ran[0].Kind != bind.KindUnbind || r.ran[0].From != "work" || r.ran[0].Dir != api || r.ran[0].Root != api {
 		t.Fatalf("ran %+v", r.ran)
 	}
@@ -211,44 +217,32 @@ func TestExactMatchOffersUnbind(t *testing.T) {
 
 func TestRebindMenuListsTheOtherIdentities(t *testing.T) {
 	s, tt, r := card(t, matched(api, "work", true), work(), client(), personal())
-	openMenu(t, s, tt)
-	want(t, tt, "Rebind to client", "Rebind to personal")
-	wantNot(t, tt, "Rebind to work")
-	if !s.menuOpen {
-		t.Fatal("menu open")
+	if got := openMenu(t, s, tt); !slices.Equal(got, []string{"Rebind to", "client", "personal", "-", "Unbind"}) {
+		t.Fatalf("menu %q", got)
 	}
-	// Escape closes the menu and leaves the panel open.
-	tt.Key(0, ui.KeyEscape)
-	tt.Frame()
-	if s.menuOpen || r.hidden != 0 {
-		t.Fatalf("Escape closes the menu first: open %v hidden %d", s.menuOpen, r.hidden)
-	}
-	openMenu(t, s, tt)
-	click(t, tt, "Rebind to client")
+	choose(t, tt, "client")
 	if len(r.ran) != 1 || r.ran[0].Kind != bind.KindRebind || r.ran[0].From != "work" || r.ran[0].To != "client" {
 		t.Fatalf("ran %+v", r.ran)
 	}
-	if s.menuOpen || s.confirmTo != "" {
-		t.Error("choosing closes the menu; a scoped identity needs no confirmation")
+	if s.confirmTo != "" {
+		t.Error("a scoped identity needs no confirmation")
 	}
-	// The menu sits under the card's actions, right-aligned to them, and is as wide as the mockup says.
-	s2, tt2, _ := card(t, matched(api, "work", true), work(), client())
+	// The heading is not a choice.
+	s2, tt2, r2 := card(t, matched(api, "work", true), work(), client())
 	openMenu(t, s2, tt2)
-	entry, _ := tt2.Find("Rebind to client")
-	if entry.H <= 0 || s2.menuOpen != true {
-		t.Fatalf("entry %v", entry)
+	if err := tt2.ChooseMenuItem("Rebind to"); err == nil {
+		tt2.Frame()
 	}
-	clear, _ := tt2.Find("Clear")
-	if right := entry.X + entry.W; right > clear.X+clear.W+1 {
-		t.Errorf("the menu stays inside the card: %v %v", entry, clear)
+	if len(r2.ran) != 0 {
+		t.Fatalf("ran %+v", r2.ran)
 	}
 }
 
 func TestRebindToAGlobalIdentityAsksFirst(t *testing.T) {
 	s, tt, r := card(t, matched(api, "work", true), work(), personal())
 	openMenu(t, s, tt)
-	click(t, tt, "Rebind to personal")
-	if len(r.ran) != 0 || s.confirmTo != "personal" || s.menuOpen {
+	choose(t, tt, "personal")
+	if len(r.ran) != 0 || s.confirmTo != "personal" {
 		t.Fatalf("the menu closes and the confirmation opens: %+v %q", r.ran, s.confirmTo)
 	}
 	want(t, tt, "personal will apply only here", "Cancel", "Rebind")
@@ -270,14 +264,14 @@ func TestRebindToAGlobalIdentityAsksFirst(t *testing.T) {
 	}
 	wantNot(t, tt, "personal will apply only here")
 	openMenu(t, s, tt)
-	click(t, tt, "Rebind to personal")
+	choose(t, tt, "personal")
 	tt.Key(0, ui.KeyEscape)
 	tt.Frame()
 	if s.confirmTo != "" || r.hidden != 0 {
 		t.Fatalf("Escape cancels the confirmation: %q %d", s.confirmTo, r.hidden)
 	}
 	openMenu(t, s, tt)
-	click(t, tt, "Rebind to personal")
+	choose(t, tt, "personal")
 	click(t, tt, "Rebind")
 	if len(r.ran) != 1 || r.ran[0].Kind != bind.KindRebind || r.ran[0].To != "personal" || r.ran[0].From != "work" {
 		t.Fatalf("ran %+v", r.ran)
@@ -287,7 +281,7 @@ func TestRebindToAGlobalIdentityAsksFirst(t *testing.T) {
 func TestCoveredBindChangesNothingAndSaysWhy(t *testing.T) {
 	s, tt, r := card(t, matched(api, "client", false), work(), client())
 	openMenu(t, s, tt)
-	click(t, tt, "Rebind to work")
+	choose(t, tt, "work")
 	s.OpDone(bind.Outcome{Op: r.ran[0], CoveredID: "work", CoveredBy: "~/work/", Result: matched(api, "client", false)})
 	tt.Frame()
 	// The card keeps its answer; its context line says "Covered by …" for a moment, the full sentence is a tooltip.
@@ -431,7 +425,7 @@ func TestARebindOrUseOnlyIsUndoneWithBothIdentities(t *testing.T) {
 	s, tt, r := card(t, matched(api, "work", true), work(), client())
 	newClock(s)
 	openMenu(t, s, tt)
-	click(t, tt, "Rebind to client")
+	choose(t, tt, "client")
 	before := []account.Account{work(), client()}
 	s.OpDone(bind.Outcome{Op: r.ran[0], Undo: before, Result: matched(api, "client", true)})
 	tt.Frame()
@@ -470,11 +464,7 @@ func TestResultOfAnotherFolderOnlyEndsTheWait(t *testing.T) {
 func TestFailuresShowInTheCard(t *testing.T) {
 	s, tt, r := card(t, matched(api, "work", true), work(), client())
 	openMenu(t, s, tt)
-	click(t, tt, "Unbind")
-	tt.Frame()
-	if s.menuOpen {
-		t.Error("Unbind closes the menu")
-	}
+	choose(t, tt, "Unbind")
 	s.OpDone(bind.Outcome{Op: r.ran[0], Err: fmt.Errorf("writing: %w", errors.New("permission denied"))})
 	tt.Frame()
 	want(t, tt, "Could not change the bindings: permission denied", "More")
@@ -483,7 +473,7 @@ func TestFailuresShowInTheCard(t *testing.T) {
 	}
 	// The buttons work again.
 	openMenu(t, s, tt)
-	click(t, tt, "Unbind")
+	choose(t, tt, "Unbind")
 	if len(r.ran) != 2 {
 		t.Fatalf("ran %+v", r.ran)
 	}
@@ -656,20 +646,4 @@ func TestOverlapShowsTheFolderOnce(t *testing.T) {
 		t.Error("the one clear button clears both cards")
 	}
 	wantNot(t, tt, "cover this folder")
-}
-
-func TestMenuOpensUnderItsButton(t *testing.T) {
-	s, tt, _ := card(t, matched(api, "work", true), work(), client(), personal())
-	more, _ := tt.Find(s.text.More)
-	openMenu(t, s, tt)
-	entry, _ := tt.Find("Rebind to client")
-	unbind, _ := tt.Find("Unbind")
-	// Right-aligned with the button, inset by the menu's padding only, and below the card's context line.
-	inset := more.X + more.W - (entry.X + entry.W)
-	if inset < 0 || inset > more.W/2 {
-		t.Errorf("the menu ends with the button: %v %v", more, entry)
-	}
-	if entry.Y <= more.Y+more.H || !same(entry.W, unbind.W) {
-		t.Errorf("entries under the button, equally wide: %v %v %v", more, entry, unbind)
-	}
 }
