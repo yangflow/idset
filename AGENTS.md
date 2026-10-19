@@ -57,8 +57,9 @@ internal/diagnose/       connectivity check with `ssh -T`, key state, problem ba
                          commands are injectable, tests use a fake
 internal/trayicon/       the tray icon, drawn in code, no image files
 resources/               shipped licenses and product assets
-scripts/                 checks, version bump, secret scan, packaging
+scripts/                 checks, secret scan, packaging
 mygo.json                name, identifier, version, packaging
+release-please-*.json    the release pull request: version and changelog from the merged titles
 docs/, design/           product spec, design language, ADRs, mockups, tokens
 ```
 
@@ -70,7 +71,6 @@ go test -race ./...
 python3 scripts/scan_secrets.py
 go tool mygo dev
 go tool mygo build
-python3 scripts/bump.py <version>   # then tag v<version>; see docs/release.md
 ```
 
 `scripts/check.sh --cross` must pass before merge.
@@ -88,8 +88,10 @@ python3 scripts/bump.py <version>   # then tag v<version>; see docs/release.md
   maintainer confirms the visual direction before UI code is written. Mockup, `docs/design.md` and code go in
   the same PR. Screenshots go in the PR body, never in the repository; the only exception is the README images
   in `docs/images/`, taken from demo identities on `example.com` in a throwaway home directory.
-- User-visible changes go under `[Unreleased]` in `CHANGELOG.md`. The version lives only in `mygo.json`; change it
-  with `python3 scripts/bump.py <version>`, which also dates the changelog.
+- Releases: release-please keeps a release pull request open on `main` and computes the version from the merged
+  titles, writing `mygo.json`, where the version lives only, and `CHANGELOG.md`; the `feat`, `fix` and `perf`
+  titles become the release notes, so write them for users. Do not edit `CHANGELOG.md` or the version by hand; only
+  the maintainer merges the release pull request, which tags the release (docs/release.md).
 - `README.md` (English) and `README.zh-CN.md` (Chinese) say the same thing; change both together. Feature status
   lists only merged work; planned work is marked as planned.
 - Only MyGo native views and the native updater plugin. No WebView, HTML frontend, production cgo dependency or
