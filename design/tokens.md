@@ -22,9 +22,9 @@ Mockups show the 4 DIP unit and 13 px text.
 | space-2.5 | `t.Space(2.5)` | 10 | badge to text in a list row; between blocks of the panel; lines of the read-only state |
 | space-3 | `t.Space(3)` | 12 | panel content padding at the sides and below; card padding; list row left inset |
 | space-4 | `t.Space(4)` | 16 | title row, left inset |
-| symbol-button | `t.Space(6.5)` | 26 | borderless icon buttons: in the title row and the footer, in the context line of a card (open, copy, menu, clear), at the end of an overlap row (pin, minus); always 26 x 26 with a 16 glyph, 4 apart |
+| symbol-button | `t.Space(6.5)` | 26 | borderless round icon buttons: in the title row and the footer, next to the answer of a result card (clone, menu, clear), at the end of an overlap row (pin, minus); always a 26 circle with a 16 glyph, 2 apart in a card and 4 in the footer |
 | chrome-title | `t.Space(11)` | 44 | title row of the panel, no hairline; the content starts 4 below it |
-| chrome-footer | `t.Space(10)` | 40 | footer of the panel, a hairline above it |
+| chrome-footer | `t.Space(10)` | 40 | footer of the panel, no hairline: the material runs on under the list |
 | context-line | `t.Space(9)` | 36 | context line of a result card, its hairline included |
 | chrome-inset | `t.Space(2)` / `t.Space(2.25)` | 8 / 9 | the footer's side insets / the title row's right inset |
 | chrome-gap | `t.Space(1)` | 4 | between the footer's icon buttons |
@@ -40,24 +40,25 @@ Mockups show the 4 DIP unit and 13 px text.
 | button-confirm | `t.Space(7)` high, `t.Space(20)` wide | 28 x 80 | Cancel and Bind of the confirm block; both the same size |
 | button-readonly | `t.Space(7)` high, `t.Space(30)` wide | 28 x 120 | Show in Finder and Read Again of the read-only state; both the same size |
 | countdown | `t.Space(0.5)` | 2 | undo bar's countdown line on its bottom edge, `Accent` at 45%, in fifths of the card's width |
-| badge-result | `t.Space(9)` | 36 | initial badge in a result card |
+| badge-result | `t.Space(8)` | 32 | initial badge in a result card |
 | badge-list | `t.Space(7)` | 28 | initial badge in a list row; the row hairline starts 50 from the card's edge (12 + 28 + 10) |
 | badge-warning | `t.Space(11)` | 44 | warning badge of the read-only state |
 | button-add | `t.Space(7)` high, 16 padding | 28 | the filled Add Identity button of the empty state |
 | detail-label | `t.Space(14)` | 56 | label column of the result card's details |
-| detail-inset | `t.Space(14.5)` | 58 | details lined up with the identity name (12 + 36 + 10) |
-| radius | `Theme.Radius` | 6 | controls and symbol buttons |
-| radius-card | 10 | 10 | result cards, the identity list, the drop zone, settings groups |
-| radius-window | system | 12 | the windows; the system draws the corners |
+| detail-inset | `t.Space(13.5)` | 54 | the email and alias line, and the details, lined up with the identity name (12 + 32 + 10) |
+| radius | `Theme.Radius` | 999 (capsule) | push buttons, segmented controls and the filter field are capsules; symbol buttons are circles; text inputs keep 8 |
+| radius-card | 12 | 12 | result cards, the identity list, the drop zone, settings groups, banners, menus; a list row's hover fill inside the accounts sidebar is 8 |
+| radius-window | system | 16 | the windows; the system draws the corners, macOS 26 rounder still |
 | radius-hero | 14 | 14 | the empty state's key tile, 56 x 56 |
-| radius-search | 8 | 8 | the panel's filter field, 28 high, `Surface` fill, no outline |
-| radius-dialog | system | 12 | dialog windows, whose corners the system draws; their buttons share the width, 28 high, radius 8 |
-| radius-badge | 8 / 10 / 11 | 8 / 10 / 11 | list badge, result badge, warning badge |
+| radius-search | capsule | 14 | the panel's filter field: 28 high, `Surface` fill, no outline, a 13 magnifier 10 from its left edge and the text 29 in; focus is the focus ring |
+| radius-dialog | system | 16 | dialog windows, whose corners the system draws; their buttons share the width, 28 high capsules |
+| radius-badge | 8 / 9 / 11 | 8 / 9 / 11 | list badge, result badge, warning badge |
 | radius-filter | 12 | 12 | platform filter buttons |
-| outline-drop | 1.5, dashed | 1.5 | drop zone outline, `Accent` at 55% over an 8% tint; the drop zone is 48 high: a 20 folder glyph, the line (`secondary`) and a 24 high primary Choose button |
-| title | `t.Rem(1.15)`, 600 | about 15 / 16 | panel title "Idset", a level 1 heading; the identity name in a result card and in the editor; pane, read-only and empty titles |
+| outline-drop | 1, dashed | 1 | drop zone outline, `Accent` at 50% over a 6% tint; while dragging over, 1.5 solid `Accent` over accent-soft; the drop zone is 48 high: a 20 folder glyph, the line (`secondary`, `Text`) and a 24 high primary Choose button; it shows only while there is no result |
+| title | `t.Rem(1.15)`, 600 | about 15 / 16 | panel title "Idset", a level 1 heading; the identity name in the editor; pane, read-only and empty titles |
+| answer | `t.Rem(1.08)`, 600 | about 14 / 15 | the identity name in a result card |
 | emphasis | `t.Rem(1)`, 600 | 13 / 14 | identity names in a list, dialog titles, the first line of a notice |
-| hairline | 0.5 | 0.5 (1 at 1x) | every divider and the outline of a field; cards have none |
+| hairline | 0.5 | 0.5 (1 at 1x) | dividers between rows and the outline of a text field; cards and the footer have none |
 | secondary | `t.Rem(0.92)` | about 12 / 13 | hints, notes, emails, status lines, the drop zone line |
 | mono | `t.Rem(0.88)` / `t.Rem(0.85)`, monospace | about 11.5 / 11 | paths, aliases, commands and key names next to secondary text / next to small text |
 | caption | `t.Rem(0.85)`, 600 | about 11 / 12 | group heading ("Identities · 3") |
@@ -103,13 +104,18 @@ fallback itself.
 | solid-detail | `#fbfbfd` | `#323236` | the accounts detail pane on the solid fallback |
 | detail | `rgba(255, 255, 255, 0.45)` | `rgba(0, 0, 0, 0.18)` | the accounts detail pane over the material |
 | card | `rgba(255, 255, 255, 0.2)` | `rgba(255, 255, 255, 0.08)` | result cards, the identity list, settings groups; no outline |
+| card-rim | `rgba(255, 255, 255, 0.45)` | `rgba(255, 255, 255, 0.06)` | a 0.5 light line along the top edge of a card, inside it, so a card reads as a sheet of glass rather than a box |
+| rim | `rgba(255, 255, 255, 0.7)` | `rgba(255, 255, 255, 0.16)` | the same line along the top edge of a window or dialog, inside the system's 0.5 outline and shadow |
+| menu (mockups only) | `rgba(250, 250, 252, 0.74)` | `rgba(44, 44, 48, 0.7)` | how a system menu and a dialog window look; mockups blur 36 and saturate 200% under it |
 
-macOS turns the material opaque by itself when Reduce transparency is on; the theme does not change.
+macOS turns the material opaque by itself when Reduce transparency is on; the theme does not change. On macOS 26 the
+system draws `Popover` windows, dialogs and menus as Liquid Glass; Idset adds only the rims, never its own blur.
 
 ## Color roles
 
-Idset's own `ui.Theme`, light and dark, given to every window. It does not follow the system accent color: Git
-orange is the product's color, and every pair below was checked against the material, which a system accent was not.
+Idset's own `ui.Theme`, light and dark, given to every window. It does not follow the system accent color: commit
+mint, the green of the product icon, is the product's color, and every pair below was checked against the material,
+which a system accent was not.
 It does follow Increase contrast (`Preferences().HighContrast`): `Border` and `TextMuted` move towards `Text` as
 MyGo's default theme does, and the focus ring becomes opaque. Contrast is WCAG AA (4.5:1 for text, 3:1 for glyphs and
 outlines) on the solid color and on a card over it.
@@ -124,20 +130,20 @@ outlines) on the solid color and on a card over it.
 | `Border` | `rgba(60, 60, 67, 0.18)` | `rgba(255, 255, 255, 0.12)` | hairlines (`sep` in mockups) |
 | `Text` | `#1d1d1f` | `#f5f5f7` | primary text |
 | `TextMuted` | `#6b6b72` (4.7:1) | `#a3a3ab` (5.6:1) | hints, paths, group headings, symbols, the glyphs of the title row and footer |
-| `Accent` | `#c63a1c` | `#ff6a4a` | primary buttons, the selected list row and menu entry, switch on, radio and checkbox, text buttons and links, the drop zone, the countdown line (at 45%), the overlap winner |
-| `AccentHover` | `#ad3218` | `#ff8468` | hovered primary button |
-| `AccentPressed` | `#962a14` | `#ff9a83` | pressed primary button |
-| `AccentText` | `#ffffff` (5.2:1) | `#1d1d1f` (5.9:1) | text on the accent; dark mode uses dark text, as MyGo does for any light accent |
-| accent-soft | `rgba(240, 80, 51, 0.16)` | `rgba(255, 106, 74, 0.22)` | Git orange `#f05033` as a tint: the selected settings tab, the drop zone while dragging over, the empty state's key tile |
+| `Accent` | `#0a7a68` (4.7:1) | `#4fdcb8` (8.4:1) | primary buttons, the selected list row and menu entry, switch on, radio and checkbox, text buttons and links, the drop zone, the countdown line (at 45%), the overlap winner |
+| `AccentHover` | `#086a5a` | `#72e5c8` | hovered primary button |
+| `AccentPressed` | `#075a4d` | `#94ecd5` | pressed primary button |
+| `AccentText` | `#ffffff` (5.3:1) | `#10201c` (9.9:1) | text on the accent; dark mode uses dark text, as MyGo does for any light accent |
+| accent-soft | `rgba(20, 184, 150, 0.15)` | `rgba(79, 220, 184, 0.18)` | mint `#14b896` as a tint: the selected settings tab, the drop zone while dragging over, the empty state's key tile |
 | `Danger` | `#c8102e` | `#ff5c74` | `git` failed card; read-only warning (fill at 14%); save and field errors, Delete; error glyph of a finding, the 1 DIP inner outline of a card with an error |
 | `Warning` | `#b86e00` (3.6:1) | `#ffb340` | never text, only glyphs and outlines: inner outline of cards without a match; warning glyph of a finding |
-| `Success` | `#1e7d36` | `#3ccf62` | connectivity dot of a passing check; check mark of "Configuration OK" |
-| `Selection` | `rgba(240, 80, 51, 0.25)` | `rgba(255, 106, 74, 0.35)` | selected text |
-| `Focus` | `rgba(198, 58, 28, 0.55)` | `rgba(255, 132, 104, 0.6)` | keyboard focus ring, 3 DIPs; a focused input's outline turns `Accent` |
+| `Success` | `#1e7d36` | `#3ccf62` | connectivity dot of a passing check; check mark of "Configuration OK"; close to `Accent` in hue, so it is never the only cue: a dot sits next to its identity, a check mark next to its words |
+| `Selection` | `rgba(20, 184, 150, 0.25)` | `rgba(79, 220, 184, 0.32)` | selected text |
+| `Focus` | `rgba(10, 122, 104, 0.4)` | `rgba(79, 220, 184, 0.45)` | keyboard focus ring, 3 DIPs outside the control's own shape (a capsule, a circle, a field); a focused input's outline turns `Accent` |
 | `Inverse` / `InverseText` | `#1d1d1f` / `#f5f5f7` | `#f5f5f7` / `#1d1d1f` | tooltips (every icon button has one) and toasts |
 | `Scrollbar` | `rgba(0, 0, 0, 0.32)` | `rgba(255, 255, 255, 0.35)` | scroll bar thumbs, 6 DIPs wide |
 
-`#f05033` itself is never a fill under text: white on it is 3.6:1.
+`#14b896` itself is never a fill under text: white on it is 2.5:1.
 
 ## Identity colors
 
@@ -155,7 +161,7 @@ the accounts window are named.
 
 A badge is the value itself, solid, in both appearances. Its letter is `#1d1d1f` when the value is light
 (`0.299 R + 0.587 G + 0.114 B > 165`) and white otherwise. On a selected (`Accent`) row the badge gets a 1.5 DIP
-`AccentText` ring so an orange or red identity stays apart from the selection. Any other `#RRGGBB` follows the same
+`AccentText` ring so a green identity stays apart from the selection. Any other `#RRGGBB` follows the same
 rule; an invalid value shows as blue (`internal/account/display.go`).
 
 ## Tray icon

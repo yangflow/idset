@@ -7,7 +7,10 @@
 /* Colors are Idset's glass theme in design/tokens.md, sizes the 4 DIP spacing unit at 13 px text. The window draws no
    background of its own beyond the Window material (simulated here by .win over the desktop); groups are translucent
    cards, rows are separated by .5 hairlines, nothing has a border. */
-:root { color-scheme:light; --material:rgba(246,246,248,.62); --text:#1d1d1f; --muted:#6b6b72; --sep:rgba(60,60,67,.18); --card:rgba(255,255,255,.2); --control:rgba(0,0,0,.05); --hover:rgba(0,0,0,.07); --pressed:rgba(0,0,0,.12); --field:rgba(255,255,255,.22); --accent:#c63a1c; --accent-hover:#ad3218; --accent-text:#ffffff; --accent-soft:rgba(240,80,51,.16); --danger:#c8102e; --warning:#b86e00; --success:#1e7d36; --focus:rgba(198,58,28,.55); --inverse:#1d1d1f; --inverse-text:#f5f5f7; --material:rgba(36,36,40,.58); --text:#f5f5f7; --muted:#a3a3ab; --sep:rgba(255,255,255,.12); --card:rgba(255,255,255,.08); --control:rgba(255,255,255,.08); --hover:rgba(255,255,255,.11); --pressed:rgba(255,255,255,.16); --field:rgba(0,0,0,.22); --accent:#ff6a4a; --accent-hover:#ff8468; --accent-text:#1d1d1f; --accent-soft:rgba(255,106,74,.22); --danger:#ff5c74; --warning:#ffb340; --success:#3ccf62; --focus:rgba(255,132,104,.6); --inverse:#f5f5f7; --inverse-text:#1d1d1f; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI Variable Text","Segoe UI","PingFang SC","Microsoft YaHei UI",system-ui,sans-serif; font-size:13px; -webkit-font-smoothing:antialiased; color:var(--text); display:flex; gap:24px; padding:24px; align-items:flex-start; min-height:100vh;
+:root { color-scheme:light; --material:rgba(246,246,248,.62); --text:#1d1d1f; --muted:#6b6b72; --sep:rgba(60,60,67,.18); --card:rgba(255,255,255,.2); --control:rgba(0,0,0,.05); --hover:rgba(0,0,0,.07); --pressed:rgba(0,0,0,.12); --field:rgba(255,255,255,.22); --accent:#0a7a68; --accent-hover:#086a5a; --accent-text:#ffffff; --accent-soft:rgba(20,184,150,.15); --danger:#c8102e; --warning:#b86e00; --success:#1e7d36; --focus:rgba(10,122,104,.4); --inverse:#1d1d1f; --inverse-text:#f5f5f7; --rim:rgba(255,255,255,.7); --card-rim:rgba(255,255,255,.45); --menu:rgba(250,250,252,.74); }
+:root[data-scheme=dark] { color-scheme:dark; --material:rgba(36,36,40,.58); --text:#f5f5f7; --muted:#a3a3ab; --sep:rgba(255,255,255,.12); --card:rgba(255,255,255,.08); --control:rgba(255,255,255,.08); --hover:rgba(255,255,255,.11); --pressed:rgba(255,255,255,.16); --field:rgba(0,0,0,.22); --accent:#4fdcb8; --accent-hover:#72e5c8; --accent-text:#10201c; --accent-soft:rgba(79,220,184,.18); --danger:#ff5c74; --warning:#ffb340; --success:#3ccf62; --focus:rgba(79,220,184,.45); --inverse:#f5f5f7; --inverse-text:#1d1d1f; --rim:rgba(255,255,255,.16); --card-rim:rgba(255,255,255,.06); --menu:rgba(44,44,48,.7); }
+* { box-sizing:border-box }
+body { margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI Variable Text","Segoe UI","PingFang SC","Microsoft YaHei UI",system-ui,sans-serif; font-size:13px; -webkit-font-smoothing:antialiased; color:var(--text); display:flex; gap:24px; padding:24px; align-items:flex-start; min-height:100vh;
   background:radial-gradient(60% 50% at 15% 20%,#9fd8ff,transparent 70%),radial-gradient(50% 60% at 85% 30%,#b8f0c9,transparent 70%),radial-gradient(60% 60% at 50% 100%,#ffd8a8,transparent 70%),linear-gradient(135deg,#7cc4f5,#a7e3d0 60%,#f6e3b5) }
 :root[data-scheme=dark] body { background:radial-gradient(60% 50% at 15% 20%,#2b4f8f,transparent 70%),radial-gradient(50% 60% at 85% 30%,#1f5e4a,transparent 70%),radial-gradient(60% 60% at 50% 100%,#6b3a2a,transparent 70%),linear-gradient(135deg,#14213d,#0f2a2a 60%,#2a1a14) }
 /* Stripes on the desktop, so the blur behind the window shows. */
@@ -20,9 +23,9 @@ body::before { content:""; position:fixed; inset:0; z-index:-1; background:repea
 .controls .hint { color:#666; line-height:1.5 }
 .controls kbd { padding:0 4px; border:1px solid #ccc; border-radius:3px; background:#fff; font-size:11px }
 
-/* Window: 720x480, 12 corners, the material and the system's shadow; the system title bar, a toolbar of tabs (one per
+/* Window: 720x480, 16 corners with a light rim, the material and the system's shadow; the system title bar, a toolbar of tabs (one per
    pane) under it, then the pane. "Reduce transparency" makes it opaque. */
-.win { isolation:isolate; position:relative; width:720px; height:480px; flex:none; display:flex; flex-direction:column; border-radius:12px; overflow:hidden; background:var(--material); box-shadow:0 0 0 .5px rgba(0,0,0,.25),0 12px 40px rgba(0,0,0,.3) }
+.win { isolation:isolate; position:relative; width:720px; height:480px; flex:none; display:flex; flex-direction:column; border-radius:16px; overflow:hidden; background:var(--material); box-shadow:inset 0 .5px 0 var(--rim),0 0 0 .5px rgba(0,0,0,.18),0 14px 44px rgba(0,0,0,.24) }
 /* The material is drawn under the window rather than on it, so that a translucent element inside can blur the window's content. */
 .win::before { content:""; position:absolute; inset:0; z-index:-1; border-radius:inherit; backdrop-filter:blur(30px) saturate(180%); -webkit-backdrop-filter:blur(30px) saturate(180%) }
 .solid .win { background:#f2f2f5 }
@@ -44,6 +47,8 @@ body::before { content:""; position:fixed; inset:0; z-index:-1; background:repea
 .body { flex:1; min-height:0; display:flex }
 .detail { flex:1; min-width:0; display:flex; flex-direction:column }
 .scroll { flex:1; min-height:0; overflow:auto; padding:16px 20px 20px; display:flex; flex-direction:column; gap:20px }
+.content, .scroll, .side .items { scrollbar-width:none }
+.content::-webkit-scrollbar, .scroll::-webkit-scrollbar, .side .items::-webkit-scrollbar { display:none }
 .scroll > * { flex-shrink:0; width:100%; max-width:560px; margin-inline:auto }
 .scroll.busy { opacity:.5; pointer-events:none }
 .foot { flex:none; display:flex; align-items:center; gap:8px; min-height:44px; box-sizing:border-box; padding:0 20px; border-top:.5px solid var(--sep) }
@@ -52,7 +57,7 @@ body::before { content:""; position:fixed; inset:0; z-index:-1; background:repea
 .status svg { width:12px; height:12px; flex:none }
 
 /* Buttons: --control fill, no border; primary (the only accent fill), destructive, and text. */
-button { padding:0 12px; height:24px; border:0; border-radius:6px; background:var(--control); color:var(--text); font:inherit; display:inline-flex; align-items:center; gap:4px; white-space:nowrap }
+button { padding:0 12px; height:24px; border:0; border-radius:999px; background:var(--control); color:var(--text); font:inherit; display:inline-flex; align-items:center; gap:4px; white-space:nowrap }
 button:hover:not(:disabled) { background:var(--hover) }
 /* Footer buttons: one height, and Revert and Save one width, so a label change moves nothing. */
 .foot button { height:28px }
@@ -88,7 +93,7 @@ button.ghost svg { width:14px; height:14px }
 
 /* Groups: a heading, then a card of rows (label left, value right) with inset .5 hairlines, then a footnote. */
 .g > h3 { margin:0 0 4px 12px; font-size:11px; font-weight:600; color:var(--muted) }
-.rows { background:var(--card); border-radius:10px }
+.rows { background:var(--card); border-radius:12px; box-shadow:inset 0 .5px 0 var(--card-rim) }
 .r { position:relative; display:flex; align-items:center; gap:12px; min-height:32px; padding:4px 12px }
 .r + .r::before { content:""; position:absolute; top:0; left:12px; right:0; height:.5px; background:var(--sep) }
 .r .k { flex:none; width:168px }
@@ -97,7 +102,7 @@ button.ghost svg { width:14px; height:14px }
 .r .v { flex:1; min-width:0; text-align:right; overflow-wrap:anywhere }
 .r .v.ph { color:var(--muted) }
 .r .v.left { text-align:left }
-.r .v.focus { padding:2px 8px; border:.5px solid var(--accent); border-radius:6px; background:var(--field); outline:3px solid var(--focus); outline-offset:0 }
+.r .v.focus { padding:2px 8px; border:.5px solid var(--accent); border-radius:8px; background:var(--field); box-shadow:0 0 0 3px var(--focus) }
 .r .v.sel { display:flex; align-items:center; justify-content:flex-end; gap:4px }
 .r .v.sel svg { width:10px; height:10px; color:var(--muted) }
 .r .tail { flex:none; display:flex; align-items:center; gap:4px }
@@ -133,10 +138,10 @@ button.ghost svg { width:14px; height:14px }
 .center .acts { display:flex; gap:8px; margin-top:16px }
 
 /* Confirmations: a card on the Menu material over the dimmed window. */
-/* A dialog is a separate frameless child window on the system material (popover): no scrim dims the parent. */
+/* A dialog is a separate frameless child window on the system material (popover), which macOS 26 draws as Liquid Glass: 16
+   corners, a light rim along the top, capsule buttons. No scrim dims the parent. */
 .scrim { position:absolute; inset:0; display:flex; align-items:center; justify-content:center }
-.dialog { width:340px; display:flex; flex-direction:column; gap:12px; padding:20px; background:rgba(246,246,248,.72); backdrop-filter:blur(30px) saturate(180%); -webkit-backdrop-filter:blur(30px) saturate(180%); border-radius:12px; box-shadow:0 0 0 .5px rgba(0,0,0,.25),0 12px 40px rgba(0,0,0,.3) }
-:root[data-scheme=dark] .dialog { background:rgba(40,40,44,.7) }
+.dialog { width:340px; display:flex; flex-direction:column; gap:12px; padding:20px; background:var(--menu); backdrop-filter:blur(36px) saturate(200%); -webkit-backdrop-filter:blur(36px) saturate(200%); border-radius:16px; box-shadow:inset 0 .5px 0 var(--rim),0 0 0 .5px rgba(0,0,0,.18),0 14px 44px rgba(0,0,0,.24) }
 .dialog h2 { margin:0; font-size:13px; font-weight:600; overflow-wrap:anywhere }
 .dialog p { margin:0; line-height:1.45 }
 .dialog .kv { display:grid; grid-template-columns:64px 1fr; gap:4px 8px; padding:8px 0; border-top:.5px solid var(--sep); border-bottom:.5px solid var(--sep); font-size:12px }
@@ -146,7 +151,7 @@ button.ghost svg { width:14px; height:14px }
 .dialog .opt { display:flex; flex-direction:column; gap:4px }
 .dialog .opt .small { padding-left:22px }
 .dialog .buttons { display:flex; gap:8px; margin-top:6px }
-.dialog .buttons button { flex:1; height:28px; justify-content:center; border-radius:8px }
+.dialog .buttons button { flex:1; height:28px; justify-content:center }
 
 /* Settings additions: the pane heading, backup rows, notes in the warning color. */
 .note.warn { color:var(--warning); display:flex; gap:4px }
@@ -172,7 +177,7 @@ button.ghost svg { width:14px; height:14px }
 .r.idr .trail.txt { justify-content:flex-end; padding-right:5px; font-size:12px }
 .r.idr .trail svg { width:14px; height:14px }
 .r.err { display:block; min-height:0; padding:6px 12px 8px 44px }
-.banner { display:flex; gap:8px; align-items:flex-start; padding:10px 12px; border-radius:10px; background:color-mix(in srgb, var(--danger) 12%, transparent); line-height:1.4 }
+.banner { display:flex; gap:8px; align-items:flex-start; padding:10px 12px; border-radius:12px; background:color-mix(in srgb, var(--danger) 12%, transparent); line-height:1.4 }
 .banner svg { width:14px; height:14px; flex:none; margin-top:2px; color:var(--danger) }
 .dialog .ids { display:flex; flex-direction:column; gap:6px; padding:8px 0; border-top:.5px solid var(--sep); border-bottom:.5px solid var(--sep) }
 .dialog .ids .li { display:flex; align-items:center; gap:8px }
