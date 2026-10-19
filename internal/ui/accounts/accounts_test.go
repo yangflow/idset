@@ -324,7 +324,13 @@ func TestChoicesChangeTheForm(t *testing.T) {
 func TestPlatformSelectChangesProvider(t *testing.T) {
 	r := open(t, "en", sample(), Request{ID: workID})
 	r.click(t, "GitHub")
-	r.click(t, "Gitea")
+	if got := r.tt.Menu(); !slices.Equal(got, []string{"GitHub", "GitLab", "Gitea", "Custom"}) {
+		t.Fatalf("menu %q", got)
+	}
+	if err := r.tt.ChooseMenuItem("Gitea"); err != nil {
+		t.Fatal(err)
+	}
+	r.tt.Frame()
 	if f := r.form(); f.cur.provider != account.Gitea || f.cur.port != 22 {
 		t.Fatalf("provider %q port %d", f.cur.provider, f.cur.port)
 	}

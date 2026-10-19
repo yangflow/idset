@@ -267,15 +267,13 @@ func (s *Screen) keyResult(c *ui.Context) {
 }
 
 // pickDialog asks which identity the new key is for: one of the list, or a new one made in the accounts window.
-func (s *Screen) pickDialog(c *ui.Context) {
-	if !s.keys.pickOpen || s.keys.key == nil {
+func (s *Screen) pickDialog(c *ui.Context) ui.Element {
+	if s.keys.key == nil {
 		s.keys.pickOpen = false
-		return
+		return ui.Element{}
 	}
 	t := c.Theme()
-	ui.DialogBase(c, &s.keys.pickOpen, func(backdrop, panel ui.Element) {
-		theme.Dialog(c, backdrop, panel, t.Space(85))
-		panel.Role(ui.RoleDialog).Label(s.text.UseTitle)
+	return theme.Dialog(c, &s.keys.pickOpen, ui.RoleDialog, s.text.UseTitle, func() {
 		ui.Text(c, s.text.UseTitle).FontWeight(600).Role(ui.RoleHeading).Level(2).Wrap()
 		ui.Text(c, s.text.UseBody).Wrap()
 		ui.Divider(c)

@@ -1,6 +1,7 @@
 package theme
 
 import (
+	"slices"
 	"testing"
 
 	"github.com/egoist/mygo/ui"
@@ -82,15 +83,14 @@ func TestSelectIsAsWideAsItsChoiceAndChoosesFromAMenu(t *testing.T) {
 	if err := tester.Click("Platform"); err != nil {
 		t.Fatal(err)
 	}
-	for _, o := range options[1:] {
-		if !tester.HasText(o) {
-			t.Fatalf("the menu has no %q: %q", o, tester.Texts())
-		}
+	if got := tester.Menu(); !slices.Equal(got, options) {
+		t.Fatalf("the menu is %q, want %q", got, options)
 	}
-	if err := tester.Click("Gitea"); err != nil || choice != "Gitea" {
-		t.Fatalf("choose: %v %q", err, choice)
+	if err := tester.ChooseMenuItem("Gitea"); err != nil {
+		t.Fatal(err)
 	}
-	if tester.HasText("GitLab") {
-		t.Errorf("the menu stays open: %q", tester.Texts())
+	tester.Frame()
+	if choice != "Gitea" || !tester.HasText("Gitea") {
+		t.Fatalf("choose: %q %q", choice, tester.Texts())
 	}
 }

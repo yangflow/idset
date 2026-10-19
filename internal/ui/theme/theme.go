@@ -3,7 +3,6 @@
 package theme
 
 import (
-	"github.com/egoist/mygo/plugins/glass"
 	"github.com/egoist/mygo/ui"
 
 	"github.com/yangflow/idset/internal/ui/icons"
@@ -21,20 +20,16 @@ type Fills struct {
 	Field ui.Color
 	// AccentSoft is Git orange as a tint.
 	AccentSoft ui.Color
-	// Rim is the inner edge of the card menu and dialogs; Scrim is behind a dialog.
-	Rim, Scrim ui.Color
 }
 
 var (
 	lightFills = Fills{
 		Solid: ui.Hex("#f2f2f5"), SolidDetail: ui.Hex("#fbfbfd"), Detail: ui.RGBA(255, 255, 255, 0.45),
-		Card: ui.RGBA(255, 255, 255, 0.2), Field: ui.RGBA(255, 255, 255, 0.45), AccentSoft: ui.RGBA(240, 80, 51, 0.16),
-		Rim: ui.RGBA(255, 255, 255, 0.7), Scrim: ui.RGBA(0, 0, 0, 0.1),
+		Card: ui.RGBA(255, 255, 255, 0.2), Field: ui.RGBA(255, 255, 255, 0.22), AccentSoft: ui.RGBA(240, 80, 51, 0.16),
 	}
 	darkFills = Fills{
 		Solid: ui.Hex("#2a2a2e"), SolidDetail: ui.Hex("#323236"), Detail: ui.RGBA(0, 0, 0, 0.18),
 		Card: ui.RGBA(255, 255, 255, 0.08), Field: ui.RGBA(0, 0, 0, 0.22), AccentSoft: ui.RGBA(255, 106, 74, 0.22),
-		Rim: ui.RGBA(255, 255, 255, 0.18), Scrim: ui.RGBA(0, 0, 0, 0.28),
 	}
 )
 
@@ -112,56 +107,38 @@ func TitleBar(c *ui.Context, title string) {
 		})
 }
 
-// Dialog gives a DialogBase its look: the scrim over the whole window and a pane of Liquid Glass, radius 16 and
-// width wide, with its rim and a shadow; its children are Space(3) apart.
-func Dialog(c *ui.Context, backdrop, panel ui.Element, width float32) {
-	t, f := c.Theme(), Of(c)
-	backdrop.Background(f.Scrim)
-	panel.Width(width).Padding(t.Space(5)).Gap(t.Space(3)).Radius(16).Material(glass.Glass{}).Border(0.5, f.Rim).
-		Shadow(0, 16, 48, 0, ui.RGBA(0, 0, 0, 0.32))
-}
+// DialogWidth is the width of a dialog's window, in DIPs.
+const DialogWidth = 340
 
-// Menu gives a PopoverBase its look: a pane of Liquid Glass, radius 10 and width wide (as wide as its entries for 0),
-// with its rim and a shadow.
-func Menu(c *ui.Context, panel ui.Element, width float32) {
-	if width > 0 {
-		panel.Width(width)
+// Dialog draws a dialog in a window of its own, a frameless child of the screen's window whose material shows through
+// it: a column of children Space(3) apart, named label for assistive technology. Escape sets *open to false. The
+// window takes the column's height.
+func Dialog(c *ui.Context, open *bool, role ui.Role, label string, body func()) ui.Element {
+	t := c.Theme()
+	if c.Shortcut(0, ui.KeyEscape) {
+		*open = false
 	}
-	panel.Padding(c.Theme().Space(1.25)).Radius(10).Material(glass.Glass{}).Border(0.5, Of(c).Rim).
-		Shadow(0, 10, 30, 0, ui.RGBA(0, 0, 0, 0.25))
+	return ui.Column(c).FillWidth().Padding(t.Space(5)).Gap(t.Space(3)).Role(role).Label(label).Children(body)
 }
 
-// Select is a drop-down choosing one of options into *selected: a compact button as wide as the choice, and a Menu
-// of the options under it, the chosen one checked.
+// Select is a drop-down choosing one of options into *selected: a compact button as wide as the choice, which opens
+// a menu of the system's with the options, the chosen one checked.
 func Select(c *ui.Context, selected *string, options []string) ui.Element {
 	t := c.Theme()
-	sel := ui.SelectBase(c, selected)
-	b := sel.Trigger.Height(t.Space(6.5)).PaddingX(t.Space(2.5)).Gap(t.Space(1.5)).Radius(t.Radius).AlignItems(ui.Center).
-		Background(t.Surface)
-	if b.Hovered() || sel.Open() {
+	b := ui.Button(c, "").Height(t.Space(6.5)).PaddingX(t.Space(2.5)).Gap(t.Space(1.5)).Radius(t.Radius).AlignItems(ui.Center).
+		Background(t.Surface).Border(0, ui.Color{})
+	if b.Hovered() {
 		b.Background(t.SurfaceHover)
 	}
 	b.Children(func() {
 		ui.Text(c, *selected).FontSize(t.Rem(0.92)).SingleLine()
 		ui.Icon(c, icons.ChevronDown).FontSize(t.Space(3)).TextColor(t.TextMuted)
 	})
-	sel.Popup(func(panel ui.Element) {
-		Menu(c, panel, 0)
-		panel.Margin(t.Space(1), 0, 0, 0)
+	return b.Menu(func(m *ui.Menu) {
 		for _, opt := range options {
-			item := sel.Item(opt).Height(t.Space(6.5)).PaddingX(t.Space(1.5)).Gap(t.Space(1)).Radius(t.Radius).AlignItems(ui.Center)
-			if item.Highlighted() {
-				item.Background(t.SurfaceHover)
+			if m.Item(opt).Checked(opt == *selected).Chosen() {
+				*selected = opt
 			}
-			item.Children(func() {
-				ui.Row(c).Width(t.Space(3.5)).Children(func() {
-					if opt == *selected {
-						ui.Icon(c, icons.Check).FontSize(t.Space(3.5)).TextColor(t.Accent)
-					}
-				})
-				ui.Text(c, opt).FontSize(t.Rem(0.92)).SingleLine().Padding(0, t.Space(2), 0, 0)
-			})
 		}
 	})
-	return b
 }

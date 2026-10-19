@@ -27,6 +27,7 @@ main.go                  lifecycle, single instance, tray, panel window position
                          background loading and matching, native updater plugin
 accounts_window.go       opening the account window, Dock icon on macOS, its background work (save, delete, pickers)
 about_window.go          opening the about window, finding out in the background whether this copy can update itself
+dialog_window.go         a screen's dialog in a frameless modal child window on the system material (ADR 0005)
 internal/ui/<screen>/    one package per screen: state, copy.json catalog, headless interaction tests;
                          the name matches design/screens/<screen>.html
 internal/ui/panel/       the panel

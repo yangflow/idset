@@ -37,7 +37,7 @@ func keysOpen(t *testing.T, lang string, list []account.Account, req Request) *r
 	s.SetAccounts(list)
 	req.Pane = Keys
 	s.Open(req)
-	r := &rig{s: s, tt: ui.NewTester(s.View, 720, 1400), rec: rec}
+	r := &rig{s: s, tt: ui.NewTester(withDialog(s), 720, 1400), rec: rec}
 	r.tt.Frame()
 	return r
 }

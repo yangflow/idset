@@ -8,6 +8,7 @@
 | [0002](0002-managed-files-and-one-include.md) | Write only managed files and add one Include line to the user's configuration | accepted |
 | [0003](0003-drop-zone-in-tray-window.md) | The drop zone lives in the window the tray icon opens | accepted |
 | [0004](0004-system-ssh-and-git.md) | Run the system's ssh and git instead of reimplementing them in process | accepted |
+| [0005](0005-dialogs-and-menus-in-system-windows.md) | Dialogs open in child windows, menus are the system's | accepted |
 
 ## Record format
 

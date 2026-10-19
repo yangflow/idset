@@ -110,7 +110,7 @@ scale still follow the desktop; the values are in [tokens.md](../design/tokens.m
   groups use the card fill with no outline; buttons and the filter field use `Surface`. Dividers are 0.5 DIP
   hairlines in `Border`. A card that needs attention adds a 1 DIP inner outline in `Warning` or `Danger`.
 - **Always use theme roles, never literals.** Views read `c.Theme()`; the theme alone holds the values. The exceptions
-  are identity colors, below, and the few fills the theme has no role for (card, field, accent-soft, menu, scrim),
+  are identity colors, below, and the few fills the theme has no role for (card, field, accent-soft),
   which are named once beside the theme and switch with `c.Theme().Dark`.
 
   | Role | Use in Idset |
@@ -137,7 +137,7 @@ scale still follow the desktop; the values are in [tokens.md](../design/tokens.m
   fixed values (blue `#3A7BD5`, green `#2E9E5B`, orange `#E07A1F`, red `#D64545`, purple `#8E44AD`, yellow
   `#D4A017`); any other value is its own `#RRGGBB`. The initial badge is the color itself, solid, in a list row, a
   result card and the accounts window; the letter is near black on a light color and white otherwise. On a selected
-  row the badge has a 1.5 DIP `AccentText` ring. Dots show the color in the card menu and the color choices (named,
+  row the badge has a 1.5 DIP `AccentText` ring. Dots show the color in a bind row and the color choices (named,
   the chosen one ticked).
 - **Appearance.** Do not implement your own dark mode switch; build the light or dark glass theme from
   `c.Theme().Dark`, which follows the system.
@@ -168,7 +168,7 @@ scale still follow the desktop; the values are in [tokens.md](../design/tokens.m
   | emphasis | `Rem(1)`, 13 | 600 | identity names in a list, dialog titles, the first line of a notice |
   | body | `Rem(1)`, 13 | 400 | everything else, and all widget text |
   | secondary | `Rem(0.92)`, about 12 | 400, `TextMuted` | hints, notes, emails, status lines, the drop zone line |
-  | caption | `Rem(0.85)`, about 11 | 600 for group headings, 400 otherwise, `TextMuted` | group headings ("Identities · 4"), menu headings, window titles, tab labels, "Copied" |
+  | caption | `Rem(0.85)`, about 11 | 600 for group headings, 400 otherwise, `TextMuted` | group headings ("Identities · 4"), window titles, tab labels, "Copied" |
 
   Buttons use body or secondary size; a primary or destructive button is 500, a text button 500, others 400. The about
   window's product name, 18 and 600, is the only other size. Nothing is 700.
@@ -239,7 +239,7 @@ What Idset uses today:
 | Icon button (title row, footer) | The same 26×26 button with a `Rem(1.2)` (about 16) glyph, radius `Theme.Radius`. Always has `.Label()` and a `.Tooltip()` with the same text, in both languages: Settings, Add Identity, About Idset, Check Again, Quit (设置 / 添加身份 / 关于 Idset / 重新检查 / 退出 in Chinese). The tooltip is the `Inverse` fill, no shadow, above the button (below the title row's). Same size, 4 DIPs apart, so a missing button never moves another. |
 | Result card | A context line (the path in monospace `TextMuted`, then the copy and clear buttons) and below it the answer. Card fill, no outline, radius 10; the cards without a match add a 1 DIP inner outline in `Warning`, the card for a failed `git` one in `Danger`; a matched card with findings takes the color of the worst one. |
 | Bind row | In a result card: color dot (10 DIPs), name and one line of `TextMuted` (the identity's first folder in monospace `Rem(0.85)`, like the identity list's folders, middle-truncated; "Has <path> · adds another" is its tooltip), "Bind" in `Accent` at the end. 44 DIPs high, hairline above. The whole row is the target. |
-| Card menu | The "⋯" icon button's menu in a matched card, 224 DIPs wide, anchored to the button: its right edge is the button's, and it opens 4 DIPs below the card's context line: Liquid Glass (`glass.Glass{}`, with a 0.5 DIP inner rim), radius 10, a shadow, 5 DIPs of padding, a 24 DIP heading "Rebind to" (`Rem(0.85)`, 600, `TextMuted`, inset 8 DIPs like the entries), 26 DIP entries with radius 6 (color dot, name, first folder or "Global" in monospace `Rem(0.85)`), and under a hairline "Unbind" (only when the identity lists this very folder). The entry under the pointer or the keyboard is filled with `Accent`, its text in `AccentText`. There is no actions row: open, copy, the menu and clear are icon buttons in the context line, in that order. |
+| Card menu | The "⋯" icon button's menu in a matched card: the system's menu (`Element.Menu`), opened by the button on pointer down. A disabled "Rebind to" heading, the other identities by name, and under a separator "Unbind" (only when the identity lists this very folder). The system draws it on its own material, so it has the platform's look, keyboard and screen reader behavior; it cannot show color dots or folders. There is no actions row: open, copy, the menu and clear are icon buttons in the context line, in that order. |
 | Confirm block | In a matched card, under the details, hairline above: one line ("<name> will apply only here") and two 80×28 buttons at the right, the plain one first ("Cancel"), then the filled one (`Accent`, "Rebind"). No extra identity row. |
 | Overlap rows | In the overlap card: a row per identity in git's read order (dot, name, path in monospace `Rem(0.88)`), then the verdict: "Used" in `Accent` 600 with a check mark for the winner, "Overridden" in `TextMuted` for the others, whose names also lose their weight; and at the very end an icon button: a pin on the winner ("Use Only <name> Here"), a minus on each loser ("Remove <path> from <name>"). Title row: "<n> identities cover this folder" and an info icon button whose tooltip is "Git reads them in order; the last one wins." |
 | Stale-path prompt | A card of its own above the no-match card: a 40 DIP header (color dot, "<name>'s folder is gone" / 「<name> 的路径已不在」, the name in 600, one line), two 28 DIP path rows under hairlines with no labels (the old path in `TextMuted`, then the new path after an arrow, monospace, one line, middle-truncated, full text in the tooltip), and a 36 DIP row with two text buttons at the right, "Update" in `Accent` and "Ignore" in `TextMuted`; their tooltips are "Change to This Path" and "Keep Old Path". The height is the same for any path. Card fill, no outline, no clear button. |
@@ -264,7 +264,7 @@ The tables below say what to reach for as the accounts, settings and about windo
 | The main action of a group, once (Save in the accounts window) | [Button](https://github.com/egoist/mygo/blob/v0.4.1/docs/ui/button.md) (`PrimaryButton`) |
 | Other actions | [Button](https://github.com/egoist/mygo/blob/v0.4.1/docs/ui/button.md) |
 | Open the GitHub page from the about window | A link-style [Button](https://github.com/egoist/mygo/blob/v0.4.1/docs/ui/button.md) (`Accent` text, no fill) with the external icon and `c.OpenURL` |
-| "Rebind to" another identity | [Popover](https://github.com/egoist/mygo/blob/v0.4.1/docs/ui/popover.md) (`PopoverBase`) with entries of our own: a menu button's menu is the system's and cannot show a color dot and a monospace folder at 224 wide |
+| "Rebind to" another identity | A menu button (`Element.Menu`): the system's menu, on the system's material. A menu drawn inside the panel could only blur the panel's own pixels and looked gray (issue 51). |
 | Actions on a specific identity, on right click | [Context menu](https://github.com/egoist/mygo/blob/v0.4.1/docs/ui/context-menu.md) |
 | Choose one of a few modes (global or limited scope) | [Segmented control](https://github.com/egoist/mygo/blob/v0.4.1/docs/ui/segmented.md) |
 | Adding to a list ("Add Identity") | A symbol button in a bar at the bottom of the list; icon button (plus) in the panel footer |
@@ -276,7 +276,7 @@ The tables below say what to reach for as the accounts, settings and about windo
 | A setting applied immediately (start at login, push on a URL rewrite) | [Switch](https://github.com/egoist/mygo/blob/v0.4.1/docs/ui/switch.md) |
 | A yes/no value submitted with a form ("also delete the private key"), or several independent options (import candidates) | [Checkbox](https://github.com/egoist/mygo/blob/v0.4.1/docs/ui/checkbox.md) |
 | One of two to five visible options (port 22 or 443) | [Radio](https://github.com/egoist/mygo/blob/v0.4.1/docs/ui/radio.md) |
-| One of many options (platform) | `theme.Select`, built on [SelectBase](https://github.com/egoist/mygo/blob/v0.4.1/docs/ui/select.md): a 26 high button as wide as the choice with a down chevron, and the options in a glass menu as wide as they are, the chosen one checked; with typing to filter, [Combobox](https://github.com/egoist/mygo/blob/v0.4.1/docs/ui/combobox.md) |
+| One of many options (platform) | `theme.Select`: a 26 high button as wide as the choice with a down chevron, and the options in the system's menu (`Element.Menu`), the chosen one checked; with typing to filter, [Combobox](https://github.com/egoist/mygo/blob/v0.4.1/docs/ui/combobox.md) |
 | An identity's color | The six presets as named choices; any other value with a [color well](https://github.com/egoist/mygo/blob/v0.4.1/docs/ui/color-picker.md) (`ui.ColorWell`) |
 
 ### Text
@@ -308,7 +308,7 @@ The tables below say what to reach for as the accounts, settings and about windo
 
 | Need | Use |
 |---|---|
-| Confirm something that cannot be undone (deleting an identity, restoring a backup, removing the Include) | [Alert dialog](https://github.com/egoist/mygo/blob/v0.4.1/docs/ui/alert-dialog.md) |
+| Confirm something that cannot be undone (deleting an identity, restoring a backup, removing the Include) | A dialog window: `theme.Dialog` (`RoleAlertDialog`) in a modal child window, see below |
 | Choose a folder or a key file | `mygo.Dialog` ([desktop APIs](https://github.com/egoist/mygo/blob/v0.4.1/docs/native.md)) |
 | A small panel tied to an element | [Popover](https://github.com/egoist/mygo/blob/v0.4.1/docs/ui/popover.md) |
 | A short label or hint for a control | [Tooltip](https://github.com/egoist/mygo/blob/v0.4.1/docs/ui/tooltip.md) (never the only place for essential information) |
@@ -324,8 +324,12 @@ Overlays share focus and Escape behavior; see
   exception is giving a global identity a folder, which changes what every other folder uses: it asks first, inside
   the result card, not in a dialog.
 - Do not stack dialogs, and do not use a dialog for an error.
-- A dialog is a 340 DIP sheet of Liquid Glass (`DialogBase` with `Material(glass.Glass{})`), radius 16, a 0.5 DIP inner rim and a shadow, centered over a light
-  scrim: title, text, then the buttons side by side sharing the width, 28 DIPs high, Cancel first and the action last.
+- A dialog is a window of its own (`dialog_window.go`, [ADR 0005](adr/0005-dialogs-and-menus-in-system-windows.md)): frameless, not resizable, modal and a child of the
+  window it belongs to, 340 DIPs wide and as tall as its content, centered over its parent, on the system material
+  (`Popover` on macOS, `Acrylic` on Windows 11, the solid color on Linux and Windows 10). There is no scrim: the
+  parent shows its inactive look. Inside: `Space(5)` padding, title, text, then the buttons side by side sharing the
+  width, 28 DIPs high, Cancel first and the action last. Escape and Cancel close it; closing it focuses the parent.
+  Drawn inside the window, a dialog could only blur that window's own pixels and looked gray (issue 51).
 - Errors say what happened and what to do, on the card or form where they happened (`Error`, or a
   [form](https://github.com/egoist/mygo/blob/v0.4.1/docs/ui/form.md) field).
 - Confirmations of copying and saving are a 1.2 second "Copied" or "Saved" next to the control; a repeat restarts
@@ -536,8 +540,7 @@ toolbar: below it, a source list and a detail pane.
   Save and Revert are disabled while there is nothing to save.
 - **Empty.** No list and no footer: "No identities yet" (`Rem(1.15)`, 600), one sentence, "Import Existing"
   (bordered; opens the settings window on Import) and "New" (primary), centered, with no add bar.
-- **Delete confirmation.** A Liquid Glass alert (see Dialogs), radius 16, with a shadow, 340 wide, `Space(5)` padding, over a
-  scrim that covers the whole window, title bar included:
+- **Delete confirmation.** A dialog window (see Dialogs), 340 wide, `Space(5)` padding:
   "Delete identity <name>?" (`Rem(1)`, 600), a sentence, the private key path and the folders that are not
   deleted automatically between two hairlines (no box), a line that project folders are never touched, the "Also
   delete the private key" checkbox (unchecked by default) and the buttons Cancel (bordered; the Escape action and
@@ -576,7 +579,7 @@ translucent fills, hairlines and text; only dialogs have a shadow.
   public key on the platform with "Open <platform> Settings" and the external icon; "Load into ssh-agent" with Load,
   a spinner, then a check and "Loaded"; "Use for identity" with "Choose…", then the identity's dot and name and
   "Change…"). Notes under Next steps: the identity written, ssh-agent not running (`Warning`), or the platform hint.
-  "Generate Another" is a text button at the end. "Choose…" opens a Liquid Glass alert 340 wide: "Use this key for which
+  "Generate Another" is a text button at the end. "Choose…" opens a dialog window 340 wide: "Use this key for which
   identity?", one sentence, the identities as radio rows (dot, name, muted email, and "Now: <key>" or "No key yet"
   under it) and "New identity" with the email and platform it starts from, between two hairlines, a muted note,
   Cancel (initial focus) and Use.
@@ -599,7 +602,7 @@ translucent fills, hairlines and text; only dialogs have a shadow.
   backup is a copy and the newest 10 are kept anyway. A backup that cannot be read has its sub-line in `Danger`, and
   Restore and the chevron disabled. Under the list, a note says when backups are made (before an identity is added,
   before a restore), that the newest 10 are kept and where. With no backups that note is the empty state.
-- **Restore.** A Liquid Glass alert over the scrim, 340 wide, like the delete confirmation: "Restore backup <time>?", one
+- **Restore.** A dialog window, 340 wide, like the delete confirmation: "Restore backup <time>?", one
   sentence (the current `accounts.json` is backed up first, the configuration is regenerated), the identities that will
   exist afterwards between two hairlines, a line that identities not in the backup are removed, Cancel (Escape,
   initial focus) and Restore (`Accent` fill: it replaces data but is undoable through the backup it makes). While it

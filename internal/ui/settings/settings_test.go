@@ -12,6 +12,7 @@ import (
 	"github.com/yangflow/idset/internal/account"
 	"github.com/yangflow/idset/internal/apply"
 	"github.com/yangflow/idset/internal/paths"
+	"github.com/yangflow/idset/internal/ui/theme"
 )
 
 var env = paths.Env{Home: "/home/ada"}
@@ -94,9 +95,20 @@ func open(t *testing.T, lang string, req Request) *rig {
 	s.now = func() time.Time { return base }
 	s.SetSystem("en")
 	s.Open(req)
-	r := &rig{s: s, tt: ui.NewTester(s.View, 720, 1400), rec: rec}
+	r := &rig{s: s, tt: ui.NewTester(withDialog(s), 720, 1400), rec: rec}
 	r.tt.Frame()
 	return r
+}
+
+// withDialog draws the screen and, at the bottom of the frame where the owner's dialog window would be, its dialog.
+func withDialog(s *Screen) func(c *ui.Context) {
+	return func(c *ui.Context) {
+		s.View(c)
+		if s.DialogOpen() {
+			ui.Column(c).Absolute().Left(0).Bottom(0).Width(theme.DialogWidth).Background(c.Theme().Background).
+				Children(func() { s.Dialog(c) })
+		}
+	}
 }
 
 func (r *rig) frame() { r.tt.Frame() }

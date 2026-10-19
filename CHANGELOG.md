@@ -94,5 +94,6 @@ All notable user-facing changes are recorded here, following [Keep a Changelog](
   identity card.
 - A new look: the panel and the windows are translucent glass over the desktop (the system material on macOS and
   Windows 11, a solid fill elsewhere or with reduced transparency), with Git orange as the accent, in light and dark.
-  Menus and dialogs are Liquid Glass. Text uses five sizes, and actions a common symbol names clearly are icon buttons
+  Dialogs open in a window of their own on the same material, menus are the system's, and text fields are lightly
+  tinted instead of white. Text uses five sizes, and actions a common symbol names clearly are icon buttons
   with tooltips. Labels and notes are shorter.

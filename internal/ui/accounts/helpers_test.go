@@ -7,6 +7,7 @@ import (
 	"github.com/egoist/mygo/ui"
 	"github.com/yangflow/idset/internal/account"
 	"github.com/yangflow/idset/internal/paths"
+	"github.com/yangflow/idset/internal/ui/theme"
 )
 
 var env = paths.Env{Home: "/home/ada"}
@@ -102,5 +103,16 @@ func open(t *testing.T, lang string, list []account.Account, req Request) *rig {
 	s := New(Text(lang), env, rec.actions())
 	s.SetAccounts(list, nil, "/home/ada/.config/idset/accounts.json")
 	s.Open(req)
-	return &rig{s: s, tt: ui.NewTester(s.View, 760, 1500), rec: rec}
+	return &rig{s: s, tt: ui.NewTester(withDialog(s), 760, 1500), rec: rec}
+}
+
+// withDialog draws the screen and, at the bottom of the frame where the owner's dialog window would be, its dialog.
+func withDialog(s *Screen) func(c *ui.Context) {
+	return func(c *ui.Context) {
+		s.View(c)
+		if s.DialogOpen() {
+			ui.Column(c).Absolute().Left(0).Bottom(0).Width(theme.DialogWidth).Background(c.Theme().Background).
+				Children(func() { s.Dialog(c) })
+		}
+	}
 }
