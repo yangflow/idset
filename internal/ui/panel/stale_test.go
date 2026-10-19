@@ -55,7 +55,7 @@ func TestStalePromptOnARenamedFolder(t *testing.T) {
 		t.Errorf("no labels before the paths: %q", tt.Texts())
 	}
 	// The short words name the long actions, and the old path comes above the new one.
-	update, _ := tt.Find("Change to This Path")
+	update, _ := tt.Find("Use New Path")
 	ignore, _ := tt.Find("Keep Old Path")
 	if update.Y != ignore.Y || update.X >= ignore.X {
 		t.Errorf("Update, then Ignore, on one line: %v %v", update, ignore)
@@ -65,9 +65,9 @@ func TestStalePromptOnARenamedFolder(t *testing.T) {
 	if old.Y <= head.Y || old.Y >= update.Y {
 		t.Errorf("header, paths, buttons: %v %v %v", head, old, update)
 	}
-	within(t, tt, "’s folder is gone", "projects/api-old", "Change to This Path", "Keep Old Path")
+	within(t, tt, "’s folder is gone", "projects/api-old", "Use New Path", "Keep Old Path")
 	// The no-match card below is unchanged: its sentence, the bind list and the new identity.
-	want(t, tt, "No identity matches this folder", "Bind to", "Bind to client", "New Identity and Bind Here")
+	want(t, tt, "No identity matches this folder", "Bind to", "Bind to client", "New Identity for This Folder")
 	wantNot(t, tt, "Updated")
 }
 
@@ -79,7 +79,7 @@ func TestStalePromptInChinese(t *testing.T) {
 	s.Drop([]string{newRoot})
 	s.SetResult(newRoot, staleResult(newRoot, renamed), nil)
 	tt.Frame()
-	want(t, tt, "work 的路径已不在", "更新", "忽略", "改成这次的路径", "保留旧路径", "没有身份匹配这个目录")
+	want(t, tt, "work 的路径已不在", "更新", "忽略", "改用新路径", "保留旧路径", "没有身份匹配这个目录")
 	within(t, tt, " 的路径已不在", "更新", "忽略")
 	if got := tt.Announcements(); !slices.ContainsFunc(got, func(a string) bool { return strings.Contains(a, "work 的路径已不在") }) {
 		t.Errorf("the prompt is announced: %q", got)
@@ -90,7 +90,7 @@ func TestStalePromptInChinese(t *testing.T) {
 // buttons.
 func stackHeights(t *testing.T, tt *ui.Tester) (paths, buttons float32) {
 	t.Helper()
-	b, ok := tt.Find("Change to This Path")
+	b, ok := tt.Find("Use New Path")
 	if !ok {
 		t.Fatalf("no button in %q", tt.Texts())
 	}
@@ -160,7 +160,7 @@ func TestLongPathsKeepTheirStartAndLastFolder(t *testing.T) {
 
 func TestChangeToThisPathAsksForOneChange(t *testing.T) {
 	s, tt, r := card(t, staleResult(newRoot, renamed), staleList(renamed)...)
-	click(t, tt, "Change to This Path")
+	click(t, tt, "Use New Path")
 	if len(r.ran) != 1 {
 		t.Fatalf("ran %+v", r.ran)
 	}
@@ -171,7 +171,7 @@ func TestChangeToThisPathAsksForOneChange(t *testing.T) {
 	// While the owner works, nothing else goes out.
 	tt.Frame()
 	click(t, tt, "Keep Old Path")
-	click(t, tt, "Change to This Path")
+	click(t, tt, "Use New Path")
 	if len(r.ran) != 1 || !s.busy {
 		t.Fatalf("a second request while busy: %+v", r.ran)
 	}
@@ -182,12 +182,12 @@ func TestAfterChangingThePathTheFolderMatchesWithUpdated(t *testing.T) {
 	s, tt, r := card(t, staleResult(newRoot, renamed), staleList(renamed)...)
 	s.goos = "darwin"
 	clock := newClock(s)
-	click(t, tt, "Change to This Path")
+	click(t, tt, "Use New Path")
 	s.SetAccounts([]account.Account{fixed, client()}, nil, "")
 	s.OpDone(bind.Outcome{Op: r.ran[0], Result: matched(newRoot, "work", true)})
 	tt.Frame()
 	want(t, tt, "Updated", "Git uses this identity here", "More", s.openLabel())
-	wantNot(t, tt, "’s folder is gone", "Change to This Path", "Keep Old Path", "Undo", "Bound to work")
+	wantNot(t, tt, "’s folder is gone", "Use New Path", "Keep Old Path", "Undo", "Bound to work")
 	if got := tt.Announcements(); !slices.Contains(got, "Updated") {
 		t.Errorf("announced %q", got)
 	}
@@ -208,7 +208,7 @@ func TestKeepOldPathOnlyHidesThePrompt(t *testing.T) {
 	if len(r.ran) != 0 || s.busy {
 		t.Fatalf("no data changes: %+v", r.ran)
 	}
-	wantNot(t, tt, "’s folder is gone", "Change to This Path", "Keep Old Path", "Updated")
+	wantNot(t, tt, "’s folder is gone", "Use New Path", "Keep Old Path", "Updated")
 	want(t, tt, "No identity matches this folder", "Bind to client")
 	// A request on the card does not bring it back, even when it fails.
 	click(t, tt, "Bind to client")
@@ -224,7 +224,7 @@ func TestKeepOldPathOnlyHidesThePrompt(t *testing.T) {
 
 func TestStaleFailuresShowOnceInTheCard(t *testing.T) {
 	s, tt, r := card(t, staleResult(newRoot, renamed), staleList(renamed)...)
-	click(t, tt, "Change to This Path")
+	click(t, tt, "Use New Path")
 	s.OpDone(bind.Outcome{Op: r.ran[0], Err: errors.New("denied")})
 	tt.Frame()
 	n := 0
@@ -236,9 +236,9 @@ func TestStaleFailuresShowOnceInTheCard(t *testing.T) {
 	if n != 1 || s.busy {
 		t.Fatalf("shown %d times in %q", n, tt.Texts())
 	}
-	want(t, tt, "Change to This Path", "Keep Old Path")
+	want(t, tt, "Use New Path", "Keep Old Path")
 	// The buttons work again.
-	click(t, tt, "Change to This Path")
+	click(t, tt, "Use New Path")
 	if len(r.ran) != 2 {
 		t.Fatalf("ran %+v", r.ran)
 	}
@@ -269,8 +269,8 @@ func TestStalePromptOnWindowsPaths(t *testing.T) {
 	s.Drop([]string{root})
 	s.SetResult(root, staleResult(root, old), nil)
 	tt.Frame()
-	want(t, tt, "~/Projects/Api-Old", "~/Projects/Api", "Change to This Path")
-	click(t, tt, "Change to This Path")
+	want(t, tt, "~/Projects/Api-Old", "~/Projects/Api", "Use New Path")
+	click(t, tt, "Use New Path")
 	if len(r.ran) != 1 || r.ran[0].Path != old || r.ran[0].Root != root {
 		t.Fatalf("%+v", r.ran)
 	}

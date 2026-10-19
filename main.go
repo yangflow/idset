@@ -155,7 +155,7 @@ func (a *app) ready() {
 		// it quits.
 		slog.Warn("No tray icon", "error", err)
 		a.win = mygo.NewWindow(mygo.WindowOptions{
-			Title: "Idset", Width: 340, Height: 480, DisableResize: true, Content: ui.View(a.screen.View),
+			Title: "Idset", Width: 340, Height: 480, DisableResize: true, Vibrancy: mygo.VibrancyPopover, Content: ui.View(a.screen.View),
 		})
 		mygo.App.OnWindowAllClosed(mygo.App.Quit)
 		a.load()
@@ -167,7 +167,7 @@ func (a *app) ready() {
 	a.win = mygo.NewWindow(mygo.WindowOptions{
 		Title: "Idset", Width: 340, Height: 480, Hidden: true, Frameless: true,
 		DisableResize: true, DisableMinimize: true, DisableMaximize: true, DisableFullScreen: true,
-		AlwaysOnTop: true, SkipTaskbar: true,
+		AlwaysOnTop: true, SkipTaskbar: true, Vibrancy: mygo.VibrancyPopover,
 		Content: ui.View(a.screen.View),
 	})
 	a.win.OnClose(func(e *mygo.CloseEvent) {

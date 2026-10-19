@@ -22,9 +22,9 @@ func TestMockupStates(t *testing.T) {
 		{"empty", []account.Account{}, Request{}, nil, texts{
 			[]string{"No identities yet", "New"}, []string{"还没有身份", "新建"}}},
 		{"global", sample(), Request{ID: personalID}, nil, texts{
-			[]string{"Global", "Used when no folder rule matches.", "Last used"}, []string{"全局", "没有 gitdir 规则命中时生效。", "最近使用"}}},
+			[]string{"Global", "Used when no folder rule matches.", "Last used"}, []string{"全局", "没有文件夹规则命中时生效。", "最近使用"}}},
 		{"scoped", sample(), Request{ID: workID}, nil, texts{
-			[]string{"Scoped", "Add Path", "Remove this path", "Push only"}, []string{"限定", "添加路径", "删除这条路径", "仅推送"}}},
+			[]string{"Scoped", "Add Path", "Remove Path", "Push only"}, []string{"限定", "添加路径", "删除路径", "仅推送"}}},
 		{"custom", sample(), Request{ID: clientID}, nil, texts{
 			[]string{"Custom", "Host name", "Port"}, []string{"自定义", "主机名", "端口"}}},
 		{"dirty", sample(), Request{ID: workID}, func(t *testing.T, r *rig) {
@@ -32,10 +32,10 @@ func TestMockupStates(t *testing.T) {
 		}, texts{[]string{"Unsaved changes", "Revert", "Save"}, []string{"有未保存的修改", "还原", "保存"}}},
 		{"draft", sample(), Request{New: true}, func(t *testing.T, r *rig) {
 			r.s.SetPrefill(r.s.Draft(), "Bob", "bob@example.com")
-		}, texts{[]string{"New", "New identity, not saved yet", "From git config --global"},
-			[]string{"新建", "新身份，还没有保存", "来自 git config --global"}}},
+		}, texts{[]string{"New", "Not saved", "From git config --global"},
+			[]string{"新建", "未保存", "来自 git config --global"}}},
 		{"rewrites", sample(), Request{ID: workID}, nil, texts{
-			[]string{"URL rewrites", "Add Rewrite", "Add Platform Default Rewrite"}, []string{"地址改写", "添加改写", "添加平台默认改写"}}},
+			[]string{"URL rewrites", "Add Rewrite", "Add Default Rewrites"}, []string{"地址改写", "添加改写", "添加默认改写"}}},
 		{"invalid", sample(), Request{ID: workID}, func(t *testing.T, r *rig) {
 			r.click(t, r.s.text.ScopeGlobal)
 			r.click(t, r.s.text.Save)
@@ -50,7 +50,7 @@ func TestMockupStates(t *testing.T) {
 			r.typeInto(t, r.s.text.Username, "bob-new")
 			r.click(t, r.s.text.Save)
 			r.saveSucceeds(t, nil)
-		}, texts{[]string{"Written"}, []string{"已写入"}}},
+		}, texts{[]string{"Saved"}, []string{"已保存"}}},
 		{"failed", sample(), Request{ID: workID}, func(t *testing.T, r *rig) {
 			r.typeInto(t, r.s.text.Username, "bob-new")
 			r.click(t, r.s.text.Save)
@@ -65,7 +65,7 @@ func TestMockupStates(t *testing.T) {
 			r.askDelete(t, keyfile.None, "")
 			r.click(t, r.s.text.AlsoKey)
 			r.tt.Frame()
-		}, texts{[]string{"Only the private key is deleted; the .pub file stays."}, []string{"只删私钥，保留 .pub 文件。"}}},
+		}, texts{[]string{"Deletes the private key; the .pub file stays."}, []string{"只删私钥，保留 .pub。"}}},
 		{"delnokey", sample(), Request{ID: miscID}, func(t *testing.T, r *rig) {
 			r.askDelete(t, keyfile.NoPath, "")
 		}, texts{[]string{"This identity has no key path.", "none"}, []string{"这个身份没有私钥路径。", "没有"}}},
@@ -74,7 +74,7 @@ func TestMockupStates(t *testing.T) {
 		}, texts{[]string{"Another identity (personal) uses the same key."}, []string{"其他身份（personal）也在用这个私钥。"}}},
 		{"delsymlink", sample(), Request{ID: workID}, func(t *testing.T, r *rig) {
 			r.askDelete(t, keyfile.Symlink, "")
-		}, texts{[]string{"The key path is a symbolic link; Idset will not delete it."}, []string{"私钥路径是符号链接，Idset 不会删除。"}}},
+		}, texts{[]string{"The key path is a symbolic link."}, []string{"私钥路径是符号链接。"}}},
 		{"delmissing", sample(), Request{ID: workID}, func(t *testing.T, r *rig) {
 			r.askDelete(t, keyfile.Missing, "")
 		}, texts{[]string{"The key file does not exist."}, []string{"私钥文件不存在。"}}},
@@ -107,5 +107,17 @@ func TestMockupStates(t *testing.T) {
 	}
 	if len(states) != 18 {
 		t.Errorf("the mockup has 18 states, the test %d", len(states))
+	}
+}
+
+func TestDrawsOnTheMaterialAndSolid(t *testing.T) {
+	for _, vibrancy := range []bool{true, false} {
+		r := open(t, "en", sample(), Request{ID: workID})
+		r.tt.SetVibrancy(vibrancy)
+		r.tt.Frame()
+		r.want(t, "Idset · Accounts", "work", "Identity")
+		r.s.askDelete()
+		r.tt.Frame()
+		r.want(t, "Delete identity work?")
 	}
 }

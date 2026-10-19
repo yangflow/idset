@@ -6,6 +6,7 @@ import (
 	"github.com/egoist/mygo/ui"
 	"github.com/yangflow/idset/internal/account"
 	"github.com/yangflow/idset/internal/ui/icons"
+	"github.com/yangflow/idset/internal/ui/theme"
 )
 
 // Stored forms of the two files the Configuration pane names; they read the same on every platform.
@@ -14,14 +15,17 @@ const (
 	gitConfig = "~/.gitconfig"
 )
 
-// View draws the window. It reads state only; clicks go to the owner through Actions.
+// View draws the window: its title in the hidden title bar, the tabs on the material, then the chosen pane. It reads
+// state only; clicks go to the owner through Actions.
 func (s *Screen) View(c *ui.Context) {
+	theme.Apply(c)
 	t := c.Theme()
 	if s.shown != s.tab {
 		s.shown = s.tab
 		s.entered()
 	}
 	ui.Column(c).Fill().Children(func() {
+		theme.TitleBar(c, s.text.Window)
 		s.tabBar(c)
 		ui.Divider(c)
 		ui.Scroll(c).Grow(1).AlignItems(ui.Center).Padding(t.Space(4), t.Space(5), t.Space(5), t.Space(5)).Children(func() {
@@ -50,9 +54,9 @@ func (s *Screen) View(c *ui.Context) {
 	}
 }
 
-// tabBar is the row of tabs over the panes: an icon over a label, the chosen one on a pressed surface.
+// tabBar is the row of tabs over the panes: an icon over a label, the chosen one in the accent-soft fill.
 func (s *Screen) tabBar(c *ui.Context) {
-	t := c.Theme()
+	t, f := c.Theme(), theme.Of(c)
 	tabs := []struct {
 		name string
 		icon *ui.SVG
@@ -61,19 +65,19 @@ func (s *Screen) tabBar(c *ui.Context) {
 		parts := ui.TabsBase(c, &s.tab, len(tabs))
 		parts.List.Gap(t.Space(1)).Label(s.text.Tabs).Children(func() {
 			for i, tab := range tabs {
-				el := parts.Tab(i).MinWidth(t.Space(22)).Height(t.Space(13)).PaddingX(t.Space(1)).Radius(6).AlignItems(ui.Center).Justify(ui.Center).Label(tab.name)
-				color := t.TextMuted
+				el := parts.Tab(i).MinWidth(t.Space(22)).Height(t.Space(13)).PaddingX(t.Space(1)).Radius(8).AlignItems(ui.Center).Justify(ui.Center).Label(tab.name)
+				color, weight := t.TextMuted, 400
 				switch {
 				case i == s.tab:
-					el.Background(t.SurfacePressed)
-					color = t.Text
+					el.Background(f.AccentSoft)
+					color, weight = t.Accent, 500
 				case el.Hovered():
 					el.Background(t.SurfaceHover)
 				}
 				el.Children(func() {
 					ui.Column(c).Gap(t.Space(1)).AlignItems(ui.Center).Children(func() {
 						ui.Icon(c, tab.icon).FontSize(t.Space(5)).TextColor(color)
-						ui.Text(c, tab.name).FontSize(t.Space(2.75)).TextColor(color).SingleLine().Shrink(0)
+						ui.Text(c, tab.name).FontSize(t.Rem(0.85)).FontWeight(weight).TextColor(color).SingleLine().Shrink(0)
 					})
 				})
 			}
@@ -89,31 +93,31 @@ type rows struct {
 
 func (r *rows) next() {
 	if r.n > 0 {
-		ui.Divider(r.c)
+		ui.Column(r.c).Padding(0, 0, 0, r.c.Theme().Space(3)).Children(func() { ui.Divider(r.c) })
 	}
 	r.n++
 }
 
-// section is a titled group; its notes follow it.
+// section is a titled group in the card fill; its notes follow it.
 func (s *Screen) section(c *ui.Context, title string, body func(r *rows), after func()) {
 	t := c.Theme()
 	ui.Column(c).Gap(t.Space(1)).Children(func() {
 		if title != "" {
-			ui.Text(c, title).FontSize(t.Space(2.75)).TextColor(t.TextMuted).Role(ui.RoleHeading).Level(2).PaddingX(t.Space(3))
+			ui.Text(c, title).FontSize(t.Rem(0.85)).FontWeight(600).TextColor(t.TextMuted).Role(ui.RoleHeading).Level(2).PaddingX(t.Space(3))
 		}
-		ui.Column(c).Radius(10).Background(t.Surface).Clip().Children(func() { body(&rows{c: c}) })
+		ui.Column(c).Radius(10).Background(theme.Of(c).Card).Clip().Children(func() { body(&rows{c: c}) })
 		if after != nil {
 			after()
 		}
 	})
 }
 
-// note is a line of 11 DIP text under a group with a 12 DIP icon in front: a warning, a failure or a success.
+// note is a line of 12 DIP text under a group with a 12 DIP icon in front: a warning, a failure or a success.
 func (s *Screen) note(c *ui.Context, icon *ui.SVG, iconColor, textColor ui.Color, text string) {
 	t := c.Theme()
 	ui.Row(c).Gap(t.Space(1)).PaddingX(t.Space(3)).Children(func() {
 		ui.Icon(c, icon).FontSize(t.Space(3)).TextColor(iconColor)
-		ui.Text(c, text).FontSize(t.Space(2.75)).TextColor(textColor).Grow(1)
+		ui.Text(c, text).FontSize(t.Rem(0.92)).TextColor(textColor).Grow(1)
 	})
 }
 
@@ -124,7 +128,7 @@ func (s *Screen) warn(c *ui.Context, text string) {
 
 func (s *Screen) footnote(c *ui.Context, text string) {
 	t := c.Theme()
-	ui.Text(c, text).FontSize(t.Space(2.75)).TextColor(t.TextMuted).PaddingX(t.Space(3))
+	ui.Text(c, text).FontSize(t.Rem(0.92)).TextColor(t.TextMuted).PaddingX(t.Space(3))
 }
 
 // line is a row of a group.
@@ -157,7 +161,7 @@ func (s *Screen) general(c *ui.Context) {
 			row.Children(func() {
 				ui.Text(c, choice.name).Grow(1)
 				if on && choice.value == FollowSystem {
-					ui.Text(c, fmt.Sprintf(s.text.Current, s.systemName())).FontSize(t.Space(2.75)).TextColor(t.TextMuted)
+					ui.Text(c, fmt.Sprintf(s.text.Current, s.systemName())).FontSize(t.Rem(0.92)).TextColor(t.TextMuted)
 				}
 				ui.Row(c).Size(t.Space(3.5), t.Space(3.5)).Shrink(0).Children(func() {
 					if on {
@@ -202,6 +206,11 @@ func ghost(c *ui.Context, key, label string, icon *ui.SVG) ui.Element {
 		b.Background(t.SurfaceHover)
 	}
 	return b
+}
+
+// dialogButton makes the two buttons of a dialog share its width, 28 DIPs high.
+func dialogButton(b ui.Element, t *ui.Theme) ui.Element {
+	return b.Grow(1).Height(t.Space(7)).Radius(8)
 }
 
 // dot is an identity's color, lighter on a dark theme for contrast.
@@ -273,21 +282,21 @@ func (s *Screen) backupRow(c *ui.Context, b Backup) {
 			ui.Column(c).Grow(1).Children(func() {
 				ui.Text(c, s.stamp(b.Time)).SingleLine()
 				if unreadable {
-					ui.Text(c, s.text.Unreadable+" · "+size(b.Size)).FontSize(t.Space(2.75)).TextColor(t.Danger).SingleLine()
+					ui.Text(c, s.text.Unreadable+" · "+size(b.Size)).FontSize(t.Rem(0.85)).TextColor(t.Danger).SingleLine()
 					return
 				}
 				sub := s.identityCount(len(b.Accounts))
 				if len(b.Accounts) > 0 {
 					sub += " · " + s.names(b.Accounts)
 				}
-				ui.Text(c, sub+" · "+size(b.Size)).FontSize(t.Space(2.75)).TextColor(t.TextMuted).SingleLine()
+				ui.Text(c, sub+" · "+size(b.Size)).FontSize(t.Rem(0.85)).TextColor(t.TextMuted).SingleLine()
 			})
 			switch {
 			case busy:
-				ui.Text(c, s.text.Restoring).FontSize(t.Space(2.75)).TextColor(t.TextMuted).SingleLine()
+				ui.Text(c, s.text.Restoring).FontSize(t.Rem(0.92)).TextColor(t.TextMuted).SingleLine()
 				ui.Spinner(c)
 			case flash:
-				ui.Text(c, s.text.Restored).FontSize(t.Space(2.75)).TextColor(t.TextMuted).SingleLine()
+				ui.Text(c, s.text.Restored).FontSize(t.Rem(0.92)).TextColor(t.TextMuted).SingleLine()
 				ui.Icon(c, icons.Check).FontSize(t.Rem(1.1)).TextColor(t.Accent)
 			default:
 				if ghost(c, "restore", s.text.Restore, icons.Restore).Disabled(unreadable || s.restoring != "").Clicked() {
@@ -318,10 +327,10 @@ func (s *Screen) identityRow(c *ui.Context, a account.Account) {
 	ui.Row(c.Key("id-"+a.ID)).MinHeight(t.Space(8)).Padding(0, t.Space(3), 0, t.Space(11)).Gap(t.Space(2)).AlignItems(ui.Center).Children(func() {
 		dot(c, a.Color)
 		ui.Text(c, s.label(a)).SingleLine().Shrink(0)
-		ui.Text(c, a.GitUserEmail).FontSize(t.Space(2.75)).TextColor(t.TextMuted).Grow(1).Wrap()
+		ui.Text(c, a.GitUserEmail).FontSize(t.Rem(0.92)).TextColor(t.TextMuted).Grow(1).Wrap()
 		if a.Scope.Global {
 			ui.Row(c).MinWidth(t.Space(6)).Justify(ui.End).Padding(0, t.Space(1.25), 0, 0).Shrink(0).Children(func() {
-				ui.Text(c, s.text.Global).FontSize(t.Space(2.75)).TextColor(t.TextMuted).SingleLine()
+				ui.Text(c, s.text.Global).FontSize(t.Rem(0.92)).TextColor(t.TextMuted).SingleLine()
 			})
 			return
 		}
@@ -341,10 +350,9 @@ func (s *Screen) restoreDialog(c *ui.Context) {
 	t := c.Theme()
 	title := fmt.Sprintf(s.text.ConfirmTitle, s.stamp(b.Time))
 	ui.DialogBase(c, &s.confirmOpen, func(backdrop, panel ui.Element) {
-		backdrop.Background(ui.RGBA(0, 0, 0, 0.4))
-		panel.Width(t.Space(90)).Padding(t.Space(5)).Gap(t.Space(3)).Radius(10).Background(t.Background).Border(1, t.Border).
-			Role(ui.RoleAlertDialog).Label(title)
-		ui.Text(c, title).FontSize(t.Rem(1.15)).FontWeight(600).Role(ui.RoleHeading).Level(2).Wrap()
+		theme.Dialog(c, backdrop, panel, t.Space(85))
+		panel.Role(ui.RoleAlertDialog).Label(title)
+		ui.Text(c, title).FontWeight(600).Role(ui.RoleHeading).Level(2).Wrap()
 		ui.Text(c, s.text.ConfirmBody).Wrap()
 		ui.Divider(c)
 		ui.Column(c).Gap(t.Space(1.5)).Children(func() {
@@ -352,17 +360,17 @@ func (s *Screen) restoreDialog(c *ui.Context) {
 				ui.Row(c).Gap(t.Space(2)).AlignItems(ui.Center).Children(func() {
 					dot(c, a.Color)
 					ui.Text(c, s.label(a)).SingleLine().Shrink(0)
-					ui.Text(c, a.GitUserEmail).FontSize(t.Space(2.75)).TextColor(t.TextMuted).Grow(1).Wrap()
+					ui.Text(c, a.GitUserEmail).FontSize(t.Rem(0.92)).TextColor(t.TextMuted).Grow(1).Wrap()
 				})
 			}
 		})
 		ui.Divider(c)
-		ui.Text(c, s.text.ConfirmNote).FontSize(t.Space(2.75)).TextColor(t.TextMuted).Wrap()
-		ui.Row(c).Gap(t.Space(2)).Justify(ui.End).Children(func() {
-			if ui.Button(c.Key("confirm-cancel"), s.text.Cancel).AutoFocus().Clicked() {
+		ui.Text(c, s.text.ConfirmNote).FontSize(t.Rem(0.92)).TextColor(t.TextMuted).Wrap()
+		ui.Row(c).Gap(t.Space(2)).Margin(t.Space(1.5), 0, 0, 0).Children(func() {
+			if dialogButton(ui.Button(c.Key("confirm-cancel"), s.text.Cancel), t).AutoFocus().Clicked() {
 				s.confirmOpen = false
 			}
-			if ui.PrimaryButton(c.Key("confirm-restore"), s.text.Restore).Clicked() {
+			if dialogButton(ui.PrimaryButton(c.Key("confirm-restore"), s.text.Restore), t).Clicked() {
 				s.confirmRestore()
 			}
 		})
@@ -375,11 +383,11 @@ func (s *Screen) configPane(c *ui.Context) {
 		switch {
 		case !s.includesRead:
 		case f.err != nil:
-			ui.Text(c, cause(f.err)).FontSize(t.Space(2.75)).TextColor(t.Danger).SingleLine()
+			ui.Text(c, cause(f.err)).FontSize(t.Rem(0.92)).TextColor(t.Danger).SingleLine()
 		case f.present:
-			ui.Text(c, s.text.Present).FontSize(t.Space(2.75)).TextColor(t.TextMuted).SingleLine()
+			ui.Text(c, s.text.Present).FontSize(t.Rem(0.92)).TextColor(t.TextMuted).SingleLine()
 		default:
-			ui.Text(c, s.text.Absent).FontSize(t.Space(2.75)).TextColor(t.TextMuted).SingleLine()
+			ui.Text(c, s.text.Absent).FontSize(t.Rem(0.92)).TextColor(t.TextMuted).SingleLine()
 		}
 	}
 	done := s.removal == removalDone
@@ -389,7 +397,7 @@ func (s *Screen) configPane(c *ui.Context) {
 			state fileState
 		}{{sshConfig, fileState{s.includes.SSH.Present, s.includes.SSH.Err}}, {gitConfig, fileState{s.includes.Git.Present, s.includes.Git.Err}}} {
 			r.line(func() {
-				ui.Text(c, f.name).Font("monospace").FontSize(t.Space(3)).Grow(1).SingleLine()
+				ui.Text(c, f.name).Font("monospace").FontSize(t.Rem(0.88)).Grow(1).SingleLine()
 				state(f.state)
 			})
 		}
@@ -436,10 +444,9 @@ func (s *Screen) removeDialog(c *ui.Context) {
 	}
 	t := c.Theme()
 	ui.DialogBase(c, &s.removeOpen, func(backdrop, panel ui.Element) {
-		backdrop.Background(ui.RGBA(0, 0, 0, 0.4))
-		panel.Width(t.Space(90)).Padding(t.Space(5)).Gap(t.Space(3)).Radius(10).Background(t.Background).Border(1, t.Border).
-			Role(ui.RoleAlertDialog).Label(s.text.RemoveTitle)
-		ui.Text(c, s.text.RemoveTitle).FontSize(t.Rem(1.15)).FontWeight(600).Role(ui.RoleHeading).Level(2)
+		theme.Dialog(c, backdrop, panel, t.Space(85))
+		panel.Role(ui.RoleAlertDialog).Label(s.text.RemoveTitle)
+		ui.Text(c, s.text.RemoveTitle).FontWeight(600).Role(ui.RoleHeading).Level(2).Wrap()
 		ui.Text(c, s.text.RemoveBody).Wrap()
 		// item is a line of a box: a 12 DIP icon, then the text, whose path (mono) sits between the two plain parts.
 		item := func(icon *ui.SVG, color ui.Color, pre, mono, post string) {
@@ -453,7 +460,7 @@ func (s *Screen) removeDialog(c *ui.Context) {
 						switch {
 						case part.text == "":
 						case part.mono:
-							ui.Text(c, part.text).Font("monospace").FontSize(t.Space(3)).SingleLine()
+							ui.Text(c, part.text).Font("monospace").FontSize(t.Rem(0.88)).SingleLine()
 						default:
 							ui.Text(c, part.text).SingleLine()
 						}
@@ -462,8 +469,8 @@ func (s *Screen) removeDialog(c *ui.Context) {
 			})
 		}
 		box := func(title string, items func()) {
-			ui.Column(c).Gap(t.Space(1.5)).Padding(t.Space(2.5), t.Space(3), t.Space(2.5), t.Space(3)).Radius(8).Background(t.Surface).Children(func() {
-				ui.Text(c, title).FontSize(t.Space(2.75)).FontWeight(600).TextColor(t.TextMuted)
+			ui.Column(c).Gap(t.Space(1.5)).Padding(t.Space(2.5), t.Space(3), t.Space(2.5), t.Space(3)).Radius(8).Background(theme.Of(c).Card).Children(func() {
+				ui.Text(c, title).FontSize(t.Rem(0.85)).FontWeight(600).TextColor(t.TextMuted)
 				items()
 			})
 		}
@@ -477,11 +484,11 @@ func (s *Screen) removeDialog(c *ui.Context) {
 			item(icons.Check, t.TextMuted, s.text.Kept2Pre, "~/.config/idset/", s.text.Kept2Post)
 			item(icons.Check, t.TextMuted, s.text.Kept3, "", "")
 		})
-		ui.Row(c).Gap(t.Space(2)).Justify(ui.End).Children(func() {
-			if ui.Button(c.Key("remove-cancel"), s.text.Cancel).AutoFocus().Clicked() {
+		ui.Row(c).Gap(t.Space(2)).Margin(t.Space(1.5), 0, 0, 0).Children(func() {
+			if dialogButton(ui.Button(c.Key("remove-cancel"), s.text.Cancel), t).AutoFocus().Clicked() {
 				s.removeOpen = false
 			}
-			if ui.PrimaryButton(c.Key("remove-confirm"), s.text.RemoveButton).Clicked() {
+			if dialogButton(ui.PrimaryButton(c.Key("remove-confirm"), s.text.RemoveButton), t).Clicked() {
 				s.confirmRemove()
 			}
 		})

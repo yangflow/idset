@@ -66,7 +66,7 @@ func TestImportScansOnEveryEntry(t *testing.T) {
 func TestImportChecksTheNewOnes(t *testing.T) {
 	r := importOpen(t, "en", sampleCandidates())
 	r.want(t, "5 identities found", "gh-work · bob@example.com", "No alias · bob@example.net", "corp-git", "Already added",
-		"These files are only read", "Import 4 Identities")
+		"Read only; nothing is changed", "Import 4 Identities")
 	r.wantNot(t, "Imported as scoped")
 	r.click(t, "corp-git")
 	r.want(t, "Import 3 Identities")
@@ -94,8 +94,8 @@ func TestImportChecksTheNewOnes(t *testing.T) {
 	}
 	r.s.ImportDone(added, nil)
 	r.frame()
-	r.want(t, "3 identities imported", "bob@client.example", "accounts.json was backed up")
-	r.click(t, "Open Identities")
+	r.want(t, "3 identities imported", "bob@client.example", "Configuration regenerated.")
+	r.click(t, "Open Accounts")
 	if fmt.Sprint(r.rec.opened) != "[gh-work-id]" {
 		t.Fatalf("opened %v", r.rec.opened)
 	}
@@ -117,10 +117,10 @@ func TestImportMarksTheScoped(t *testing.T) {
 	cands := sampleCandidates()
 	cands[1].Limited, cands[2].Limited = true, true
 	r := importOpen(t, "en", cands)
-	r.want(t, "Imported as scoped", "There is already a global identity")
+	r.want(t, "Imported as scoped", "A global identity exists")
 	r.click(t, "github.com")
 	r.click(t, "client")
-	r.wantNot(t, "Imported as scoped", "There is already a global identity")
+	r.wantNot(t, "Imported as scoped", "A global identity exists")
 }
 
 func TestImportStopsAtTheFirstFailure(t *testing.T) {
@@ -130,7 +130,7 @@ func TestImportStopsAtTheFirstFailure(t *testing.T) {
 	r.s.ImportDone([]account.Account{stored(sent[0], "blue"), stored(sent[1], "green")}, errors.New("accounts.json is a symbolic link"))
 	r.frame()
 	r.want(t, "Could not import client: accounts.json is a symbolic link. The 2 before it were imported", "Import 2 Identities")
-	r.wantNot(t, "These files are only read")
+	r.wantNot(t, "Read only; nothing is changed")
 	r.click(t, "Import 2 Identities")
 	var labels []string
 	for _, a := range r.rec.imports[1] {
@@ -151,8 +151,8 @@ func TestImportSavedButNotRegenerated(t *testing.T) {
 	r.s.ImportDone([]account.Account{a}, &store.RegenerateError{Err: errors.New("permission denied")})
 	r.frame()
 	r.want(t, "1 identity imported", "The identities were imported, but the configuration could not be written: permission denied",
-		"Open Identities")
-	r.wantNot(t, "accounts.json was backed up")
+		"Open Accounts")
+	r.wantNot(t, "Configuration regenerated.")
 }
 
 func TestImportScanFailures(t *testing.T) {
@@ -160,7 +160,7 @@ func TestImportScanFailures(t *testing.T) {
 	r.s.scan()
 	r.s.ScanDone(nil, fmt.Errorf("git: %w", exec.ErrNotFound))
 	r.frame()
-	r.want(t, "git command not found")
+	r.want(t, "git not found")
 	r.s.scan()
 	r.s.ScanDone(nil, errors.New("reading ~/.ssh/config: permission denied"))
 	r.frame()
@@ -178,7 +178,7 @@ func TestImportReadOnly(t *testing.T) {
 	r.frame()
 	r.s.ScanDone(sampleCandidates(), nil)
 	r.frame()
-	r.want(t, "accounts.json cannot be read, so nothing can be imported")
+	r.want(t, "accounts.json cannot be read. Restore a backup first")
 	r.click(t, "Import 4 Identities")
 	if len(r.rec.imports) != 0 {
 		t.Fatal("imported while read-only")

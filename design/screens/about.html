@@ -4,55 +4,70 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>About window</title>
 <style>
-/* Colors are the MyGo default theme roles and sizes the 4 DIP spacing unit at 13 px text; see design/tokens.md.
-   No shadows, gradients or blur: everything is fills, hairlines and text. */
-:root { color-scheme:light; --background:#ffffff; --surface:#f4f4f5; --pressed:#dddde1; --text:#18181b; --muted:#71717a; --border:#d9d9de; --accent:#2563eb; --accent-text:#ffffff; --focus:rgba(37,99,235,.55); --danger:#dc2626 }
-:root[data-scheme=dark] { color-scheme:dark; --background:#18181b; --surface:#27272a; --pressed:#3c3c41; --text:#f4f4f5; --muted:#a1a1aa; --border:#3f3f46; --accent:#3b82f6; --focus:rgba(96,165,250,.6); --danger:#ef4444 }
+/* Glass and Git orange; see design/tokens.md. The window draws no background of its own: its Popover material
+   (simulated here over the desktop) shows through, and the buttons are translucent fills. */
+:root { color-scheme:light; --material:rgba(246,246,248,.62); --text:#1d1d1f; --muted:#6b6b72; --sep:rgba(60,60,67,.18); --card:rgba(255,255,255,.2); --control:rgba(0,0,0,.05); --hover:rgba(0,0,0,.07); --pressed:rgba(0,0,0,.12); --field:rgba(255,255,255,.45); --accent:#c63a1c; --accent-hover:#ad3218; --accent-text:#ffffff; --accent-soft:rgba(240,80,51,.16); --danger:#c8102e; --warning:#b86e00; --success:#1e7d36; --focus:rgba(198,58,28,.55); --inverse:#1d1d1f; --inverse-text:#f5f5f7; --menu:rgba(250,250,252,.97) }
+:root[data-scheme=dark] { color-scheme:dark; --material:rgba(36,36,40,.58); --text:#f5f5f7; --muted:#a3a3ab; --sep:rgba(255,255,255,.12); --card:rgba(255,255,255,.08); --control:rgba(255,255,255,.08); --hover:rgba(255,255,255,.11); --pressed:rgba(255,255,255,.16); --field:rgba(0,0,0,.22); --accent:#ff6a4a; --accent-hover:#ff8468; --accent-text:#1d1d1f; --accent-soft:rgba(255,106,74,.22); --danger:#ff5c74; --warning:#ffb340; --success:#3ccf62; --focus:rgba(255,132,104,.6); --inverse:#f5f5f7; --inverse-text:#1d1d1f; --menu:rgba(44,44,48,.97) }
 * { box-sizing:border-box }
-body { margin:0; font-family:system-ui,sans-serif; font-size:13px; color:var(--text); background:#888; display:flex; gap:24px; padding:24px; align-items:flex-start }
+body { margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI Variable Text","Segoe UI","PingFang SC","Microsoft YaHei UI",system-ui,sans-serif; font-size:13px; -webkit-font-smoothing:antialiased; color:var(--text); display:flex; gap:24px; padding:24px; align-items:flex-start; min-height:100vh;
+  background:radial-gradient(60% 50% at 15% 20%,#9fd8ff,transparent 70%),radial-gradient(50% 60% at 85% 30%,#b8f0c9,transparent 70%),radial-gradient(60% 60% at 50% 100%,#ffd8a8,transparent 70%),linear-gradient(135deg,#7cc4f5,#a7e3d0 60%,#f6e3b5) }
+:root[data-scheme=dark] body { background:radial-gradient(60% 50% at 15% 20%,#2b4f8f,transparent 70%),radial-gradient(50% 60% at 85% 30%,#1f5e4a,transparent 70%),radial-gradient(60% 60% at 50% 100%,#6b3a2a,transparent 70%),linear-gradient(135deg,#14213d,#0f2a2a 60%,#2a1a14) }
+/* Stripes on the desktop, so the blur behind the window shows. */
+body::before { content:""; position:fixed; inset:0; z-index:-1; background:repeating-linear-gradient(45deg,rgba(255,255,255,.1) 0 14px,transparent 14px 40px) }
 .controls { width:220px; flex:none; display:flex; flex-direction:column; gap:14px; padding:14px; border-radius:10px; background:#f4f4f4; color:#242424; font-size:12px }
 .controls h2 { margin:0 0 6px; font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:.04em; color:#666 }
 .controls .group { display:flex; flex-wrap:wrap; gap:4px }
 .controls button { padding:4px 8px; border:1px solid #ccc; border-radius:5px; background:#fff; color:#242424; font:inherit; cursor:pointer; height:auto }
 .controls button.on { background:#006fdf; border-color:#006fdf; color:#fff }
-.controls .hint { color:#666; line-height:1.5 }
+.controls .hint { color:#666; line-height:1.5; overflow-wrap:anywhere }
 .controls kbd { padding:0 4px; border:1px solid #ccc; border-radius:3px; background:#fff; font-size:11px }
 
-/* Window: the system title bar, then one centered column of 320x292. Not resizable. */
-.win { width:320px; height:320px; flex:none; display:flex; flex-direction:column; background:var(--background); border:1px solid var(--border); border-radius:10px; overflow:hidden }
-.titlebar { flex:none; height:28px; display:grid; place-items:center; font-size:11px; color:var(--muted); background:var(--surface); border-bottom:1px solid var(--border) }
-.body { flex:1; display:flex; flex-direction:column; align-items:center; text-align:center; padding:28px 24px 24px }
-/* The product icon, design/icon.svg, at 64. */
-.icon { width:64px; height:64px; display:block }
+/* Window: the system title bar, then one centered column of 320 x 320, 12 corners, the material and the system's shadow.
+   "Reduce transparency" makes it opaque. Not resizable. */
+.win { width:320px; height:320px; flex:none; display:flex; flex-direction:column; border-radius:12px; overflow:hidden; background:var(--material); backdrop-filter:blur(30px) saturate(180%); -webkit-backdrop-filter:blur(30px) saturate(180%); box-shadow:0 0 0 .5px rgba(0,0,0,.25),0 12px 40px rgba(0,0,0,.3) }
+.solid .win { background:#f2f2f5; backdrop-filter:none; -webkit-backdrop-filter:none }
+:root[data-scheme=dark] .solid .win { background:#2a2a2e }
+.titlebar { flex:none; height:28px; display:grid; place-items:center; font-size:11px; color:var(--muted) }
+/* macOS draws the window buttons (only close is enabled here) in the transparent title bar; the mockup shows them so the space above the content reads as the title bar. */
+.titlebar { position:relative }
+.lights { position:absolute; left:9px; top:8px; display:flex; gap:8px }
+.lights i { width:12px; height:12px; border-radius:50%; box-shadow:inset 0 0 0 .5px rgba(0,0,0,.15) }
+.lights i:nth-child(1) { background:#ff5f57 } .lights i:nth-child(2) { background:#febc2e } .lights i:nth-child(3) { background:#28c840 }
+.lights.fixed i:nth-child(n+2) { background:rgba(128,128,128,.35) }
+.body { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:0 24px 20px }
+/* The product icon at 64: a graphite tile (radius 22%) with the ivory key; the key's branch is cut out, so the tile shows through. */
+.icon { width:64px; height:64px; display:grid; place-items:center; border-radius:14px; background:linear-gradient(#4a4a50,#2c2c30); box-shadow:inset 0 .5px 0 rgba(255,255,255,.25),0 1px 3px rgba(0,0,0,.25) }
+.icon svg { width:42px; height:28px }
 h1 { margin:12px 0 0; font-size:18px; font-weight:600 }
 .version { margin-top:2px; color:var(--muted); user-select:text }
 .legal { margin-top:12px; font-size:11px; line-height:1.5; color:var(--muted) }
-.sp { flex:1; min-height:20px }
-.acts { display:flex; gap:8px }
-.note { margin-top:8px; max-width:260px; font-size:11px; line-height:1.4; color:var(--muted) }
+.acts { margin-top:20px; display:flex; align-items:center; gap:8px }
+.note { margin-top:8px; max-width:260px; font-size:12px; line-height:1.4; color:var(--muted) }
 
-button { padding:0 12px; height:28px; border:1px solid var(--border); border-radius:6px; background:var(--background); color:var(--text); font:inherit; display:inline-flex; align-items:center; gap:4px; white-space:nowrap }
-button.primary { background:var(--accent); border-color:var(--accent); color:var(--accent-text) }
+button { padding:0 12px; height:28px; border:0; border-radius:6px; background:var(--control); color:var(--text); font:inherit; display:inline-flex; align-items:center; gap:4px; white-space:nowrap }
+button.primary { background:var(--accent); color:var(--accent-text); font-weight:500 }
+button.link { background:transparent; padding:0 4px; color:var(--accent); font-weight:500 }
 button:disabled { opacity:.4 }
 button svg { width:12px; height:12px }
-button.focus { outline:2px solid var(--focus); outline-offset:1px }
+button.focus { outline:3px solid var(--focus); outline-offset:0 }
 </style>
 <aside class="controls">
   <div><h2>State</h2><div class="group" id="states"></div></div>
   <div><h2>Scheme</h2><div class="group" id="schemes"></div></div>
+  <div><h2>Material</h2><div class="group" id="materials"></div></div>
   <div><h2>Language</h2><div class="group" id="langs"></div></div>
-  <div class="hint">URL: <code>?state=…&amp;scheme=dark&amp;lang=zh</code><br><kbd>←</kbd> <kbd>→</kbd> switch state.</div>
+  <div class="hint">URL: <code>?state=…&amp;scheme=dark&amp;lang=zh&amp;material=solid</code><br><kbd>←</kbd> <kbd>→</kbd> switch state.</div>
 </aside>
 <div class="win" id="win"></div>
 <script>
 const TEXT = {
   zh: {
     window:'关于 Idset', version:v => `版本 ${v}`, copyright:'© 2026 yangflow', license:'以 MIT 许可发布',
-    github:'GitHub', check:'检查更新…', cannot:'这个版本不能自动更新，新版本请到 GitHub 下载。',
+    github:'GitHub', check:'检查更新…', cannot:'这个版本不能自动更新，请到 GitHub 下载。',
   },
   en: {
     window:'About Idset', version:v => `Version ${v}`, copyright:'© 2026 yangflow', license:'Released under the MIT License',
-    github:'GitHub', check:'Check for Updates…', cannot:'This copy cannot update itself. Download new versions from GitHub.',
+    github:'GitHub', check:'Check for Updates…', cannot:'This copy cannot update itself. Get updates on GitHub.',
   },
 };
 const STATES = { about:'可以更新', noupdate:'不能自动更新', focus:'键盘焦点' };
@@ -64,22 +79,31 @@ const view = {
   state: STATES[q.get('state')] ? q.get('state') : 'about',
   scheme: q.get('scheme') === 'dark' ? 'dark' : 'light',
   lang: q.get('lang') === 'zh' ? 'zh' : 'en',
+  material: q.get('material') === 'solid' ? 'solid' : 'glass',
 };
+
+// The product icon's key in a 54 x 36 box: a rounded diamond bow with the Git branch cut out (a mask, so what lies
+// behind shows through), the shaft and two bits.
+function keyGlyph(fill) {
+  const branch = `<g stroke-width="2.6" stroke-linecap="round" fill="none"><path d="M14.2 10v16"/><path d="M14.2 20.8Q20.6 16 20.6 14.4"/></g><circle cx="14.2" cy="10" r="2.5"/><circle cx="14.2" cy="26" r="2.5"/><circle cx="20.6" cy="14.4" r="2.5"/>`;
+  return `<svg viewBox="0 0 54 36"><defs><mask id="branch"><rect width="54" height="36" fill="#fff"/><g fill="#000" stroke="#000">${branch}</g></mask></defs>`
+    + `<g fill="${fill}" mask="url(#branch)"><rect x="6.1" y="6.1" width="23.8" height="23.8" rx="4.9" transform="rotate(45 18 18)"/><rect x="28" y="13.4" width="25" height="9.2" rx="2.8"/><rect x="39" y="18" width="5" height="10.6" rx="1.6"/><rect x="46.5" y="18" width="5" height="8.6" rx="1.6"/></g></svg>`;
+}
 
 function render() {
   const T = TEXT[view.lang], s = view.state;
   document.documentElement.lang = view.lang === 'zh' ? 'zh-Hans' : 'en';
   document.documentElement.dataset.scheme = view.scheme;
+  document.body.classList.toggle('solid', view.material === 'solid');
   const cannot = s === 'noupdate';
   // GitHub opens the repository in the browser; Check for Updates opens the updater's own window.
-  document.getElementById('win').innerHTML = `<div class="titlebar">${T.window}</div>
+  document.getElementById('win').innerHTML = `<div class="titlebar"><span class="lights fixed"><i></i><i></i><i></i></span>${T.window}</div>
     <div class="body">
-      <img class="icon" src="../icon.svg" alt="">
+      <div class="icon" role="img" aria-label="Idset">${keyGlyph('#f3ead8')}</div>
       <h1>Idset</h1>
       <div class="version">${T.version('0.1.0')}</div>
       <div class="legal">${T.copyright}<br>${T.license}</div>
-      <div class="sp"></div>
-      <div class="acts"><button${s === 'focus' ? ' class="focus"' : ''}>${icon.external}${T.github}</button><button class="primary"${cannot ? ' disabled' : ''}>${T.check}</button></div>
+      <div class="acts"><button class="link${s === 'focus' ? ' focus' : ''}">${icon.external}${T.github}</button><button class="primary"${cannot ? ' disabled' : ''}>${T.check}</button></div>
       ${cannot ? `<div class="note">${T.cannot}</div>` : ''}
     </div>`;
 
@@ -90,8 +114,9 @@ function render() {
   };
   buttons('states', STATES, 'state');
   buttons('schemes', { light:'浅色', dark:'深色' }, 'scheme');
+  buttons('materials', { glass:'Glass', solid:'Solid' }, 'material');
   buttons('langs', { zh:'中文', en:'English' }, 'lang');
-  history.replaceState(null, '', `?state=${view.state}&scheme=${view.scheme}&lang=${view.lang}`);
+  history.replaceState(null, '', `?state=${view.state}&scheme=${view.scheme}&lang=${view.lang}${view.material === 'solid' ? '&material=solid' : ''}`);
 }
 
 onkeydown = e => {

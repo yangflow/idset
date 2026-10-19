@@ -178,10 +178,10 @@ func TestListShowsEveryIdentityInPanelOrder(t *testing.T) {
 
 func TestEmptyStateOffersImportAndNew(t *testing.T) {
 	r := open(t, "en", []account.Account{}, Request{})
-	r.want(t, "No identities yet", "Import your existing SSH and Git configuration, or create one.", "New")
+	r.want(t, "No identities yet", "Import from SSH and Git, or create one.", "New")
 	// No toolbar and no sidebar: the centered buttons are the only way to add.
 	r.wantNot(t, "Revert", "Save", "Add Identity")
-	r.click(t, "Import Existing Configuration")
+	r.click(t, "Import Existing")
 	if r.rec.imports != 1 || r.s.Draft() != "" {
 		t.Fatalf("import asked %d times, draft %q", r.rec.imports, r.s.Draft())
 	}
@@ -190,14 +190,14 @@ func TestEmptyStateOffersImportAndNew(t *testing.T) {
 		t.Fatalf("the draft must ask for the signature: %v", r.rec.prefilled)
 	}
 	r.tt.Frame()
-	r.want(t, "New identity, not saved yet", "Revert", "Save")
+	r.want(t, "Not saved", "Revert", "Save")
 	r.wantNot(t, "No identities yet")
 }
 
 func TestGlobalIdentity(t *testing.T) {
 	r := open(t, "en", sample(), Request{ID: personalID})
 	r.want(t, "personal", "Global", "Identity", "SSH", "Scope", "URL rewrites", "Notes", "Times",
-		"Used when no folder rule matches.", "Add Rewrite", "Add Platform Default Rewrite", "Created", "Updated", "Last used", "2026-10-11")
+		"Used when no folder rule matches.", "Add Rewrite", "Add Default Rewrites", "Created", "Updated", "Last used", "2026-10-11")
 	r.wantNot(t, "Add Path")
 	f := r.form()
 	if !f.cur.global || f.scope != 0 || f.dirty() {
@@ -221,10 +221,10 @@ func TestScopedIdentityListsEveryDetailGroup(t *testing.T) {
 		!slices.Equal(f.cur.paths, []string{"~/work/", "~/src/new/", "~/clients/acme/"}) || len(f.cur.rewrites) != 2 {
 		t.Errorf("form %+v", f.cur)
 	}
-	if n := strings.Count(strings.Join(r.tt.Texts(), "|"), "Remove this path"); n != 3 {
+	if n := strings.Count(strings.Join(r.tt.Texts(), "|"), "Remove Path"); n != 3 {
 		t.Errorf("one remove button per path, got %d", n)
 	}
-	r.wantNot(t, "Used when no folder rule matches.", "Host name", "New identity, not saved yet")
+	r.wantNot(t, "Used when no folder rule matches.", "Host name", "Not saved")
 	if r.form().cur.port != 443 {
 		t.Error("port 443 is chosen")
 	}
@@ -239,7 +239,7 @@ func TestScopedIdentityListsEveryDetailGroup(t *testing.T) {
 func TestCustomPlatformHasHostAndPort(t *testing.T) {
 	r := open(t, "en", sample(), Request{ID: clientID})
 	r.want(t, "Host name", "Port")
-	r.wantNot(t, "Add Platform Default Rewrite")
+	r.wantNot(t, "Add Default Rewrites")
 	if f := r.form(); f.cur.hostName != "git.client.example" || f.cur.portText != "22" {
 		t.Errorf("form %+v", f.cur)
 	}
@@ -249,7 +249,7 @@ func TestCustomPlatformHasHostAndPort(t *testing.T) {
 	}
 	r.s.selectID(workID)
 	r.tt.Frame()
-	r.want(t, "443", "Add Platform Default Rewrite")
+	r.want(t, "443", "Add Default Rewrites")
 	r.wantNot(t, "Host name")
 }
 
@@ -278,12 +278,12 @@ func TestEditingMakesTheFormDirtyAndRevertGoesBack(t *testing.T) {
 func TestChoicesChangeTheForm(t *testing.T) {
 	r := open(t, "en", sample(), Request{ID: personalID})
 	// Scope: global to folders gives one default path; back to global drops the paths.
-	r.click(t, "Limited to folders")
+	r.click(t, "Limited to Folders")
 	if f := r.form(); f.cur.global || !slices.Equal(f.cur.paths, []string{"~/"}) {
 		t.Fatalf("scope: %+v", f.cur)
 	}
 	r.want(t, "Add Path")
-	r.click(t, "Remove this path")
+	r.click(t, "Remove Path")
 	if len(r.form().cur.paths) != 1 {
 		t.Error("the last path cannot be removed")
 	}
@@ -333,8 +333,8 @@ func TestPlatformSelectChangesProvider(t *testing.T) {
 func TestRewrites(t *testing.T) {
 	r := open(t, "en", sample(), Request{ID: personalID})
 	r.wantNot(t, "Push only", "Enter an alias")
-	r.click(t, "Add Platform Default Rewrite")
-	r.click(t, "Add Platform Default Rewrite")
+	r.click(t, "Add Default Rewrites")
+	r.click(t, "Add Default Rewrites")
 	want := []account.Rewrite{
 		{From: "https://github.com/", To: "git@github-personal:"},
 		{From: "git@github.com:", To: "git@github-personal:"},
@@ -344,7 +344,7 @@ func TestRewrites(t *testing.T) {
 	}
 	r.tt.Frame()
 	// Both defaults are there: the button has nothing more to add.
-	r.click(t, "Add Platform Default Rewrite")
+	r.click(t, "Add Default Rewrites")
 	if len(r.form().cur.rewrites) != 2 {
 		t.Error("a default rule is added once")
 	}
@@ -352,7 +352,7 @@ func TestRewrites(t *testing.T) {
 	if len(r.form().cur.rewrites) != 3 {
 		t.Error("Add Rewrite adds an empty rule")
 	}
-	r.click(t, "Remove this rewrite")
+	r.click(t, "Remove Rewrite")
 	if len(r.form().cur.rewrites) != 2 {
 		t.Error("Remove deletes one rule")
 	}
@@ -365,12 +365,12 @@ func TestRewrites(t *testing.T) {
 	// Without an alias the platform default cannot be added, and the reason is shown.
 	r.form().cur.alias = ""
 	r.tt.Frame()
-	r.want(t, "Enter an alias to add the platform default rewrite.")
+	r.want(t, "Enter an alias first.")
 	if _, ok := r.form().nextDefaultRewrite(); ok {
 		t.Error("no default rule without an alias")
 	}
 	before := len(r.form().cur.rewrites)
-	r.click(t, "Add Platform Default Rewrite")
+	r.click(t, "Add Default Rewrites")
 	if len(r.form().cur.rewrites) != before {
 		t.Error("the disabled button must not add a rule")
 	}
@@ -386,7 +386,7 @@ func TestDraftPrefillFillsOnlyEmptyFields(t *testing.T) {
 		t.Errorf("the draft starts as %+v", f.cur)
 	}
 	r.tt.Frame()
-	r.want(t, "New", "New identity, not saved yet")
+	r.want(t, "New", "Not saved")
 	r.wantNot(t, "From git config --global", "Times", "Delete")
 	// The user starts typing the email before git answers.
 	r.form().cur.email = "typed@example.com"
@@ -454,9 +454,9 @@ func TestSaveWithAShortcutAndTheResultFlash(t *testing.T) {
 		t.Error("a second save while saving")
 	}
 	r.saveSucceeds(t, nil)
-	r.want(t, "Written")
-	r.wantNot(t, "Writing…", "Unsaved changes", "Saving", "Save")
-	if got := r.tt.Announcements(); !slices.Contains(got, "Written") {
+	r.want(t, "Saved")
+	r.wantNot(t, "Writing…", "Unsaved changes", "Saving")
+	if got := r.tt.Announcements(); !slices.Contains(got, "Saved") {
 		t.Errorf("the save must be announced: %v", got)
 	}
 	if f := r.form(); f.dirty() || f.cur.alias != "github-work2" {
@@ -464,7 +464,7 @@ func TestSaveWithAShortcutAndTheResultFlash(t *testing.T) {
 	}
 	clock = clock.Add(2 * time.Second)
 	r.tt.Frame()
-	r.wantNot(t, "Written")
+	r.wantNot(t, "Saved")
 	r.want(t, "Save")
 }
 
@@ -492,7 +492,6 @@ func TestSavedButConfigurationNotRegenerated(t *testing.T) {
 	r.click(t, "Save")
 	r.saveSucceeds(t, &store.RegenerateError{Err: errors.New("permission denied")})
 	r.want(t, "Saved, but the generated configuration could not be rewritten: permission denied.")
-	r.wantNot(t, "Written")
 	if f := r.form(); f.dirty() || f.cur.username != "bob-new" {
 		t.Error("the identity is saved, the form is clean")
 	}
@@ -510,7 +509,7 @@ func TestInvalidFormIsNotSaved(t *testing.T) {
 		t.Error("the problem belongs to the form")
 	}
 	// Fixing the form takes the messages away.
-	r.click(t, "Limited to folders")
+	r.click(t, "Limited to Folders")
 	r.wantNot(t, "problem to fix first", "There is already a global identity")
 	r.click(t, "Save")
 	if len(r.rec.saves) != 1 {
@@ -559,7 +558,7 @@ func TestSaveNewIdentity(t *testing.T) {
 	r.s.SetPrefill(id, "Ada", "ada@example.com")
 	r.typeInto(t, "Name", "side")
 	// The list has a global identity already.
-	r.click(t, "Limited to folders")
+	r.click(t, "Limited to Folders")
 	r.click(t, "Save")
 	if len(r.rec.saves) != 1 || !r.rec.saves[0].isNew || r.rec.saves[0].a.ID != id || r.rec.saves[0].a.Label != "side" {
 		t.Fatalf("saves: %+v", r.rec.saves)
@@ -571,8 +570,8 @@ func TestSaveNewIdentity(t *testing.T) {
 	if r.s.Draft() != "" || r.s.Selected() != id || r.form().isNew {
 		t.Fatalf("the draft is now an identity: draft %q selected %q", r.s.Draft(), r.s.Selected())
 	}
-	r.want(t, "Written", "Delete", "Times", "side")
-	r.wantNot(t, "New identity, not saved yet")
+	r.want(t, "Saved", "Delete", "Times", "side")
+	r.wantNot(t, "Not saved")
 }
 
 func TestPickers(t *testing.T) {
@@ -592,11 +591,11 @@ func TestPickers(t *testing.T) {
 	r.tt.Frame()
 	buttons := 0
 	for _, name := range r.tt.Texts() {
-		if name == "Choose folder" {
+		if name == "Choose Folder…" {
 			buttons++
 		}
 	}
-	if err := r.tt.Click("Choose folder"); err != nil {
+	if err := r.tt.Click("Choose Folder…"); err != nil {
 		t.Fatal(err)
 	}
 	if len(r.rec.folders) != 1 || r.rec.folders[0] != (folderCall{workID, 0}) {
@@ -636,7 +635,7 @@ func TestChinese(t *testing.T) {
 	r := open(t, "zh-Hans", sample(), Request{ID: workID})
 	r.want(t, "添加身份", "身份", "限定", "署名", "邮箱", "别名", "私钥", "端口", "范围", "地址改写", "备注", "时间", "删除", "还原", "保存", "适用于")
 	r.click(t, "删除")
-	r.want(t, "删除身份 work？", "同时删除私钥", "磁盘上的项目文件夹不会被改动。")
+	r.want(t, "删除身份 work？", "同时删除私钥", "项目文件夹不受影响。")
 }
 
 func TestDarkScheme(t *testing.T) {
@@ -649,7 +648,7 @@ func TestKeyReasonsTextsExist(t *testing.T) {
 	s := New(Text("en"), env, (&recorder{}).actions())
 	for reason, want := range map[keyfile.Reason]string{
 		keyfile.NoPath: "This identity has no key path.", keyfile.Shared: "Another identity (x) uses the same key.",
-		keyfile.Symlink: "The key path is a symbolic link; Idset will not delete it.", keyfile.Missing: "The key file does not exist.",
+		keyfile.Symlink: "The key path is a symbolic link.", keyfile.Missing: "The key file does not exist.",
 		keyfile.NotFile: "The key path is not a regular file.", keyfile.None: "",
 	} {
 		if got := s.keyReason(&confirm{reason: reason, other: "x"}); got != want {
@@ -879,7 +878,7 @@ func TestNewDraftForAGeneratedKey(t *testing.T) {
 		t.Fatalf("after a frame and the prefill: %+v", f.cur)
 	}
 	r.form().cur.label = "lab"
-	r.click(t, "Limited to folders")
+	r.click(t, "Limited to Folders")
 	r.click(t, "Save")
 	if len(r.rec.saves) != 1 {
 		t.Fatalf("saves: %+v, %q", r.rec.saves, r.tt.Texts())

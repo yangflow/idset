@@ -9,6 +9,7 @@ import (
 	"github.com/yangflow/idset/internal/match"
 	"github.com/yangflow/idset/internal/remote"
 	"github.com/yangflow/idset/internal/ui/icons"
+	"github.com/yangflow/idset/internal/ui/theme"
 )
 
 // repoPlaceholder is the same in every language.
@@ -81,7 +82,7 @@ func (s *Screen) cloneBlock(c *ui.Context, key string, a account.Account, f *clo
 	ui.Column(c.Key(key)).Gap(t.Space(1)).Padding(t.Space(2), t.Space(3), t.Space(2.5), left).Children(func() {
 		ui.Row(c).Gap(t.Space(1.5)).AlignItems(ui.Center).Children(func() {
 			in := ui.TextInput(c.Key(key+"-input"), &f.value).Label(s.text.CloneLabel).Placeholder(repoPlaceholder).
-				Tooltip(s.text.CloneTip).Font("monospace").FontSize(t.Rem(0.9)).Height(t.Space(7)).Background(t.Background).Grow(1).MinWidth(0)
+				Tooltip(s.text.CloneTip).Font("monospace").FontSize(t.Rem(0.88)).Height(t.Space(7)).Radius(6).Background(theme.Of(c).Field).Grow(1).MinWidth(0)
 			if focus {
 				in.AutoFocus()
 			}

@@ -7,6 +7,7 @@ import (
 	"github.com/yangflow/idset/internal/account"
 	"github.com/yangflow/idset/internal/keygen"
 	"github.com/yangflow/idset/internal/ui/icons"
+	"github.com/yangflow/idset/internal/ui/theme"
 )
 
 // keysPane is the form until a key is generated, then the key and what to do with it.
@@ -45,7 +46,7 @@ func (s *Screen) keyForm(c *ui.Context) {
 	t := c.Theme()
 	busy := s.keys.busy
 	if a, ok := s.identity(s.keys.target); ok {
-		ui.Row(c).Gap(t.Space(2)).Padding(t.Space(2.5), t.Space(3), t.Space(2.5), t.Space(3)).Radius(10).Background(t.Surface).Children(func() {
+		ui.Row(c).Gap(t.Space(2)).Padding(t.Space(2.5), t.Space(3), t.Space(2.5), t.Space(3)).Radius(10).Background(theme.Of(c).Card).Children(func() {
 			ui.Icon(c, icons.Key).FontSize(t.Space(3.5)).TextColor(t.TextMuted)
 			ui.Text(c, fmt.Sprintf(s.text.KDiag, s.label(a), s.env.Tilde(a.KeyPath))).Grow(1).Wrap()
 		})
@@ -55,9 +56,9 @@ func (s *Screen) keyForm(c *ui.Context) {
 		names = append(names, s.providerName(p))
 	}
 	field := func(key string, value *string, label string, mono bool) {
-		in := ui.TextInput(c.Key(key), value).Label(label).Grow(1).TextAlign(ui.End).Background(ui.Color{}).Border(0, ui.Color{}).Disabled(busy)
+		in := ui.TextInput(c.Key(key), value).Label(label).Grow(1).TextAlign(ui.End).Radius(6).Background(theme.Of(c).Field).Border(0.5, t.Border).Disabled(busy)
 		if mono {
-			in.Font("monospace").FontSize(t.Space(3))
+			in.Font("monospace").FontSize(t.Rem(0.88))
 		}
 	}
 	group := ui.Column(c).Gap(t.Space(5))
@@ -74,7 +75,7 @@ func (s *Screen) keyForm(c *ui.Context) {
 			r.line(func() {
 				keyLabel(c, s.text.KPlatform, false)
 				ui.Spacer(c)
-				ui.Select(c.Key("key-platform"), &s.keys.platform, names).Label(s.text.KPlatform).Disabled(busy)
+				theme.Select(c.Key("key-platform"), &s.keys.platform, names).Label(s.text.KPlatform).Disabled(busy)
 			})
 			r.line(func() {
 				keyLabel(c, s.text.KFile, false)
@@ -98,7 +99,7 @@ func (s *Screen) keyForm(c *ui.Context) {
 	})
 	ui.Row(c).Gap(t.Space(2)).Justify(ui.End).AlignItems(ui.Center).Children(func() {
 		if busy {
-			ui.Text(c, s.text.Generating).FontSize(t.Space(2.75)).TextColor(t.TextMuted).SingleLine()
+			ui.Text(c, s.text.Generating).FontSize(t.Rem(0.92)).TextColor(t.TextMuted).SingleLine()
 			ui.Spinner(c)
 		}
 		if ui.PrimaryButton(c.Key("generate"), s.text.Generate).Disabled(busy || s.nameInvalid()).Clicked() {
@@ -116,24 +117,26 @@ func (s *Screen) keyResult(c *ui.Context) {
 	}
 	ui.Row(c).Gap(t.Space(2)).AlignItems(ui.Center).Children(func() {
 		ui.Icon(c, icons.Check).FontSize(t.Space(4)).TextColor(t.Accent)
-		ui.Text(c, s.text.Created).FontSize(t.Space(3.75)).FontWeight(600).Role(ui.RoleHeading).Level(2).SingleLine()
-		ui.Text(c, kind+" · "+s.providerName(s.keys.provider)).FontSize(t.Space(2.75)).TextColor(t.TextMuted).SingleLine()
+		ui.Text(c, s.text.Created).FontSize(t.Rem(1.15)).FontWeight(600).Role(ui.RoleHeading).Level(2).SingleLine()
+		ui.Text(c, kind+" · "+s.providerName(s.keys.provider)).FontSize(t.Rem(0.92)).TextColor(t.TextMuted).SingleLine()
 	})
 
 	s.section(c, s.text.PubKey, func(r *rows) {
-		if key.Public != "" {
-			r.line(func() {
-				ui.Text(c, key.Public).Font("monospace").FontSize(t.Space(3)).Grow(1).Wrap().Selectable()
-			})
-		}
-		r.lineAt(t.Space(1), func() {
-			flash := s.now().Before(s.keys.copied)
-			if flash {
+		r.line(func() {
+			if key.Public != "" {
+				ui.Text(c, key.Public).Font("monospace").FontSize(t.Rem(0.88)).Grow(1).Wrap().Selectable()
+			} else {
+				ui.Spacer(c)
+			}
+			if s.now().Before(s.keys.copied) {
 				c.After(s.keys.copied.Sub(s.now()))
-				textButton(c, "copy-pub", s.text.Copied, icons.Check).Disabled(true)
+				ui.Row(c).Gap(t.Space(1)).AlignItems(ui.Center).Shrink(0).Children(func() {
+					ui.Text(c, s.text.Copied).FontSize(t.Rem(0.85)).TextColor(t.TextMuted).SingleLine()
+					ui.Icon(c, icons.Check).FontSize(t.Rem(1.1)).TextColor(t.Accent).Label(s.text.Copied)
+				})
 				return
 			}
-			if textButton(c, "copy-pub", s.text.CopyPub, icons.Copy).Disabled(key.Public == "").Clicked() {
+			if ghost(c, "copy-pub", s.text.CopyPub, icons.Copy).Disabled(key.Public == "").Clicked() {
 				c.WriteClipboard(key.Public)
 				s.copyPublic()
 			}
@@ -148,7 +151,7 @@ func (s *Screen) keyResult(c *ui.Context) {
 	value := func(text string, mono bool) {
 		v := ui.Text(c, text).Grow(1).TextAlign(ui.End).Wrap()
 		if mono {
-			v.Font("monospace").FontSize(t.Space(3))
+			v.Font("monospace").FontSize(t.Rem(0.88))
 		}
 	}
 	s.section(c, s.text.KFiles, func(r *rows) {
@@ -184,7 +187,7 @@ func (s *Screen) keyResult(c *ui.Context) {
 		r.line(func() {
 			if p == account.Custom || p.KeySettingsURL() == "" {
 				ui.Text(c, s.text.AddCustom).Grow(1)
-				ui.Text(c, s.text.AddCustomHint).FontSize(t.Space(2.75)).TextColor(t.TextMuted).SingleLine()
+				ui.Text(c, s.text.AddCustomHint).FontSize(t.Rem(0.92)).TextColor(t.TextMuted).SingleLine()
 				return
 			}
 			ui.Text(c, fmt.Sprintf(s.text.AddOn, name)).Grow(1)
@@ -203,7 +206,7 @@ func (s *Screen) keyResult(c *ui.Context) {
 			switch s.keys.agent {
 			case agentLoaded:
 				ui.Icon(c, icons.Check).FontSize(t.Space(3)).TextColor(t.Accent)
-				ui.Text(c, s.text.Loaded).FontSize(t.Space(2.75)).TextColor(t.TextMuted).SingleLine()
+				ui.Text(c, s.text.Loaded).FontSize(t.Rem(0.92)).TextColor(t.TextMuted).SingleLine()
 			case agentBusy:
 				ui.Spinner(c)
 			default:
@@ -271,10 +274,9 @@ func (s *Screen) pickDialog(c *ui.Context) {
 	}
 	t := c.Theme()
 	ui.DialogBase(c, &s.keys.pickOpen, func(backdrop, panel ui.Element) {
-		backdrop.Background(ui.RGBA(0, 0, 0, 0.4))
-		panel.Width(t.Space(90)).Padding(t.Space(5)).Gap(t.Space(3)).Radius(10).Background(t.Background).Border(1, t.Border).
-			Role(ui.RoleDialog).Label(s.text.UseTitle)
-		ui.Text(c, s.text.UseTitle).FontSize(t.Rem(1.15)).FontWeight(600).Role(ui.RoleHeading).Level(2).Wrap()
+		theme.Dialog(c, backdrop, panel, t.Space(85))
+		panel.Role(ui.RoleDialog).Label(s.text.UseTitle)
+		ui.Text(c, s.text.UseTitle).FontWeight(600).Role(ui.RoleHeading).Level(2).Wrap()
 		ui.Text(c, s.text.UseBody).Wrap()
 		ui.Divider(c)
 		choice := func(value, label string, head func(), sub string) {
@@ -293,7 +295,7 @@ func (s *Screen) pickDialog(c *ui.Context) {
 				})
 				ui.Column(c).Grow(1).MinWidth(0).Gap(t.Space(0.25)).Children(func() {
 					ui.Row(c).Gap(t.Space(1.5)).AlignItems(ui.Center).Children(head)
-					ui.Text(c, sub).FontSize(t.Space(2.75)).TextColor(t.TextMuted).Wrap()
+					ui.Text(c, sub).FontSize(t.Rem(0.92)).TextColor(t.TextMuted).Wrap()
 				})
 			})
 		}
@@ -306,7 +308,7 @@ func (s *Screen) pickDialog(c *ui.Context) {
 				choice(a.ID, s.label(a), func() {
 					dot(c, a.Color)
 					ui.Text(c, s.label(a)).SingleLine().Shrink(0)
-					ui.Text(c, a.GitUserEmail).FontSize(t.Space(2.75)).TextColor(t.TextMuted).SingleLine()
+					ui.Text(c, a.GitUserEmail).FontSize(t.Rem(0.92)).TextColor(t.TextMuted).SingleLine()
 				}, sub)
 			}
 			sub := fmt.Sprintf(s.text.NewIDSubPlain, s.providerName(s.keys.provider))
@@ -316,12 +318,12 @@ func (s *Screen) pickDialog(c *ui.Context) {
 			choice(newIdentity, s.text.NewID, func() { ui.Text(c, s.text.NewID).SingleLine() }, sub)
 		})
 		ui.Divider(c)
-		ui.Text(c, s.text.UseNote).FontSize(t.Space(2.75)).TextColor(t.TextMuted).Wrap()
-		ui.Row(c).Gap(t.Space(2)).Justify(ui.End).Children(func() {
-			if ui.Button(c.Key("pick-cancel"), s.text.Cancel).AutoFocus().Clicked() {
+		ui.Text(c, s.text.UseNote).FontSize(t.Rem(0.92)).TextColor(t.TextMuted).Wrap()
+		ui.Row(c).Gap(t.Space(2)).Margin(t.Space(1.5), 0, 0, 0).Children(func() {
+			if dialogButton(ui.Button(c.Key("pick-cancel"), s.text.Cancel), t).AutoFocus().Clicked() {
 				s.keys.pickOpen = false
 			}
-			if ui.PrimaryButton(c.Key("pick-use"), s.text.UseButton).Clicked() {
+			if dialogButton(ui.PrimaryButton(c.Key("pick-use"), s.text.UseButton), t).Clicked() {
 				s.confirmPick()
 			}
 		})

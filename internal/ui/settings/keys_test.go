@@ -95,9 +95,9 @@ func TestKeyFormSendsTheRequest(t *testing.T) {
 	r.s.GenerateDone(keygen.Key{Path: "~/.ssh/id_lab", Public: samplePub, Fingerprint: sampleFp}, nil)
 	r.frame()
 	r.want(t, "Key created", "RSA 4096 · GitLab", samplePub, "~/.ssh/id_lab.pub", sampleFp, "None",
-		"This private key has no passphrase. You can add one later with ssh-keygen -p -f ~/.ssh/id_lab.",
+		"No passphrase. Add one with ssh-keygen -p -f ~/.ssh/id_lab.",
 		"Add the public key on GitLab", "Open GitLab Settings", "Load into ssh-agent", "Use for identity",
-		"On the GitLab settings page, add a new SSH key and paste the copied public key.")
+		"On GitLab, add a new SSH key and paste the public key.")
 	r.wantNot(t, "Generating…")
 }
 
@@ -114,8 +114,8 @@ func TestKeyFormRefusesBadNames(t *testing.T) {
 
 func TestKeyFormErrors(t *testing.T) {
 	for err, text := range map[error]string{
-		&keygen.ExistsError{Path: "~/.ssh/id_idset"}:       "~/.ssh/id_idset already exists. Idset never overwrites a key; choose another file name.",
-		fmt.Errorf("start: %w", exec.ErrNotFound):          "Could not run ssh-keygen: command not found. Install the OpenSSH client and try again.",
+		&keygen.ExistsError{Path: "~/.ssh/id_idset"}:       "~/.ssh/id_idset already exists. Choose another file name.",
+		fmt.Errorf("start: %w", exec.ErrNotFound):          "ssh-keygen not found. Install the OpenSSH client.",
 		errors.New("Saving key failed: Permission denied"): "Could not generate the key: Saving key failed: Permission denied",
 	} {
 		r := keysOpen(t, "en", nil, Request{})
@@ -154,7 +154,7 @@ func TestKeyResultCopiesAndReveals(t *testing.T) {
 func TestKeyResultWithoutPublicKey(t *testing.T) {
 	r := keysOpen(t, "en", nil, Request{})
 	r.generated(t, "")
-	r.want(t, "~/.ssh/id_idset.pub does not exist, so there is no public key to copy.")
+	r.want(t, "~/.ssh/id_idset.pub does not exist.")
 	r.wantNot(t, "Fingerprint")
 }
 
@@ -162,7 +162,7 @@ func TestKeyResultForACustomPlatform(t *testing.T) {
 	r := keysOpen(t, "en", nil, Request{})
 	r.s.keys.platform = "Custom"
 	r.generated(t, samplePub)
-	r.want(t, "Ed25519 · Custom", "Add the public key on your server", "A custom platform has no fixed settings page.")
+	r.want(t, "Ed25519 · Custom", "Add the public key on your server", "Give the public key to the server administrator")
 	r.wantNot(t, "Open GitHub Settings")
 }
 
@@ -185,7 +185,7 @@ func TestKeyLoadsIntoTheAgent(t *testing.T) {
 	r.click(t, "Load")
 	r.s.LoadDone(keygen.ErrNoAgent)
 	r.frame()
-	r.want(t, "ssh-agent is not running, so the key was not loaded.")
+	r.want(t, "ssh-agent is not running. ssh reads the key file directly.")
 	r.wantNot(t, "On the GitHub settings page")
 
 	r = keysOpen(t, "en", nil, Request{})
@@ -201,7 +201,7 @@ func TestKeyGoesToAChosenIdentity(t *testing.T) {
 	r.generated(t, samplePub)
 	r.click(t, "Choose…")
 	r.want(t, "Use this key for which identity?", "Now: ~/.ssh/id_work", "New identity",
-		"Email work@example.com · GitHub. Finish and save it in the accounts window.")
+		"work@example.com · GitHub. Finish it in Accounts.")
 	if r.s.keys.pick != "work-id" {
 		t.Errorf("pick = %q", r.s.keys.pick)
 	}
@@ -213,7 +213,7 @@ func TestKeyGoesToAChosenIdentity(t *testing.T) {
 	r.wantNot(t, "Use this key for which identity?")
 	r.s.UseDone("personal-id", nil)
 	r.frame()
-	r.want(t, "personal", "Change…", "The key path and fingerprint of personal were written and the configuration regenerated.")
+	r.want(t, "personal", "Change…", "Written to personal; configuration regenerated.")
 
 	r.click(t, "Change…")
 	if r.s.keys.pick != "personal-id" {
@@ -247,7 +247,7 @@ func TestKeyMakesANewIdentity(t *testing.T) {
 	r.s.keys.comment = "laptop key"
 	r.generated(t, samplePub)
 	r.click(t, "Choose…")
-	r.want(t, "GitHub. Finish and save it in the accounts window.")
+	r.want(t, "GitHub. Finish it in Accounts.")
 	r.click(t, "Use")
 	if len(r.rec.drafts) != 1 || r.rec.drafts[0].Email != "" {
 		t.Errorf("drafts %+v", r.rec.drafts)
@@ -256,7 +256,7 @@ func TestKeyMakesANewIdentity(t *testing.T) {
 
 func TestKeyFormFilledInFromTheDiagnostics(t *testing.T) {
 	r := keysOpen(t, "en", keyIdentities(), Request{For: "work-id"})
-	r.want(t, "The private key of work, ~/.ssh/id_work, does not exist.")
+	r.want(t, "work’s private key ~/.ssh/id_work does not exist.")
 	if k := r.s.keys; k.name != "id_work" || k.comment != "work@example.com" || k.platform != "GitLab" || k.target != "work-id" {
 		t.Fatalf("form = %+v", k)
 	}

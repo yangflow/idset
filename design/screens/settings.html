@@ -4,12 +4,17 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Settings window</title>
 <style>
-/* Colors are the MyGo default theme roles and sizes the 4 DIP spacing unit at 13 px text; see design/tokens.md.
-   No shadows, gradients or blur: everything is fills, hairlines and text. */
-:root { color-scheme:light; --background:#ffffff; --surface:#f4f4f5; --pressed:#dddde1; --text:#18181b; --muted:#71717a; --border:#d9d9de; --accent:#2563eb; --accent-text:#ffffff; --focus:rgba(37,99,235,.55); --danger:#dc2626; --warning:#d97706; --scrim:rgba(0,0,0,.28) }
-:root[data-scheme=dark] { color-scheme:dark; --background:#18181b; --surface:#27272a; --pressed:#3c3c41; --text:#f4f4f5; --muted:#a1a1aa; --border:#3f3f46; --accent:#3b82f6; --focus:rgba(96,165,250,.6); --danger:#ef4444; --warning:#f59e0b; --scrim:rgba(0,0,0,.5) }
+/* Colors are Idset's glass theme in design/tokens.md, sizes the 4 DIP spacing unit at 13 px text. The window draws no
+   background of its own beyond the Window material (simulated here by .win over the desktop); groups are translucent
+   cards, rows are separated by .5 hairlines, nothing has a border. */
+:root { color-scheme:light; --material:rgba(246,246,248,.62); --text:#1d1d1f; --muted:#6b6b72; --sep:rgba(60,60,67,.18); --card:rgba(255,255,255,.2); --control:rgba(0,0,0,.05); --hover:rgba(0,0,0,.07); --pressed:rgba(0,0,0,.12); --field:rgba(255,255,255,.45); --accent:#c63a1c; --accent-hover:#ad3218; --accent-text:#ffffff; --accent-soft:rgba(240,80,51,.16); --danger:#c8102e; --warning:#b86e00; --success:#1e7d36; --focus:rgba(198,58,28,.55); --inverse:#1d1d1f; --inverse-text:#f5f5f7; --menu:rgba(255,255,255,.54); --glass:blur(10px) saturate(110%); --rim:rgba(255,255,255,.7); --scrim:rgba(0,0,0,.1) }
+:root[data-scheme=dark] { color-scheme:dark; --material:rgba(36,36,40,.58); --text:#f5f5f7; --muted:#a3a3ab; --sep:rgba(255,255,255,.12); --card:rgba(255,255,255,.08); --control:rgba(255,255,255,.08); --hover:rgba(255,255,255,.11); --pressed:rgba(255,255,255,.16); --field:rgba(0,0,0,.22); --accent:#ff6a4a; --accent-hover:#ff8468; --accent-text:#1d1d1f; --accent-soft:rgba(255,106,74,.22); --danger:#ff5c74; --warning:#ffb340; --success:#3ccf62; --focus:rgba(255,132,104,.6); --inverse:#f5f5f7; --inverse-text:#1d1d1f; --menu:rgba(60,60,60,.64); --glass:blur(10px) saturate(220%); --rim:rgba(255,255,255,.18); --scrim:rgba(0,0,0,.28) }
 * { box-sizing:border-box }
-body { margin:0; font-family:system-ui,sans-serif; font-size:13px; color:var(--text); background:#888; display:flex; gap:24px; padding:24px; align-items:flex-start }
+body { margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI Variable Text","Segoe UI","PingFang SC","Microsoft YaHei UI",system-ui,sans-serif; font-size:13px; -webkit-font-smoothing:antialiased; color:var(--text); display:flex; gap:24px; padding:24px; align-items:flex-start; min-height:100vh;
+  background:radial-gradient(60% 50% at 15% 20%,#9fd8ff,transparent 70%),radial-gradient(50% 60% at 85% 30%,#b8f0c9,transparent 70%),radial-gradient(60% 60% at 50% 100%,#ffd8a8,transparent 70%),linear-gradient(135deg,#7cc4f5,#a7e3d0 60%,#f6e3b5) }
+:root[data-scheme=dark] body { background:radial-gradient(60% 50% at 15% 20%,#2b4f8f,transparent 70%),radial-gradient(50% 60% at 85% 30%,#1f5e4a,transparent 70%),radial-gradient(60% 60% at 50% 100%,#6b3a2a,transparent 70%),linear-gradient(135deg,#14213d,#0f2a2a 60%,#2a1a14) }
+/* Stripes on the desktop, so the blur behind the window shows. */
+body::before { content:""; position:fixed; inset:0; z-index:-1; background:repeating-linear-gradient(45deg,rgba(255,255,255,.1) 0 14px,transparent 14px 40px) }
 .controls { width:220px; flex:none; display:flex; flex-direction:column; gap:14px; padding:14px; border-radius:10px; background:#f4f4f4; color:#242424; font-size:12px }
 .controls h2 { margin:0 0 6px; font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:.04em; color:#666 }
 .controls .group { display:flex; flex-wrap:wrap; gap:4px }
@@ -18,40 +23,56 @@ body { margin:0; font-family:system-ui,sans-serif; font-size:13px; color:var(--t
 .controls .hint { color:#666; line-height:1.5 }
 .controls kbd { padding:0 4px; border:1px solid #ccc; border-radius:3px; background:#fff; font-size:11px }
 
-/* Window: the system title bar, a row of tabs (one per pane) under it, then the pane. 720x480. */
-.win { position:relative; width:720px; height:480px; flex:none; display:flex; flex-direction:column; background:var(--background); border:1px solid var(--border); border-radius:10px; overflow:hidden }
-.band { flex:none; background:var(--surface); border-bottom:1px solid var(--border) }
+/* Window: 720x480, 12 corners, the material and the system's shadow; the system title bar, a toolbar of tabs (one per
+   pane) under it, then the pane. "Reduce transparency" makes it opaque. */
+.win { isolation:isolate; position:relative; width:720px; height:480px; flex:none; display:flex; flex-direction:column; border-radius:12px; overflow:hidden; background:var(--material); box-shadow:0 0 0 .5px rgba(0,0,0,.25),0 12px 40px rgba(0,0,0,.3) }
+/* The material is drawn under the window rather than on it, so that the glass of a menu or dialog inside can blur the window's content. */
+.win::before { content:""; position:absolute; inset:0; z-index:-1; border-radius:inherit; backdrop-filter:blur(30px) saturate(180%); -webkit-backdrop-filter:blur(30px) saturate(180%) }
+.solid .win { background:#f2f2f5 }
+.solid .win::before { display:none }
+:root[data-scheme=dark] .solid .win { background:#2a2a2e }
+.band { flex:none; border-bottom:.5px solid var(--sep) }
 .titlebar { height:28px; display:grid; place-items:center; font-size:11px; color:var(--muted) }
+/* macOS draws the window buttons in the transparent title bar; the mockup shows them so the space above the content reads as the title bar. */
+.titlebar { position:relative }
+.lights { position:absolute; left:9px; top:8px; display:flex; gap:8px }
+.lights i { width:12px; height:12px; border-radius:50%; box-shadow:inset 0 0 0 .5px rgba(0,0,0,.15) }
+.lights i:nth-child(1) { background:#ff5f57 } .lights i:nth-child(2) { background:#febc2e } .lights i:nth-child(3) { background:#28c840 }
+.lights.fixed i:nth-child(n+2) { background:rgba(128,128,128,.35) }
 .tabs { display:flex; justify-content:center; gap:4px; padding:4px 8px 6px }
-.tab { width:88px; height:52px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; border-radius:6px; font-size:11px; color:var(--muted) }
+.tab { width:88px; height:52px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; border-radius:8px; font-size:11px; color:var(--muted) }
+.tab:hover { background:var(--hover) }
 .tab svg { width:20px; height:20px }
-.tab.sel { background:var(--pressed); color:var(--text) }
+.tab.sel { background:var(--accent-soft); color:var(--accent); font-weight:500 }
 .body { flex:1; min-height:0; display:flex }
 .detail { flex:1; min-width:0; display:flex; flex-direction:column }
 .scroll { flex:1; min-height:0; overflow:auto; padding:16px 20px 20px; display:flex; flex-direction:column; gap:20px }
 .scroll > * { flex-shrink:0; width:100%; max-width:560px; margin-inline:auto }
 .scroll.busy { opacity:.5; pointer-events:none }
-.foot { flex:none; display:flex; align-items:center; gap:8px; min-height:44px; box-sizing:border-box; padding:0 20px; border-top:1px solid var(--border) }
-.status { flex:1; min-width:0; font-size:11px; color:var(--muted); display:flex; align-items:center; gap:6px; overflow-wrap:anywhere }
+.foot { flex:none; display:flex; align-items:center; gap:8px; min-height:44px; box-sizing:border-box; padding:0 20px; border-top:.5px solid var(--sep) }
+.status { flex:1; min-width:0; font-size:12px; color:var(--muted); display:flex; align-items:center; gap:6px; overflow-wrap:anywhere }
 .status.error { color:var(--danger) }
 .status svg { width:12px; height:12px; flex:none }
 
-/* Buttons: bordered, primary (the only filled one), and text. */
-button { padding:0 12px; height:24px; border:1px solid var(--border); border-radius:6px; background:var(--background); color:var(--text); font:inherit; display:inline-flex; align-items:center; gap:4px; white-space:nowrap }
+/* Buttons: --control fill, no border; primary (the only accent fill), destructive, and text. */
+button { padding:0 12px; height:24px; border:0; border-radius:6px; background:var(--control); color:var(--text); font:inherit; display:inline-flex; align-items:center; gap:4px; white-space:nowrap }
+button:hover:not(:disabled) { background:var(--hover) }
 /* Footer buttons: one height, and Revert and Save one width, so a label change moves nothing. */
 .foot button { height:28px }
 .foot button:not(.text) { width:100px; justify-content:center }
-button.primary { background:var(--accent); border-color:var(--accent); color:var(--accent-text) }
-button.destructive { background:var(--danger); border-color:var(--danger); color:#fff }
-button.text { border-color:transparent; background:transparent; padding:0 8px; color:var(--accent) }
+button.primary { background:var(--accent); color:var(--accent-text); font-weight:500 }
+button.primary:hover:not(:disabled) { background:var(--accent-hover) }
+button.destructive { background:var(--danger); color:#fff; font-weight:500 }
+button.text { background:transparent; padding:0 8px; color:var(--accent); font-weight:500 }
+button.text:hover:not(:disabled) { background:var(--hover) }
 button.text.danger { color:var(--danger) }
 button:disabled { opacity:.4 }
 button svg { width:12px; height:12px }
-button.ghost { width:24px; padding:0; justify-content:center; border-color:transparent; background:transparent; color:var(--muted) }
+button.ghost { width:24px; padding:0; justify-content:center; background:transparent; color:var(--muted) }
 button.ghost svg { width:14px; height:14px }
 .muted { color:var(--muted) }
-.mono { font-family:ui-monospace,monospace; font-size:12px }
-.spinner { width:12px; height:12px; flex:none; border:2px solid var(--border); border-top-color:var(--accent); border-radius:50% }
+.mono { font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace; font-size:11.5px }
+.spinner { width:12px; height:12px; flex:none; border:2px solid var(--sep); border-top-color:var(--accent); border-radius:50% }
 
 .dot { flex:none; width:10px; height:10px; border-radius:50%; background:rgb(var(--c)) }
 :root[data-scheme=dark] .dot { background:rgb(var(--cl)) }
@@ -60,7 +81,7 @@ button.ghost svg { width:14px; height:14px }
 .head { display:flex; align-items:center; gap:8px; flex-wrap:wrap }
 .head .dot { width:12px; height:12px }
 .head h2 { margin:0; font-size:15px; font-weight:600; overflow-wrap:anywhere }
-.head .mark { font-size:11px; color:var(--muted) }
+.head .mark { font-size:12px; color:var(--muted) }
 .head .sp { flex:1 }
 .choices { display:flex; align-items:center; gap:8px }
 .choice { width:14px; height:14px; border-radius:50%; background:rgb(var(--c)); display:grid; place-items:center; color:#fff }
@@ -68,28 +89,29 @@ button.ghost svg { width:14px; height:14px }
 .choice svg { width:9px; height:9px }
 .choices .mono { margin-left:4px; color:var(--muted); font-size:11px }
 
-/* Inset groups: a title, then a Surface group of rows (label left, value right) with inset hairlines, then a footnote. */
-.g > h3 { margin:0 0 4px 12px; font-size:11px; font-weight:400; color:var(--muted) }
-.rows { background:var(--surface); border-radius:10px }
+/* Groups: a heading, then a card of rows (label left, value right) with inset .5 hairlines, then a footnote. */
+.g > h3 { margin:0 0 4px 12px; font-size:11px; font-weight:600; color:var(--muted) }
+.rows { background:var(--card); border-radius:10px }
 .r { position:relative; display:flex; align-items:center; gap:12px; min-height:32px; padding:4px 12px }
-.r + .r::before { content:""; position:absolute; top:0; left:12px; right:0; height:1px; background:color-mix(in srgb, var(--border) 70%, transparent) }
+.r + .r::before { content:""; position:absolute; top:0; left:12px; right:0; height:.5px; background:var(--sep) }
 .r .k { flex:none; width:168px }
 .r .k.wide { width:auto; flex:1 }
-.r .hint-end { flex:none; font-size:11px; color:var(--muted) }
+.r .hint-end { flex:none; font-size:12px; color:var(--muted) }
 .r .v { flex:1; min-width:0; text-align:right; overflow-wrap:anywhere }
 .r .v.ph { color:var(--muted) }
 .r .v.left { text-align:left }
-.r .v.focus { outline:2px solid var(--focus); outline-offset:1px; border-radius:4px }
+.r .v.focus { padding:2px 8px; border:.5px solid var(--accent); border-radius:6px; background:var(--field); outline:3px solid var(--focus); outline-offset:0 }
 .r .v.sel { display:flex; align-items:center; justify-content:flex-end; gap:4px }
 .r .v.sel svg { width:10px; height:10px; color:var(--muted) }
 .r .tail { flex:none; display:flex; align-items:center; gap:4px }
 .r.add { padding-left:4px }
-.note { margin:4px 12px 0; font-size:11px; line-height:1.4; color:var(--muted) }
+.note { margin:4px 12px 0; font-size:12px; line-height:1.4; color:var(--muted) }
 .note.err { color:var(--danger); display:flex; gap:4px }
 .note.err svg { width:12px; height:12px; flex:none; margin-top:1px }
-.seg { display:inline-flex; padding:2px; gap:2px; border-radius:7px; background:var(--pressed) }
+.seg { display:inline-flex; padding:2px; gap:2px; border-radius:7px; background:var(--control) }
 .seg span { padding:2px 12px; border-radius:5px; font-size:12px }
-.seg span.on { background:var(--background) }
+.seg span.on { background:#fff; box-shadow:0 .5px 1.5px rgba(0,0,0,.2) }
+:root[data-scheme=dark] .seg span.on { background:rgba(255,255,255,.18) }
 .radios { display:inline-flex; gap:16px }
 .radio { display:inline-flex; align-items:center; gap:6px }
 .radio i { width:14px; height:14px; border:1.5px solid var(--muted); border-radius:50%; display:grid; place-items:center }
@@ -101,29 +123,31 @@ button.ghost svg { width:14px; height:14px }
 .check i svg { width:10px; height:10px }
 .check.off { opacity:.45 }
 .switch { flex:none; width:28px; height:16px; border-radius:8px; background:var(--pressed); position:relative }
-.switch::after { content:""; position:absolute; top:2px; left:2px; width:12px; height:12px; border-radius:50%; background:var(--background) }
+.switch::after { content:""; position:absolute; top:2px; left:2px; width:12px; height:12px; border-radius:50%; background:#fff; box-shadow:0 .5px 1.5px rgba(0,0,0,.3) }
 .switch.on { background:var(--accent) }
 .switch.on::after { left:14px }
+:root[data-scheme=dark] .switch.on::after { background:var(--accent-text) }
 .rw { flex:1; min-width:0; display:flex; flex-direction:column; gap:1px }
 .rw .to { color:var(--muted) }
-.push { font-size:11px; color:var(--muted) }
+.push { font-size:12px; color:var(--muted) }
 
 .center { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; text-align:center; padding:0 24px }
 .center strong { font-size:15px; font-weight:600 }
 .center .acts { display:flex; gap:8px; margin-top:16px }
 
-/* Delete confirmation: an alert over the dimmed window. */
-.scrim { position:absolute; left:0; right:0; top:28px; bottom:0; background:var(--scrim); display:flex; align-items:center; justify-content:center }
-.dialog { width:360px; display:flex; flex-direction:column; gap:12px; padding:20px; background:var(--background); border:1px solid var(--border); border-radius:10px }
-.dialog h2 { margin:0; font-size:15px; font-weight:600; overflow-wrap:anywhere }
+/* Confirmations: a card on the Menu material over the dimmed window. */
+.scrim { position:absolute; inset:0; background:var(--scrim); display:flex; align-items:center; justify-content:center }
+.dialog { width:340px; display:flex; flex-direction:column; gap:12px; padding:20px; background:var(--menu); backdrop-filter:var(--glass); -webkit-backdrop-filter:var(--glass); border-radius:16px; box-shadow:inset 0 0 0 .5px var(--rim),0 0 0 .5px rgba(0,0,0,.22),0 16px 48px rgba(0,0,0,.32) }
+.dialog h2 { margin:0; font-size:13px; font-weight:600; overflow-wrap:anywhere }
 .dialog p { margin:0; line-height:1.45 }
-.dialog .kv { display:grid; grid-template-columns:64px 1fr; gap:4px 8px; padding:8px 0; border-top:1px solid var(--border); border-bottom:1px solid var(--border); font-size:12px }
+.dialog .kv { display:grid; grid-template-columns:64px 1fr; gap:4px 8px; padding:8px 0; border-top:.5px solid var(--sep); border-bottom:.5px solid var(--sep); font-size:12px }
 .dialog .kv > :nth-child(odd) { color:var(--muted) }
 .dialog .kv .paths { display:flex; flex-direction:column; gap:2px }
-.dialog .small { font-size:11px; color:var(--muted) }
+.dialog .small { font-size:12px; color:var(--muted) }
 .dialog .opt { display:flex; flex-direction:column; gap:4px }
 .dialog .opt .small { padding-left:22px }
-.dialog .buttons { display:flex; justify-content:flex-end; gap:8px; margin-top:4px }
+.dialog .buttons { display:flex; gap:8px; margin-top:6px }
+.dialog .buttons button { flex:1; height:28px; justify-content:center; border-radius:8px }
 
 /* Settings additions: the pane heading, backup rows, notes in the warning color. */
 .note.warn { color:var(--warning); display:flex; gap:4px }
@@ -134,27 +158,27 @@ button.ghost svg { width:14px; height:14px }
 .r.pick .k { flex:1; width:auto }
 .r.bk { min-height:44px; padding:6px 12px 6px 4px }
 .r.bk .t { flex:1; min-width:0; display:flex; flex-direction:column; gap:1px }
-.r.bk .t .sub { font-size:11px; color:var(--muted); overflow-wrap:anywhere }
+.r.bk .t .sub { font-size:12px; color:var(--muted); overflow-wrap:anywhere }
 .r.bk .t .sub.bad { color:var(--danger) }
 .r.bk .acts { flex:none; display:flex; align-items:center; gap:2px }
-.r.bk .acts .muted { font-size:11px; margin-right:4px }
+.r.bk .acts .muted { font-size:12px; margin-right:4px }
 .r.bk .slot { width:24px; height:24px; flex:none; display:flex; align-items:center; justify-content:center }
 .r.bk .slot.ok { color:var(--accent) }
 .r.bk .slot svg { width:14px; height:14px }
 .r.bk.busy { opacity:.5 }
 .r.idr { min-height:32px; padding-left:44px; gap:8px }
 .r.idr .nm { flex:none }
-.r.idr .em { flex:1; min-width:0; font-size:11px; color:var(--muted); overflow-wrap:anywhere }
+.r.idr .em { flex:1; min-width:0; font-size:12px; color:var(--muted); overflow-wrap:anywhere }
 .r.idr .trail { flex:none; min-width:24px; display:flex; justify-content:center; color:var(--muted) }
-.r.idr .trail.txt { justify-content:flex-end; padding-right:5px; font-size:11px }
+.r.idr .trail.txt { justify-content:flex-end; padding-right:5px; font-size:12px }
 .r.idr .trail svg { width:14px; height:14px }
 .r.err { display:block; min-height:0; padding:6px 12px 8px 44px }
 .banner { display:flex; gap:8px; align-items:flex-start; padding:10px 12px; border-radius:10px; background:color-mix(in srgb, var(--danger) 12%, transparent); line-height:1.4 }
 .banner svg { width:14px; height:14px; flex:none; margin-top:2px; color:var(--danger) }
-.dialog .ids { display:flex; flex-direction:column; gap:6px; padding:8px 0; border-top:1px solid var(--border); border-bottom:1px solid var(--border) }
+.dialog .ids { display:flex; flex-direction:column; gap:6px; padding:8px 0; border-top:.5px solid var(--sep); border-bottom:.5px solid var(--sep) }
 .dialog .ids .li { display:flex; align-items:center; gap:8px }
-.dialog .ids .li .em { font-size:11px; color:var(--muted) }
-.dialog .sec { display:flex; flex-direction:column; gap:6px; padding:10px 12px; border-radius:8px; background:var(--surface) }
+.dialog .ids .li .em { font-size:12px; color:var(--muted) }
+.dialog .sec { display:flex; flex-direction:column; gap:6px; padding:10px 12px; border-radius:8px; background:var(--control) }
 .dialog .sec h3 { margin:0 0 2px; font-size:11px; font-weight:600; color:var(--muted) }
 .dialog .sec .li { display:flex; align-items:center; gap:8px; line-height:1.35 }
 .dialog .sec .li svg { width:12px; height:12px; flex:none }
@@ -162,164 +186,165 @@ button.ghost svg { width:14px; height:14px }
 .dialog .sec .kept svg { color:var(--muted) }
 
 /* Keys: the form, its action row, the public key text, the next steps, the identity picker. */
-.banner.info { background:var(--surface) }
+.banner.info { background:var(--card) }
 .banner.info svg { color:var(--muted) }
 .actrow { display:flex; justify-content:flex-end; align-items:center; gap:8px }
-.actrow .muted { font-size:11px }
+.actrow .muted { font-size:12px }
 .actrow.split { justify-content:space-between }
 .scroll.form-busy .g { opacity:.5 }
 .keyhead { display:flex; align-items:center; gap:8px }
 .keyhead svg { width:16px; height:16px; color:var(--accent); flex:none }
 .keyhead h2 { margin:0; font-size:15px; font-weight:600 }
-.keyhead .mark { font-size:11px; color:var(--muted) }
+.keyhead .mark { font-size:12px; color:var(--muted) }
 .r.keytext { display:block; padding:8px 12px; line-height:1.45; word-break:break-all; user-select:text }
-.r .v.mono, .r .k.mono { font-size:12px }
+.r .v.mono, .r .k.mono { font-size:11.5px }
 .files .r .k { width:96px }
-.r .tail .ok { display:inline-flex; align-items:center; gap:4px; font-size:11px; color:var(--muted) }
+.r .tail .ok { display:inline-flex; align-items:center; gap:4px; font-size:12px; color:var(--muted) }
 .r .tail .ok svg { width:12px; height:12px; color:var(--accent) }
 .r .tail .who { display:inline-flex; align-items:center; gap:6px }
 .r .tail .who .dot { width:8px; height:8px }
-.dialog .picks { display:flex; flex-direction:column; padding:4px 0; border-top:1px solid var(--border); border-bottom:1px solid var(--border) }
+.dialog .picks { display:flex; flex-direction:column; padding:4px 0; border-top:.5px solid var(--sep); border-bottom:.5px solid var(--sep) }
 .dialog .picks .pk { display:flex; align-items:flex-start; gap:8px; padding:5px 0 }
 .dialog .picks .pk .radio { margin-top:1px }
 .dialog .picks .pk .t { flex:1; min-width:0; display:flex; flex-direction:column; gap:1px }
 .dialog .picks .pk .t .ln { display:flex; align-items:center; gap:6px }
-.dialog .picks .pk .t .em { font-size:11px; color:var(--muted) }
-.dialog .picks .pk .t .sub { font-size:11px; color:var(--muted); overflow-wrap:anywhere }
+.dialog .picks .pk .t .em { font-size:12px; color:var(--muted) }
+.dialog .picks .pk .t .sub { font-size:12px; color:var(--muted); overflow-wrap:anywhere }
 
 /* Import: a checkbox row per candidate (name over "alias · email", a mark at the end), the result list. */
 .r.cand { min-height:44px; padding:6px 12px; gap:10px }
 .r.cand .t { flex:1; min-width:0; display:flex; flex-direction:column; gap:1px }
-.r.cand .t .sub { font-size:11px; color:var(--muted); overflow-wrap:anywhere }
-.r.cand .mk { flex:none; font-size:11px; color:var(--muted) }
+.r.cand .t .sub { font-size:12px; color:var(--muted); overflow-wrap:anywhere }
+.r.cand .mk { flex:none; font-size:12px; color:var(--muted) }
 .r.cand .mk.lim { display:inline-flex; align-items:center; gap:4px }
 .r.cand .mk svg { width:12px; height:12px }
 .r.cand.off .t > span:first-child { color:var(--muted) }
 .scroll.import-busy .g { opacity:.5 }
 .r.done { gap:8px }
-.r.done .em { flex:1; min-width:0; font-size:11px; color:var(--muted); overflow-wrap:anywhere }
+.r.done .em { flex:1; min-width:0; font-size:12px; color:var(--muted); overflow-wrap:anywhere }
 .center .spinner { margin-bottom:8px }
 </style>
 <aside class="controls">
   <div><h2>State</h2><div class="group" id="states"></div></div>
   <div><h2>Scheme</h2><div class="group" id="schemes"></div></div>
   <div><h2>Language</h2><div class="group" id="langs"></div></div>
-  <div class="hint">URL: <code>?state=…&amp;scheme=dark&amp;lang=zh</code><br><kbd>←</kbd> <kbd>→</kbd> switch state.<br>The manual language choice follows the Language switch.</div>
+  <div><h2>Material</h2><div class="group" id="materials"></div></div>
+  <div class="hint">URL: <code>?state=…&amp;scheme=dark&amp;lang=zh&amp;material=solid</code><br><kbd>←</kbd> <kbd>→</kbd> switch state.<br>The manual language choice follows the Language switch.</div>
 </aside>
 <div class="win" id="win"></div>
 <script>
 const TEXT = {
   zh: {
     window:'Idset · 设置', general:'通用', backups:'备份', config:'配置',
-    gLanguage:'界面语言', system:'跟随系统', current:'当前：简体中文', langNote:'改动立即生效，不用重启。', systemNote:'现在跟随系统：简体中文。',
-    gStartup:'启动', login:'登录时启动', loginNote:'登录后 Idset 在托盘里启动。',
-    approve:'macOS 需要你先批准。打开「系统设置」›「通用」›「登录项与扩展」，打开 Idset。',
+    gLanguage:'界面语言', system:'跟随系统', current:'当前：简体中文', langNote:'立即生效。', systemNote:'现在跟随系统：简体中文。',
+    gStartup:'启动', login:'登录时启动', loginNote:'登录后在托盘里启动 Idset。',
+    approve:'需要批准：在「系统设置 › 通用 › 登录项与扩展」里打开 Idset。',
     loginFail:'无法更改登录项：operation not permitted',
-    restore:'恢复', restoring:'正在恢复…', restored:'已恢复', del:'删除', expand:'展开', collapse:'收起', cancel:'取消',
+    restore:'恢复', restoring:'正在恢复…', restored:'已恢复', del:'删除', expand:'显示身份', collapse:'隐藏身份', cancel:'取消',
     identities:n => `${n} 个身份`, unreadable:'无法读取的备份', more:n => `+${n}`, global:'全局', scoped:'限定',
-    backupNote:'新增身份之前和恢复备份之前，Idset 会自动备份 accounts.json，只保留最新的 10 份。位置：~/.config/idset/backups/。',
-    readonlyBanner:'accounts.json 读不出来，Idset 现在是只读的。恢复一份备份即可继续。',
-    failed:'无法恢复：~/.config/idset/accounts.json 是符号链接，Idset 不会写入。',
-    emptyTitle:'还没有备份', emptyBody:'Idset 会在两种时候自动备份 accounts.json：新增身份之前，和恢复备份之前。编辑、删除、绑定不备份。只保留最新的 10 份，放在 ~/.config/idset/backups/。',
-    confirmTitle:t => `恢复 ${t} 的备份？`, confirmBody:'先备份当前的 accounts.json，再用这份备份替换它，并重新生成配置。恢复后会有这些身份：', confirmNote:'不在备份里的身份会从列表里移除。',
+    backupNote:'新增身份前和恢复前自动备份，保留最新 10 份，位于 ~/.config/idset/backups/。',
+    readonlyBanner:'accounts.json 读不出来，Idset 只读。恢复一份备份即可。',
+    failed:'无法恢复：~/.config/idset/accounts.json 是符号链接。',
+    emptyTitle:'还没有备份', emptyBody:'新增身份前和恢复前会自动备份。',
+    confirmTitle:t => `恢复 ${t} 的备份？`, confirmBody:'先备份当前的 accounts.json，再替换。恢复后的身份：', confirmNote:'不在备份里的身份会被移除。',
     gInclude:'Include', present:'有 Include 标记块', absent:'没有 Include 标记块',
-    remove:'移除 Include（保留 accounts.json）', removed:'已移除',
-    includeNote:'只删除 ~/.ssh/config 和 ~/.gitconfig 里 Idset 的标记块，其余内容不动。下次修改身份时会加回来。',
-    removedNote:'已移除。身份没有变化；下次修改身份时，标记块会加回来。',
+    remove:'移除 Include…', removed:'已移除',
+    includeNote:'只移除 Idset 的标记块；修改身份时会加回。',
+    removedNote:'已移除。修改身份时会加回。',
     removeFail:'无法写入 ~/.gitconfig：permission denied。~/.ssh/config 里的标记块已经移除。',
-    removeTitle:'移除 Include？', removeBody:'移除后 Git 和 SSH 不再按文件夹选身份。下次修改身份时，标记块会自动加回来。', removes:'会移除', keeps:'不受影响',
+    removeTitle:'移除 Include？', removeBody:'Git 和 SSH 不再按文件夹选身份。', removes:'会移除', keeps:'不受影响',
     markerIn:f => `${f} 里的 Idset 标记块`, keptList:['<span class="mono">accounts.json</span> 和你的身份', '<span class="mono">~/.config/idset/</span> 里的托管文件', '私钥和你自己写的其他配置'],
     removeBtn:'移除',
     keys:'密钥',
     kNew:'新密钥', kType:'类型', kPlatform:'平台', kFile:'文件名', kComment:'注释',
-    kFormNote:(f, g) => `保存为 ${f} 和 ${g}。已有同名文件时不会覆盖。`,
+    kFormNote:(f, g) => `保存为 ${f} 和 ${g}。`,
     generate:'生成', generating:'正在生成…',
     kInvalid:'文件名只能用字母、数字、.、_ 和 -，不能以 . 开头，不能含 ..。',
-    kExists:f => `${f} 已经存在。Idset 不会覆盖已有的密钥，换一个文件名。`,
-    kFail:'无法运行 ssh-keygen：找不到这个命令。安装 OpenSSH 客户端后再试。',
-    kDiag:(n, f) => `${n} 的私钥 ${f} 不存在。下面已经按 ${n} 填好，生成后 ${n} 直接用这把密钥。`,
+    kExists:f => `${f} 已存在，换一个文件名。`,
+    kFail:'找不到 ssh-keygen。安装 OpenSSH 客户端。',
+    kDiag:(n, f) => `${n} 的私钥 ${f} 不存在。已按 ${n} 填好。`,
     created:'已生成', pubKey:'公钥', copyPub:'复制公钥', copied:'已复制',
-    noPub:f => `${f} 不存在，没有可复制的公钥。`,
+    noPub:f => `${f} 不存在。`,
     kFiles:'文件', priv:'私钥', pub:'公钥文件', fp:'指纹', pass:'口令', none:'无',
-    passNote:f => `这把私钥没有口令。以后可以运行 ssh-keygen -p -f ${f} 加上。`,
+    passNote:f => `没有口令。可用 ssh-keygen -p -f ${f} 添加。`,
     reveal:'在 Finder 中显示',
-    kNext:'下一步', addOn:p => `在 ${p} 添加公钥`, openSettings:p => `打开 ${p} 设置`, addCustom:'在你的服务器上添加公钥', addCustomHint:'复制上面的公钥',
-    agent:'加载到 ssh-agent', load:'加载', loaded:'已加载', agentFail:'ssh-agent 没有运行，没法加载。用这把密钥时 ssh 会直接读文件，不影响使用。',
+    kNext:'下一步', addOn:p => `在 ${p} 添加公钥`, openSettings:p => `打开 ${p}`, addCustom:'在你的服务器上添加公钥', addCustomHint:'复制上面的公钥',
+    agent:'加载到 ssh-agent', load:'加载', loaded:'已加载', agentFail:'ssh-agent 没有运行。ssh 会直接读取密钥文件。',
     useFor:'用于身份', choose:'选择…', change:'更改…',
-    nextNote:p => `在 ${p} 的设置页新建 SSH 密钥，把复制的公钥粘贴进去。`, nextCustom:'自定义平台没有固定的设置页，把公钥交给服务器的管理员，或加到它的 authorized_keys。',
-    usedNote:n => `已写入 ${n} 的密钥路径和指纹，配置已重新生成。`,
+    nextNote:p => `在 ${p} 新建 SSH 密钥，粘贴公钥。`, nextCustom:'把公钥交给服务器管理员，或加到 authorized_keys。',
+    usedNote:n => `已写入 ${n}，配置已重新生成。`,
     another:'再生成一把',
-    useTitle:'这把密钥用于哪个身份？', useBody:'只写入密钥路径和指纹，身份的其他内容不变。',
-    nowKey:f => `现在：${f}`, noKey:'还没有密钥', newId:'新建身份', newIdSub:(e, p) => `邮箱 ${e} · ${p}。在身份窗口里补全后保存。`,
-    useNote:'取消不会改动任何身份，密钥文件留在 ~/.ssh/。', useBtn:'使用',
+    useTitle:'这把密钥用于哪个身份？', useBody:'只写入密钥路径和指纹。',
+    nowKey:f => `现在：${f}`, noKey:'还没有密钥', newId:'新建身份', newIdSub:(e, p) => `${e} · ${p}，在账户窗口里补全。`,
+    useNote:'取消不改动身份，密钥留在 ~/.ssh/。', useBtn:'使用',
     imports:'导入',
-    scanning:'正在读取 SSH 和 Git 配置…', scanningSub:'~/.ssh/config 和它 Include 的文件，以及 git config --global 和它 includeIf 的文件。',
+    scanning:'正在读取 SSH 和 Git 配置…', scanningSub:'~/.ssh/config 和 git config --global，含它们引用的文件。',
     found:n => `找到 ${n} 个身份`, exists:'已存在', asLimited:'导入为限定', noAlias:'没有别名',
     importN:n => `导入 ${n} 个身份`, importing:'正在导入…', rescan:'重新扫描',
-    readNote:'只读取，不改动这些文件。已存在的身份默认不勾。',
-    limitedNote:'已经有全局身份，标「导入为限定」的身份导入后没有生效目录，之后在面板里拖入文件夹绑定。',
-    noneTitle:'在现有的 SSH 和 Git 配置里没找到身份', noneBody:'读取了 ~/.ssh/config（含 Include）和 git config --global（含 includeIf）。需要 Host 写了 IdentityFile。',
-    doneTitle:n => `已导入 ${n} 个身份`, doneNote:'每个身份新增前都备份了 accounts.json，配置已重新生成。',
-    openAccounts:'打开身份窗口',
-    scanFail:'无法读取 SSH 和 Git 配置：找不到 git 命令。安装 Git 后重新扫描。',
-    importFail:(n, d, e) => `导入 ${n} 时失败：${e}。前面的 ${d} 个已经导入，配置已重新生成。`,
-    importReadOnly:'accounts.json 读不出来，现在不能导入。先在「备份」里恢复一份备份。',
+    readNote:'只读取，不修改。已有的身份默认不勾。',
+    limitedNote:'已有全局身份，「导入为限定」的身份绑定文件夹后才生效。',
+    noneTitle:'在现有的 SSH 和 Git 配置里没找到身份', noneBody:'已读取 ~/.ssh/config 和 git config --global。只有写了 IdentityFile 的 Host 才算。',
+    doneTitle:n => `已导入 ${n} 个身份`, doneNote:'配置已重新生成。',
+    openAccounts:'打开账户窗口',
+    scanFail:'找不到 git。安装 Git 后重新扫描。',
+    importFail:(n, d, e) => `导入 ${n} 失败：${e}。前 ${d} 个已导入。`,
+    importReadOnly:'accounts.json 读不出来。先恢复一份备份。',
   },
   en: {
     window:'Idset · Settings', general:'General', backups:'Backups', config:'Configuration',
-    gLanguage:'Language', system:'Follow System', current:'Current: English', langNote:'Changes apply immediately; no restart.', systemNote:'Following the system now: English.',
-    gStartup:'Startup', login:'Open at login', loginNote:'Idset starts in the tray when you sign in.',
-    approve:'macOS needs your approval first. Open System Settings › General › Login Items & Extensions and turn on Idset.',
+    gLanguage:'Language', system:'Follow System', current:'Current: English', langNote:'Applies immediately.', systemNote:'Following the system now: English.',
+    gStartup:'Startup', login:'Open at login', loginNote:'Starts Idset in the tray at sign-in.',
+    approve:'Needs approval: turn on Idset in System Settings › General › Login Items & Extensions.',
     loginFail:'Could not change the login item: operation not permitted',
-    restore:'Restore', restoring:'Restoring…', restored:'Restored', del:'Delete', expand:'Show identities', collapse:'Hide identities', cancel:'Cancel',
+    restore:'Restore', restoring:'Restoring…', restored:'Restored', del:'Delete', expand:'Show Identities', collapse:'Hide Identities', cancel:'Cancel',
     identities:n => `${n} ${n === 1 ? 'identity' : 'identities'}`, unreadable:'Unreadable backup', more:n => `+${n}`, global:'Global', scoped:'Scoped',
-    backupNote:'Idset backs up accounts.json before an identity is added and before a backup is restored, and keeps the newest 10. Location: ~/.config/idset/backups/.',
-    readonlyBanner:'accounts.json cannot be read, so Idset is read-only. Restore a backup to carry on.',
-    failed:'Could not restore: ~/.config/idset/accounts.json is a symbolic link, and Idset will not write to it.',
-    emptyTitle:'No backups yet', emptyBody:'Idset backs up accounts.json automatically in two cases: before an identity is added, and before a backup is restored. Editing, deleting and binding do not back up. The newest 10 are kept in ~/.config/idset/backups/.',
-    confirmTitle:t => `Restore backup ${t}?`, confirmBody:'The current accounts.json is backed up first, then replaced by this backup, and the configuration is regenerated. After restoring you will have these identities:', confirmNote:'Identities that are not in the backup are removed from the list.',
+    backupNote:'Backed up before adding an identity and before restoring. The newest 10 are kept in ~/.config/idset/backups/.',
+    readonlyBanner:'accounts.json cannot be read; Idset is read-only. Restore a backup.',
+    failed:'Could not restore: ~/.config/idset/accounts.json is a symbolic link.',
+    emptyTitle:'No backups yet', emptyBody:'Backups are made before adding an identity and before restoring.',
+    confirmTitle:t => `Restore backup ${t}?`, confirmBody:'The current accounts.json is backed up, then replaced. Identities after restoring:', confirmNote:'Identities not in this backup are removed.',
     gInclude:'Include', present:'Include block present', absent:'No Include block',
-    remove:'Remove Include (keep accounts.json)', removed:'Removed',
-    includeNote:'Only the Idset marker block in ~/.ssh/config and ~/.gitconfig is deleted; everything else stays. It comes back the next time you change an identity.',
-    removedNote:'Removed. Your identities are unchanged; the marker blocks return the next time you change an identity.',
+    remove:'Remove Include…', removed:'Removed',
+    includeNote:'Removes only Idset’s marker blocks. They return when an identity changes.',
+    removedNote:'Removed. They return when an identity changes.',
     removeFail:'Could not write ~/.gitconfig: permission denied. The block in ~/.ssh/config was already removed.',
-    removeTitle:'Remove Include?', removeBody:'Git and SSH stop picking an identity by folder. The marker blocks come back the next time you change an identity.', removes:'Will be removed', keeps:'Left as is',
+    removeTitle:'Remove Include?', removeBody:'Git and SSH stop choosing identities by folder.', removes:'Will be removed', keeps:'Left as is',
     markerIn:f => `The Idset marker block in ${f}`, keptList:['<span class="mono">accounts.json</span> and your identities', 'Managed files in <span class="mono">~/.config/idset/</span>', 'Private keys and the rest of your own config'],
     removeBtn:'Remove',
     keys:'Keys',
     kNew:'New key', kType:'Type', kPlatform:'Platform', kFile:'File name', kComment:'Comment',
-    kFormNote:(f, g) => `Saved as ${f} and ${g}. An existing file is never overwritten.`,
+    kFormNote:(f, g) => `Saved as ${f} and ${g}.`,
     generate:'Generate', generating:'Generating…',
     kInvalid:'Use letters, digits, ., _ and - only; do not start with . or include ..',
-    kExists:f => `${f} already exists. Idset never overwrites a key; choose another file name.`,
-    kFail:'Could not run ssh-keygen: command not found. Install the OpenSSH client and try again.',
-    kDiag:(n, f) => `The private key of ${n}, ${f}, does not exist. The form is filled in for ${n}, which uses the key as soon as it is generated.`,
+    kExists:f => `${f} already exists. Choose another file name.`,
+    kFail:'ssh-keygen not found. Install the OpenSSH client.',
+    kDiag:(n, f) => `${n}’s private key ${f} does not exist. The form is filled in for ${n}.`,
     created:'Key created', pubKey:'Public key', copyPub:'Copy Public Key', copied:'Copied',
-    noPub:f => `${f} does not exist, so there is no public key to copy.`,
+    noPub:f => `${f} does not exist.`,
     kFiles:'Files', priv:'Private key', pub:'Public key', fp:'Fingerprint', pass:'Passphrase', none:'None',
-    passNote:f => `This private key has no passphrase. You can add one later with ssh-keygen -p -f ${f}.`,
+    passNote:f => `No passphrase. Add one with ssh-keygen -p -f ${f}.`,
     reveal:'Show in Finder',
-    kNext:'Next steps', addOn:p => `Add the public key on ${p}`, openSettings:p => `Open ${p} Settings`, addCustom:'Add the public key on your server', addCustomHint:'Copy the public key above',
-    agent:'Load into ssh-agent', load:'Load', loaded:'Loaded', agentFail:'ssh-agent is not running, so the key was not loaded. ssh reads the key file directly, so the key still works.',
+    kNext:'Next steps', addOn:p => `Add the public key on ${p}`, openSettings:p => `Open ${p}`, addCustom:'Add the public key on your server', addCustomHint:'Copy the public key above',
+    agent:'Load into ssh-agent', load:'Load', loaded:'Loaded', agentFail:'ssh-agent is not running. ssh reads the key file directly.',
     useFor:'Use for identity', choose:'Choose…', change:'Change…',
-    nextNote:p => `On the ${p} settings page, add a new SSH key and paste the copied public key.`, nextCustom:'A custom platform has no fixed settings page. Give the public key to the server administrator, or add it to its authorized_keys.',
-    usedNote:n => `The key path and fingerprint of ${n} were written and the configuration regenerated.`,
+    nextNote:p => `On ${p}, add a new SSH key and paste the public key.`, nextCustom:'Give the public key to the server administrator, or add it to authorized_keys.',
+    usedNote:n => `Written to ${n}; configuration regenerated.`,
     another:'Generate Another',
-    useTitle:'Use this key for which identity?', useBody:'Only the key path and fingerprint are written; nothing else about the identity changes.',
-    nowKey:f => `Now: ${f}`, noKey:'No key yet', newId:'New identity', newIdSub:(e, p) => `Email ${e} · ${p}. Finish and save it in the accounts window.`,
-    useNote:'Cancel leaves every identity as it is; the key files stay in ~/.ssh/.', useBtn:'Use',
+    useTitle:'Use this key for which identity?', useBody:'Writes only the key path and fingerprint.',
+    nowKey:f => `Now: ${f}`, noKey:'No key yet', newId:'New identity', newIdSub:(e, p) => `${e} · ${p}. Finish it in Accounts.`,
+    useNote:'Cancel changes no identity; the key stays in ~/.ssh/.', useBtn:'Use',
     imports:'Import',
-    scanning:'Reading your SSH and Git configuration…', scanningSub:'~/.ssh/config and the files it includes, and git config --global with the files of its includeIf.',
+    scanning:'Reading your SSH and Git configuration…', scanningSub:'~/.ssh/config and git config --global, with the files they include.',
     found:n => `${n} ${n === 1 ? 'identity' : 'identities'} found`, exists:'Already added', asLimited:'Imported as scoped', noAlias:'No alias',
     importN:n => `Import ${n} ${n === 1 ? 'Identity' : 'Identities'}`, importing:'Importing…', rescan:'Scan Again',
-    readNote:'These files are only read, never changed. Identities Idset already has are not checked.',
-    limitedNote:'There is already a global identity, so those marked “Imported as scoped” apply to no folder yet; bind folders to them in the panel later.',
-    noneTitle:'No identities found in your SSH and Git configuration', noneBody:'Idset read ~/.ssh/config with its Include files and git config --global with its includeIf files. A Host needs an IdentityFile.',
-    doneTitle:n => `${n} ${n === 1 ? 'identity' : 'identities'} imported`, doneNote:'accounts.json was backed up before each one was added, and the configuration was regenerated.',
-    openAccounts:'Open Identities',
-    scanFail:'Could not read your SSH and Git configuration: git command not found. Install Git and scan again.',
-    importFail:(n, d, e) => `Could not import ${n}: ${e}. The ${d} before it were imported and the configuration regenerated.`,
-    importReadOnly:'accounts.json cannot be read, so nothing can be imported. Restore a backup in Backups first.',
+    readNote:'Read only; nothing is changed. Existing identities are unchecked.',
+    limitedNote:'A global identity exists; those “Imported as scoped” apply once a folder is bound.',
+    noneTitle:'No identities found in your SSH and Git configuration', noneBody:'Read ~/.ssh/config and git config --global. Only a Host with an IdentityFile counts.',
+    doneTitle:n => `${n} ${n === 1 ? 'identity' : 'identities'} imported`, doneNote:'Configuration regenerated.',
+    openAccounts:'Open Accounts',
+    scanFail:'git not found. Install Git and scan again.',
+    importFail:(n, d, e) => `Could not import ${n}: ${e}. The ${d} before it were imported.`,
+    importReadOnly:'accounts.json cannot be read. Restore a backup first.',
   },
 };
 const STATES = {
@@ -364,6 +389,7 @@ const icon = {
   copy:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"><rect x="5.5" y="5.5" width="8" height="8" rx="1.5"/><path d="M10.5 5.5V3.5a1 1 0 0 0-1-1h-6a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2"/></svg>',
   ext:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h4v4M13 3L7.5 8.5M11.5 9.5V13h-8.5V4.5H6.5"/></svg>',
   import:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v8M5 7l3 3 3-3"/><path d="M2.5 10.5v2a1 1 0 0 0 1 1h9a1 1 0 0 0 1-1v-2"/></svg>',
+  refresh:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13.25 8a5.25 5.25 0 1 1-1.54-3.71"/><path d="M12.9 1.9v2.8H10.1"/></svg>',
   doc:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 2h5l3 3v9H4z"/><path d="M9 2v3h3M6 8.5h4M6 11h4"/></svg>',
 };
 const q = new URLSearchParams(location.search);
@@ -371,6 +397,7 @@ const view = {
   state: STATES[q.get('state')] ? q.get('state') : 'general',
   scheme: q.get('scheme') === 'dark' ? 'dark' : 'light',
   lang: q.get('lang') === 'zh' ? 'zh' : 'en',
+  material: q.get('material') === 'solid' ? 'solid' : 'glass',
 };
 
 function render() {
@@ -451,7 +478,7 @@ function render() {
   const done = (k, label) => `<span class="ok">${icon.check}${label}</span>`;
   let pubNote = '';
   if (s === 'keysnopub') pubNote = note('err', 'warn', T.noPub(`<span class="mono">${path}.pub</span>`));
-  const copyBtn = s === 'keyscopied' ? `<button class="text" disabled>${icon.check}${T.copied}</button>` : `<button class="text">${icon.copy}${T.copyPub}</button>`;
+  const copyBtn = s === 'keyscopied' ? `<span class="muted">${T.copied}</span>${ghost('check', T.copyPub)}` : ghost('copy', T.copyPub);
   const used = s === 'keysused';
   const addRow = custom
     ? `<div class="r"><div class="k wide">${T.addCustom}</div><span class="hint-end">${T.addCustomHint}</span></div>`
@@ -463,7 +490,7 @@ function render() {
   if (used) nextNote = note('ok', 'check', T.usedNote(IDS.side.label));
   const result =
     `<div class="keyhead">${icon.check}<h2>${T.created}</h2><span class="mark">Ed25519 · ${platform}</span></div>` +
-    group(T.pubKey, `<div class="r keytext mono">${PUBKEY}</div><div class="r add">${copyBtn}</div>`, pubNote) +
+    group(T.pubKey, `<div class="r keytext mono">${PUBKEY}</div><div class="r add" style="justify-content:flex-end">${copyBtn}</div>`, pubNote) +
     `<div class="files">` + group(T.kFiles,
       `<div class="r"><div class="k">${T.priv}</div><div class="v mono">${path}</div><div class="tail">${ghost('folder', T.reveal)}</div></div>` +
       `<div class="r"><div class="k">${T.pub}</div><div class="v mono">${path}.pub</div><div class="tail"><span style="width:24px"></span></div></div>` +
@@ -495,7 +522,7 @@ function render() {
   let importNote = note('', '', T.readNote);
   if (s === 'importlimited') importNote += note('', '', T.limitedNote);
   if (s === 'importfail') importNote = note('err', 'warn', T.importFail('client', 2, 'accounts.json is a symbolic link'));
-  const importAct = `<div class="actrow split"><button class="text"${importing ? ' disabled' : ''}>${T.rescan}</button><span style="flex:1"></span>${importing ? `<span class="muted">${T.importing}</span>${spinner}` : ''}<button class="primary"${importing || s === 'importreadonly' ? ' disabled' : ''}>${T.importN(checked)}</button></div>`;
+  const importAct = `<div class="actrow split">${ghost('refresh', T.rescan, importing)}<span style="flex:1"></span>${importing ? `<span class="muted">${T.importing}</span>${spinner}` : ''}<button class="primary"${importing || s === 'importreadonly' ? ' disabled' : ''}>${T.importN(checked)}</button></div>`;
   const centered = (head, body, acts = '') => `<div class="center">${head}<span class="muted" style="max-width:420px;line-height:1.45">${body}</span>${acts ? `<div class="acts">${acts}</div>` : ''}</div>`;
   const IMPORTED = [IDS.work, { ...IDS.personal, label:'github.com' }, { ...IDS.client, label:'client' }];
   let importPane = group(T.found(CANDS.length), CANDS.map(cand).join(''), importNote) + importAct;
@@ -506,7 +533,7 @@ function render() {
   if (s === 'imported') importPane =
     `<div class="keyhead">${icon.check}<h2>${T.doneTitle(IMPORTED.length)}</h2></div>` +
     group('', IMPORTED.map(d => `<div class="r done">${dot(d)}<span>${d.label}</span><span class="em">${d.email}</span></div>`).join(''), note('ok', 'check', T.doneNote)) +
-    `<div class="actrow split"><button class="text">${T.rescan}</button><button>${T.openAccounts}</button></div>`;
+    `<div class="actrow split">${ghost('refresh', T.rescan)}<button>${T.openAccounts}</button></div>`;
 
   // Dialogs: the restore and remove confirmations and the identity picker, over the dimmed window.
   let dialog = '';
@@ -537,7 +564,8 @@ function render() {
     .map(([id, ic, label]) => `<div class="tab${pane === id ? ' sel' : ''}" role="tab" aria-selected="${pane === id}">${icon[ic]}<span>${label}</span></div>`).join('');
   const body = { general, keys:keysPane, import:importPane, backups:backupsPane, config:configPane }[pane];
   document.documentElement.dataset.scheme = view.scheme;
-  document.getElementById('win').innerHTML = `<div class="band"><div class="titlebar">${T.window}</div><div class="tabs" role="tablist">${nav}</div></div>
+  document.body.classList.toggle('solid', view.material === 'solid');
+  document.getElementById('win').innerHTML = `<div class="band"><div class="titlebar"><span class="lights"><i></i><i></i><i></i></span>${T.window}</div><div class="tabs" role="tablist">${nav}</div></div>
     <div class="body"><div class="detail"><div class="scroll pane${running ? ' form-busy' : ''}${importing ? ' import-busy' : ''}">${body}</div></div></div>${dialog}`;
 
   const buttons = (id, options, key) => {
@@ -548,7 +576,8 @@ function render() {
   buttons('states', STATES, 'state');
   buttons('schemes', { light:'浅色', dark:'深色' }, 'scheme');
   buttons('langs', { zh:'中文', en:'English' }, 'lang');
-  history.replaceState(null, '', `?state=${view.state}&scheme=${view.scheme}&lang=${view.lang}`);
+  buttons('materials', { glass:'Glass', solid:'Solid' }, 'material');
+  history.replaceState(null, '', `?state=${view.state}&scheme=${view.scheme}&lang=${view.lang}${view.material === 'solid' ? '&material=solid' : ''}`);
 }
 
 onkeydown = e => {

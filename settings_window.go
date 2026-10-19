@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"log/slog"
+	"runtime"
 	"slices"
 	"time"
 
@@ -57,7 +58,7 @@ func (a *app) openSettings(req settings.Request) {
 	w.screen.Open(req)
 	w.win = mygo.NewWindow(mygo.WindowOptions{
 		Title: w.text.Window, Width: settingsWidth, Height: settingsHeight, MinWidth: settingsMinWidth, MinHeight: settingsMinHeight,
-		StateKey: "settings", Content: ui.View(w.screen.View),
+		StateKey: "settings", TitleBarStyle: mygo.TitleBarHidden, Vibrancy: formMaterial(), Content: ui.View(w.screen.View),
 	})
 	a.settings = w
 	w.win.OnClosed(func() {
@@ -295,4 +296,13 @@ func useKey(list []account.Account, update func(account.Account) error, id, keyP
 	x := list[i]
 	x.KeyPath, x.KeyFingerprint = keyPath, fingerprint
 	return update(x)
+}
+
+// formMaterial is the material of the settings and about windows: Popover on macOS, where UnderWindow and Window are
+// nearly opaque and the windows looked white, and Mica on Windows 11, as a window that stays open should have.
+func formMaterial() mygo.Vibrancy {
+	if runtime.GOOS == "windows" {
+		return mygo.VibrancyMica
+	}
+	return mygo.VibrancyPopover
 }

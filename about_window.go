@@ -11,7 +11,7 @@ import (
 )
 
 // The about window has a fixed size.
-const aboutWidth, aboutHeight = 320, 292
+const aboutWidth, aboutHeight = 320, 320
 
 //go:embed resources/icon.png
 var iconPNG []byte
@@ -45,7 +45,7 @@ func (a *app) openAbout() {
 	w.win = mygo.NewWindow(mygo.WindowOptions{
 		Title: text.Window, Width: aboutWidth, Height: aboutHeight,
 		DisableResize: true, DisableMinimize: true, DisableMaximize: true, DisableFullScreen: true,
-		Content: ui.View(w.screen.View),
+		TitleBarStyle: mygo.TitleBarHidden, Vibrancy: formMaterial(), Content: ui.View(w.screen.View),
 	})
 	a.about = w
 	w.win.OnClosed(func() {

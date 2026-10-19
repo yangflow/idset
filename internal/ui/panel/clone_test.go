@@ -36,13 +36,13 @@ func TestHTTPSRowCopiesTheRemoteCommand(t *testing.T) {
 	s, tt, rec := card(t, httpsResult(httpsURL), cloneList()...)
 	advance := clock(s)
 	want(t, tt, "Remote is HTTPS")
-	if tip := hover(t, tt, "Remote is HTTPS"); !tip("Pushes over HTTPS do not use this identity’s SSH alias or key.") {
+	if tip := hover(t, tt, "Remote is HTTPS"); !tip("HTTPS pushes do not use this identity’s alias or key.") {
 		t.Errorf("the row explains itself: %q", tt.Texts())
 	}
 	if edge(t, tt, "Remote is HTTPS") != edge(t, tt, "Folders") {
 		t.Error("an HTTPS remote is not a finding: the outline stays as it was")
 	}
-	click(t, tt, "Copy command to use SSH")
+	click(t, tt, "Copy Switch-to-SSH Command")
 	if !slices.Equal(rec.copied, []string{setURL}) {
 		t.Fatalf("copied %q", rec.copied)
 	}
@@ -72,7 +72,7 @@ func TestHTTPSRowIsHiddenWithoutAnHTTPSRemoteOrAnAlias(t *testing.T) {
 		r := httpsResult(c.origin)
 		r.ID, r.Covering = c.id, []match.Cover{{ID: c.id}}
 		_, tt, _ := card(t, r, c.list...)
-		wantNot(t, tt, "Remote is HTTPS", "Copy command to use SSH")
+		wantNot(t, tt, "Remote is HTTPS", "Copy Switch-to-SSH Command")
 		if c.id == "client" {
 			wantNot(t, tt, "Repository to clone")
 		}
@@ -94,7 +94,7 @@ func TestCloneHelperStartsWithTheOrigin(t *testing.T) {
 	s, tt, rec := card(t, httpsResult(httpsURL), cloneList()...)
 	clock(s)
 	want(t, tt, "acme/api", "git clone git@github-work:acme/api.git")
-	click(t, tt, "Copy the clone command")
+	click(t, tt, "Copy Clone Command")
 	if !slices.Equal(rec.copied, []string{"git clone git@github-work:acme/api.git"}) {
 		t.Fatalf("copied %q", rec.copied)
 	}
@@ -112,7 +112,7 @@ func TestCloneHelperStartsWithTheRememberedPrefix(t *testing.T) {
 	s.SetResult("/home/ada/work/api", httpsResult("git@github.com:solo"), nil)
 	tt.Frame()
 	// A prefix alone is not a repository: nothing to copy, and a quiet hint instead of an error.
-	want(t, tt, "Enter owner/repo or a repository URL")
+	want(t, tt, "Type owner/repo or a URL")
 	wantNot(t, tt, "git clone git@github-work:")
 	click(t, tt, "Repository to clone")
 	tt.Type("web")
@@ -148,13 +148,13 @@ func TestCloneHelperDoesNotCopyWhatItCannotRead(t *testing.T) {
 			tt.Type(in)
 			tt.Key(0, ui.KeyEnter)
 		}
-		if err := tt.Click("Copy the clone command"); err == nil && len(rec.copied) != 0 {
+		if err := tt.Click("Copy Clone Command"); err == nil && len(rec.copied) != 0 {
 			t.Errorf("%q: copied %q", in, rec.copied)
 		}
 		if len(rec.copied) != 0 || len(rec.cloned) != 0 {
 			t.Errorf("%q: copied %q, cloned %v", in, rec.copied, rec.cloned)
 		}
-		want(t, tt, "Enter owner/repo or a repository URL")
+		want(t, tt, "Type owner/repo or a URL")
 		wantNot(t, tt, "Copied")
 	}
 }
@@ -165,7 +165,7 @@ func TestIdentityRowsOpenOneHelperAtATime(t *testing.T) {
 	tt.Frame()
 	wantNot(t, tt, "Repository to clone")
 	// Only the identities with an alias can clone.
-	if n := count(tt, "Clone with this identity"); n != 2 {
+	if n := count(tt, "Clone with This Identity"); n != 2 {
 		t.Fatalf("two identities have an alias: %d in %q", n, tt.Texts())
 	}
 	toggle(t, tt, "work")
@@ -230,19 +230,19 @@ func TestCloneTextsInChinese(t *testing.T) {
 	s.Drop([]string{"/home/ada/work/api"})
 	s.SetResult("/home/ada/work/api", httpsResult(httpsURL), nil)
 	tt.Frame()
-	want(t, tt, "远程地址是 HTTPS", "复制改地址命令", "要克隆的仓库", "复制克隆命令", "用这个身份克隆")
+	want(t, tt, "远程地址是 HTTPS", "复制改用 SSH 的命令", "要克隆的仓库", "复制克隆命令", "用这个身份克隆")
 }
 
 func TestCopiedIsSaidOnceAndTheButtonKeepsItsPlainLook(t *testing.T) {
 	s, tt, _ := card(t, httpsResult(httpsURL), cloneList()...)
 	clock(s)
-	click(t, tt, "Copy command to use SSH")
+	click(t, tt, "Copy Switch-to-SSH Command")
 	tt.Frame()
 	if n := count(tt, "Copied"); n != 1 {
 		t.Fatalf("one acknowledgment: %d in %q", n, tt.Texts())
 	}
 	// The pointer is still on the button: it shows the check mark without a hover fill.
-	r, _ := tt.Find("Copy command to use SSH")
+	r, _ := tt.Find("Copy Switch-to-SSH Command")
 	img := tt.Image()
 	x, y := int(r.X+r.W/2), int(r.Y+2)
 	if got, plain := img.RGBAAt(x, y), img.RGBAAt(x, int(r.Y)-3); got != plain {

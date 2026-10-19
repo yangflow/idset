@@ -120,7 +120,7 @@ func TestNoMatchOffersEveryIdentityAndANewOne(t *testing.T) {
 	s, tt, r := card(t, noMatch(), work(), client())
 	want(t, tt, "No identity matches this folder", "Bind to", "~/work/", "~/work/client/", "New Identity", "~/scratch/notes")
 	wantNot(t, tt, "adds another", "More", "Unbind")
-	if _, ok := tt.Find("New Identity and Bind Here"); !ok {
+	if _, ok := tt.Find("New Identity for This Folder"); !ok {
 		t.Error("the long label names the short button")
 	}
 	// Rows are equally high, whatever they say.
@@ -143,7 +143,7 @@ func TestNoMatchOffersEveryIdentityAndANewOne(t *testing.T) {
 
 func TestNewIdentityForTheFolder(t *testing.T) {
 	_, tt, r := card(t, noMatch(), work())
-	click(t, tt, "New Identity and Bind Here")
+	click(t, tt, "New Identity for This Folder")
 	if len(r.boundNew) != 1 || r.boundNew[0] != notes || r.newDraft != 0 {
 		t.Fatalf("new identity for the folder: %v", r.boundNew)
 	}
@@ -157,7 +157,7 @@ func TestNoMatchWithoutIdentitiesStillOffersANewOne(t *testing.T) {
 	s.Drop([]string{notes})
 	s.SetResult(notes, noMatch(), nil)
 	tt.Frame()
-	want(t, tt, "New Identity and Bind Here")
+	want(t, tt, "New Identity for This Folder")
 	wantNot(t, tt, "Bind to")
 }
 
@@ -175,7 +175,7 @@ func TestMatchedByAParentOffersRebindButNotUnbind(t *testing.T) {
 	wantNot(t, tt, "Rebind to work", "Unbind")
 	// With nobody to rebind to and nothing to unbind, the menu has no entries, and there is no "⋯".
 	_, tt, _ = card(t, matched(api, "work", false), work())
-	want(t, tt, s.openLabel(), "Copy the full path", "Clear result")
+	want(t, tt, s.openLabel(), "Copy Path", "Clear")
 	wantNot(t, tt, s.text.More)
 }
 
@@ -238,7 +238,7 @@ func TestRebindMenuListsTheOtherIdentities(t *testing.T) {
 	if entry.H <= 0 || s2.menuOpen != true {
 		t.Fatalf("entry %v", entry)
 	}
-	clear, _ := tt2.Find("Clear result")
+	clear, _ := tt2.Find("Clear")
 	if right := entry.X + entry.W; right > clear.X+clear.W+1 {
 		t.Errorf("the menu stays inside the card: %v %v", entry, clear)
 	}
@@ -320,8 +320,8 @@ func TestCoveredBindChangesNothingAndSaysWhy(t *testing.T) {
 func TestOverlapListsGitsOrderAndOffersToSettleIt(t *testing.T) {
 	res := matched("/home/ada/work/client/app", "client", false, match.Cover{ID: "work", Path: "~/work/"}, match.Cover{ID: "client", Path: "~/work/client/"})
 	s, tt, r := card(t, res, work(), client())
-	want(t, tt, "2 identities cover this folder", "Git reads them in this order; the last one wins.", "Used", "Overridden",
-		"Use only client here", "Remove ~/work/ from work", s.openLabel())
+	want(t, tt, "2 identities cover this folder", "Git reads them in order; the last one wins.", "Used", "Overridden",
+		"Use Only client Here", "Remove ~/work/ from work", s.openLabel())
 	first, _ := tt.Find("~/work/")
 	second, _ := tt.Find("~/work/client/")
 	if first.Y >= second.Y {
@@ -329,20 +329,20 @@ func TestOverlapListsGitsOrderAndOffersToSettleIt(t *testing.T) {
 	}
 	wantNot(t, tt, "Rebind to")
 	// The pin, the minus and the info mark are icon buttons the size of the clear button.
-	wc, hc := size(t, tt, "Clear result")
-	for _, name := range []string{"Use only client here", "Remove ~/work/ from work", "Git reads them in this order; the last one wins."} {
+	wc, hc := size(t, tt, "Clear")
+	for _, name := range []string{"Use Only client Here", "Remove ~/work/ from work", "Git reads them in order; the last one wins."} {
 		if w, h := size(t, tt, name); !same(w, wc) || !same(h, hc) {
 			t.Errorf("%s is %v x %v, the clear button %v x %v", name, w, h, wc, hc)
 		}
 	}
 	// Each sits at the end of its row: the minus by the overridden identity, the pin by the one Git uses.
-	pin, _ := tt.Find("Use only client here")
+	pin, _ := tt.Find("Use Only client Here")
 	minus, _ := tt.Find("Remove ~/work/ from work")
 	if !same(pin.X, minus.X) || minus.Y >= pin.Y || pin.Y <= second.Y-pin.H || minus.Y <= first.Y-minus.H {
 		t.Errorf("pin %v minus %v rows %v %v", pin, minus, first, second)
 	}
-	within(t, tt, "2 identities cover this folder", "Use only client here", "Remove ~/work/ from work")
-	click(t, tt, "Use only client here")
+	within(t, tt, "2 identities cover this folder", "Use Only client Here", "Remove ~/work/ from work")
+	click(t, tt, "Use Only client Here")
 	if len(r.ran) != 1 || r.ran[0].Kind != bind.KindUseOnly || r.ran[0].To != "client" {
 		t.Fatalf("ran %+v", r.ran)
 	}
@@ -355,7 +355,7 @@ func TestOverlapListsGitsOrderAndOffersToSettleIt(t *testing.T) {
 	// The winner with its own path is an explicit choice: no overlap card, and after "Use only" it goes away.
 	res.Exact = true
 	_, tt, _ = card(t, res, work(), client())
-	wantNot(t, tt, "cover this folder", "Use only client here", "Remove ~/work/ from work")
+	wantNot(t, tt, "cover this folder", "Use Only client Here", "Remove ~/work/ from work")
 	want(t, tt, s.openLabel())
 	s.OpDone(bind.Outcome{Op: r.ran[1], Result: res})
 	tt.Frame()
@@ -552,13 +552,13 @@ func TestBindingTextInChinese(t *testing.T) {
 	s.Drop([]string{notes})
 	s.SetResult(notes, noMatch(), nil)
 	tt.Frame()
-	want(t, tt, "没有身份匹配这个目录", "绑定到", "~/work/", "新建身份", "新建身份并绑到这里")
+	want(t, tt, "没有身份匹配这个目录", "绑定到", "~/work/", "新建身份", "新建身份并绑定这个文件夹")
 	wantNot(t, tt, "会再加一条")
 	res := matched("/home/ada/work/client/app", "client", false, match.Cover{ID: "work", Path: "~/work/"}, match.Cover{ID: "client", Path: "~/work/client/"})
 	s.Drop([]string{res.Root})
 	s.SetResult(res.Root, res, nil)
 	tt.Frame()
-	want(t, tt, "2 个身份覆盖这里", "这里只用 client", "从 work 去掉 ~/work/", "生效", "被覆盖", "更多", "复制完整路径", "清除结果")
+	want(t, tt, "2 个身份覆盖这里", "这里只用 client", "从 work 去掉 ~/work/", "生效", "被覆盖", "更多", "复制路径", "清除")
 	s.OpDone(bind.Outcome{Op: bind.Op{Dir: res.Root}, CoveredID: "work", CoveredBy: "~/work/", Result: res})
 	tt.Frame()
 	want(t, tt, "已由 ~/work/ 覆盖")
@@ -611,15 +611,13 @@ func band(tt *ui.Tester, x, y int) int {
 	return bottom - top
 }
 
-func TestCardHeaderIsAsHighAsTheFooter(t *testing.T) {
+func TestCardHeaderIsThe36DIPContextLine(t *testing.T) {
 	_, tt, _ := card(t, matched(api, "work", true), work(), client())
-	clear, _ := tt.Find("Clear result")
-	quit, _ := tt.Find("Quit")
-	// Between the buttons, from the card's top edge to its hairline, and from the footer's hairline to the bottom.
+	clear, _ := tt.Find("Clear")
+	// Between the buttons, from the card's top edge to its hairline.
 	header := band(tt, int(clear.X)-2, int(clear.Y+clear.H/2))
-	footer := band(tt, int(quit.X)-4, int(quit.Y+quit.H/2))
-	if d := header - footer; d > 1 || d < -1 {
-		t.Errorf("the card header is %d high, the footer %d", header, footer)
+	if d := header - 36; d > 1 || d < -1 {
+		t.Errorf("the card header is %d high, want 36", header)
 	}
 }
 
@@ -641,7 +639,7 @@ func TestDetailLabelsStandByTheFirstLineOfTheirValue(t *testing.T) {
 func TestOverlapShowsTheFolderOnce(t *testing.T) {
 	res := matched("/home/ada/work/client/app", "client", false, match.Cover{ID: "work", Path: "~/work/"}, match.Cover{ID: "client", Path: "~/work/client/"})
 	s, tt, _ := card(t, res, work(), client())
-	if n := count(tt, "Clear result"); n != 1 {
+	if n := count(tt, "Clear"); n != 1 {
 		t.Errorf("%d clear buttons", n)
 	}
 	if n := count(tt, "work/client/app"); n != 1 {
@@ -653,7 +651,7 @@ func TestOverlapShowsTheFolderOnce(t *testing.T) {
 	if title.Y >= path.Y {
 		t.Errorf("title %v, path %v", title, path)
 	}
-	click(t, tt, "Clear result")
+	click(t, tt, "Clear")
 	if s.Result() != nil {
 		t.Error("the one clear button clears both cards")
 	}
