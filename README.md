@@ -18,7 +18,7 @@ Private keys stay where they are; Idset only refers to them by path.
 
 ## Features
 
-Early development, version 0.1.0, with no release yet. The behavior to build is specified in
+Early development; 0.1.0 is the first release. The behavior to build is specified in
 [docs/product.md](docs/product.md) (in Chinese), issue by issue, in the order of the
 [milestones](https://github.com/yangflow/idset/milestones).
 
@@ -65,7 +65,8 @@ SmartScreen warns on first launch. The Debian package needs `libayatana-appindic
 
 ## Quick start
 
-There is no release yet. Build from source with the Go version in `.go-version` and Python 3:
+Download the installer for your platform from the [latest release](https://github.com/yangflow/idset/releases/latest).
+Or build from source with the Go version in `.go-version` and Python 3:
 
 ```bash
 git clone https://github.com/yangflow/idset

@@ -13,7 +13,7 @@ Idset 把身份放在一个列表里，替你生成配置。它不改写你自�
 
 ## 功能
 
-早期开发，版本 0.1.0，还没有发布。要做的行为写在 [docs/product.md](docs/product.md)，按[里程碑](https://github.com/yangflow/idset/milestones)的顺序，一个 issue 一个 issue 地落地。
+早期开发，0.1.0 是第一个发布版。要做的行为写在 [docs/product.md](docs/product.md)，按[里程碑](https://github.com/yangflow/idset/milestones)的顺序，一个 issue 一个 issue 地落地。
 
 已经可用：
 
@@ -36,7 +36,8 @@ Idset 把身份放在一个列表里，替你生成配置。它不改写你自�
 
 ## 快速开始
 
-还没有发布。从源码构建，需要 `.go-version` 里的 Go 版本和 Python 3：
+从[最新发布版](https://github.com/yangflow/idset/releases/latest)下载对应平台的安装包。
+也可以从源码构建，需要 `.go-version` 里的 Go 版本和 Python 3：
 
 ```bash
 git clone https://github.com/yangflow/idset
