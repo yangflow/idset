@@ -56,7 +56,7 @@ func (a *app) openAccounts(req accounts.Request) {
 		w.win.Focus()
 		return
 	}
-	w := &accountsWindow{app: a, text: accounts.Text(mygo.App.Locale())}
+	w := &accountsWindow{app: a, text: accounts.Text(a.locale())}
 	w.screen = accounts.New(w.text, a.env, w.actions())
 	if s := a.store; s != nil {
 		w.screen.SetAccounts(s.Accounts(), s.ReadOnly(), s.Path())
