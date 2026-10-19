@@ -177,7 +177,7 @@ func TestMatchedByAParentOffersRebindButNotUnbind(t *testing.T) {
 	wantNot(t, tt, "Unbind", "Undo", s.openLabel(), "Copy Path")
 	// The menu opens the folder, copies its path and chooses another, then lists the others, and has no Unbind:
 	// only a parent folder covers this one.
-	if got := openMenu(t, s, tt); !slices.Equal(got, []string{"Open in Finder", "Copy Path", "Choose Another Folder…", "-", "Rebind to", "client", "personal"}) {
+	if got := openMenu(t, s, tt); !slices.Equal(got, []string{s.openLabel(), "Copy Path", "Choose Another Folder…", "-", "Rebind to", "client", "personal"}) {
 		t.Errorf("menu %q", got)
 	}
 	choose(t, tt, s.openLabel())
@@ -192,7 +192,7 @@ func TestMatchedByAParentOffersRebindButNotUnbind(t *testing.T) {
 	want(t, tt, "Copied")
 	// With nobody to rebind to and nothing to unbind, the menu keeps the folder's entries and no separator.
 	s, tt, _ = card(t, matched(api, "work", false), work())
-	if got := openMenu(t, s, tt); !slices.Equal(got, []string{"Open in Finder", "Copy Path", "Choose Another Folder…"}) {
+	if got := openMenu(t, s, tt); !slices.Equal(got, []string{s.openLabel(), "Copy Path", "Choose Another Folder…"}) {
 		t.Errorf("menu %q", got)
 	}
 }
@@ -560,7 +560,7 @@ func TestBindingTextInChinese(t *testing.T) {
 	s.SetResult(res.Root, res, nil)
 	tt.Frame()
 	want(t, tt, "2 个身份覆盖这里", "这里只用 client", "从 work 去掉 ~/work/", "生效", "被覆盖", "更多", "清除")
-	if got := openMenu(t, s, tt); !slices.Equal(got[:3], []string{"在 Finder 中打开", "复制路径", "选择其他文件夹…"}) {
+	if got := openMenu(t, s, tt); !slices.Equal(got[:3], []string{s.openLabel(), "复制路径", "选择其他文件夹…"}) {
 		t.Errorf("menu %q", got)
 	}
 	tt.CloseMenu()
