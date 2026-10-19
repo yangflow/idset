@@ -67,4 +67,6 @@ a Chromium-based browser given as `CHROME`) and commit `resources/icon.png` with
 platform's icon from that PNG, and the about window shows it. Check the result in `icon.html`. MyGo does not draw SVG
 filters, which is why the app uses the PNG.
 
-Screenshots go in the pull request body, not into the repository; `design/screenshots/` is ignored by git.
+Screenshots go in the pull request body, not into the repository; `design/screenshots/` is ignored by git. The one
+exception is the README images in `docs/images/`, taken from demo identities on `example.com` in a throwaway home
+directory, never from a real one.

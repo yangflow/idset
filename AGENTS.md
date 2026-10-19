@@ -86,7 +86,8 @@ python3 scripts/bump.py <version>   # then tag v<version>; see docs/release.md
   committing.
 - Product behavior changes start in `docs/product.md`. A UI change starts from the mockup in design/; the
   maintainer confirms the visual direction before UI code is written. Mockup, `docs/design.md` and code go in
-  the same PR. Screenshots go in the PR body, never in the repository.
+  the same PR. Screenshots go in the PR body, never in the repository; the only exception is the README images
+  in `docs/images/`, taken from demo identities on `example.com` in a throwaway home directory.
 - User-visible changes go under `[Unreleased]` in `CHANGELOG.md`. The version lives only in `mygo.json`; change it
   with `python3 scripts/bump.py <version>`, which also dates the changelog.
 - `README.md` (English) and `README.zh-CN.md` (Chinese) say the same thing; change both together. Feature status

@@ -1,4 +1,6 @@
-# Idset
+<p align="center"><img src="design/icon.svg" alt="" width="128"></p>
+
+<h1 align="center">Idset</h1>
 
 [English](README.md) | 中文
 
@@ -10,6 +12,17 @@
 同一台机器上，工作仓库和个人仓库要用不同的提交邮箱和不同的 SSH 密钥。要配对，就得手改 `~/.ssh/config` 里的 Host 别名、`~/.gitconfig` 里的 `includeIf "gitdir:"`，还要记住每个克隆地址该填哪个别名。错一处，提交就署错了名，或者推送被拒。
 
 Idset 把身份放在一个列表里，替你生成配置。它不改写你自己维护的文件：只生成自己的文件，再在 `~/.ssh/config` 和 `~/.gitconfig` 里各加一行 `Include`。私钥留在原处，Idset 只按路径引用。
+
+<p align="center">
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/panel-dark.png">
+  <img src="docs/images/panel-light.png" alt="面板：拖入的文件夹对应 Acme Work 身份，下面是身份列表" width="240">
+</picture>
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/accounts-dark.png">
+  <img src="docs/images/accounts-light.png" alt="账户窗口：左边是身份列表，右边是 Acme Work 的编辑器" width="496">
+</picture>
+</p>
 
 ## 功能
 
