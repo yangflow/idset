@@ -3,6 +3,13 @@
 release-please writes each release's section from the titles of the pull requests merged since the last one
 (docs/release.md); do not edit it by hand.
 
+## [0.2.1](https://github.com/yangflow/idset/compare/v0.2.0...v0.2.1) (2026-10-24)
+
+
+### Fixed
+
+* keep background loads and dialogs within MyGo's threading rules ([#67](https://github.com/yangflow/idset/issues/67)) ([729e762](https://github.com/yangflow/idset/commit/729e7629f7dbe73641cb40cea474fa03e0227ef9))
+
 ## [0.2.0] - 2026-10-19
 
 ### Changed
