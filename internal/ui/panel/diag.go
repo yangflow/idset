@@ -436,7 +436,7 @@ func (s *Screen) summary(c *ui.Context) {
 		s.diag.seen, s.diag.open = sig, sig != ""
 	}
 	if len(entries) == 0 {
-		ui.Row(c).Key("all-ok").Gap(t.Space(1.5)).PaddingX(t.Space(0.5)).AlignItems(ui.Center).Children(func() {
+		ui.Row(c.Key("all-ok")).Gap(t.Space(1.5)).PaddingX(t.Space(0.5)).AlignItems(ui.Center).Children(func() {
 			ui.Icon(c, icons.Check).FontSize(t.Rem(1.1)).TextColor(t.Success)
 			ui.Text(c, s.text.AllOK).FontSize(t.Rem(0.9)).TextColor(t.TextMuted)
 		})

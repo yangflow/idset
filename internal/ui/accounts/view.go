@@ -137,7 +137,7 @@ func (s *Screen) sidebar(c *ui.Context) {
 
 func (s *Screen) item(c *ui.Context, id, label, email, color string, scoped, draft bool) {
 	t := c.Theme()
-	row := ui.Row(c).Key("item-"+id).Focusable().Gap(t.Space(2.5)).Padding(t.Space(1.5), t.Space(2)).Radius(theme.FieldRadius).AlignItems(ui.Center)
+	row := ui.Row(c.Key("item-"+id)).Focusable().Gap(t.Space(2.5)).Padding(t.Space(1.5), t.Space(2)).Radius(theme.FieldRadius).AlignItems(ui.Center)
 	selected := id == s.sel
 	secondary := t.TextMuted
 	switch {
@@ -275,36 +275,35 @@ func (s *Screen) colorChoice(c *ui.Context, f *form, name string) {
 
 // rows lays out the rows of one group, with a hairline between them.
 type rows struct {
-	c *ui.Context
 	n int
 }
 
-func (r *rows) next() {
+func (r *rows) next(c *ui.Context) {
 	if r.n > 0 {
-		hairline(r.c).Margin(0, 0, 0, r.c.Theme().Space(3))
+		hairline(c).Margin(0, 0, 0, c.Theme().Space(3))
 	}
 	r.n++
 }
 
 // field is a row with its label on the left and the value, drawn by value, filling the rest. hint is a small
 // muted note at the end of the row, after the value; the value gives way to it and never overlaps it.
-func (r *rows) field(label, hint string, value func()) {
-	r.next()
-	t := r.c.Theme()
-	ui.Row(r.c).MinHeight(t.Space(8)).PaddingX(t.Space(3)).PaddingY(t.Space(1)).Gap(t.Space(3)).AlignItems(ui.Center).Children(func() {
-		ui.Text(r.c, label).Role(ui.RoleText).Width(t.Space(42)).Shrink(0)
+func (r *rows) field(c *ui.Context, label, hint string, value func()) {
+	r.next(c)
+	t := c.Theme()
+	ui.Row(c).MinHeight(t.Space(8)).PaddingX(t.Space(3)).PaddingY(t.Space(1)).Gap(t.Space(3)).AlignItems(ui.Center).Children(func() {
+		ui.Text(c, label).Role(ui.RoleText).Width(t.Space(42)).Shrink(0)
 		value()
 		if hint != "" {
-			ui.Text(r.c, hint).FontSize(t.Rem(0.92)).TextColor(t.TextMuted).SingleLine().Shrink(0)
+			ui.Text(c, hint).FontSize(t.Rem(0.92)).TextColor(t.TextMuted).SingleLine().Shrink(0)
 		}
 	})
 }
 
 // line is a row without a label.
-func (r *rows) line(content func()) {
-	r.next()
-	t := r.c.Theme()
-	ui.Row(r.c).MinHeight(t.Space(8)).PaddingX(t.Space(3)).PaddingY(t.Space(1)).Gap(t.Space(1)).AlignItems(ui.Center).Children(content)
+func (r *rows) line(c *ui.Context, content func()) {
+	r.next(c)
+	t := c.Theme()
+	ui.Row(c).MinHeight(t.Space(8)).PaddingX(t.Space(3)).PaddingY(t.Space(1)).Gap(t.Space(1)).AlignItems(ui.Center).Children(content)
 }
 
 // section is a titled group; its error messages, in Danger, and its help text follow it.
@@ -312,7 +311,7 @@ func (s *Screen) section(c *ui.Context, title, help string, errs []string, body 
 	t := c.Theme()
 	ui.Column(c).Gap(t.Space(1)).Children(func() {
 		ui.Text(c, title).FontSize(t.Rem(0.85)).FontWeight(600).TextColor(t.TextMuted).Role(ui.RoleHeading).Level(2).PaddingX(t.Space(3))
-		theme.Card(c, ui.Column(c)).Clip().Children(func() { body(&rows{c: c}) })
+		theme.Card(c, ui.Column(c)).Clip().Children(func() { body(&rows{}) })
 		s.notes(c, errs)
 		if help != "" {
 			s.footnote(c, help)
@@ -346,14 +345,14 @@ func (s *Screen) identityGroup(c *ui.Context, f *form) {
 		names = append(names, s.providerName(p))
 	}
 	s.section(c, s.text.GroupIdentity, "", s.problemTexts(f, "label", "username", "gitUserName", "gitUserEmail", "provider"), func(r *rows) {
-		r.field(s.text.Name, "", func() { s.input(c, "label", &f.cur.label, s.text.Name).Placeholder(s.text.Unnamed) })
-		r.field(s.text.Platform, "", func() {
+		r.field(c, s.text.Name, "", func() { s.input(c, "label", &f.cur.label, s.text.Name).Placeholder(s.text.Unnamed) })
+		r.field(c, s.text.Platform, "", func() {
 			ui.Spacer(c)
 			theme.Select(c.Key("platform"), &f.platform, names).Label(s.text.Platform).Disabled(s.busy)
 		})
-		r.field(s.text.Username, "", func() { s.input(c, "username", &f.cur.username, s.text.Username) })
-		r.field(s.text.GitName, s.fromGit(f.cur.gitName, f.prefName), func() { s.input(c, "gitName", &f.cur.gitName, s.text.GitName) })
-		r.field(s.text.Email, s.fromGit(f.cur.email, f.prefEmail), func() { s.input(c, "email", &f.cur.email, s.text.Email) })
+		r.field(c, s.text.Username, "", func() { s.input(c, "username", &f.cur.username, s.text.Username) })
+		r.field(c, s.text.GitName, s.fromGit(f.cur.gitName, f.prefName), func() { s.input(c, "gitName", &f.cur.gitName, s.text.GitName) })
+		r.field(c, s.text.Email, s.fromGit(f.cur.email, f.prefEmail), func() { s.input(c, "email", &f.cur.email, s.text.Email) })
 	})
 }
 
@@ -369,16 +368,16 @@ func (s *Screen) sshGroup(c *ui.Context, f *form) {
 	t := c.Theme()
 	s.section(c, s.text.GroupSSH, "", s.problemTexts(f, "sshAlias", "keyPath", "hostName", "sshPort"), func(r *rows) {
 		if f.custom() {
-			r.field(s.text.Host, "", func() { s.input(c, "host", &f.cur.hostName, s.text.Host).Font("monospace").FontSize(t.Rem(0.88)) })
+			r.field(c, s.text.Host, "", func() { s.input(c, "host", &f.cur.hostName, s.text.Host).Font("monospace").FontSize(t.Rem(0.88)) })
 		}
-		r.field(s.text.Alias, "", func() { s.input(c, "alias", &f.cur.alias, s.text.Alias).Font("monospace").FontSize(t.Rem(0.88)) })
-		r.field(s.text.Key, "", func() {
+		r.field(c, s.text.Alias, "", func() { s.input(c, "alias", &f.cur.alias, s.text.Alias).Font("monospace").FontSize(t.Rem(0.88)) })
+		r.field(c, s.text.Key, "", func() {
 			s.keyValue(c, f)
 			if ghost(c, s.text.ChooseFile, icons.Folder).Disabled(s.busy).Clicked() {
 				s.act.ChooseKey(f.id)
 			}
 		})
-		r.field(s.text.Port, "", func() {
+		r.field(c, s.text.Port, "", func() {
 			if f.custom() {
 				s.input(c, "port", &f.cur.portText, s.text.Port).Font("monospace").FontSize(t.Rem(0.88))
 				return
@@ -442,7 +441,7 @@ func (s *Screen) scopeGroup(c *ui.Context, f *form) {
 		help = s.text.ScopeHint
 	}
 	s.section(c, s.text.GroupScope, help, s.problemTexts(f, "scope"), func(r *rows) {
-		r.field(s.text.Applies, "", func() {
+		r.field(c, s.text.Applies, "", func() {
 			ui.Spacer(c)
 			ui.Segmented(c, &f.scope, s.text.ScopeGlobal, s.text.ScopeGitdir).Label(s.text.Applies).Disabled(s.busy)
 		})
@@ -451,7 +450,7 @@ func (s *Screen) scopeGroup(c *ui.Context, f *form) {
 		}
 		remove := -1
 		for i := range f.cur.paths {
-			r.line(func() {
+			r.line(c, func() {
 				s.input(c, fmt.Sprint("path-", i), &f.cur.paths[i], s.text.Path).TextAlign(ui.Start).Font("monospace").FontSize(t.Rem(0.88))
 				if ghost(c, s.text.ChooseFolder, icons.Folder).Disabled(s.busy).Clicked() {
 					s.act.ChooseFolder(f.id, i)
@@ -464,7 +463,7 @@ func (s *Screen) scopeGroup(c *ui.Context, f *form) {
 		if remove >= 0 {
 			f.cur.paths = slices.Delete(f.cur.paths, remove, remove+1)
 		}
-		r.line(func() {
+		r.line(c, func() {
 			if textButton(c, s.text.AddPath, t.Accent, icons.Plus).Disabled(s.busy).Clicked() {
 				f.cur.paths = append(f.cur.paths, "")
 			}
@@ -481,7 +480,7 @@ func (s *Screen) rewriteGroup(c *ui.Context, f *form) {
 	s.section(c, s.text.GroupRewrites, help, s.problemTexts(f, "urlRewrites"), func(r *rows) {
 		remove := -1
 		for i := range f.cur.rewrites {
-			r.line(func() {
+			r.line(c, func() {
 				ui.Column(c).Grow(1).Children(func() {
 					s.input(c, fmt.Sprint("from-", i), &f.cur.rewrites[i].From, s.text.From).Grow(0).FillWidth().TextAlign(ui.Start).Font("monospace").FontSize(t.Rem(0.88))
 					ui.Row(c).AlignItems(ui.Center).Children(func() {
@@ -499,7 +498,7 @@ func (s *Screen) rewriteGroup(c *ui.Context, f *form) {
 		if remove >= 0 {
 			f.cur.rewrites = slices.Delete(f.cur.rewrites, remove, remove+1)
 		}
-		r.line(func() {
+		r.line(c, func() {
 			if textButton(c, s.text.AddRewrite, t.Accent, icons.Plus).Disabled(s.busy).Clicked() {
 				f.cur.rewrites = append(f.cur.rewrites, account.Rewrite{})
 			}
@@ -508,7 +507,7 @@ func (s *Screen) rewriteGroup(c *ui.Context, f *form) {
 			return
 		}
 		next, ok := f.nextDefaultRewrite()
-		r.line(func() {
+		r.line(c, func() {
 			if textButton(c, s.text.AddDefault, t.Accent, icons.Plus).Disabled(s.busy || !ok).Clicked() {
 				f.cur.rewrites = append(f.cur.rewrites, next)
 			}
@@ -518,7 +517,7 @@ func (s *Screen) rewriteGroup(c *ui.Context, f *form) {
 
 func (s *Screen) notesGroup(c *ui.Context, f *form) {
 	s.section(c, s.text.GroupNotes, "", nil, func(r *rows) {
-		r.line(func() {
+		r.line(c, func() {
 			ui.TextArea(c.Key("notes"), &f.cur.notes).Label(s.text.GroupNotes).Grow(1).TextAlign(ui.Start).Radius(theme.FieldRadius).Background(ui.Color{}).Border(0, ui.Color{}).Disabled(s.busy)
 		})
 	})
@@ -528,9 +527,9 @@ func (s *Screen) timesGroup(c *ui.Context, f *form) {
 	t := c.Theme()
 	stamp := func(v time.Time) string { return v.Local().Format("2006-01-02 15:04") }
 	s.section(c, s.text.GroupTimes, "", nil, func(r *rows) {
-		r.field(s.text.Created, "", func() { ui.Text(c, stamp(f.base.CreatedAt)).Grow(1).TextAlign(ui.End).TextColor(t.TextMuted) })
-		r.field(s.text.Updated, "", func() { ui.Text(c, stamp(f.base.UpdatedAt)).Grow(1).TextAlign(ui.End).TextColor(t.TextMuted) })
-		r.field(s.text.Used, "", func() {
+		r.field(c, s.text.Created, "", func() { ui.Text(c, stamp(f.base.CreatedAt)).Grow(1).TextAlign(ui.End).TextColor(t.TextMuted) })
+		r.field(c, s.text.Updated, "", func() { ui.Text(c, stamp(f.base.UpdatedAt)).Grow(1).TextAlign(ui.End).TextColor(t.TextMuted) })
+		r.field(c, s.text.Used, "", func() {
 			used := s.text.Never
 			if f.base.LastUsedAt != nil {
 				used = stamp(*f.base.LastUsedAt)

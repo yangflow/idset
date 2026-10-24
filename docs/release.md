@@ -11,8 +11,8 @@ Merging it creates a draft release with that section as its notes and the tag `v
 `.github/workflows/release.yml`: the checks, then one build per platform that signs and uploads its installers and
 updates to the draft, then publishing the release once every platform uploaded. Installed copies update to the
 latest published release, and the update window shows the version's section of `CHANGELOG.md`.
-The update mechanism is MyGo's ([auto-updates](https://github.com/egoist/mygo/blob/v0.4.1/docs/updates.md),
-[GitHub Actions](https://github.com/egoist/mygo/blob/v0.4.1/docs/github-actions.md)).
+The update mechanism is MyGo's ([auto-updates](https://github.com/egoist/mygo/blob/v0.5.5/docs/updates.md),
+[GitHub Actions](https://github.com/egoist/mygo/blob/v0.5.5/docs/github-actions.md)).
 
 ## One-time setup
 

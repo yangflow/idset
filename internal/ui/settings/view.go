@@ -104,13 +104,12 @@ func (s *Screen) tabBar(c *ui.Context) {
 
 // rows lays out the rows of one group, with a hairline between them.
 type rows struct {
-	c *ui.Context
 	n int
 }
 
-func (r *rows) next() {
+func (r *rows) next(c *ui.Context) {
 	if r.n > 0 {
-		ui.Column(r.c).Padding(0, 0, 0, r.c.Theme().Space(3)).Children(func() { ui.Divider(r.c) })
+		ui.Column(c).Padding(0, 0, 0, c.Theme().Space(3)).Children(func() { ui.Divider(c) })
 	}
 	r.n++
 }
@@ -122,7 +121,7 @@ func (s *Screen) section(c *ui.Context, title string, body func(r *rows), after 
 		if title != "" {
 			ui.Text(c, title).FontSize(t.Rem(0.85)).FontWeight(600).TextColor(t.TextMuted).Role(ui.RoleHeading).Level(2).PaddingX(t.Space(3))
 		}
-		theme.Card(c, ui.Column(c)).Clip().Children(func() { body(&rows{c: c}) })
+		theme.Card(c, ui.Column(c)).Clip().Children(func() { body(&rows{}) })
 		if after != nil {
 			after()
 		}
@@ -149,13 +148,13 @@ func (s *Screen) footnote(c *ui.Context, text string) {
 }
 
 // line is a row of a group.
-func (r *rows) line(content func()) { r.lineAt(r.c.Theme().Space(3), content) }
+func (r *rows) line(c *ui.Context, content func()) { r.lineAt(c, c.Theme().Space(3), content) }
 
 // lineAt is a row with its own left padding, for a row that holds a text button.
-func (r *rows) lineAt(left float32, content func()) {
-	r.next()
-	t := r.c.Theme()
-	ui.Row(r.c).MinHeight(t.Space(8)).Padding(t.Space(1), t.Space(3), t.Space(1), left).Gap(t.Space(2)).AlignItems(ui.Center).Children(content)
+func (r *rows) lineAt(c *ui.Context, left float32, content func()) {
+	r.next(c)
+	t := c.Theme()
+	ui.Row(c).MinHeight(t.Space(8)).Padding(t.Space(1), t.Space(3), t.Space(1), left).Gap(t.Space(2)).AlignItems(ui.Center).Children(content)
 }
 
 func (s *Screen) general(c *ui.Context) {
@@ -164,7 +163,7 @@ func (s *Screen) general(c *ui.Context) {
 	chosen := s.language
 	s.section(c, s.text.Language, func(r *rows) {
 		for _, choice := range choices {
-			r.next()
+			r.next(c)
 			on := s.language == choice.value
 			// A radio, not Selected: Selected would paint the row in the accent color; the mockup marks the choice with a check.
 			row := ui.RadioBase(c.Key("lang-"+choice.value), &chosen, choice.value).Label(choice.name).MinHeight(t.Space(8)).Padding(t.Space(1), t.Space(3), t.Space(1), t.Space(3)).
@@ -195,7 +194,7 @@ func (s *Screen) general(c *ui.Context) {
 		s.footnote(c, s.text.LangNote)
 	})
 	s.section(c, s.text.Startup, func(r *rows) {
-		r.line(func() {
+		r.line(c, func() {
 			ui.Text(c, s.text.Login).Grow(1)
 			sw := ui.Switch(c.Key("login"), &s.login).Size(t.Space(7), t.Space(4)).Radius(t.Space(2)).Label(s.text.Login).Disabled(s.loginBusy)
 			if sw.Changed() {
@@ -265,7 +264,7 @@ func (s *Screen) backupsPane(c *ui.Context) {
 	default:
 		s.section(c, "", func(r *rows) {
 			for _, b := range s.backups {
-				r.next()
+				r.next(c)
 				s.backupRow(c.Key(b.Path), b)
 			}
 		}, func() { s.footnote(c, s.text.BackupNote) })
@@ -411,12 +410,12 @@ func (s *Screen) configPane(c *ui.Context) {
 			name  string
 			state fileState
 		}{{sshConfig, fileState{s.includes.SSH.Present, s.includes.SSH.Err}}, {gitConfig, fileState{s.includes.Git.Present, s.includes.Git.Err}}} {
-			r.line(func() {
+			r.line(c, func() {
 				ui.Text(c, f.name).Font("monospace").FontSize(t.Rem(0.88)).Grow(1).SingleLine()
 				state(f.state)
 			})
 		}
-		r.lineAt(t.Space(1), func() {
+		r.lineAt(c, t.Space(1), func() {
 			b := ui.Button(c.Key("remove"), "").Label(s.text.Remove).Background(ui.Color{}).Border(0, ui.Color{}).TextColor(t.Accent).
 				Disabled(s.removing || !s.includesRead || done)
 			b.Children(func() {

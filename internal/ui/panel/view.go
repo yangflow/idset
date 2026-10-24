@@ -94,7 +94,7 @@ func (s *Screen) View(c *ui.Context) {
 // folder icon and what releasing does.
 func (s *Screen) dropOverlay(c *ui.Context) {
 	t := c.Theme()
-	ui.Column(c).Key("drop-over").Absolute().Top(t.Space(11)).Left(t.Space(2)).Right(t.Space(2)).Bottom(t.Space(11.5)).
+	ui.Column(c.Key("drop-over")).Absolute().Top(t.Space(11)).Left(t.Space(2)).Right(t.Space(2)).Bottom(t.Space(11.5)).
 		Radius(t.Space(3.5)).Border(1.5, t.Accent.Alpha(0.7)).Background(theme.Of(c).AccentSoft).Gap(t.Space(2)).
 		AlignItems(ui.Center).Justify(ui.Center).Children(func() {
 		ui.Icon(c, icons.Folder).FontSize(t.Space(7)).TextColor(t.Accent)
@@ -299,7 +299,7 @@ func badge(c *ui.Context, a account.Account, size, radius, font float32) {
 // fillCard is a result card or the identity list: a fill with the card rim, not an outline. One that needs attention adds a 1 DIP inner
 // outline in Warning or Danger.
 func fillCard(c *ui.Context, key string, attention ui.Color) ui.Element {
-	e := theme.Card(c, ui.Column(c).Key(key)).Clip()
+	e := theme.Card(c, ui.Column(c.Key(key))).Clip()
 	if attention.A != 0 {
 		e.InsetShadow(0, 0, 0, 1, attention)
 	}
@@ -405,7 +405,7 @@ func (s *Screen) row(c *ui.Context, a account.Account) {
 // dropZone is always one line, and only there while no result shows; what it says beyond that is in the tooltip.
 func (s *Screen) dropZone(c *ui.Context) {
 	t := c.Theme()
-	zone := ui.Column(c).Key("drop").Height(t.Space(12)).Radius(theme.CardRadius).Border(1, t.Accent.Alpha(0.5)).BorderStyle(ui.BorderDashed).
+	zone := ui.Column(c.Key("drop")).Height(t.Space(12)).Radius(theme.CardRadius).Border(1, t.Accent.Alpha(0.5)).BorderStyle(ui.BorderDashed).
 		Background(t.Accent.Alpha(0.06))
 	if zone.FileDragOver() {
 		zone.Border(1.5, t.Accent).BorderStyle(ui.BorderSolid).Background(theme.Of(c).AccentSoft)
