@@ -488,8 +488,7 @@ func hover(t *testing.T, tt *ui.Tester, name string) func(text string) bool {
 		t.Fatalf("no %q in %q", name, tt.Texts())
 	}
 	tt.Move(r.X+r.W/2, r.Y+r.H/2)
-	time.Sleep(700 * time.Millisecond)
-	tt.Frame()
+	tt.Advance(700 * time.Millisecond)
 	return func(text string) bool { return slices.Contains(tt.Texts(), text) }
 }
 

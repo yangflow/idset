@@ -73,7 +73,7 @@ func (s *Screen) candidates(c *ui.Context) {
 	list.Children(func() {
 		s.section(c, s.foundTitle(len(im.cands)), func(r *rows) {
 			for i, cand := range im.cands {
-				r.next()
+				r.next(c)
 				a := cand.Account
 				ui.Row(c.Key("cand-"+strconv.Itoa(i))).MinHeight(t.Space(11)).Padding(t.Space(1.5), t.Space(3), t.Space(1.5), t.Space(3)).Gap(t.Space(2.5)).
 					AlignItems(ui.Center).Children(func() {
@@ -140,7 +140,7 @@ func (s *Screen) imported(c *ui.Context) {
 	})
 	s.section(c, "", func(r *rows) {
 		for _, a := range im.added {
-			r.line(func() {
+			r.line(c, func() {
 				dot(c, a.Color)
 				ui.Text(c, s.label(a)).SingleLine().Shrink(0)
 				ui.Text(c, a.GitUserEmail).FontSize(t.Rem(0.92)).TextColor(t.TextMuted).Grow(1).Wrap()

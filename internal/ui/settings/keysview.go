@@ -67,21 +67,21 @@ func (s *Screen) keyForm(c *ui.Context) {
 	}
 	group.Children(func() {
 		s.section(c, s.text.KNew, func(r *rows) {
-			r.line(func() {
+			r.line(c, func() {
 				keyLabel(c, s.text.KType, false)
 				ui.Spacer(c)
 				ui.Segmented(c, &s.keys.kind, "Ed25519", "RSA 4096").Label(s.text.KType).Disabled(busy)
 			})
-			r.line(func() {
+			r.line(c, func() {
 				keyLabel(c, s.text.KPlatform, false)
 				ui.Spacer(c)
 				theme.Select(c.Key("key-platform"), &s.keys.platform, names).Label(s.text.KPlatform).Disabled(busy)
 			})
-			r.line(func() {
+			r.line(c, func() {
 				keyLabel(c, s.text.KFile, false)
 				field("key-name", &s.keys.name, s.text.KFile, true)
 			})
-			r.line(func() {
+			r.line(c, func() {
 				keyLabel(c, s.text.KComment, false)
 				field("key-comment", &s.keys.comment, s.text.KComment, false)
 			})
@@ -122,7 +122,7 @@ func (s *Screen) keyResult(c *ui.Context) {
 	})
 
 	s.section(c, s.text.PubKey, func(r *rows) {
-		r.line(func() {
+		r.line(c, func() {
 			if key.Public != "" {
 				ui.Text(c, key.Public).Font("monospace").FontSize(t.Rem(0.88)).Grow(1).Wrap().Selectable()
 			} else {
@@ -155,26 +155,26 @@ func (s *Screen) keyResult(c *ui.Context) {
 		}
 	}
 	s.section(c, s.text.KFiles, func(r *rows) {
-		r.line(func() {
+		r.line(c, func() {
 			keyLabel(c, s.text.Priv, true)
 			value(key.Path, true)
 			if ghost(c, "reveal", s.revealLabel(), icons.Folder).Clicked() {
 				s.act.Reveal(key.Path)
 			}
 		})
-		r.line(func() {
+		r.line(c, func() {
 			keyLabel(c, s.text.Pub, true)
 			value(key.Path+".pub", true)
 			slot()
 		})
 		if key.Fingerprint != "" {
-			r.line(func() {
+			r.line(c, func() {
 				keyLabel(c, s.text.Fp, true)
 				value(key.Fingerprint, true)
 				slot()
 			})
 		}
-		r.line(func() {
+		r.line(c, func() {
 			keyLabel(c, s.text.Pass, true)
 			value(s.text.None, false)
 			slot()
@@ -184,7 +184,7 @@ func (s *Screen) keyResult(c *ui.Context) {
 	p := s.keys.provider
 	name := p.DisplayName()
 	s.section(c, s.text.KNext, func(r *rows) {
-		r.line(func() {
+		r.line(c, func() {
 			if p == account.Custom || p.KeySettingsURL() == "" {
 				ui.Text(c, s.text.AddCustom).Grow(1)
 				ui.Text(c, s.text.AddCustomHint).FontSize(t.Rem(0.92)).TextColor(t.TextMuted).SingleLine()
@@ -201,7 +201,7 @@ func (s *Screen) keyResult(c *ui.Context) {
 				c.OpenURL(p.KeySettingsURL())
 			}
 		})
-		r.line(func() {
+		r.line(c, func() {
 			ui.Text(c, s.text.Agent).Grow(1)
 			switch s.keys.agent {
 			case agentLoaded:
@@ -215,7 +215,7 @@ func (s *Screen) keyResult(c *ui.Context) {
 				}
 			}
 		})
-		r.line(func() {
+		r.line(c, func() {
 			ui.Text(c, s.text.UseFor).Grow(1)
 			if s.keys.useBusy {
 				ui.Spinner(c)
