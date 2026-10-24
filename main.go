@@ -37,9 +37,14 @@ const (
 // app owns the tray, the panel window, the account window and the store. Its fields are touched on the main
 // thread only; background work reports back through post.
 type app struct {
-	env       paths.Env
-	dataDir   string
-	store     *store.Store
+	env     paths.Env
+	dataDir string
+	store   *store.Store
+	// openOnce opens the store for the first load; opened is what it opened and loadSeq counts the loads, so that
+	// an older read never replaces a newer one. loadSeq is touched on the main thread only.
+	openOnce  sync.Once
+	opened    *store.Store
+	loadSeq   int
 	git       match.Git
 	gitConfig accounts.GitConfig
 	text      panel.Copy
@@ -204,13 +209,23 @@ func (a *app) ready() {
 }
 
 // load reads accounts.json in the background, so that edits made outside the app show up each time. The store
-// is opened once and read again afterwards, so that saves in the account window and loads never work on two
-// copies of the list.
+// is opened once, by whichever load gets there first, and read again afterwards, so that saves in the account
+// window and loads never work on two copies of the list. Only the newest load shows its result.
 func (a *app) load() {
 	s := a.store
+	a.loadSeq++
+	seq := a.loadSeq
 	go func() {
 		if s == nil {
-			s = store.Open(a.dataDir, time.Now, store.WithRegenerate(apply.Regenerate(a.env, apply.DefaultTarget(a.env), time.Now)))
+			first := false
+			a.openOnce.Do(func() {
+				a.opened = store.Open(a.dataDir, time.Now, store.WithRegenerate(apply.Regenerate(a.env, apply.DefaultTarget(a.env), time.Now)))
+				first = true
+			})
+			s = a.opened
+			if !first {
+				s.Reload()
+			}
 		} else {
 			s.Reload()
 		}
@@ -220,26 +235,32 @@ func (a *app) load() {
 			if a.store == nil {
 				a.store = s
 			}
+			if seq != a.loadSeq {
+				return
+			}
 			a.showAccounts(list, readErr, path)
 			a.screen.SetPrefixes(prefixes)
 		})
 	}()
 }
 
-// post runs fn on the UI thread and redraws the panel and the account window, if it is open.
+// post runs fn on the UI thread and redraws the panel and the account window, if it is open. It may be called
+// from any goroutine: the windows are looked at on the UI thread, after fn.
 func (a *app) post(fn func()) {
-	a.win.Update(fn)
-	if a.accounts != nil {
-		a.accounts.win.Update(func() {})
-		a.accounts.dialog.update()
-	}
-	if a.settings != nil {
-		a.settings.win.Update(func() {})
-		a.settings.dialog.update()
-	}
-	if a.about != nil {
-		a.about.win.Update(func() {})
-	}
+	a.win.Update(func() {
+		fn()
+		if a.accounts != nil {
+			a.accounts.win.Update(func() {})
+			a.accounts.dialog.update()
+		}
+		if a.settings != nil {
+			a.settings.win.Update(func() {})
+			a.settings.dialog.update()
+		}
+		if a.about != nil {
+			a.about.win.Update(func() {})
+		}
+	})
 }
 
 // showAccounts gives the list to both screens, checks the identities that are due and updates the tray.
@@ -381,12 +402,13 @@ func (a *app) openFolder(path string) {
 }
 
 func (a *app) chooseFolder() {
+	win, title := a.win, a.text.ChooseTitle
 	go func() {
-		chosen, err := mygo.Dialog.Open(mygo.OpenDialogOptions{Parent: a.win, Title: a.text.ChooseTitle, Directory: true, DefaultPath: a.env.Home})
+		chosen, err := mygo.Dialog.Open(mygo.OpenDialogOptions{Parent: win, Title: title, Directory: true, DefaultPath: a.env.Home})
 		if err != nil || len(chosen) == 0 {
 			return
 		}
-		a.win.Update(func() { a.screen.Drop(chosen) })
+		win.Update(func() { a.screen.Drop(chosen) })
 	}()
 }
 

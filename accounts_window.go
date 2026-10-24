@@ -157,9 +157,10 @@ func (w *accountsWindow) actions() accounts.Actions {
 			}()
 		},
 		ChooseKey: func(id string) {
+			win, title := w.win, w.text.ChooseKeyTitle
 			go func() {
 				chosen, err := mygo.Dialog.Open(mygo.OpenDialogOptions{
-					Parent: w.win, Title: w.text.ChooseKeyTitle, DefaultPath: a.env.Native("~/.ssh"), ShowHiddenFiles: true,
+					Parent: win, Title: title, DefaultPath: a.env.Native("~/.ssh"), ShowHiddenFiles: true,
 				})
 				if err != nil || len(chosen) == 0 {
 					return
@@ -168,9 +169,10 @@ func (w *accountsWindow) actions() accounts.Actions {
 			}()
 		},
 		ChooseFolder: func(id string, index int) {
+			win, title := w.win, w.text.ChooseFolderTitle
 			go func() {
 				chosen, err := mygo.Dialog.Open(mygo.OpenDialogOptions{
-					Parent: w.win, Title: w.text.ChooseFolderTitle, Directory: true, DefaultPath: a.env.Home, CreateDirectories: true,
+					Parent: win, Title: title, Directory: true, DefaultPath: a.env.Home, CreateDirectories: true,
 				})
 				if err != nil || len(chosen) == 0 {
 					return
