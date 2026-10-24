@@ -32,9 +32,17 @@ type dialogWindow struct {
 func (d *dialogWindow) view(c *ui.Context) {
 	d.screen.View(c)
 	if d.parent != nil && !d.syncing && d.screen.DialogOpen() != (d.win != nil) {
-		d.syncing = true
-		d.parent.Update(d.sync)
+		d.requestSync()
 	}
+}
+
+// requestSync has the screen's window follow the dialog's state on the next pass of the main loop, and redraws it.
+func (d *dialogWindow) requestSync() {
+	if d.syncing {
+		return
+	}
+	d.syncing = true
+	d.parent.Update(d.sync)
 }
 
 func (d *dialogWindow) sync() {
@@ -80,9 +88,9 @@ func (d *dialogWindow) dialogView(c *ui.Context) {
 		c.AnimationFrame()
 		return
 	}
-	// Whatever the dialog changed, the screen's window shows it too.
-	d.parent.Update(func() {})
+	// Every action of a dialog closes it, and the screen's window shows what it changed once the dialog is gone.
 	if !d.screen.DialogOpen() {
+		d.requestSync()
 		return
 	}
 	cw, ch := w.ContentSize()
