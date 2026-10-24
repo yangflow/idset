@@ -1,7 +1,7 @@
 {
   "name": "Idset",
   "identifier": "app.idset.app",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "copyright": "© 2026 yangflow",
   "main": ".",
   "out": "build",
