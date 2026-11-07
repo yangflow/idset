@@ -174,13 +174,16 @@ func (s *Screen) undoBar(c *ui.Context) {
 	t := c.Theme()
 	// Undo clears the bar inside this frame, so the rest of it works on what it started with.
 	undo, left := s.undo, s.undoLeft()
-	ui.Divider(c)
-	ui.Row(c).Height(t.Space(theme.Bar)).Padding(0, t.Space(theme.Space2), 0, t.Space(theme.Space3)).AlignItems(ui.Center).Children(func() {
-		ui.Text(c, fmt.Sprintf(s.text.BoundTo, undo.who)+" ·").SingleLine()
-		if s.textButton(c, "undo", s.text.Undo, "", nil, t.Accent).Clicked() {
-			s.Undo()
-		}
-		ui.Column(c).Absolute().Left(0).Bottom(0).Height(t.Space(theme.Countdown)).WidthPercent(float32(left) * 100 / undoSteps).Background(t.Accent)
+	// The bar rises into place; once it has been shown, it goes quicker than it came.
+	theme.Arrive(c, ui.Column(c.Key("undo-bar")), theme.Slide(1), theme.Fade()).Children(func() {
+		ui.Divider(c)
+		ui.Row(c).Height(t.Space(theme.Bar)).Padding(0, t.Space(theme.Space2), 0, t.Space(theme.Space3)).AlignItems(ui.Center).Children(func() {
+			ui.Text(c, fmt.Sprintf(s.text.BoundTo, undo.who)+" ·").SingleLine()
+			if s.textButton(c, "undo", s.text.Undo, "", nil, t.Accent).Clicked() {
+				s.Undo()
+			}
+			s.countdown(c, left, undo.until)
+		})
 	})
 	// The next frame is due when the line steps, and when the time is up.
 	step := undoFor / undoSteps
@@ -190,6 +193,26 @@ func (s *Screen) undoBar(c *ui.Context) {
 	}
 	c.After(next + 10*time.Millisecond)
 }
+
+// countdown is the line along the undo bar's bottom that runs out with the time to undo: it glides from where it is to
+// nothing by the deadline, or, while the desktop asks for less motion, steps down in fifths.
+func (s *Screen) countdown(c *ui.Context, left int, deadline time.Time) {
+	t := c.Theme()
+	line := ui.Column(c.Key("countdown")).Absolute().Left(0).Bottom(0).Height(t.Space(theme.Countdown)).Background(t.Accent)
+	width := float32(left) * 100 / undoSteps
+	if remaining := deadline.Sub(s.now()); !c.Preferences().ReduceMotion && remaining > 0 {
+		// A new deadline, a new bar or another bind while it shows, starts the line again from where its time is.
+		if until := ui.Local(line, countdownKey{}, func() time.Time { return time.Time{} }); until != nil && !until.Equal(deadline) {
+			*until = deadline
+			line.Jump(countdownKey{}, float32(remaining)*100/float32(undoFor))
+		}
+		width = line.AnimateWith(countdownKey{}, 0, remaining, ui.Linear)
+	}
+	line.WidthPercent(width)
+}
+
+// countdownKey is the undo line's animated width and the deadline it runs to.
+type countdownKey struct{}
 
 // noMatchCard offers every identity to bind the folder to, and a new one.
 func (s *Screen) noMatchCard(c *ui.Context, r *match.Result) {

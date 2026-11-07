@@ -25,7 +25,9 @@ Both are private to the maintainer; ask for access when you need it.
 `tokens.json` is the source; the design system's tokens are copied from it, and the code's are generated from it:
 `go generate ./internal/ui/theme` writes `internal/ui/theme/tokens_gen.go`, and a test fails when that file is stale.
 A token's Go name is its name in camel case: `space-3` is `theme.Space3`, used as `t.Space(theme.Space3)` (12 at
-MyGo's default unit of 4); `radius-card` is `theme.RadiusCard`; `motion-ack` is `theme.MotionAck`. Spacing and sizes
+MyGo's default unit of 4); `radius-card` is `theme.RadiusCard`; `motion-ack` is `theme.MotionAck`, a `time.Duration`; `motion-shift` is
+`theme.MotionShift`, in DIPs; the curve `ease` is `theme.Ease`. `motion.moments` lists what moves, when, and with
+which call; the screens use the helpers in `internal/ui/theme/motion.go`. Spacing and sizes
 are in pixels at the default unit and become steps of it; a size with a `unit` (`rem`, `stroke`) is not generated.
 Window sizes are in their own family, `window`. Colors without a MyGo theme role are in `internal/ui/theme`.
 `layout.json`'s patterns are generated into the same file as functions that lay an element out: `item-row` is

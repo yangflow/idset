@@ -132,7 +132,8 @@ func (s *Screen) sidebar(c *ui.Context) {
 
 func (s *Screen) item(c *ui.Context, id, label, email, color string, scoped, draft bool) {
 	t := c.Theme()
-	row := theme.Cluster(c, ui.Row(c.Key("item-"+id))).Focusable().Padding(t.Space(theme.Space1_5), t.Space(theme.Space2)).Radius(theme.RadiusControl)
+	// A row added opens and fades in, one deleted closes and fades out, and the others move to their place.
+	row := theme.Arrive(c, theme.Cluster(c, ui.Row(c.Key("item-"+id))), theme.Collapse(), theme.Collapse()).Focusable().Padding(t.Space(theme.Space1_5), t.Space(theme.Space2)).Radius(theme.RadiusControl)
 	switch {
 	case id == s.sel:
 		row.Selected(true).Background(theme.Of(c).Selected)
@@ -174,14 +175,14 @@ func (s *Screen) detail(c *ui.Context) {
 	if s.problems != nil && (s.problemsID != f.id || !reflect.DeepEqual(s.problemsState, f.cur)) {
 		s.problems = nil
 	}
-	c = c.Key(f.id)
 	t := c.Theme()
 	fill := theme.Of(c).SolidDetail
 	if c.Vibrancy() {
 		fill = theme.Of(c).Detail
 	}
 	ui.Column(c).Fill().Padding(bandHeight(c), 0, 0, 0).Background(fill).Children(func() {
-		body := theme.StackPage(c, ui.Scroll(c)).Grow(1).Padding(t.Space(theme.Space4), t.Space(theme.Space6), t.Space(theme.Space6), t.Space(theme.Space6))
+		// The content is the identity's: another identity's fades in where it was, and nothing slides.
+		body := theme.StackPage(c, theme.Appear(ui.Scroll(c.Key(f.id)))).Grow(1).Padding(t.Space(theme.Space4), t.Space(theme.Space6), t.Space(theme.Space6), t.Space(theme.Space6))
 		if s.busy {
 			body.Opacity(theme.OpacityFaded)
 		}
@@ -589,7 +590,8 @@ func (s *Screen) footer(c *ui.Context, f *form) {
 		default:
 			save = ui.PrimaryButton(c, s.text.Save).Size(bw, bh).Disabled(!dirty)
 		}
-		if save.Clicked() {
+		// Save cross-fades to Saved and its check mark, and back.
+		if theme.Swap(save).Clicked() {
 			s.save()
 		}
 	})

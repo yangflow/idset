@@ -126,7 +126,8 @@ func symbolButton(c *ui.Context, key, label string, icon *ui.SVG, done bool) ui.
 	if b.Hovered() && !done {
 		b.Background(t.SurfaceHover)
 	}
-	return b
+	// The symbol cross-fades to the check mark when the copy is done, and back.
+	return theme.Swap(b)
 }
 
 func (s *Screen) content(c *ui.Context) {
@@ -408,6 +409,8 @@ func (s *Screen) dropZone(c *ui.Context) {
 	if zone.FileDragOver() {
 		zone.Border(1.5, t.Accent).BorderStyle(ui.BorderSolid).Background(theme.Of(c).AccentSoft)
 	}
+	// It takes a folder in color, and fades out as the result card comes in.
+	theme.Recolor(zone)
 	if files := zone.DroppedFiles(); len(files) > 0 {
 		s.Drop(files)
 	}
@@ -476,7 +479,8 @@ func (s *Screen) resultCard(c *ui.Context) {
 func (s *Screen) frame(c *ui.Context, key string, border ui.Color, path string, body func()) {
 	t := c.Theme()
 	checking := s.checking
-	fillCard(c, key, border).Children(func() {
+	// The card settles from above as the answer arrives, where the drop zone was, and fades as it is cleared.
+	theme.Arrive(c, fillCard(c, key, border), theme.Slide(-1), theme.Fade()).Children(func() {
 		theme.InlineTight(c, ui.Row(c)).Height(t.Space(theme.Bar)).Padding(0, t.Space(theme.Space1_5), 0, t.Space(theme.Space3)).Children(func() {
 			face := pathFace{style: theme.Mono, color: t.TextMuted}
 			// The folder keeps at least a button's width; the status gives way first.
@@ -495,7 +499,7 @@ func (s *Screen) frame(c *ui.Context, key string, border ui.Color, path string, 
 // Covered by a folder, whose full sentence is the tooltip.
 func (s *Screen) status(c *ui.Context, copyable bool) {
 	t := c.Theme()
-	for _, ack := range []struct {
+	for i, ack := range []struct {
 		until      time.Time
 		text, full string
 		show       bool
@@ -506,7 +510,8 @@ func (s *Screen) status(c *ui.Context, copyable bool) {
 		{s.copiedUntil, s.text.Copied, "", copyable},
 	} {
 		if left := ack.until.Sub(s.now()); ack.show && left > 0 {
-			text := theme.Small.On(c, ui.Text(c, ack.text)).TextColor(t.TextMuted).SingleLine().MinWidth(0)
+			// The word says what happened and fades in and out; the path beside it stays put.
+			text := theme.FadeIn(theme.Small.On(c, ui.Text(c.Key(fmt.Sprintf("ack-%d", i)), ack.text)).TextColor(t.TextMuted).SingleLine().MinWidth(0))
 			if ack.full != "" {
 				text.Tooltip(ack.full)
 			}

@@ -152,16 +152,24 @@ const (
 	OpacityFaded = 0.6
 )
 
-// Durations: c.After(MotionAck).
+// Motion: durations, c.After(MotionAck); distances in DIPs, ui.Motion{Y: MotionShift}.
 const (
-	// MotionFast is 120ms. Hover, press, fades.
+	// MotionFast is 120ms. Exits, color changes, content swapped: the drop zone taking a folder, Copied, collapsing, a row removed.
 	MotionFast = 120 * time.Millisecond
-	// MotionBase is 200ms. Expanding and collapsing; a result card or problem bar appearing.
+	// MotionBase is 200ms. Entries and expanding: the result card, the undo bar, diagnostics opening, a row added.
 	MotionBase = 200 * time.Millisecond
+	// MotionShift is 8 DIPs. How far a card or bar travels as it enters: the result card settles from above, the undo bar rises from below.
+	MotionShift = 8
 	// MotionAck is 1200ms. How long Copied, Saved and Updated stay; a repeat starts it again.
 	MotionAck = 1200 * time.Millisecond
 	// MotionUndo is 5000ms. The undo bar's countdown, from an absolute deadline.
 	MotionUndo = 5000 * time.Millisecond
+)
+
+// Easing curves: ui.ElementTransition{Ease: Ease}.
+var (
+	// Ease is cubic-bezier(0.2, 0, 0, 1). The curve of every transition: quick out, slow to settle. No springs.
+	Ease = ui.CubicBezier(0.2, 0, 0, 1)
 )
 
 // Type styles: Secondary.On(c, ui.Text(c, s)).

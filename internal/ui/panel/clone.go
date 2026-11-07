@@ -30,14 +30,15 @@ func cloneSeed(r match.Result, prefix string) string {
 	return prefix
 }
 
-// copied says "Copied" before a button, for the time that is left after a copy; the button shows the check mark.
-func (s *Screen) copied(c *ui.Context, until time.Time) bool {
+// copied says "Copied" before the button keyed key, for the time that is left after a copy, fading in and out; the
+// button shows the check mark.
+func (s *Screen) copied(c *ui.Context, key string, until time.Time) bool {
 	left := until.Sub(s.now())
 	if left <= 0 {
 		return false
 	}
 	t := c.Theme()
-	theme.Small.On(c, ui.Text(c, s.text.Copied)).TextColor(t.TextMuted).SingleLine().Shrink(0)
+	theme.FadeIn(theme.Small.On(c, ui.Text(c.Key(key+"-copied"), s.text.Copied)).TextColor(t.TextMuted).SingleLine().Shrink(0))
 	c.After(left)
 	return true
 }
@@ -55,7 +56,7 @@ func (s *Screen) remoteRow(c *ui.Context, r *match.Result, a account.Account) {
 		ui.Icon(c, icons.Globe).FontSize(t.Space(theme.IconS)).TextColor(t.TextMuted).Shrink(0)
 		text := theme.Secondary.On(c, ui.Text(c, s.text.HTTPSRow)).SingleLine().Grow(1).MinWidth(0)
 		tipAbove(c, text, s.text.HTTPSTip)
-		s.copied(c, s.httpsUntil)
+		s.copied(c, "https-copy", s.httpsUntil)
 		icon, done := icons.Terminal, s.now().Before(s.httpsUntil)
 		if done {
 			icon = icons.Check
@@ -87,7 +88,7 @@ func (s *Screen) cloneBlock(c *ui.Context, key string, a account.Account, f *clo
 				in.AutoFocus()
 			}
 			enter := in.Submitted()
-			s.copied(c, f.until)
+			s.copied(c, key+"-copy", f.until)
 			icon, done := icons.Terminal, s.now().Before(f.until)
 			if done {
 				icon = icons.Check

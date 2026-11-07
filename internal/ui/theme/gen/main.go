@@ -1,5 +1,5 @@
 // Command gen writes the theme package's tokens_gen.go from design/tokens.json and design/layout.json: the spacing
-// steps and sizes in steps of Theme.Spacing, the window sizes and radii in DIPs, the opacities, the motion durations,
+// steps and sizes in steps of Theme.Spacing, the window sizes and radii in DIPs, the opacities, the motion durations, distances and curve,
 // the type styles and the layout patterns, so the screens name a token or a layout instead of writing a number. go
 // generate runs it in the theme package.
 package main
@@ -120,12 +120,17 @@ func generate(src, lay []byte) ([]byte, error) {
 		{"Window sizes, in DIPs.", t.Window.Tokens, dips},
 		{"Radii, in DIPs: e.Radius(RadiusCard).", t.Radius.Tokens, dips},
 		{"Opacities: e.Opacity(OpacityFaded).", t.Opacity.Tokens, plain},
-		{"Durations: c.After(MotionAck).", t.Motion.Tokens, duration},
+		{"Motion: durations, c.After(MotionAck); distances in DIPs, ui.Motion{Y: MotionShift}.", t.Motion.Tokens, motion},
 	}
+	var curves []token
 	for _, g := range groups {
 		fmt.Fprintf(&b, "\n// %s\nconst (\n", g.doc)
 		for _, tok := range g.toks {
 			if tok.Unit != "" {
+				continue
+			}
+			if s, _ := tok.Value.(string); strings.HasPrefix(s, "cubic-bezier(") {
+				curves = append(curves, tok)
 				continue
 			}
 			value, at, err := g.emit(tok)
@@ -137,6 +142,16 @@ func generate(src, lay []byte) ([]byte, error) {
 		}
 		b.WriteString(")\n")
 	}
+	b.WriteString("\n// Easing curves: ui.ElementTransition{Ease: Ease}.\nvar (\n")
+	for _, tok := range curves {
+		value, err := curve(tok)
+		if err != nil {
+			return nil, fmt.Errorf("%s: %w", tok.Name, err)
+		}
+		fmt.Fprintf(&b, "\t// %s is %s. %s\n\t%s = %s\n", ident(tok.Name), tok.Value, tok.Usage, ident(tok.Name), value)
+		names[ident(tok.Name)] = true
+	}
+	b.WriteString(")\n")
 	b.WriteString("\n// Type styles: Secondary.On(c, ui.Text(c, s)).\nvar (\n")
 	for _, g := range t.Type.Groups {
 		for _, st := range g.Styles {
@@ -274,6 +289,35 @@ func plain(tok token) (string, string, error) {
 		return "", "", fmt.Errorf("value %v is not a number", tok.Value)
 	}
 	return number(v), number(v), nil
+}
+
+// motion is a duration in milliseconds, or a distance in px, which is DIPs: Motion moves by DIPs.
+func motion(tok token) (string, string, error) {
+	if s, _ := tok.Value.(string); strings.HasSuffix(s, "px") {
+		return dips(tok)
+	}
+	return duration(tok)
+}
+
+// curve is the ui.Easing of a value such as "cubic-bezier(0.2, 0, 0, 1)".
+func curve(tok token) (string, error) {
+	s, _ := tok.Value.(string)
+	args, ok := strings.CutPrefix(s, "cubic-bezier(")
+	if args, ok = strings.CutSuffix(args, ")"); !ok {
+		return "", fmt.Errorf("value %v is not a cubic-bezier", tok.Value)
+	}
+	parts := strings.Split(args, ",")
+	if len(parts) != 4 {
+		return "", fmt.Errorf("value %v does not have four numbers", tok.Value)
+	}
+	for i, p := range parts {
+		v, err := strconv.ParseFloat(strings.TrimSpace(p), 64)
+		if err != nil {
+			return "", err
+		}
+		parts[i] = number(v)
+	}
+	return "ui.CubicBezier(" + strings.Join(parts, ", ") + ")", nil
 }
 
 // duration reads the leading milliseconds of a value such as "200ms ease-out".

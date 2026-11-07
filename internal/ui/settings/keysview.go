@@ -130,7 +130,8 @@ func (s *Screen) keyResult(c *ui.Context) {
 			}
 			if s.now().Before(s.keys.copied) {
 				c.After(s.keys.copied.Sub(s.now()))
-				theme.InlineTight(c, ui.Row(c)).Shrink(0).Children(func() {
+				// The acknowledgment fades in where the button was, and out again.
+				theme.FadeIn(theme.InlineTight(c, ui.Row(c.Key("pub-copied")))).Shrink(0).Children(func() {
 					theme.Small.On(c, ui.Text(c, s.text.Copied)).TextColor(t.TextMuted).SingleLine()
 					ui.Icon(c, icons.Check).FontSize(t.Space(theme.Icon)).TextColor(t.Accent).Label(s.text.Copied)
 				})
