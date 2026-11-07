@@ -30,8 +30,8 @@ colors. Three rules hold the system together:
 - **Selection is neutral.** A selected row, menu entry or tab takes `selected` and keeps its text colors; the identity
   badge keeps its own color. The identity colors are the only other hues, always beside a name.
 - **Fixed scales.** Spacing is 2, 4, 6, 8, 12, 16, 24, 32; radius follows role (8 fields and rows, 12 cards, 16
-  windows, capsules for buttons); type is a role scale (`title`, `emphasis`, `body`, `secondary`, `caption`, `small`,
-  `mono`).
+  windows, capsules for buttons); type is ten named styles (`Display`, `Title`, `Body`, `BodyMedium`, `BodyStrong`,
+  `Secondary`, `Caption`, `Small`, `Mono`, `MonoSmall`).
 
 The code reaches these values screen by screen. Until a screen moves, the measurements below describe the code as it
 is, and `audit.pending` in `tokens.json` lists each value that still differs; a screen's pull request takes its entries
@@ -95,9 +95,9 @@ Layout uses flexbox in device-independent pixels (DIPs); see
 - **Tokens in code.** `internal/ui/theme/tokens_gen.go` is generated from `design/tokens.json` by
   `go generate ./internal/ui/theme`: spacing and sizes in steps of the unit, window sizes and radii in DIPs, opacities
   and durations. A screen writes no number of its own for a size, radius or opacity: a test fails on `t.Space(3)`,
-  `Radius(12)` or `Opacity(0.5)`, and another fails when the generated file is stale. A value the screens need and
-  `tokens.json` lacks is added there first, then generated. Line widths (borders, hairlines, glyph strokes) and text
-  sizes (`t.Rem`) are not tokens in code yet.
+  `Radius(12)` or `Opacity(0.5)`, or on text that sets its own size or weight instead of a type style, and another
+  fails when the generated file is stale. A value the screens need and `tokens.json` lacks is added there first, then
+  generated. Line widths (borders, hairlines, glyph strokes) are not tokens in code yet.
 - **Scale.** Prefer whole multiples of the unit: 1 (4) inside a control row, 2 (8) between related controls and
   between buttons, 3 (12) between blocks of the panel, 4 (16) for the panel's outer padding. Larger gaps need a
   reason, for example the idle drop zone.
@@ -192,27 +192,30 @@ scale still follow the desktop; the values are in [tokens.json](../design/tokens
 
 ## Typography
 
-- **System font.** Leave `Font` empty so text uses the platform's UI font. The default text size is 13 on macOS and
-  14 elsewhere, and scales with the desktop's text size (`Preferences().TextScale`) when you rely on the theme. See
-  [Text](https://github.com/egoist/mygo/blob/v0.5.5/docs/ui/text.md). Paths, SSH aliases and folders use
-  `Font("monospace")`.
-- **Size relative to the theme.** Use `t.Rem(n)` for sizes (`n` times the theme font size) rather than fixed numbers,
-  so custom text follows the user's text scale. Widgets use the theme size.
-- **Six styles.** At the macOS default of 13, every screen uses these and nothing else:
+- **System font.** Text uses the platform's UI font; the default text size is 13 on macOS and 14 elsewhere, and
+  scales with the desktop's text size (`Preferences().TextScale`). See
+  [Text](https://github.com/egoist/mygo/blob/v0.5.5/docs/ui/text.md).
+- **Ten named styles.** Every text goes through one of them, `theme.Body.On(c, e)`, and sets no size, weight, line
+  height, tracking or font of its own; `TestNoLiterals` fails on any that does. The styles are `type` in
+  [design/tokens.json](../design/tokens.json), generated into `internal/ui/theme/tokens_gen.go`. Sizes are
+  relative to the theme font size (size / 13), so they follow the user's text scale; at the macOS default:
 
-  | Style | Size | Weight | Used for |
+  | Style | Size / line | Weight | Used for |
   |---|---|---|---|
-  | display | `Rem(1.4)`, about 18 | 600 | the product name in the about window, and nowhere else |
-  | title | `Rem(1.15)`, about 15 | 600 | the panel title "Idset", the identity name in a result card and in the accounts editor, a settings pane's heading, the read-only and empty titles |
-  | emphasis | `Rem(1)`, 13 | 600 | identity names in a list, dialog titles, the first line of a notice |
-  | body | `Rem(1)`, 13 | 400 | everything else, and all widget text |
-  | secondary | `Rem(0.92)`, about 12 | 400, `TextMuted` | hints, notes, emails, status lines, the drop zone line |
-  | caption | `Rem(0.85)`, about 11 | 600 for group headings, 400 otherwise, `TextMuted` | group headings ("Identities · 4"), window titles, tab labels, "Copied" |
+  | `Display` | 18 / 24 | 600 | the product name in the about window, and nowhere else |
+  | `Title` | 15 / 20 | 600 | window and panel titles, the identity name in a result card and in the editor, empty and error titles, the letter of a 32 badge |
+  | `Body` | 13 / 18 | 400 | everything else, and the text inside controls: inputs, menus, values in a row |
+  | `BodyMedium` | 13 / 18 | 500 | button labels, identity names in a list, form labels |
+  | `BodyStrong` | 13 / 18 | 600 | dialog titles, the first line of a problem bar or notice, the diagnostics count, the winner of an overlap, the letter of a 28 badge |
+  | `Secondary` | 12 / 16 | 400 | hints, emails, status lines, the drop zone's line, a problem bar's detail |
+  | `Caption` | 11 / 14 | 600, +0.02em | group headings ("Identities · 4"), settings tab labels, small tags (Global, Scoped, New) |
+  | `Small` | 11 / 14 | 400 | a row's folders, times, "Copied" |
+  | `Mono` | 12 / 16 | 400, monospace | paths, aliases, commands, key names beside body or secondary text |
+  | `MonoSmall` | 11 / 14 | 400, monospace | the same beside small text: the clone command, paths in a finding |
 
-  Buttons use body or secondary size; a primary or destructive button is 500, a text button 500, others 400. Nothing is 700.
-- **Monospace.** Paths, aliases, folders, commands and key file names use `Font("monospace")` (SF Mono, Consolas,
-  DejaVu Sans Mono), one step smaller than the text around them, since monospace reads larger: about 11.5 next to
-  secondary text, 11 next to captions.
+  Color is not part of a style: muted text adds `TextColor(t.TextMuted)`. Nothing is 700.
+- **Monospace.** `Mono` and `MonoSmall` use the platform's monospace font (SF Mono, Consolas, DejaVu Sans Mono), one
+  step smaller than the text around them, since monospace reads larger.
 - **Chinese.** The platform font covers Chinese (PingFang SC, Microsoft YaHei UI, Noto Sans CJK); no size changes
   per language.
 - **Hierarchy with few steps.** Weight and color before size; one larger size per screen. A card uses at most three text styles.
@@ -236,9 +239,9 @@ scale still follow the desktop; the values are in [tokens.json](../design/tokens
 - **An icon needs a name when it is alone.** Icons are decoration for assistive technology unless given a `Label`.
   A button that shows only an icon must get a readable name with `.Label()`; an icon next to a visible text label
   needs none.
-- **Size icons with the text.** Card symbols are `Rem(1.1)` (about 14) in `TextMuted`; the glyphs of the title row and
-  footer buttons are `Rem(1.2)` (about 16); the read-only warning is
-  `Space(5.5)` (22) in `Danger`.
+- **Size icons with the tokens.** `ui.Icon` takes its size from `FontSize(t.Space(theme.Icon))`: `IconXs` (12) beside
+  small text and on a disclosure chevron, `IconS` (14) in a row (findings, problem bars, the diagnostics), `Icon` (16) in
+  a button or a title row, `IconM` (20) on a settings tab, `IconL` (24) for an empty state or a result.
 - **The tray icon** is drawn in code by `internal/trayicon/`, so no image file is maintained by hand. It is the
   product icon's mark in one color: the folder, solid, with the keyhole cut through it and the smaller keyhole solid
   inside the cut. It is drawn from the same numbers as [design/icon.svg](../design/icon.svg), on its 100 grid. On
@@ -275,21 +278,21 @@ What Idset uses today:
 | `ui.Divider` | A 0.5 DIP `Border` hairline between list rows and between the sections of a result card. The title row and the footer have none. |
 | Drop zone | A 48 DIP `ui.Row` with a 1 DIP dashed outline (`BorderStyle(ui.BorderDashed)`) in `Accent` at 50% over a fill of `Accent` at 6%, taking files with `DroppedFiles`; a 20 DIP folder glyph in `Accent`, the line, and a 24 DIP high `PrimaryButton` "Choose…" at the end. While `FileDragOver`, the outline is solid `Accent` and the fill accent-soft. See [Dropped files](https://github.com/egoist/mygo/blob/v0.5.5/docs/ui/input.md#dropped-files). |
 | Initial badge | A rounded square with the first letter of the identity's name ("?" without a name), in the identity's color, solid (see [Color](#color-and-dark-mode)): 28 DIPs with radius 8 in a list row, 32 with radius 10 in a result card and the editor header. |
-| Borderless symbol button | `Space(7)` square (28), transparent, icon `Rem(1.1)` in `TextMuted`, `SurfaceHover` fill on hover, `SurfacePressed` while pressed. Must have a `.Label()`. After the path is copied, the icon turns into a check mark with "Copied" before it for 1.2 seconds. |
-| Icon button (title row, footer) | The same 28×28 button with a `Rem(1.2)` (about 16) glyph, round. Always has `.Label()` and a `.Tooltip()` with the same text, in both languages: Settings, Add Identity, About Idset, Check Again, Quit (设置 / 添加身份 / 关于 Idset / 重新检查 / 退出 in Chinese). The tooltip is the `Inverse` fill, no shadow, above the button (below the title row's). Same size, 4 DIPs apart, so a missing button never moves another. |
-| Result card | An answer row (the 32 DIP initial badge, the name at `Rem(1.15)` 600 with the path in monospace `TextMuted` under it, then the clone toggle (only with an alias), ⋯ and clear buttons, 2 DIPs apart) and under it one muted line, email · alias, indented 52 DIPs to the name. Card fill with the 1 DIP card rim, radius 12; the cards without a match add a 1 DIP inner outline in `Warning`, the card for a failed `git` one in `Danger`; a matched card with findings takes the color of the worst one. |
-| Bind row | In a result card: color dot (10 DIPs), name and one line of `TextMuted` (the identity's first folder in monospace `Rem(0.85)`, like the identity list's folders, middle-truncated; "Has <path> · adds another" is its tooltip), "Bind" in `Accent` at the end. 44 DIPs high, hairline above. The whole row is the target. |
+| Borderless symbol button | `Space(7)` square (28), transparent, icon `Icon` (16) in `TextMuted`, `SurfaceHover` fill on hover, `SurfacePressed` while pressed. Must have a `.Label()`. After the path is copied, the icon turns into a check mark with "Copied" before it for 1.2 seconds. |
+| Icon button (title row, footer) | The same 28×28 button with an `Icon` (16) glyph, round. Always has `.Label()` and a `.Tooltip()` with the same text, in both languages: Settings, Add Identity, About Idset, Check Again, Quit (设置 / 添加身份 / 关于 Idset / 重新检查 / 退出 in Chinese). The tooltip is the `Inverse` fill, no shadow, above the button (below the title row's). Same size, 4 DIPs apart, so a missing button never moves another. |
+| Result card | An answer row (the 32 DIP initial badge, the name in `Title` with the path in monospace `TextMuted` under it, then the clone toggle (only with an alias), ⋯ and clear buttons, 2 DIPs apart) and under it one muted line, email · alias, indented 52 DIPs to the name. Card fill with the 1 DIP card rim, radius 12; the cards without a match add a 1 DIP inner outline in `Warning`, the card for a failed `git` one in `Danger`; a matched card with findings takes the color of the worst one. |
+| Bind row | In a result card: color dot (10 DIPs), name and one line of `TextMuted` (the identity's first folder in `MonoSmall`, like the identity list's folders, middle-truncated; "Has <path> · adds another" is its tooltip), "Bind" in `Accent` at the end. 44 DIPs high, hairline above. The whole row is the target. |
 | Card menu | The "⋯" icon button's menu in a matched card: the system's menu (`Element.Menu`), opened by the button on pointer down. A disabled "Rebind to" heading, the other identities by name, and under a separator "Unbind" (only when the identity lists this very folder). The system draws it on its own material, so it has the platform's look, keyboard and screen reader behavior; it cannot show color dots or folders. It opens with "Open in Finder", "Copy Path" and "Choose Another Folder…" above the rebind part. There is no actions row: the clone toggle, the menu and clear are icon buttons in the answer row, in that order. |
 | Confirm block | In a matched card, under the details, hairline above: one line ("<name> will apply only here") and two 80×28 buttons at the right, the plain one first ("Cancel"), then the filled one (`Accent`, "Rebind"). No extra identity row. |
-| Overlap rows | In the overlap card: a row per identity in git's read order (dot, name, path in monospace `Rem(0.88)`), then the verdict: "Used" in `Accent` 600 with a check mark for the winner, "Overridden" in `TextMuted` for the others, whose names also lose their weight; and at the very end an icon button: a pin on the winner ("Use Only <name> Here"), a minus on each loser ("Remove <path> from <name>"). Title row: "<n> identities cover this folder" and an info icon button whose tooltip is "Git reads them in order; the last one wins." |
+| Overlap rows | In the overlap card: a row per identity in git's read order (dot, name, path in `Mono`), then the verdict: "Used" in `Accent` 600 with a check mark for the winner, "Overridden" in `TextMuted` for the others, whose names also lose their weight; and at the very end an icon button: a pin on the winner ("Use Only <name> Here"), a minus on each loser ("Remove <path> from <name>"). Title row: "<n> identities cover this folder" and an info icon button whose tooltip is "Git reads them in order; the last one wins." |
 | Stale-path prompt | A card of its own above the no-match card: a 40 DIP header (color dot, "<name>'s folder is gone" / 「<name> 的路径已不在」, the name in 600, one line), two 28 DIP path rows under hairlines with no labels (the old path in `TextMuted`, then the new path after an arrow, monospace, one line, middle-truncated, full text in the tooltip), and a 36 DIP row with two text buttons at the right, "Update" in `Accent` and "Ignore" in `TextMuted`; their tooltips are "Change to This Path" and "Keep Old Path". The height is the same for any path. Card fill, no outline, no clear button. |
-| Finding rows | In a matched card, under the details, in a section of their own: a hairline above, `Space(1)` (4) above and below the rows. One 28 DIP row per identity-check finding, email first, then key, like a path row: padding `Space(3)` (12), a `Rem(1.1)` (about 14) glyph, the warning triangle in `Warning` or the error circle in `Danger`, gap `Space(1.5)` (6), and one line of `Rem(0.92)` (about 12) `Text`: "Commits have no author", "Commits use <email> (<name>)", "Commits use <email>", "Pushes use <path>" (「提交没有作者」「提交会署名为 <邮箱>（<身份>）」「提交会署名为 <邮箱>」「推送会用 <路径>」). A long email gives way before its "@", so the domain and the identity name stay; a key path is middle-truncated in monospace like any path. The row's tooltip says why, with the full value: above the row, 6 DIPs away, its start under the row's start, at most 240 DIPs wide. No buttons: fixes belong to the diagnostics. The card's outline is `Danger` when any finding is an error, else `Warning`. |
+| Finding rows | In a matched card, under the details, in a section of their own: a hairline above, `Space(1)` (4) above and below the rows. One 28 DIP row per identity-check finding, email first, then key, like a path row: padding `Space(3)` (12), an `IconS` (14) glyph, the warning triangle in `Warning` or the error circle in `Danger`, gap `Space(1.5)` (6), and one line of `Secondary` in `Text`: "Commits have no author", "Commits use <email> (<name>)", "Commits use <email>", "Pushes use <path>" (「提交没有作者」「提交会署名为 <邮箱>（<身份>）」「提交会署名为 <邮箱>」「推送会用 <路径>」). A long email gives way before its "@", so the domain and the identity name stay; a key path is middle-truncated in monospace like any path. The row's tooltip says why, with the full value: above the row, 6 DIPs away, its start under the row's start, at most 240 DIPs wide. No buttons: fixes belong to the diagnostics. The card's outline is `Danger` when any finding is an error, else `Warning`. |
 | Connectivity dot | At the end of an identity row, after the folders: a 14 DIP slot holding a 6 DIP dot, `Success` when the last `ssh -T` passed, `Danger` when it failed, a 1.5 DIP `TextMuted` ring while the first check runs. Its tooltip and accessible name say it in words: "Connected · <platform> user <user>", "Check failed · <why>", "Checking the connection…". A row without an alias keeps the empty slot so the folders line up; before the first report there are no dots. |
-| Problem bar | Under the row of an identity whose check failed, inside the same list, indented to the name (48 DIPs: 12 + the 28 DIP badge + 8), 28 DIP line: the error circle in `Danger` (the globe in `TextMuted` for an HTTPS remote), one `Rem(0.92)` sentence (a missing key names its path in monospace, middle-truncated), the reason as its tooltip, and "Check Again" (the refresh icon button, disabled while the check runs). Below it, indented past the glyph and its gap (`Rem(1.1)` + `Space(1.5)`, about 20, so it follows the font size), at most one line of next step: "Unlock with Keychain" on macOS (an `Accent` text button); elsewhere, or after the unlock failed, the `ssh-add <path>` command with a copy button; "Copy Public Key" (a copy icon button) and "Open <platform>" for a rejected key; "Add Rewrite" for an HTTPS remote; "Generate Key" for a missing key, which opens the Keys pane of the settings window filled in for the identity. No hairline between the row and its bar. |
+| Problem bar | Under the row of an identity whose check failed, inside the same list, indented to the name (48 DIPs: 12 + the 28 DIP badge + 8), 28 DIP line: the error circle in `Danger` (the globe in `TextMuted` for an HTTPS remote), one `Secondary` sentence (a missing key names its path in monospace, middle-truncated), the reason as its tooltip, and "Check Again" (the refresh icon button, disabled while the check runs). Below it, indented past the glyph and its gap (`IconS` + `Space1_5`, 20), at most one line of next step: "Unlock with Keychain" on macOS (an `Accent` text button); elsewhere, or after the unlock failed, the `ssh-add <path>` command with a copy button; "Copy Public Key" (a copy icon button) and "Open <platform>" for a rejected key; "Add Rewrite" for an HTTPS remote; "Generate Key" for a missing key, which opens the Keys pane of the settings window filled in for the identity. No hairline between the row and its bar. |
 | ssh notice | When the checks find no `ssh`, one card above the drop zone replaces every bar and the summary: the danger-soft tint, radius 12, no outline, the error circle, "ssh not found" (600), "Check Again" over all identities, and one line in `fg2` on how to install it for the platform. |
-| Diagnostics summary | After the identity list, once a round of checks has finished. Nothing wrong: one muted line with a `Success` check mark, "Configuration OK". Otherwise a card (card fill, radius 12): a 32 DIP header, a button with `aria-expanded` (the worst glyph, "1 error · 2 warnings" in 600, a chevron), and when open one entry per problem under hairlines: the glyph, what is wrong, how to look into it in `TextMuted`, an optional action ("Copy Command" as a terminal icon button for NET001, "Regenerate" as an `Accent` text button for GIT001), and the code (NET001, SSH001, GIT001, GIT002) in monospace `Rem(0.85)` at the end. It opens by itself whenever its set of entries changes, and stays as the user left it otherwise. |
+| Diagnostics summary | After the identity list, once a round of checks has finished. Nothing wrong: one muted line with a `Success` check mark, "Configuration OK". Otherwise a card (card fill, radius 12): a 32 DIP header, a button with `aria-expanded` (the worst glyph, "1 error · 2 warnings" in 600, a chevron), and when open one entry per problem under hairlines: the glyph, what is wrong, how to look into it in `TextMuted`, an optional action ("Copy Command" as a terminal icon button for NET001, "Regenerate" as an `Accent` text button for GIT001), and the code (NET001, SSH001, GIT001, GIT002) in `MonoSmall` at the end. It opens by itself whenever its set of entries changes, and stays as the user left it otherwise. |
 | Undo bar | The last row of the result card, 36 DIPs high, hairline above: "Bound to <identity> ·" and an `Accent` "Undo" text button. A 2 DIP line on the bar's bottom edge, `Accent` at 45%, is as wide as the time left of the card's width, in fifths. |
-| Identity list | A group heading "Identities · N" (`Rem(0.85)`, 600, `TextMuted`), then one card container (card fill, card rim, radius 12) with 0.5 DIP hairlines between rows, starting at the name (48 DIPs from the edge). |
+| Identity list | A group heading "Identities · N" (`Caption`, `TextMuted`), then one card container (card fill, card rim, radius 12) with 0.5 DIP hairlines between rows, starting at the name (48 DIPs from the edge). |
 | Source list row | A 28 DIP initial badge, name and email on two lines, an optional folder symbol; `Accent` fill with `AccentText` when selected. |
 | Color choice | A 14 DIP dot in the preset color with its name as `Label`; the chosen one has a ring and a check mark. |
 | Settings row | Label left, value right, 32 DIPs high, hairline between rows inside a card-fill group with radius 12. |
@@ -380,7 +383,7 @@ Overlays share focus and Escape behavior; see
 Design: the Panel page of the [screens canvas](https://claude.ai/artifact/2cP14kKAaf6tajDXeJV555), every state, and both appearances side by side in its
 "light and dark" board.
 
-From top to bottom: the title row ("Idset", `Rem(1.15)` / 600, a level 1 heading, and the Settings icon
+From top to bottom: the title row ("Idset", `Title`, a level 1 heading, and the Settings icon
 button at the right; no close button: the tray icon and Escape hide the panel), the content, and the footer. The title
 row is `Space(11)` (44) high with no divider; the footer is `Space(10)` (40), also with no divider: the list's end and the material separate them. The title row
 has `Space(4)` left and `Space(2)` right padding; the footer has `Space(2)` at both sides. The icon buttons are
@@ -397,19 +400,19 @@ The content, in order:
 
 1. Loading: only a spinner and "Reading configuration…", centered.
 2. `accounts.json` cannot be read: nothing else can be done, so the error fills the content and is centered
-   vertically: a `Space(11)` (44) warning badge (radius 12, danger-soft), the title (`Rem(1.15)`, 600), the file path in
-   monospace `Rem(0.88)` `TextMuted`, the parser error in monospace `Rem(0.85)` `TextMuted`, at most two lines (the full
+   vertically: a `Space(11)` (44) warning badge (radius 12, danger-soft), the title (`Title`), the file path in
+   `Mono` `TextMuted`, the parser error in `MonoSmall` `TextMuted`, at most two lines (the full
    text is its tooltip), one short line "Read-only until fixed" (the sentence "Idset does not write to it until it is
    fixed or restored." is its tooltip), and three buttons: "Restore from Backup" (primary, 28×248, opens the Backups pane of the settings window), then
    "Show in Finder" (Explorer on Windows, the file manager on Linux) and "Reload", 28×120 each on one row. There is no reason box.
 3. Otherwise: the result card (when there is a result), the ssh notice (when `ssh` is missing), the one-line drop
    zone, the group heading "Identities" with the count, the filter (from three identities on), the identity list with
    its connectivity dots and problem bars, and the diagnostics summary. Without identities there is one centered block
-   instead: a 56×56 tile (radius 14, accent-soft) with the key glyph in `Accent`, then "No identities yet" (`Rem(1.15)`, 600), one short line ("Each folder uses its own Git and SSH identity.")
+   instead: a 56×56 tile (radius 14, accent-soft) with the key glyph in `Accent`, then "No identities yet" (`Title`), one short line ("Each folder uses its own Git and SSH identity.")
    and the filled "Add Identity" button (28 high); the drop zone sits under it, at the bottom of the content.
 
 The drop zone is one row, 48 DIPs high, and shows only while there is no result: the result card takes its place, and clearing the result brings it back. It holds a 20 DIP folder glyph in `Accent`, the line
-"Drop a folder to see its identity" (「拖入文件夹，看用哪个身份」, `Rem(0.92)`), and at the end a 24 DIP high primary
+"Drop a folder to see its identity" (「拖入文件夹，看用哪个身份」, `Secondary`), and at the end a 24 DIP high primary
 "Choose…" button. The box has a dashed 1 DIP `Accent` outline at 50% over a fill of `Accent` at 6%; while a folder
 is dragged over it the outline is solid `Accent` and the fill accent-soft. "Shows which identity a folder uses" is the
 tooltip of the line and "Choose Folder…" that of the button. Words that only explain are tooltips throughout the panel: the full sentence of
@@ -418,14 +421,14 @@ tooltip of the line and "Choose Folder…" that of the button. Words that only e
 The result card leads with the answer, padding `Space(3)` (12), radius 12, card fill with the card rim:
 
 - The answer row. Checking: a spinner and "Checking…". Matched: a 32 DIP initial badge (radius 10, solid, its letter
-  near black or white), then two lines: the identity's name (`Rem(1.15)`, 600; "Git uses this identity here" is its
+  near black or white), then two lines: the identity's name (`Title`; "Git uses this identity here" is its
   tooltip) and the folder (the repository root, or the dropped path when it is not a repository) in monospace
   `TextMuted`, middle-truncated. At the end a cluster, 2 DIPs apart: a short transient status ("Copied", "Updated",
   "Undone", "Covered by …"), the clone toggle (only with an alias), "⋯" and the clear button (not while checking).
   Open in Finder and Copy Path are in the "⋯" menu.
 - One muted line under it, indented 52 DIPs to the name: the email (or "No email") · the alias in monospace. The
-  identity's folders are in the identity list, not in the card. Without a match: the sentence for the case, 600, with a 1 DIP inner `Warning` outline. `git` failed: "Could not
-  run git" in `Danger`, then the reason in monospace `Rem(0.85)` `TextMuted`, at most two lines (the full text is its
+  identity's folders are in the identity list, not in the card. Without a match: the sentence for the case in `BodyStrong`, with a 1 DIP inner `Warning` outline. `git` failed: "Could not
+  run git" in `Danger`, then the reason in `MonoSmall` `TextMuted`, at most two lines (the full text is its
   tooltip), with a 1 DIP inner `Danger` outline.
 - Identity check (docs/product.md): when the repository's own `user.email` or `core.sshCommand` disagrees with the
   matched identity, the finding rows follow the muted line inside the same card, and the outline takes the worst
@@ -443,10 +446,10 @@ The result card leads with the answer, padding `Space(3)` (12), radius 12, card 
     the answer row's buttons). The button's name is "Copy Switch-to-SSH Command"; its tooltip is that name and the whole command
     (`git remote set-url origin git@github-work:org/repo.git`), so nothing on the card has to show a long mono
     string. Why it matters ("HTTPS pushes do not use this identity's alias or key.") is the text's tooltip.
-    After the copy the glyph is a check and "Copied" (`Rem(0.85)`, `TextMuted`) stands before it for 1.2 seconds.
-  - Clone helper: padding `Space(2)`x`Space(3)`, bottom `Space(3)`. A 28 DIP input (monospace `Rem(0.88)`, field fill,
+    After the copy the glyph is a check and "Copied" (`Small`, `TextMuted`) stands before it for 1.2 seconds.
+  - Clone helper: padding `Space(2)`x`Space(3)`, bottom `Space(3)`. A 28 DIP input (`Mono`, field fill,
     0.5 DIP `Border`, radius 8) with the copy button (`terminal` glyph, the same glyph as the HTTPS row, since both copy
-    a command) at its end; under them a 16 DIP line, monospace `Rem(0.85)` `TextMuted`: the output, `git clone
+    a command) at its end; under them a 16 DIP line, `MonoSmall` `TextMuted`: the output, `git clone
     git@github-work:org/repo.git`, middle-truncated like a path ("git clone git@github-work:" and the last segment
     stay; the full command is its tooltip). Enter copies. When the input cannot be read the copy button is
     disabled (40% opacity) and the line is a quiet hint in the same style, "Enter owner/repo or a repository URL",
@@ -457,7 +460,7 @@ The result card leads with the answer, padding `Space(3)` (12), radius 12, card 
     `clone-bad`, `clone-copied`, `row-open`.
 - Binding. Design states: no match, rebinding to a global identity (the confirmation), matched (by a parent folder, or by the folder itself
   with "Unbind"), the rebind menu, already covered, overlap, the undo bar, and after undo.
-  - No match: the sentence, a "Bind to" heading (`Rem(0.92)`, 600, `TextMuted`) and one bind row per identity, then a
+  - No match: the sentence, a "Bind to" heading (`Caption`, `TextMuted`) and one bind row per identity, then a
     last 40 DIP row with "New Identity" (an `Accent` text button with a plus; "New Identity for This Folder" is its
     tooltip and accessible name). One tap binds; there is
     no confirmation. A folder has no match only when there is no global identity, so the list never has one.
@@ -468,7 +471,7 @@ The result card leads with the answer, padding `Space(3)` (12), radius 12, card 
     when only a parent folder covers the folder; nothing else explains it, since the identity list shows the covering path. "Rebind
     to" lists every other identity.
   - Already covered: the bind did not change anything. The card keeps its answer and its answer row shows "Covered by
-    <path>" (`Rem(0.85)`, `TextMuted`, one line, ending in an ellipsis when short of room) before the buttons for 1.2 seconds,
+    <path>" (`Small`, `TextMuted`, one line, ending in an ellipsis when short of room) before the buttons for 1.2 seconds,
     like "Copied"; the full sentence "<name> already covers this folder with <path>.
     Nothing changed." is its tooltip. The path keeps at least 80 DIPs; the status shortens first.
   - Overlap: a card of its own above the matched one, without a path or clear button (the matched card under it shows the
@@ -490,10 +493,10 @@ The result card leads with the answer, padding `Space(3)` (12), radius 12, card 
     returns to what it was, with "Undone" next to the clear button for 1.2 seconds, like "Copied". Unbinding shows
     no bar.
 
-The identity list starts with the group heading "Identities · N" (「身份 · N」, `Rem(0.85)`, 600, `TextMuted`), 6 in from
+The identity list starts with the group heading "Identities · N" (「身份 · N」, `Caption`, `TextMuted`), 6 in from
 the card's edge, then one card. Identity list rows: at least 48 DIPs high, padding `Space(2)`×`Space(3)` (8×12), a
 28×28 initial badge (radius 8, the identity's color, solid, the same as in the accounts window's source list; no color
-dot), gap `Space(2)` (8), the name (`Rem(1)`, 600) and the email (`Rem(0.92)`, `TextMuted`) on two lines, and at
+dot), gap `Space(2)` (8), the name (`BodyMedium`) and the email (`Secondary`, `TextMuted`) on two lines, and at
 the end the folders: the first one, "+N" when there
 are more, "Global" for a global identity, "no folders" without any. A long first folder is middle-truncated (at
 most half the row) and " +N" always stays; the name and email are single lines too.
@@ -533,24 +536,24 @@ The window is 760×520 with radius 16 corners the system draws. The title bar is
 toolbar: below it, a source list and a detail pane.
 
 - **Source list** (left, `Space(58)`, 232, straight on the material: `Sidebar` on macOS, no fill of its own). Its
-  content starts 16 under the title bar, level with the detail pane's. Group heading "Identities" with the count (11, 600, `TextMuted`), then rows in the panel's order, inset 8 DIPs from the
-  list's sides: `Space(1.5)`×`Space(2)` padding, radius 8, a 28 DIP initial badge (radius 8), 8 to the name (13, 600) and
-  the email (`Rem(0.92)`, `TextMuted`) 2 below. Text wraps. An identity limited to folders has
+  content starts 16 under the title bar, level with the detail pane's. Group heading "Identities" with the count (`Caption`, `TextMuted`), then rows in the panel's order, inset 8 DIPs from the
+  list's sides: `Space(1.5)`×`Space(2)` padding, radius 8, a 28 DIP initial badge (radius 8), 8 to the name (`BodyMedium`) and
+  the email (`Secondary`, `TextMuted`) 2 below. Text wraps. An identity limited to folders has
   a folder symbol at the end of its row, named "Scoped" for assistive technology; a draft shows "New" there. The
   selected row has the neutral `selected` fill and keeps its text colors; its badge keeps its color. The list scrolls above an
   add bar fixed to the bottom edge of the sidebar: a hairline, then a borderless "+" symbol button named "Add
   Identity" (also its tooltip), `Space(11)` (44) high with the button centered.
 - **Detail** (right, scrolls on a slightly more opaque layer, the detail fill, separated from the list by a 0.5 DIP
   hairline). Padding `Space(4)` (16) on top and `Space(6)` (24) at the sides and below, `Space(6)` (24) between groups.
-  Header: a 32 DIP initial badge (radius 10), 8 to the title (`Rem(1.15)`, 600, level 1), "Global" or "Scoped" (`Rem(0.92)`, `TextMuted`), and at the
+  Header: a 32 DIP initial badge (radius 10), 8 to the title (`Title`, level 1), "Global" or "Scoped" (`Secondary`, `TextMuted`), and at the
   end the six preset colors as 14 DIP dots (the chosen one ringed and ticked, each named for assistive technology)
   and the hex value.
-- **Groups.** A section title (11, 600, `TextMuted`, level 2) over an inset group in the card fill with radius 12 and the card rim: Identity,
+- **Groups.** A section title (`Caption`, `TextMuted`, level 2) over an inset group in the card fill with radius 12 and the card rim: Identity,
   SSH, Scope, URL rewrites, Notes, Times (not for a draft). A row is 32 DIPs high with `Space(3)` (12) side padding:
   the label on the left (a fixed label column, so rows line up), the value on the right, right-aligned. Rows are
   separated by a hairline inset 12 from the left. Values are plain text, not boxed text fields; a focused one shows
-  the focus ring around its text. Paths, aliases, host names, ports and URLs are monospace 12 and are sized to fit
-  one line. A footnote under a group (`Rem(0.92)`, `TextMuted`) carries help; an error there is `Danger` with the warning
+  the focus ring around its text. Paths, aliases, host names, ports and URLs are `Mono` and are sized to fit
+  one line. A footnote under a group (`Secondary`, `TextMuted`) carries help; an error there is `Danger` with the warning
   symbol.
 - **Controls in rows.** Platform is a select (value and a down chevron). Port is two radios (22, 443); Custom shows a
   host name and a port value. Scope is a row "Applies to" with a segmented control, "Global" and "Limited to
@@ -561,7 +564,7 @@ toolbar: below it, a source list and a detail pane.
   row: the `from` URL, and under it `→` and the `to` URL, then "Push only" with a switch and a minus button; then the
   text rows "+ Add Rewrite" and "+ Add Default Rewrites" (disabled without an alias, the reason in the
   footnote). Text rows are `Accent` text with a leading plus, never boxed.
-- **Hints.** A prefilled signature name and email carry "From git config --global" (`Rem(0.92)`, `TextMuted`) at the end of their
+- **Hints.** A prefilled signature name and email carry "From git config --global" (`Secondary`, `TextMuted`) at the end of their
   row, right of the value; the row keeps the standard 32 height. A long value is cut before it reaches the hint. The
   hint goes as soon as the field is edited.
 - **Scrolling.** The detail is a scroll view above the fixed footer; the header scrolls with the groups. The source
@@ -569,15 +572,15 @@ toolbar: below it, a source list and a detail pane.
 - **Footer.** Hairline above, `Space(11)` (44) high like the sidebar's add bar so the two hairlines are one line, side padding
   `Space(6)` (24) like the detail's, everything centered vertically. Delete, Revert and Save are `Space(7)` (28) high; Revert and Save are `Space(25)`
   (100) wide, enough for "✓ Saved", "Saving", "已保存" and "保存中", so no label change resizes or moves anything. At the left "Delete" as plain `Danger` text (existing
-  identities only), then the status (`Rem(0.92)`, `TextMuted`), then "Revert" (bordered) and "Save", the only filled button.
+  identities only), then the status (`Secondary`, `TextMuted`), then "Revert" (bordered) and "Save", the only filled button.
   Status: "Unsaved changes", or "Not saved" for a draft; a spinner with "Writing…" while saving,
   when the form is dimmed (opacity-faded) and disabled; "Saved" with a check mark on the Save button for
   1.2 seconds after success; the reason in `Danger` with the warning symbol, wrapping, when the write failed (Save stays available).
   Save and Revert are disabled while there is nothing to save.
-- **Empty.** No list and no footer: "No identities yet" (`Rem(1.15)`, 600), one sentence, "Import Existing"
+- **Empty.** No list and no footer: "No identities yet" (`Title`), one sentence, "Import Existing"
   (bordered; opens the settings window on Import) and "New" (primary), centered, with no add bar.
 - **Delete confirmation.** A dialog window (see Dialogs), 340 wide, `Space(6)` (24) padding:
-  "Delete identity <name>?" (`Rem(1)`, 600), a sentence, the private key path and the folders that are not
+  "Delete identity <name>?" (`BodyMedium`), a sentence, the private key path and the folders that are not
   deleted automatically between two hairlines (no box), a line that project folders are never touched, the "Also
   delete the private key" checkbox (unchecked by default) and the buttons Cancel (bordered; the Escape action and
   initial focus) and Delete (`Danger` fill, white text). When the key cannot be deleted (no key path, another
@@ -619,7 +622,7 @@ translucent fills, hairlines and text; only dialogs have a shadow.
   under it) and "New identity" with the email and platform it starts from, between two hairlines, a muted note,
   Cancel (initial focus) and Use.
 - **Import.** Scanned each time the pane is entered; while it reads, a centered spinner, "Reading your SSH and Git
-  configuration…" (15, 600) and a muted line naming the files. The candidates are one grouped list under "N
+  configuration…" (`Title`) and a muted line naming the files. The candidates are one grouped list under "N
   identities found", rows 44 high: a checkbox, the Host name (muted when unchecked) over a muted "alias · email" (11;
   "No alias" when there is none), and at the end a muted "Already added", or a folder icon and "Imported as scoped"
   when that candidate is checked. Under the list, muted footnotes: the files are only read; the scoped ones apply to
@@ -661,7 +664,7 @@ Design: the About page of the [screens canvas](https://claude.ai/artifact/2cP14k
 minimizable or full-screen, on the `Popover` material; one column centered both ways in the space under the title
 bar, `Space(6)` (24) at the sides and kept free below.
 
-- **Identity.** The product icon tile at 64 DIP (`Space(16)`), from `resources/icon.png`. Under it, 12 apart, "Idset" (display, `Rem(1.4)`, about 18, 600, a level 1
+- **Identity.** The product icon tile at 64 DIP (`Space(16)`), from `resources/icon.png`. Under it, 12 apart, "Idset" (`Display`, a level 1
   heading), then the muted, selectable "Version 0.1.0", then 12 below the copyright and the license on two muted
   11 lines.
 - **Actions.** `Space(6)` (24) under the license, 8 apart and centered: "GitHub", a link in `Accent` (500, no fill) with the external

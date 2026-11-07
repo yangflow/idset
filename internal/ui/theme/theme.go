@@ -49,6 +49,30 @@ var (
 	}
 )
 
+// Style is a type style of design/tokens.json: Size a multiple of the theme's font size, Weight from 100 to 900,
+// Line the line height as a multiple of the size, Tracking the letter spacing in em, Mono the system's monospace
+// font. tokens_gen.go holds the styles; text takes its size and weight only from one of them.
+type Style struct {
+	Size     float32
+	Weight   int
+	Line     float32
+	Tracking float32
+	Mono     bool
+}
+
+// On gives e the style: its size, weight, line height and tracking, and the monospace font for a mono style.
+func (s Style) On(c *ui.Context, e ui.Element) ui.Element {
+	size := c.Theme().Rem(s.Size)
+	e = e.FontSize(size).FontWeight(s.Weight).LineHeight(s.Line)
+	if s.Tracking != 0 {
+		e = e.LetterSpacing(s.Tracking * size)
+	}
+	if s.Mono {
+		e = e.Font("monospace")
+	}
+	return e
+}
+
 // Card gives e the card shape: RadiusCard, the card fill and the card rim along its top edge, inside it.
 func Card(c *ui.Context, e ui.Element) ui.Element {
 	f := Of(c)

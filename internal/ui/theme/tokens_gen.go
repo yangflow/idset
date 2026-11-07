@@ -159,3 +159,27 @@ const (
 	// MotionUndo is 5000ms. The undo bar's countdown, from an absolute deadline.
 	MotionUndo = 5000 * time.Millisecond
 )
+
+// Type styles: Secondary.On(c, ui.Text(c, s)).
+var (
+	// Display is 18 on 24 at the default font size, weight 600. The product name in the about window, and nowhere else.
+	Display = Style{Size: 1.3846, Weight: 600, Line: 1.3333, Tracking: -0.01, Mono: false}
+	// Title is 15 on 20 at the default font size, weight 600. Window and panel titles (the panel's Idset), the identity name in a result card and the editor, empty and error titles, the letter of a 32 badge.
+	Title = Style{Size: 1.1538, Weight: 600, Line: 1.3333, Tracking: -0.005, Mono: false}
+	// Body is 13 on 18 at the default font size, weight 400. Everything else, and the text inside controls: inputs, menus, values in a row.
+	Body = Style{Size: 1.0000, Weight: 400, Line: 1.3846, Tracking: 0, Mono: false}
+	// BodyMedium is 13 on 18 at the default font size, weight 500. Button labels, identity names in a list, form labels.
+	BodyMedium = Style{Size: 1.0000, Weight: 500, Line: 1.3846, Tracking: 0, Mono: false}
+	// BodyStrong is 13 on 18 at the default font size, weight 600. Dialog titles, the first line of a problem bar or notice, the letter of a 28 badge.
+	BodyStrong = Style{Size: 1.0000, Weight: 600, Line: 1.3846, Tracking: 0, Mono: false}
+	// Secondary is 12 on 16 at the default font size, weight 400. Hints, emails, status lines, the drop zone's line, a problem bar's detail.
+	Secondary = Style{Size: 0.9231, Weight: 400, Line: 1.3333, Tracking: 0, Mono: false}
+	// Caption is 11 on 14 at the default font size, weight 600. Group headings (Identities · 4), settings tab labels, small tags (Global, Scoped, New).
+	Caption = Style{Size: 0.8462, Weight: 600, Line: 1.2727, Tracking: 0.02, Mono: false}
+	// Small is 11 on 14 at the default font size, weight 400. A row's folders, times, Copied.
+	Small = Style{Size: 0.8462, Weight: 400, Line: 1.2727, Tracking: 0, Mono: false}
+	// Mono is 12 on 16 at the default font size, weight 400. Paths, aliases, commands, key names, beside body or secondary.
+	Mono = Style{Size: 0.9231, Weight: 400, Line: 1.3333, Tracking: 0, Mono: true}
+	// MonoSmall is 11 on 14 at the default font size, weight 400. The same beside small: the clone command, paths in a finding.
+	MonoSmall = Style{Size: 0.8462, Weight: 400, Line: 1.2727, Tracking: 0, Mono: true}
+)

@@ -23,7 +23,7 @@ func (s *Screen) textButton(c *ui.Context, key, text, name string, icon *ui.SVG,
 	b := ui.Button(c.Key(key), "").Label(name).Disabled(s.busy).Background(ui.Color{}).Border(0, ui.Color{}).TextColor(color).
 		Padding(t.Space(theme.Space0_5), t.Space(theme.Space1)).Children(func() {
 		if icon != nil {
-			ui.Icon(c, icon).FontSize(t.Rem(1.1))
+			ui.Icon(c, icon).FontSize(t.Space(theme.Icon))
 		}
 		ui.Text(c, text).SingleLine()
 	})
@@ -48,7 +48,7 @@ func (s *Screen) openLabel() string {
 func (s *Screen) bar(c *ui.Context, text string, color ui.Color) {
 	t := c.Theme()
 	ui.Divider(c)
-	ui.Text(c, text).FontSize(t.Rem(0.9)).TextColor(color).Padding(t.Space(theme.Space2), t.Space(theme.Space3))
+	theme.Secondary.On(c, ui.Text(c, text)).TextColor(color).Padding(t.Space(theme.Space2), t.Space(theme.Space3))
 }
 
 // matchedCard is the answer and what the last action left: a confirmation, a failure or the undo bar. The answer
@@ -66,10 +66,10 @@ func (s *Screen) matchedCard(c *ui.Context, r *match.Result, a account.Account) 
 	}
 	fillCard(c, "result", border).Children(func() {
 		ui.Row(c).Gap(t.Space(theme.Space2)).Padding(t.Space(theme.Space3), t.Space(theme.Space1_5), 0, t.Space(theme.Space3)).AlignItems(ui.Center).Children(func() {
-			badge(c, a, t.Space(theme.BadgeM), theme.RadiusControl, t.Rem(0.95))
+			badge(c, a, t.Space(theme.BadgeM), theme.RadiusControl, theme.Title)
 			ui.Column(c).Grow(1).MinWidth(0).Gap(t.Space(theme.Space0_5)).Children(func() {
-				ui.Text(c, s.label(a)).FontSize(t.Rem(1.15)).FontWeight(600).SingleLine().Tooltip(s.text.UsesHere)
-				pathLine(c, s.env.Tilde(r.Root), "", "", pathFace{mono: true, size: t.Rem(0.88), color: t.TextMuted})
+				theme.Title.On(c, ui.Text(c, s.label(a))).SingleLine().Tooltip(s.text.UsesHere)
+				pathLine(c, s.env.Tilde(r.Root), "", "", pathFace{style: theme.Mono, color: t.TextMuted})
 			})
 			ui.Row(c).AlignSelf(ui.Start).Gap(t.Space(theme.Space0_5)).AlignItems(ui.Center).Shrink(0).Children(func() {
 				s.status(c, true)
@@ -88,9 +88,9 @@ func (s *Screen) matchedCard(c *ui.Context, r *match.Result, a account.Account) 
 		})
 		// The meta line starts under the name: the card's padding, the badge and the gap.
 		ui.Row(c).MinWidth(0).Padding(t.Space(theme.Space1_5), t.Space(theme.Space3), t.Space(theme.Space3), t.Space(theme.Space3+theme.BadgeM+theme.Space2)).Children(func() {
-			ui.Text(c, orDefault(a.GitUserEmail, s.text.NoEmail)).FontSize(t.Rem(0.92)).TextColor(t.TextMuted).SingleLine().MinWidth(0)
+			theme.Secondary.On(c, ui.Text(c, orDefault(a.GitUserEmail, s.text.NoEmail))).TextColor(t.TextMuted).SingleLine().MinWidth(0)
 			if a.SSHAlias != "" {
-				ui.Text(c, " · "+a.SSHAlias).Font("monospace").FontSize(t.Rem(0.88)).TextColor(t.TextMuted).SingleLine().Shrink(0)
+				theme.Mono.On(c, ui.Text(c, " · "+a.SSHAlias)).TextColor(t.TextMuted).SingleLine().Shrink(0)
 			}
 		})
 		s.findings(c, r, a)
@@ -199,9 +199,9 @@ func (s *Screen) noMatchCard(c *ui.Context, r *match.Result) {
 		path = r.Dir
 	}
 	s.frame(c, "result", t.Warning, path, func() {
-		ui.Text(c, s.text.NoMatch).FontWeight(600).Padding(t.Space(theme.Space3), t.Space(theme.Space3), t.Space(theme.Space2), t.Space(theme.Space3))
+		theme.BodyStrong.On(c, ui.Text(c, s.text.NoMatch)).Padding(t.Space(theme.Space3), t.Space(theme.Space3), t.Space(theme.Space2), t.Space(theme.Space3))
 		if len(s.accounts) > 0 {
-			ui.Text(c, s.text.BindTo).FontSize(t.Rem(0.9)).FontWeight(600).TextColor(t.TextMuted).Padding(0, t.Space(theme.Space3), t.Space(theme.Space1_5), t.Space(theme.Space3)).
+			theme.Caption.On(c, ui.Text(c, s.text.BindTo)).TextColor(t.TextMuted).Padding(0, t.Space(theme.Space3), t.Space(theme.Space1_5), t.Space(theme.Space3)).
 				Role(ui.RoleHeading).Level(3)
 		}
 		for _, a := range s.accounts {
@@ -235,16 +235,16 @@ func (s *Screen) bindRow(c *ui.Context, a account.Account) {
 		dot(c, a, t.Space(theme.Dot))
 		ui.Column(c).Grow(1).Gap(t.Space(theme.Space0_5)).Children(func() {
 			// One line each, cut with an ellipsis, so that every row is as high as the others on any font.
-			ui.Text(c, s.label(a)).FontWeight(600).SingleLine().Tooltip(s.label(a))
-			face := pathFace{size: t.Rem(0.9), color: t.TextMuted}
+			theme.BodyMedium.On(c, ui.Text(c, s.label(a))).SingleLine().Tooltip(s.label(a))
+			face := pathFace{style: theme.Secondary, color: t.TextMuted}
 			if p := usablePaths(a); !a.Scope.Global && len(p) > 0 {
 				// A path is monospace, as everywhere in the panel, at the size of the identity list's folders.
-				face.mono, face.size = true, t.Rem(0.85)
+				face.style = theme.MonoSmall
 				// Only the first folder; "has it, and adds another" is the tooltip.
 				pathLine(c, p[0], "", fmt.Sprintf(s.text.Has, p[0]), face)
 			} else {
 				note := orDefault(a.GitUserEmail, s.text.NoEmail)
-				face.apply(ui.Text(c, note)).SingleLine().Tooltip(note)
+				face.apply(c, ui.Text(c, note)).SingleLine().Tooltip(note)
 			}
 		})
 		ui.Text(c, s.text.Bind).TextColor(t.Accent)
@@ -258,7 +258,7 @@ func (s *Screen) overlapCard(c *ui.Context, r *match.Result) {
 	t := c.Theme()
 	fillCard(c, "overlap", ui.Color{}).Children(func() {
 		ui.Row(c).Gap(t.Space(theme.Space1)).Padding(t.Space(theme.Space3), t.Space(theme.Space2), t.Space(theme.Space2), t.Space(theme.Space3)).AlignItems(ui.Center).Children(func() {
-			ui.Text(c, fmt.Sprintf(s.text.OverlapTitle, len(r.Covering))).FontWeight(600).Grow(1).MinWidth(0)
+			theme.BodyStrong.On(c, ui.Text(c, fmt.Sprintf(s.text.OverlapTitle, len(r.Covering)))).Grow(1).MinWidth(0)
 			// The sentence about Git's order is the tooltip of the info icon.
 			ghost(c, s.text.OverlapHint, icons.Info)
 		})
@@ -275,18 +275,18 @@ func (s *Screen) overlapCard(c *ui.Context, r *match.Result) {
 				ui.Column(c).Grow(1).MinWidth(0).Gap(t.Space(theme.Space0_5)).Children(func() {
 					name := ui.Text(c, s.label(a)).SingleLine()
 					if win {
-						name.FontWeight(600)
+						theme.BodyStrong.On(c, name)
 					} else {
 						name.TextColor(t.TextMuted)
 					}
-					ui.Text(c, cv.Path).Font("monospace").FontSize(t.Rem(0.9)).TextColor(t.TextMuted).SingleLine().Tooltip(cv.Path)
+					theme.Mono.On(c, ui.Text(c, cv.Path)).TextColor(t.TextMuted).SingleLine().Tooltip(cv.Path)
 				})
 				ui.Row(c).Gap(t.Space(theme.Space1)).AlignItems(ui.Center).Children(func() {
 					if win {
-						ui.Icon(c, icons.Check).FontSize(t.Rem(1.1)).TextColor(t.Accent)
-						ui.Text(c, s.text.Used).FontSize(t.Rem(0.9)).FontWeight(600).TextColor(t.Accent)
+						ui.Icon(c, icons.Check).FontSize(t.Space(theme.IconS)).TextColor(t.Accent)
+						theme.Caption.On(c, ui.Text(c, s.text.Used)).TextColor(t.Accent)
 					} else {
-						ui.Text(c, s.text.Overridden).FontSize(t.Rem(0.9)).TextColor(t.TextMuted)
+						theme.Secondary.On(c, ui.Text(c, s.text.Overridden)).TextColor(t.TextMuted)
 					}
 				})
 				if win {
@@ -316,11 +316,11 @@ func (s *Screen) staleCard(c *ui.Context, st *match.Stale, a account.Account, ro
 		ui.Row(c).Height(t.Space(theme.RowL)).PaddingX(t.Space(theme.Space3)).Gap(t.Space(theme.Space2)).AlignItems(ui.Center).Children(func() {
 			dot(c, a, t.Space(theme.Dot))
 			ui.Row(c).Grow(1).MinWidth(0).Children(func() {
-				ui.Text(c, s.label(a)).FontWeight(600).SingleLine().Shrink(0).MaxWidthPercent(50).Tooltip(s.label(a))
+				theme.BodyStrong.On(c, ui.Text(c, s.label(a))).SingleLine().Shrink(0).MaxWidthPercent(50).Tooltip(s.label(a))
 				ui.Text(c, s.text.StaleHead).SingleLine().MinWidth(0).Grow(1)
 			})
 		})
-		face := pathFace{mono: true, size: t.Rem(0.9), color: t.Text}
+		face := pathFace{style: theme.Mono, color: t.Text}
 		oldFace := face
 		oldFace.color = t.TextMuted
 		old := strings.TrimSuffix(s.env.Tilde(s.env.Expand(st.Path)), "/")
@@ -329,7 +329,7 @@ func (s *Screen) staleCard(c *ui.Context, st *match.Stale, a account.Account, ro
 			pathLine(c, old, "", "", oldFace).Grow(1)
 		})
 		ui.Row(c.Key("stale-new")).Height(t.Space(theme.RowS)).PaddingX(t.Space(theme.Space3)).Gap(t.Space(theme.Space1_5)).AlignItems(ui.Center).Children(func() {
-			ui.Icon(c, icons.Arrow).FontSize(t.Rem(1.1)).TextColor(t.TextMuted)
+			ui.Icon(c, icons.Arrow).FontSize(t.Space(theme.IconS)).TextColor(t.TextMuted)
 			pathLine(c, strings.TrimSuffix(s.env.Tilde(root), "/"), "", "", face).Grow(1)
 		})
 		ui.Divider(c)
@@ -420,13 +420,13 @@ func (s *Screen) findingLine(c *ui.Context, d said) {
 		if strings.HasSuffix(text, " ") {
 			right = space
 		}
-		return ui.Text(c, strings.TrimSpace(text)).FontSize(t.Rem(0.92)).SingleLine().Shrink(0).Padding(0, right, 0, left)
+		return theme.Secondary.On(c, ui.Text(c, strings.TrimSpace(text))).SingleLine().Shrink(0).Padding(0, right, 0, left)
 	}
 	ui.Row(c).Grow(1).MinWidth(0).AlignItems(ui.Center).Children(func() {
 		piece(d.lead)
 		switch {
 		case d.path:
-			pathLine(c, d.value, "", d.why, pathFace{mono: true, size: t.Rem(0.9), color: t.Text})
+			pathLine(c, d.value, "", d.why, pathFace{style: theme.Mono, color: t.Text})
 		case d.value != "":
 			// The text gives way before the "@" and the ellipsis carries the domain and the name, so that what
 			// the width leaves over after the cut stays at the end of the line, not before the "@".
@@ -434,7 +434,7 @@ func (s *Screen) findingLine(c *ui.Context, d said) {
 			if at := strings.LastIndex(d.value, "@"); at >= 0 {
 				domain = d.value[at:]
 			}
-			ui.Text(c, d.value+d.tail).FontSize(t.Rem(0.9)).SingleLine().Ellipsis("…" + domain + d.tail).MinWidth(0)
+			theme.Secondary.On(c, ui.Text(c, d.value+d.tail)).SingleLine().Ellipsis("…" + domain + d.tail).MinWidth(0)
 		}
 		if d.tail != "" && (d.path || d.value == "") {
 			piece(d.tail)
@@ -462,8 +462,8 @@ func tipPlaced(c *ui.Context, anchor ui.Element, text string, end bool) {
 		} else {
 			tip.AttachTo(anchor, ui.AnchorTopLeft, ui.AnchorBottomLeft).Margin(t.Space(theme.Space1_5), 0, 0, 0)
 		}
-		tip.MaxWidth(t.Space(theme.Measure)).Padding(t.Space(theme.Space1), t.Space(theme.Space2)).Radius(theme.RadiusRow).
-			Background(t.Background).Border(0.5, t.Border).TextColor(theme.Of(c).Fg2).FontSize(t.Rem(0.75))
+		theme.Small.On(c, tip.MaxWidth(t.Space(theme.Measure))).Padding(t.Space(theme.Space1), t.Space(theme.Space2)).Radius(theme.RadiusRow).
+			Background(t.Background).Border(0.5, t.Border).TextColor(theme.Of(c).Fg2)
 		tip.Children(func() { ui.Text(c, text) })
 	})
 }

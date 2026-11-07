@@ -43,7 +43,7 @@ func (s *Screen) View(c *ui.Context) {
 		// No hide button: the tray icon and Escape hide the panel, as with other tray panels. The title bar and the
 		// footer give the rest to the content: the title bar is 44 high and the footer 40, neither with a hairline.
 		ui.Row(c).Height(t.Space(theme.Bar)).Padding(0, t.Space(theme.Space2), 0, t.Space(theme.Space4)).Gap(t.Space(theme.Space2)).AlignItems(ui.Center).Children(func() {
-			ui.Text(c, "Idset").FontSize(t.Rem(1.15)).FontWeight(600).Role(ui.RoleHeading).Level(1)
+			theme.Title.On(c, ui.Text(c, "Idset")).Role(ui.RoleHeading).Level(1)
 			ui.Spacer(c)
 			if ghost(c, s.text.Settings, icons.Gear).Clicked() {
 				s.act.OpenSettings()
@@ -98,7 +98,7 @@ func (s *Screen) dropOverlay(c *ui.Context) {
 		Radius(theme.RadiusCard).Border(1.5, t.Accent.Alpha(0.7)).Background(theme.Of(c).AccentSoft).Gap(t.Space(theme.Space2)).
 		AlignItems(ui.Center).Justify(ui.Center).Children(func() {
 		ui.Icon(c, icons.Folder).FontSize(t.Space(theme.IconL)).TextColor(t.Accent)
-		ui.Text(c, s.text.DropRelease).FontWeight(600).TextAlign(ui.Center)
+		theme.BodyStrong.On(c, ui.Text(c, s.text.DropRelease)).TextAlign(ui.Center)
 	})
 }
 
@@ -151,8 +151,8 @@ func (s *Screen) content(c *ui.Context) {
 				Justify(ui.Center).Children(func() {
 				ui.Icon(c, icons.Key).FontSize(t.Space(theme.IconL)).TextColor(t.Accent)
 			})
-			ui.Text(c, s.text.Empty).FontSize(t.Rem(1.15)).FontWeight(600).Role(ui.RoleHeading).Level(2)
-			ui.Text(c, s.text.EmptyHint).FontSize(t.Rem(0.92)).TextColor(t.TextMuted).TextAlign(ui.Center)
+			theme.Title.On(c, ui.Text(c, s.text.Empty)).Role(ui.RoleHeading).Level(2)
+			theme.Secondary.On(c, ui.Text(c, s.text.EmptyHint)).TextColor(t.TextMuted).TextAlign(ui.Center)
 			ui.Row(c).PaddingY(t.Space(theme.Space1)).Children(func() {
 				if ui.PrimaryButton(c, s.text.AddIdentity).Height(t.Space(theme.Control)).PaddingX(t.Space(theme.Space4)).Clicked() {
 					s.act.NewIdentity()
@@ -174,9 +174,9 @@ func (s *Screen) content(c *ui.Context) {
 		s.dropZone(c)
 	}
 	ui.Row(c).PaddingX(t.Space(theme.Space1_5)).Children(func() {
-		ui.Text(c, s.text.Identities).FontSize(t.Rem(0.85)).FontWeight(600).TextColor(t.TextMuted).Grow(1).
+		theme.Caption.On(c, ui.Text(c, s.text.Identities)).TextColor(t.TextMuted).Grow(1).
 			Role(ui.RoleHeading).Level(2)
-		ui.Textf(c, "%d", len(s.accounts)).FontSize(t.Rem(0.85)).FontWeight(600).TextColor(t.TextMuted)
+		theme.Caption.On(c, ui.Textf(c, "%d", len(s.accounts))).TextColor(t.TextMuted)
 	})
 	if len(s.accounts) >= FilterThreshold {
 		// A capsule search field with a magnifier inside its start, as macOS 26 draws one.
@@ -184,7 +184,7 @@ func (s *Screen) content(c *ui.Context) {
 			ui.TextInput(c.Key("filter"), &s.query).Label(s.text.Filter).Placeholder(s.text.Filter).Fill().Radius(theme.RadiusPill).
 				Border(0, ui.Color{}).Background(t.Surface).Padding(0, t.Space(theme.Space2), 0, t.Space(theme.Space2+theme.Icon+theme.Space1))
 			ui.Row(c).Absolute().Top(0).Bottom(0).Left(t.Space(theme.Space2)).AlignItems(ui.Center).Children(func() {
-				ui.Icon(c, icons.Search).FontSize(t.Rem(1)).TextColor(t.TextMuted)
+				ui.Icon(c, icons.Search).FontSize(t.Space(theme.IconS)).TextColor(t.TextMuted)
 			})
 		})
 		if used := account.ProvidersInUse(s.accounts); len(used) > 1 {
@@ -224,12 +224,12 @@ func (s *Screen) readOnly(c *ui.Context) {
 			Justify(ui.Center).Children(func() {
 			ui.Icon(c, icons.Warn).FontSize(t.Space(theme.IconL)).TextColor(t.Danger)
 		})
-		ui.Text(c, s.text.ReadOnly).FontSize(t.Rem(1.15)).FontWeight(600).Role(ui.RoleHeading).Level(2)
-		ui.Text(c, s.env.Tilde(s.dataPath)).Font("monospace").FontSize(t.Rem(0.88)).TextColor(t.TextMuted).TextAlign(ui.Center).Selectable()
+		theme.Title.On(c, ui.Text(c, s.text.ReadOnly)).Role(ui.RoleHeading).Level(2)
+		theme.Mono.On(c, ui.Text(c, s.env.Tilde(s.dataPath))).TextColor(t.TextMuted).TextAlign(ui.Center).Selectable()
 		// The parser error is at most two lines; the tooltip has all of it.
-		ui.Text(c, reason.Error()).Font("monospace").FontSize(t.Rem(0.85)).TextColor(t.TextMuted).TextAlign(ui.Center).MaxLines(2).
+		theme.MonoSmall.On(c, ui.Text(c, reason.Error())).TextColor(t.TextMuted).TextAlign(ui.Center).MaxLines(2).
 			Tooltip(reason.Error())
-		ui.Text(c, s.text.ReadOnlyShort).FontSize(t.Rem(0.92)).TextColor(t.TextMuted).Tooltip(s.text.ReadOnlyHint)
+		theme.Secondary.On(c, ui.Text(c, s.text.ReadOnlyShort)).TextColor(t.TextMuted).Tooltip(s.text.ReadOnlyHint)
 		ui.Column(c).Gap(t.Space(theme.Space2)).PaddingY(t.Space(theme.Space1)).AlignItems(ui.Center).Children(func() {
 			if ui.PrimaryButton(c, s.text.RestoreBackup).Label(s.text.RestoreBackup).Size(t.Space(2*theme.ButtonW+theme.Space2), t.Space(theme.Control)).Padding(0).Clicked() {
 				s.act.OpenBackups()
@@ -259,7 +259,7 @@ func (s *Screen) providerChip(c *ui.Context, p account.Provider) {
 	for _, q := range s.providers {
 		on = on || q == p
 	}
-	b := ui.Button(c.Key("chip-"+string(p)), s.providerName(p)).Selected(on).FontSize(t.Rem(0.92)).Height(t.Space(theme.ControlS)).PaddingX(t.Space(theme.Space3)).Radius(theme.RadiusPill)
+	b := theme.Secondary.On(c, ui.Button(c.Key("chip-"+string(p)), s.providerName(p))).Selected(on).Height(t.Space(theme.ControlS)).PaddingX(t.Space(theme.Space3)).Radius(theme.RadiusPill)
 	if on {
 		b.Background(theme.Of(c).Selected)
 	}
@@ -289,10 +289,10 @@ func initial(a account.Account) string {
 }
 
 // badge draws the identity's initial on a solid square of its color, in white or near black by theme.Ink.
-func badge(c *ui.Context, a account.Account, size, radius, font float32) {
+func badge(c *ui.Context, a account.Account, size, radius float32, style theme.Style) {
 	r, g, b := a.RGB()
 	ui.Column(c).Size(size, size).Radius(radius).Background(ui.RGB(r, g, b)).AlignItems(ui.Center).Justify(ui.Center).Children(func() {
-		ui.Text(c, initial(a)).FontSize(font).FontWeight(600).TextColor(theme.Ink(r, g, b))
+		style.On(c, ui.Text(c, initial(a))).TextColor(theme.Ink(r, g, b))
 	})
 }
 
@@ -325,13 +325,13 @@ func usablePaths(a account.Account) []string {
 // folder gives way in the middle before the row's name does, and " +N" always stays.
 func (s *Screen) folderTag(c *ui.Context, a account.Account) {
 	t := c.Theme()
-	face := pathFace{mono: true, size: t.Rem(0.85), color: t.TextMuted}
+	face := pathFace{style: theme.MonoSmall, color: t.TextMuted}
 	folders := usablePaths(a)
 	switch {
 	case a.Scope.Global:
-		face.apply(ui.Text(c, s.text.Global)).SingleLine()
+		face.apply(c, ui.Text(c, s.text.Global)).SingleLine()
 	case len(folders) == 0:
-		face.apply(ui.Text(c, s.text.NoFolders)).SingleLine()
+		face.apply(c, ui.Text(c, s.text.NoFolders)).SingleLine()
 	default:
 		suffix := ""
 		if len(folders) > 1 {
@@ -369,10 +369,10 @@ func (s *Screen) row(c *ui.Context, a account.Account) {
 			s.act.OpenAccounts(a.ID)
 		}
 		row.Children(func() {
-			badge(c, a, t.Space(theme.BadgeS), theme.RadiusControl, t.Rem(1))
+			badge(c, a, t.Space(theme.BadgeS), theme.RadiusControl, theme.BodyStrong)
 			ui.Column(c).Grow(1).MinWidth(0).Gap(t.Space(theme.Space0_5)).Children(func() {
-				ui.Text(c, s.label(a)).FontWeight(600).SingleLine()
-				ui.Text(c, orDefault(a.GitUserEmail, s.text.NoEmail)).FontSize(t.Rem(0.92)).TextColor(t.TextMuted).SingleLine()
+				theme.BodyMedium.On(c, ui.Text(c, s.label(a))).SingleLine()
+				theme.Secondary.On(c, ui.Text(c, orDefault(a.GitUserEmail, s.text.NoEmail))).TextColor(t.TextMuted).SingleLine()
 			})
 			s.folderTag(c, a)
 			if s.diag.known {
@@ -415,9 +415,9 @@ func (s *Screen) dropZone(c *ui.Context) {
 	}
 	zone.Row().Padding(0, t.Space(theme.Space2), 0, t.Space(theme.Space3)).Gap(t.Space(theme.Space2)).AlignItems(ui.Center).Children(func() {
 		ui.Icon(c, icons.Folder).FontSize(t.Space(theme.IconM)).TextColor(t.Accent).Shrink(0)
-		ui.Text(c, s.text.DropLine).FontSize(t.Rem(0.92)).SingleLine().MinWidth(0).Grow(1).Tooltip(s.text.DropHint)
-		if ui.PrimaryButton(c, s.text.ChooseShort).Label(s.text.Choose).Tooltip(s.text.Choose).Height(t.Space(theme.ControlS)).
-			PaddingX(t.Space(theme.Space3)).FontSize(t.Rem(0.92)).FontWeight(500).Shrink(0).Clicked() {
+		theme.Secondary.On(c, ui.Text(c, s.text.DropLine)).SingleLine().MinWidth(0).Grow(1).Tooltip(s.text.DropHint)
+		if theme.BodyMedium.On(c, ui.PrimaryButton(c, s.text.ChooseShort)).Label(s.text.Choose).Tooltip(s.text.Choose).Height(t.Space(theme.ControlS)).
+			PaddingX(t.Space(theme.Space3)).Shrink(0).Clicked() {
 			s.act.ChooseFolder()
 		}
 	})
@@ -428,8 +428,8 @@ func (s *Screen) resultCard(c *ui.Context) {
 	t := c.Theme()
 	// Clearing happens inside the card, so the rest of this frame works on the state it started with.
 	r, checking, resultErr, dir := s.result, s.checking, s.resultErr, s.lastDir
-	say := func(text string, color ui.Color, weight int) func() {
-		return func() { ui.Text(c, text).TextColor(color).FontWeight(weight).Padding(t.Space(theme.Space3)) }
+	say := func(text string, color ui.Color) func() {
+		return func() { theme.BodyStrong.On(c, ui.Text(c, text)).TextColor(color).Padding(t.Space(theme.Space3)) }
 	}
 	switch {
 	case checking != "":
@@ -444,7 +444,7 @@ func (s *Screen) resultCard(c *ui.Context) {
 		s.frame(c, "result", t.Danger, dir, func() {
 			ui.Column(c).Gap(t.Space(theme.Space1)).Padding(t.Space(theme.Space3)).Children(func() {
 				ui.Text(c, s.text.GitFailed).TextColor(t.Danger)
-				ui.Text(c, resultErr.Error()).Font("monospace").FontSize(t.Rem(0.85)).TextColor(t.TextMuted).MaxLines(2).
+				theme.MonoSmall.On(c, ui.Text(c, resultErr.Error())).TextColor(t.TextMuted).MaxLines(2).
 					Tooltip(resultErr.Error())
 			})
 		})
@@ -469,7 +469,7 @@ func (s *Screen) resultCard(c *ui.Context) {
 		if path == "" {
 			path = r.Dir
 		}
-		s.frame(c, "result", t.Warning, path, say(s.unresolved(r.Kind), t.Text, 600))
+		s.frame(c, "result", t.Warning, path, say(s.unresolved(r.Kind), t.Text))
 	}
 }
 
@@ -480,7 +480,7 @@ func (s *Screen) frame(c *ui.Context, key string, border ui.Color, path string, 
 	checking := s.checking
 	fillCard(c, key, border).Children(func() {
 		ui.Row(c).Height(t.Space(theme.Bar)).Gap(t.Space(theme.Space1)).Padding(0, t.Space(theme.Space1_5), 0, t.Space(theme.Space3)).AlignItems(ui.Center).Children(func() {
-			face := pathFace{mono: true, size: t.Rem(0.88), color: t.TextMuted}
+			face := pathFace{style: theme.Mono, color: t.TextMuted}
 			// The folder keeps at least a button's width; the status gives way first.
 			pathLine(c, s.env.Tilde(path), "", "", face).Grow(1).MinWidth(t.Space(theme.ButtonW)).Shrink(0)
 			s.status(c, false)
@@ -508,7 +508,7 @@ func (s *Screen) status(c *ui.Context, copyable bool) {
 		{s.copiedUntil, s.text.Copied, "", copyable},
 	} {
 		if left := ack.until.Sub(s.now()); ack.show && left > 0 {
-			text := ui.Text(c, ack.text).FontSize(t.Rem(0.85)).TextColor(t.TextMuted).SingleLine().MinWidth(0)
+			text := theme.Small.On(c, ui.Text(c, ack.text)).TextColor(t.TextMuted).SingleLine().MinWidth(0)
 			if ack.full != "" {
 				text.Tooltip(ack.full)
 			}
