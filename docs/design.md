@@ -158,12 +158,11 @@ scale still follow the desktop; the values are in [tokens.json](../design/tokens
   | `Inverse`, `InverseText` | tooltips and toasts |
   | `Scrollbar` | scroll bar thumbs |
 
-- **Commit mint.** The brand color is the mint of the commit at the tip of the product icon's key, `#14b896`. It is a
+- **Commit mint.** The brand color is the mint of the keyhole lit inside the product icon's folder, `#14b896`. It is a
   tint, never a fill under text: white on it is 2.5:1. `Accent` is a deeper `#0a7a68` in light (white text 5.3:1, 4.7:1
   as text on the solid color) and a lighter `#4fdcb8` in dark, where `AccentText` is a near-black green `#10201c`
-  (9.9:1), as MyGo itself does for a light accent. The icon's orange stays in the icon: as an accent beside identity
-  colors and warnings it was too loud. Idset does not follow the system accent color: the mint is the product's, and
-  only its values were checked against the material.
+  (9.9:1), as MyGo itself does for a light accent. Idset does not follow the system accent color: the mint is the
+  product's, and only its values were checked against the material.
 - **Identity colors.** An identity's color is data the user chose, not a theme role. The six preset names map to
   fixed values (blue `#3A7BD5`, green `#2E9E5B`, orange `#E07A1F`, red `#D64545`, purple `#8E44AD`, yellow
   `#D4A017`); any other value is its own `#RRGGBB`. The initial badge is the color itself, solid, in a list row, a
@@ -234,18 +233,20 @@ scale still follow the desktop; the values are in [tokens.json](../design/tokens
   footer buttons are `Rem(1.2)` (about 16); the read-only warning is
   `Space(5.5)` (22) in `Danger`.
 - **The tray icon** is drawn in code by `internal/trayicon/`, so no image file is maintained by hand. It is the
-  product icon's key, solid and pointing right: a rounded diamond bow with the Git branch cut out of it, the shaft
-  and two bits. On macOS it is a 54×36 template icon, black on transparent, that the system tints for the menu bar
-  and scales to 18 points tall; the bow's corners reach the top and the bottom, so it is as tall as the system's
-  symbols. Elsewhere it is a 32×32 square with the key scaled to the width, in a mid gray that stays visible on
-  light and dark taskbars. The worst entry of the diagnostics summary adds a badge at the lower right: a triangle
-  for a warning, a circle for an error (and when ssh is missing), with a "!" in it, cut free of the key by a 1.5 px
-  gap. Outside macOS the badge is `#d97706` or `#dc2626` with a white mark; in the template it is the ink with the
+  product icon's mark in one color: the folder, solid, with the keyhole cut through it and the smaller keyhole solid
+  inside the cut. It is drawn from the same numbers as [design/icon.svg](../design/icon.svg), on its 100 grid. On
+  macOS it is a 54×36 template icon, black on transparent, that the system tints for the menu bar and scales to 18
+  points tall; the folder is as tall as the icon and centered, so it is as tall as the system's symbols. Elsewhere
+  it is a 32×32 square with the folder as wide as the icon, in a mid gray that stays visible on light and dark
+  taskbars. The worst entry of the diagnostics summary adds a badge at the lower right: a triangle for a warning, a
+  circle for an error (and when ssh is missing), with a "!" in it, cut free of the folder by a 1.5 px gap; in the
+  square the folder then shrinks to the upper left, so the badge stays clear of the keyhole. Outside macOS the badge is `#d97706` or `#dc2626` with a white mark; in the template it is the ink with the
   mark cut out, since the system tints a template icon as a whole. The icon changes once a round of checks has
   finished, never while one runs, and does not flash.
-- **The product icon** is an ivory key on a graphite tile: the bow is a rounded diamond carrying a Git branch in Git
-  orange (`#f6643f` to `#c8361b`), whose tip is a glowing mint commit; the key is one piece, the bow joined to the
-  shaft by fillets, and stands raised, with a dark edge below. It sits on the macOS grid (an 824 tile at 100 in
+- **The product icon** is an ivory folder on a graphite tile, its tab at the upper left, with a keyhole cut through
+  it to the tile and a smaller mint keyhole lit inside the cut (`#7ff0c8` to `#14b896`, with a glow): the folder's
+  lock and the identity that fits it. The folder stands raised, with a dark edge below; the mint is only in the
+  keyhole. It sits on the macOS grid (an 824 tile at 100 in
   1024, radius 185) with transparent corners, so every platform shows the same rounded tile. The source is
   [design/icon.svg](../design/icon.svg); see [design/README.md](../design/README.md) for exporting it.
 

@@ -8,7 +8,7 @@ approximates the result; the app running on a real device is what counts.
 
 | Artifact | What it holds |
 |---|---|
-| [Idset design system](https://claude.ai/artifact/NFxWM1yWYqsYye5kxtNy7r) | The tokens of `tokens.json`, the principles, and the components by layer (atoms, controls, rows, cards, windows) with a preview each |
+| [Idset design system](https://claude.ai/artifact/NFxWM1yWYqsYye5kxtNy7r) | The tokens of `tokens.json`, the principles, and the components by layer (atoms, controls, rows, cards, windows) with a preview each, and the Logos group |
 | [Idset screens](https://claude.ai/artifact/2cP14kKAaf6tajDXeJV555) | A canvas with every state of every screen, in English and the light appearance, one page per screen; it uses the design system |
 
 Both are private to the maintainer; ask for access when you need it.
@@ -60,6 +60,10 @@ The product icon's source is `icon.svg`. After changing it, run `design/export-i
 a Chromium-based browser given as `CHROME`) and commit `resources/icon.png` with it; `mygo build` makes every
 platform's icon from that PNG, and the about window shows it. MyGo does not draw SVG filters, which is why the app
 uses the PNG.
+
+The design system's Logos group holds the icon and its mark (one color, and in color for light and dark grounds), all
+on the same 100 grid as `icon.svg` and `internal/trayicon/`. When the icon changes, upload the new files there and
+keep the `logo-*` tokens the same in both `tokens.json` files.
 
 Screenshots go in the pull request body, not into the repository; `design/screenshots/` is ignored by git. The one
 exception is the README images in `docs/images/`, taken from demo identities on `example.com` in a throwaway home
