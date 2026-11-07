@@ -42,7 +42,7 @@ func (s *Screen) View(c *ui.Context) {
 	root.Children(func() {
 		// No hide button: the tray icon and Escape hide the panel, as with other tray panels. The title bar and the
 		// footer give the rest to the content: the title bar is 44 high and the footer 40, neither with a hairline.
-		ui.Row(c).Height(t.Space(theme.Header)).Padding(0, t.Space(theme.Space2), 0, t.Space(theme.Space4)).Gap(t.Space(theme.Space2)).AlignItems(ui.Center).Children(func() {
+		ui.Row(c).Height(t.Space(theme.Bar)).Padding(0, t.Space(theme.Space2), 0, t.Space(theme.Space4)).Gap(t.Space(theme.Space2)).AlignItems(ui.Center).Children(func() {
 			ui.Text(c, "Idset").FontSize(t.Rem(1.15)).FontWeight(600).Role(ui.RoleHeading).Level(1)
 			ui.Spacer(c)
 			if ghost(c, s.text.Settings, icons.Gear).Clicked() {
@@ -56,7 +56,7 @@ func (s *Screen) View(c *ui.Context) {
 		} else {
 			ui.Scroll(c).Grow(1).Padding(t.Space(theme.Space1), t.Space(theme.Space3), t.Space(theme.Space3)).Gap(t.Space(theme.Space3)).Children(func() { s.content(c) })
 		}
-		ui.Row(c).Height(t.Space(theme.BarL)).PaddingX(t.Space(theme.Space2)).Gap(t.Space(theme.Space1)).AlignItems(ui.Center).Children(func() {
+		ui.Row(c).Height(t.Space(theme.Bar)).PaddingX(t.Space(theme.Space2)).Gap(t.Space(theme.Space1)).AlignItems(ui.Center).Children(func() {
 			// Add Identity stays in the fixed footer, reachable however long the list is. Without a list the
 			// empty state has its own button. Only actions that work are here.
 			if !s.loading && s.readErr == nil && len(s.accounts) > 0 && ghost(c, s.text.AddIdentity, icons.Plus).Clicked() {
@@ -94,10 +94,10 @@ func (s *Screen) View(c *ui.Context) {
 // folder icon and what releasing does.
 func (s *Screen) dropOverlay(c *ui.Context) {
 	t := c.Theme()
-	ui.Column(c.Key("drop-over")).Absolute().Top(t.Space(theme.Header)).Left(t.Space(theme.Space2)).Right(t.Space(theme.Space2)).Bottom(t.Space(theme.BarL+theme.Space1_5)).
-		Radius(theme.RadiusHero).Border(1.5, t.Accent.Alpha(0.7)).Background(theme.Of(c).AccentSoft).Gap(t.Space(theme.Space2)).
+	ui.Column(c.Key("drop-over")).Absolute().Top(t.Space(theme.Bar)).Left(t.Space(theme.Space2)).Right(t.Space(theme.Space2)).Bottom(t.Space(theme.Bar+theme.Space1_5)).
+		Radius(theme.RadiusCard).Border(1.5, t.Accent.Alpha(0.7)).Background(theme.Of(c).AccentSoft).Gap(t.Space(theme.Space2)).
 		AlignItems(ui.Center).Justify(ui.Center).Children(func() {
-		ui.Icon(c, icons.Folder).FontSize(t.Space(theme.IconHero)).TextColor(t.Accent)
+		ui.Icon(c, icons.Folder).FontSize(t.Space(theme.IconL)).TextColor(t.Accent)
 		ui.Text(c, s.text.DropRelease).FontWeight(600).TextAlign(ui.Center)
 	})
 }
@@ -147,9 +147,9 @@ func (s *Screen) content(c *ui.Context) {
 	if len(s.accounts) == 0 {
 		// One centered block, with the drop zone under it: the product's key in a tinted tile, the title and the hint.
 		ui.Column(c).Grow(1).Gap(t.Space(theme.Space2)).AlignItems(ui.Center).Justify(ui.Center).Children(func() {
-			ui.Column(c).Size(t.Space(theme.Hero), t.Space(theme.Hero)).Radius(theme.RadiusHero).Background(theme.Of(c).AccentSoft).AlignItems(ui.Center).
+			ui.Column(c).Size(t.Space(theme.BadgeL), t.Space(theme.BadgeL)).Radius(theme.RadiusCard).Background(theme.Of(c).AccentSoft).AlignItems(ui.Center).
 				Justify(ui.Center).Children(func() {
-				ui.Icon(c, icons.Key).FontSize(t.Space(theme.IconHero)).TextColor(t.Accent)
+				ui.Icon(c, icons.Key).FontSize(t.Space(theme.IconL)).TextColor(t.Accent)
 			})
 			ui.Text(c, s.text.Empty).FontSize(t.Rem(1.15)).FontWeight(600).Role(ui.RoleHeading).Level(2)
 			ui.Text(c, s.text.EmptyHint).FontSize(t.Rem(0.92)).TextColor(t.TextMuted).TextAlign(ui.Center)
@@ -182,7 +182,7 @@ func (s *Screen) content(c *ui.Context) {
 		// A capsule search field with a magnifier inside its start, as macOS 26 draws one.
 		ui.Row(c).Height(t.Space(theme.Control)).AlignItems(ui.Center).Children(func() {
 			ui.TextInput(c.Key("filter"), &s.query).Label(s.text.Filter).Placeholder(s.text.Filter).Fill().Radius(theme.RadiusPill).
-				Border(0, ui.Color{}).Background(t.Surface).Padding(0, t.Space(theme.Space2), 0, t.Space(theme.FilterText))
+				Border(0, ui.Color{}).Background(t.Surface).Padding(0, t.Space(theme.Space2), 0, t.Space(theme.Space2+theme.Icon+theme.Space1))
 			ui.Row(c).Absolute().Top(0).Bottom(0).Left(t.Space(theme.Space2)).AlignItems(ui.Center).Children(func() {
 				ui.Icon(c, icons.Search).FontSize(t.Rem(1)).TextColor(t.TextMuted)
 			})
@@ -231,14 +231,14 @@ func (s *Screen) readOnly(c *ui.Context) {
 			Tooltip(reason.Error())
 		ui.Text(c, s.text.ReadOnlyShort).FontSize(t.Rem(0.92)).TextColor(t.TextMuted).Tooltip(s.text.ReadOnlyHint)
 		ui.Column(c).Gap(t.Space(theme.Space2)).PaddingY(t.Space(theme.Space1)).AlignItems(ui.Center).Children(func() {
-			if ui.PrimaryButton(c, s.text.RestoreBackup).Label(s.text.RestoreBackup).Size(t.Space(2*theme.ButtonL+theme.Space2), t.Space(theme.Control)).Padding(0).Clicked() {
+			if ui.PrimaryButton(c, s.text.RestoreBackup).Label(s.text.RestoreBackup).Size(t.Space(2*theme.ButtonW+theme.Space2), t.Space(theme.Control)).Padding(0).Clicked() {
 				s.act.OpenBackups()
 			}
 			ui.Row(c).Gap(t.Space(theme.Space2)).Children(func() {
-				if ui.Button(c, s.revealLabel()).Label(s.revealLabel()).Size(t.Space(theme.ButtonL), t.Space(theme.Control)).Padding(0).Clicked() {
+				if ui.Button(c, s.revealLabel()).Label(s.revealLabel()).Size(t.Space(theme.ButtonW), t.Space(theme.Control)).Padding(0).Clicked() {
 					s.act.Reveal(s.dataPath)
 				}
-				if ui.Button(c, s.text.Reload).Label(s.text.Reload).Size(t.Space(theme.ButtonL), t.Space(theme.Control)).Padding(0).Clicked() {
+				if ui.Button(c, s.text.Reload).Label(s.text.Reload).Size(t.Space(theme.ButtonW), t.Space(theme.Control)).Padding(0).Clicked() {
 					s.act.Reload()
 				}
 			})
@@ -405,7 +405,7 @@ func (s *Screen) row(c *ui.Context, a account.Account) {
 // dropZone is always one line, and only there while no result shows; what it says beyond that is in the tooltip.
 func (s *Screen) dropZone(c *ui.Context) {
 	t := c.Theme()
-	zone := ui.Column(c.Key("drop")).Height(t.Space(theme.DropZone)).Radius(theme.RadiusCard).Border(1, t.Accent.Alpha(0.5)).BorderStyle(ui.BorderDashed).
+	zone := ui.Column(c.Key("drop")).Height(t.Space(theme.RowL)).Radius(theme.RadiusCard).Border(1, t.Accent.Alpha(0.5)).BorderStyle(ui.BorderDashed).
 		Background(t.Accent.Alpha(0.06))
 	if zone.FileDragOver() {
 		zone.Border(1.5, t.Accent).BorderStyle(ui.BorderSolid).Background(theme.Of(c).AccentSoft)
@@ -414,7 +414,7 @@ func (s *Screen) dropZone(c *ui.Context) {
 		s.Drop(files)
 	}
 	zone.Row().Padding(0, t.Space(theme.Space2), 0, t.Space(theme.Space3)).Gap(t.Space(theme.Space2)).AlignItems(ui.Center).Children(func() {
-		ui.Icon(c, icons.Folder).FontSize(t.Space(theme.IconTab)).TextColor(t.Accent).Shrink(0)
+		ui.Icon(c, icons.Folder).FontSize(t.Space(theme.IconM)).TextColor(t.Accent).Shrink(0)
 		ui.Text(c, s.text.DropLine).FontSize(t.Rem(0.92)).SingleLine().MinWidth(0).Grow(1).Tooltip(s.text.DropHint)
 		if ui.PrimaryButton(c, s.text.ChooseShort).Label(s.text.Choose).Tooltip(s.text.Choose).Height(t.Space(theme.ControlS)).
 			PaddingX(t.Space(theme.Space3)).FontSize(t.Rem(0.92)).FontWeight(500).Shrink(0).Clicked() {
@@ -481,8 +481,8 @@ func (s *Screen) frame(c *ui.Context, key string, border ui.Color, path string, 
 	fillCard(c, key, border).Children(func() {
 		ui.Row(c).Height(t.Space(theme.Bar)).Gap(t.Space(theme.Space1)).Padding(0, t.Space(theme.Space1_5), 0, t.Space(theme.Space3)).AlignItems(ui.Center).Children(func() {
 			face := pathFace{mono: true, size: t.Rem(0.88), color: t.TextMuted}
-			// The folder keeps at least 80 DIPs; the status gives way first.
-			pathLine(c, s.env.Tilde(path), "", "", face).Grow(1).MinWidth(t.Space(theme.PathMin)).Shrink(0)
+			// The folder keeps at least a button's width; the status gives way first.
+			pathLine(c, s.env.Tilde(path), "", "", face).Grow(1).MinWidth(t.Space(theme.ButtonW)).Shrink(0)
 			s.status(c, false)
 			if checking == "" && ghost(c, s.text.Clear, icons.Close).Clicked() {
 				s.clear()

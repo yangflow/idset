@@ -6,132 +6,98 @@ import "time"
 
 // Spacing steps, in steps of Theme.Spacing: t.Space(Space3). Eight steps and nothing in between.
 const (
-	// Space0_5 is 2 DIPs at the default spacing. A name and its second line; the dots of a countdown; icon buttons side by side in a card.
+	// Space0_5 is 2 DIPs at the default spacing. A name and its second line (stack-tight); a segmented track.
 	Space0_5 = 0.5
-	// Space1 is 4 DIPs at the default spacing. Icon buttons in the footer; rows of a result card's details; under the title row; between a field and its output.
+	// Space1 is 4 DIPs at the default spacing. An icon and small text; a menu's frame.
 	Space1 = 1
-	// Space1_5 is 6 DIPs at the default spacing. Icon to label inside a button or a line; filter chips; the lines of an empty state.
+	// Space1_5 is 6 DIPs at the default spacing. An icon and its label (inline); inside a button.
 	Space1_5 = 1.5
-	// Space2 is 8 DIPs at the default spacing. Related controls and button rows; a list row's vertical padding; badge to text; the footer's side insets.
+	// Space2 is 8 DIPs at the default spacing. Items of a row (item-row); lines of a card (stack).
 	Space2 = 2
-	// Space3 is 12 DIPs at the default spacing. Card padding; the panel's content inset at the sides and below; between blocks of the panel; a list row's left inset.
+	// Space3 is 12 DIPs at the default spacing. Card padding; the panel's content inset; between blocks of the panel (stack-block).
 	Space3 = 3
-	// Space4 is 16 DIPs at the default spacing. The title row's left inset; settings pane top; between groups of a pane.
+	// Space4 is 16 DIPs at the default spacing. A dialog's padding; between a dialog's sections (stack-section).
 	Space4 = 4
-	// Space6 is 24 DIPs at the default spacing. Around a dialog's content and the about window's; between the parts of an empty state; a settings pane and the account editor at the sides and below, and between their groups.
+	// Space6 is 24 DIPs at the default spacing. A window pane's padding (inset-pane); between groups (stack-page).
 	Space6 = 6
-	// Space8 is 32 DIPs at the default spacing. Above and below an empty state in a settings pane.
+	// Space8 is 32 DIPs at the default spacing. Only for indent arithmetic.
 	Space8 = 8
 )
 
 // Sizes, in steps of Theme.Spacing: t.Space(Control). A sum of tokens is a size too: t.Space(Space3 + BadgeS + Space2).
 const (
-	// Control is 28 DIPs at the default spacing. Push buttons, text inputs, the filter field, segmented controls, dialog buttons, icon buttons (28 circles).
+	// Control is 28 DIPs at the default spacing. Control height: buttons, text inputs, drop-downs, segmented controls.
 	Control = 7
-	// ControlS is 24 DIPs at the default spacing. Small buttons: the drop zone's Choose, a copy button inside a field, a problem bar's action.
+	// ControlS is 24 DIPs at the default spacing. Small control height: small buttons, icon buttons, menu entries.
 	ControlS = 6
-	// ButtonS is 80 DIPs at the default spacing. A fixed-width short button pair: Cancel and Rebind of the stale-path prompt.
-	ButtonS = 20
-	// ButtonW is 100 DIPs at the default spacing. Revert and Save in the accounts footer: wide enough for the longest label of either language, so a label change moves nothing.
-	ButtonW = 25
-	// ButtonL is 120 DIPs at the default spacing. A fixed-width button of the read-only state (Reveal, Reload); Restore spans two of them and the space-2 between.
-	ButtonL = 30
-	// IconXs is 12 DIPs at the default spacing. Glyphs beside caption text: an import candidate's folder, the info glyphs of settings, the chevron of a drop-down.
+	// IconXs is 12 DIPs at the default spacing. A glyph beside small text, a disclosure chevron.
 	IconXs = 3
-	// IconM is 14 DIPs at the default spacing. A warning glyph in a banner or a settings row; the 14 slot of a status glyph.
-	IconM = 3.5
-	// Icon is 16 DIPs at the default spacing. Every glyph of an icon button and a row. 16 x 16 line drawings, 1.5 stroke, as ui.Icon SVGs.
+	// IconS is 14 DIPs at the default spacing. A glyph in a row: findings, problem bars, menus.
+	IconS = 3.5
+	// Icon is 16 DIPs at the default spacing. A glyph in a button or a title row.
 	Icon = 4
-	// IconTab is 20 DIPs at the default spacing. A settings tab's glyph and the drop zone's folder.
-	IconTab = 5
-	// IconL is 22 DIPs at the default spacing. The read-only warning, an empty or error state's glyph.
-	IconL = 5.5
-	// IconHero is 28 DIPs at the default spacing. The glyph in the empty state's key tile and in the drop overlay.
-	IconHero = 7
-	// Row is 32 DIPs at the default spacing. A settings row, a menu entry, the stacked actions of the overlap card.
-	Row = 8
-	// RowS is 28 DIPs at the default spacing. A path row of the stale-path prompt, a finding row, the HTTPS row.
+	// IconM is 20 DIPs at the default spacing. A settings tab's glyph.
+	IconM = 5
+	// IconL is 24 DIPs at the default spacing. The glyph of an empty state or a result.
+	IconL = 6
+	// RowS is 28 DIPs at the default spacing. A compact row: a finding, a file row, a time row.
 	RowS = 7
-	// RowBind is 44 DIPs at the default spacing. A bind row and an overlap row; a backup row.
-	RowBind = 11
-	// RowList is 48 DIPs at the default spacing. The minimum height of an identity list row (badge 28 with space-2 above and below, two lines).
+	// Row is 32 DIPs at the default spacing. A plain row: a settings row of one line, a menu group.
+	Row = 8
+	// RowL is 44 DIPs at the default spacing. A row with a badge or a second line: a bind row, a sidebar row, a settings row, a form row.
+	RowL = 11
+	// RowList is 48 DIPs at the default spacing. A row of the panel's identity list: a badge and two lines.
 	RowList = 12
-	// CaptionLine is 16 DIPs at the default spacing. One line of caption text: the clone helper's output line.
-	CaptionLine = 4
-	// Bar is 36 DIPs at the default spacing. A card's context line and undo bar, the stale-path prompt's button row.
+	// Bar is 36 DIPs at the default spacing. The panel's title row and footer.
 	Bar = 9
-	// BarL is 40 DIPs at the default spacing. The panel footer, the stale-path prompt's header, the New Identity row of the bind list.
-	BarL = 10
-	// Header is 44 DIPs at the default spacing. The panel's title row (no hairline), the accounts window's add bar and detail footer.
-	Header = 11
-	// DropZone is 48 DIPs at the default spacing. The drop zone, one line high.
-	DropZone = 12
-	// BadgeS is 28 DIPs at the default spacing. Initial badge in a list row.
+	// BarL is 44 DIPs at the default spacing. The footer of the accounts and settings windows, the sidebar's footer.
+	BarL = 11
+	// Titlebar is 28 DIPs at the default spacing. The title bar of a window with one (designs only; the system draws it).
+	Titlebar = 7
+	// BadgeS is 28 DIPs at the default spacing. An identity badge in a list.
 	BadgeS = 7
-	// BadgeM is 32 DIPs at the default spacing. Initial badge in a result card and the accounts header.
+	// BadgeM is 32 DIPs at the default spacing. An identity badge in a result card.
 	BadgeM = 8
-	// BadgeL is 44 DIPs at the default spacing. The read-only warning badge.
+	// BadgeL is 44 DIPs at the default spacing. The identity badge at the head of the editor; an empty state's glyph tile.
 	BadgeL = 11
-	// Hero is 56 DIPs at the default spacing. The empty state's key tile.
-	Hero = 14
-	// Radio is 14 DIPs at the default spacing. A radio ring in the key generator.
-	Radio = 3.5
-	// RadioDot is 7 DIPs at the default spacing. The chosen radio's dot.
-	RadioDot = 1.75
-	// SwitchW is 28 DIPs at the default spacing. A switch's track width.
-	SwitchW = 7
-	// SwitchH is 16 DIPs at the default spacing. A switch's track height.
-	SwitchH = 4
-	// Dot is 10 DIPs at the default spacing. An identity's color dot in a bind row.
-	Dot = 2.5
-	// DotS is 6 DIPs at the default spacing. A connectivity dot in a list row.
+	// AppIcon is 64 DIPs at the default spacing. The app icon in the about window.
+	AppIcon = 16
+	// DotS is 6 DIPs at the default spacing. A connectivity dot.
 	DotS = 1.5
-	// DotL is 14 DIPs at the default spacing. A color choice in the editor.
+	// Dot is 10 DIPs at the default spacing. An identity's color dot: identities in a backup.
+	Dot = 2.5
+	// DotL is 14 DIPs at the default spacing. A color choice.
 	DotL = 3.5
-	// ColorRing is 21 DIPs at the default spacing. The ring around the chosen color choice: dot-l and 3.5 around it.
-	ColorRing = 5.25
-	// Countdown is 2 DIPs at the default spacing. The undo bar's countdown line on its bottom edge, commit at 45%, in fifths of the card's width.
+	// SwitchW is 32 DIPs at the default spacing. A switch's width.
+	SwitchW = 8
+	// SwitchH is 18 DIPs at the default spacing. A switch's height.
+	SwitchH = 4.5
+	// Knob is 14 DIPs at the default spacing. A switch's knob.
+	Knob = 3.5
+	// Check is 14 DIPs at the default spacing. A checkbox or a radio.
+	Check = 3.5
+	// LabelW is 120 DIPs at the default spacing. The label column of a form.
+	LabelW = 30
+	// ButtonW is 80 DIPs at the default spacing. The least width of grouped buttons (a dialog's, a footer's); buttons of a group share one width.
+	ButtonW = 20
+	// Sidebar is 240 DIPs at the default spacing. The accounts window's identity list.
+	Sidebar = 60
+	// TabW is 88 DIPs at the default spacing. A settings tab's width.
+	TabW = 22
+	// TabH is 52 DIPs at the default spacing. A settings tab's height.
+	TabH = 13
+	// PaneMax is 560 DIPs at the default spacing. The most a settings pane's content grows to, centered.
+	PaneMax = 140
+	// Measure is 240 DIPs at the default spacing. The widest a short run of secondary text grows before it wraps: a tooltip, an empty state's hint, the about window's note.
+	Measure = 60
+	// Countdown is 2 DIPs at the default spacing. The undo bar's countdown line.
 	Countdown = 0.5
-	// DetailLabel is 56 DIPs at the default spacing. Label column of a result card's details.
-	DetailLabel = 14
-	// FormLabel is 168 DIPs at the default spacing. Label column of a settings row in the accounts editor and of the key generator.
-	FormLabel = 42
-	// FilesLabel is 96 DIPs at the default spacing. Label column of the key generator's file rows.
-	FilesLabel = 24
-	// DialogLabel is 64 DIPs at the default spacing. Label column of a dialog's details (the delete confirmation).
-	DialogLabel = 16
-	// BindLabel is 44 DIPs at the default spacing. The Bind label at the end of a bind row, end-aligned.
-	BindLabel = 11
-	// HexField is 88 DIPs at the default spacing. The hex field of the color editor.
-	HexField = 22
-	// PathMin is 80 DIPs at the default spacing. The least a folder path keeps in a result card; the status gives way first.
-	PathMin = 20
-	// FilterText is 28 DIPs at the default spacing. The filter field's text inset at the start, past the magnifier.
-	FilterText = 7
-	// Nest is 44 DIPs at the default spacing. The inset of an identity nested under a backup row, and of its dividers and warnings.
-	Nest = 11
-	// TextButtonY is 5 DIPs at the default spacing. Vertical padding of a text button (Undo, Show): off the scale so its label sits on the bar's text line.
-	TextButtonY = 1.25
-	// AccountsList is 232 DIPs at the default spacing. The accounts window's source list.
-	AccountsList = 58
-	// SettingsTab is 88 DIPs at the default spacing. Width of a settings tab (52 high: a 20 icon over a caption label, 4 apart).
-	SettingsTab = 22
-	// SettingsTabH is 52 DIPs at the default spacing. Height of a settings tab: a 20 icon over a caption label, 4 apart.
-	SettingsTabH = 13
-	// SettingsPane is 560 DIPs at the default spacing. Maximum width of a settings pane, centered.
-	SettingsPane = 140
-	// EmptyText is 420 DIPs at the default spacing. Maximum width of an empty state's text in a settings pane.
-	EmptyText = 105
-	// NoteMax is 260 DIPs at the default spacing. Maximum width of the about window's note.
-	NoteMax = 65
-	// TipMax is 240 DIPs at the default spacing. Maximum width of a custom tooltip.
-	TipMax = 60
-	// AboutIcon is 64 DIPs at the default spacing. The product icon in the about window.
-	AboutIcon = 16
 )
 
 // Window sizes, in DIPs.
 const (
+	// DialogW is 340 DIPs. A dialog window; its height is its content's.
+	DialogW = 340
 	// PanelW is 340 DIPs. The panel window, fixed.
 	PanelW = 340
 	// PanelH is 480 DIPs. The panel window's height.
@@ -152,52 +118,44 @@ const (
 	SettingsMinW = 600
 	// SettingsMinH is 400 DIPs. The least height of the settings window.
 	SettingsMinH = 400
-	// AboutW is 320 DIPs. The about window, fixed.
+	// AboutW is 320 DIPs. The about window with its title bar, fixed.
 	AboutW = 320
-	// AboutH is 320 DIPs. The about window's height.
+	// AboutH is 320 DIPs. The about window's height with its title bar.
 	AboutH = 320
-	// DialogW is 340 DIPs. A dialog window; its height is its content's.
-	DialogW = 340
 )
 
 // Radii, in DIPs: e.Radius(RadiusCard).
 const (
-	// RadiusXs is 4 DIPs. Small marks: key caps in a hint, the scroll thumb's ends, the countdown line.
+	// RadiusXs is 4 DIPs. Small marks: checkboxes, small tags.
 	RadiusXs = 4
-	// RadiusTip is 6 DIPs. A custom tooltip.
-	RadiusTip = 6
-	// RadiusControl is 8 DIPs. Text inputs, a row's hover and selected fill, the 28 list badge, menu entries in designs.
+	// RadiusRow is 6 DIPs. Rows and highlights in them: a row's hover and selected fill, menu entries, icon buttons, tooltips.
+	RadiusRow = 6
+	// RadiusControl is 8 DIPs. Controls: text inputs, drop-downs, the 28 and 32 badges, problem bars, settings tabs.
 	RadiusControl = 8
-	// RadiusTile is 10 DIPs. The 32 result badge and the accounts header badge.
-	RadiusTile = 10
-	// RadiusCard is 12 DIPs. Cards, the identity list, the drop zone, settings groups, banners, problem bars, the 44 warning badge.
+	// RadiusCard is 12 DIPs. Surfaces: cards, list cards, groups, the drop zone, the 44 badge.
 	RadiusCard = 12
-	// RadiusHero is 14 DIPs. The empty state's 56 key tile.
-	RadiusHero = 14
-	// RadiusWindow is 16 DIPs. Windows and dialogs as designs draw them; macOS 26 rounder still.
+	// RadiusWindow is 16 DIPs. Windows and dialog windows as designs draw them; the system draws their corners.
 	RadiusWindow = 16
-	// RadiusPill is 999 DIPs. Push buttons, segmented controls, the filter field, icon buttons (circles), dots. The theme Radius.
+	// RadiusPill is 999 DIPs. Capsules and circles: buttons, segmented controls, switches, status dots, color choices. The theme Radius.
 	RadiusPill = 999
 )
 
-// Opacities: e.Opacity(OpacityBusy).
+// Opacities: e.Opacity(OpacityFaded).
 const (
-	// OpacityDisabled is 0.45. A control that cannot be used: buttons, icon buttons, switches.
-	OpacityDisabled = 0.45
-	// OpacityCountdown is 0.45. The undo countdown line's commit mint.
-	OpacityCountdown = 0.45
-	// OpacityBusy is 0.5. A list, row or group while its work runs: import candidates, a backup being restored, the key generator, the editor while it saves.
-	OpacityBusy = 0.5
+	// OpacityDisabled is 0.4. A control that cannot be used, as a whole.
+	OpacityDisabled = 0.4
+	// OpacityFaded is 0.6. A form or list dimmed while its work runs: saving, importing, restoring.
+	OpacityFaded = 0.6
 )
 
 // Durations: c.After(MotionAck).
 const (
-	// MotionNone is 0ms. Default: every state change, hover and press.
-	MotionNone = 0 * time.Millisecond
-	// MotionAck is 1200ms. Copied, written, undone and updated acknowledgements stay this long, then go at once (c.After).
-	MotionAck = 1200 * time.Millisecond
-	// MotionUndo is 5000ms. The undo window, from an absolute deadline; the countdown line shortens in fifths, once a second, with no animation.
-	MotionUndo = 5000 * time.Millisecond
-	// MotionBase is 200ms ease-out. Element transitions, only as an agreed exception in docs/design.md (MyGo default). Reduced motion jumps to the target.
+	// MotionFast is 120ms. Hover, press, fades.
+	MotionFast = 120 * time.Millisecond
+	// MotionBase is 200ms. Expanding and collapsing; a result card or problem bar appearing.
 	MotionBase = 200 * time.Millisecond
+	// MotionAck is 1200ms. How long Copied, Saved and Updated stay; a repeat starts it again.
+	MotionAck = 1200 * time.Millisecond
+	// MotionUndo is 5000ms. The undo bar's countdown, from an absolute deadline.
+	MotionUndo = 5000 * time.Millisecond
 )

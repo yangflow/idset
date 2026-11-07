@@ -102,7 +102,7 @@ func (s *Screen) cloneBlock(c *ui.Context, key string, a account.Account, f *clo
 				s.act.CloneCopied(a.ID, remote.Prefix(f.value))
 			}
 		})
-		ui.Row(c).Height(t.Space(theme.CaptionLine)).PaddingX(t.Space(theme.Space0_5)).AlignItems(ui.Center).MinWidth(0).Children(func() {
+		ui.Row(c).PaddingX(t.Space(theme.Space0_5)).AlignItems(ui.Center).MinWidth(0).Children(func() {
 			if !ok {
 				ui.Text(c, s.text.CloneHint).FontSize(t.Rem(0.85)).TextColor(t.TextMuted).SingleLine().MinWidth(0)
 				return

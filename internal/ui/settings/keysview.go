@@ -22,9 +22,9 @@ func (s *Screen) keysPane(c *ui.Context) {
 // keyLabel is the 168 DIP label at the start of a form row; files is the 96 DIP one of the Files group.
 func keyLabel(c *ui.Context, text string, files bool) {
 	t := c.Theme()
-	w := t.Space(theme.FormLabel)
+	w := t.Space(theme.LabelW)
 	if files {
-		w = t.Space(theme.FilesLabel)
+		w = t.Space(theme.LabelW)
 	}
 	ui.Text(c, text).Width(w).Shrink(0).SingleLine()
 }
@@ -47,7 +47,7 @@ func (s *Screen) keyForm(c *ui.Context) {
 	busy := s.keys.busy
 	if a, ok := s.identity(s.keys.target); ok {
 		theme.Card(c, ui.Row(c)).Gap(t.Space(theme.Space2)).Padding(t.Space(theme.Space3)).Children(func() {
-			ui.Icon(c, icons.Key).FontSize(t.Space(theme.IconM)).TextColor(t.TextMuted)
+			ui.Icon(c, icons.Key).FontSize(t.Space(theme.IconS)).TextColor(t.TextMuted)
 			ui.Text(c, fmt.Sprintf(s.text.KDiag, s.label(a), s.env.Tilde(a.KeyPath))).Grow(1).Wrap()
 		})
 	}
@@ -63,7 +63,7 @@ func (s *Screen) keyForm(c *ui.Context) {
 	}
 	group := ui.Column(c).Gap(t.Space(theme.Space6))
 	if busy {
-		group.Opacity(theme.OpacityBusy)
+		group.Opacity(theme.OpacityFaded)
 	}
 	group.Children(func() {
 		s.section(c, s.text.KNew, func(r *rows) {
@@ -285,10 +285,10 @@ func (s *Screen) pickDialog(c *ui.Context) ui.Element {
 				if on {
 					ring = t.Accent
 				}
-				ui.Row(c).Size(t.Space(theme.Radio), t.Space(theme.Radio)).Radius(theme.RadiusPill).Border(1.5, ring).Justify(ui.Center).AlignItems(ui.Center).Shrink(0).
+				ui.Row(c).Size(t.Space(theme.Check), t.Space(theme.Check)).Radius(theme.RadiusPill).Border(1.5, ring).Justify(ui.Center).AlignItems(ui.Center).Shrink(0).
 					Margin(t.Space(theme.Space0_5), 0, 0, 0).Children(func() {
 					if on {
-						ui.Column(c).Size(t.Space(theme.RadioDot), t.Space(theme.RadioDot)).Radius(theme.RadiusPill).Background(t.Accent)
+						ui.Column(c).Size(t.Space(theme.DotS), t.Space(theme.DotS)).Radius(theme.RadiusPill).Background(t.Accent)
 					}
 				})
 				ui.Column(c).Grow(1).MinWidth(0).Gap(t.Space(theme.Space0_5)).Children(func() {

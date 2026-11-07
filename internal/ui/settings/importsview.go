@@ -13,7 +13,7 @@ func (s *Screen) importPane(c *ui.Context) {
 	t := c.Theme()
 	if s.readOnly {
 		ui.Row(c).Gap(t.Space(theme.Space2)).Padding(t.Space(theme.Space3)).Radius(theme.RadiusCard).Background(theme.Of(c).DangerSoft).Children(func() {
-			ui.Icon(c, icons.Warn).FontSize(t.Space(theme.IconM)).TextColor(t.Danger)
+			ui.Icon(c, icons.Warn).FontSize(t.Space(theme.IconS)).TextColor(t.Danger)
 			ui.Text(c, s.text.ImportReadOnly).Grow(1)
 		})
 	}
@@ -26,7 +26,7 @@ func (s *Screen) importPane(c *ui.Context) {
 		}, s.text.ScanningSub, false)
 	case im.scanErr != "":
 		ui.Row(c).Gap(t.Space(theme.Space2)).Padding(t.Space(theme.Space3)).Radius(theme.RadiusCard).Background(theme.Of(c).DangerSoft).Children(func() {
-			ui.Icon(c, icons.Warn).FontSize(t.Space(theme.IconM)).TextColor(t.Danger)
+			ui.Icon(c, icons.Warn).FontSize(t.Space(theme.IconS)).TextColor(t.Danger)
 			ui.Text(c, im.scanErr).Grow(1)
 		})
 		ui.Row(c).Justify(ui.End).Children(func() {
@@ -50,7 +50,7 @@ func (s *Screen) centered(c *ui.Context, head func(), body string, rescan bool) 
 	t := c.Theme()
 	ui.Column(c).Gap(t.Space(theme.Space1)).AlignItems(ui.Center).Padding(t.Space(theme.Space8), t.Space(theme.Space4), t.Space(theme.Space8), t.Space(theme.Space4)).Children(func() {
 		ui.Column(c).Gap(t.Space(theme.Space2)).AlignItems(ui.Center).Children(head)
-		ui.Text(c, body).TextColor(t.TextMuted).TextAlign(ui.Center).MaxWidth(t.Space(theme.EmptyText)).Wrap()
+		ui.Text(c, body).TextColor(t.TextMuted).TextAlign(ui.Center).MaxWidth(t.Space(theme.Measure)).Wrap()
 		if rescan {
 			ui.Row(c).Padding(t.Space(theme.Space4), 0, 0, 0).Children(func() {
 				if ui.Button(c.Key("rescan"), s.text.Rescan).Clicked() {
@@ -68,14 +68,14 @@ func (s *Screen) candidates(c *ui.Context) {
 	n := s.checkedCount()
 	list := ui.Column(c)
 	if im.busy {
-		list.Opacity(theme.OpacityBusy)
+		list.Opacity(theme.OpacityFaded)
 	}
 	list.Children(func() {
 		s.section(c, s.foundTitle(len(im.cands)), func(r *rows) {
 			for i, cand := range im.cands {
 				r.next(c)
 				a := cand.Account
-				ui.Row(c.Key("cand-"+strconv.Itoa(i))).MinHeight(t.Space(theme.RowBind)).Padding(t.Space(theme.Space1_5), t.Space(theme.Space3), t.Space(theme.Space1_5), t.Space(theme.Space3)).Gap(t.Space(theme.Space2)).
+				ui.Row(c.Key("cand-"+strconv.Itoa(i))).MinHeight(t.Space(theme.RowL)).Padding(t.Space(theme.Space1_5), t.Space(theme.Space3), t.Space(theme.Space1_5), t.Space(theme.Space3)).Gap(t.Space(theme.Space2)).
 					AlignItems(ui.Center).Children(func() {
 					ui.Checkbox(c, &im.checked[i], "").Label(a.Label).Disabled(im.busy)
 					ui.Column(c).Grow(1).Children(func() {

@@ -183,7 +183,7 @@ func (s *Screen) detail(c *ui.Context) {
 	ui.Column(c).Fill().Padding(bandHeight(c), 0, 0, 0).Background(fill).Children(func() {
 		body := ui.Scroll(c).Grow(1).Padding(t.Space(theme.Space4), t.Space(theme.Space6), t.Space(theme.Space6), t.Space(theme.Space6)).Gap(t.Space(theme.Space6))
 		if s.busy {
-			body.Opacity(theme.OpacityBusy)
+			body.Opacity(theme.OpacityFaded)
 		}
 		body.Children(func() {
 			s.header(c, f)
@@ -216,7 +216,7 @@ func (s *Screen) header(c *ui.Context, f *form) {
 	t := c.Theme()
 	ui.Column(c).Gap(t.Space(theme.Space1_5)).Children(func() {
 		ui.Row(c).Gap(t.Space(theme.Space2)).AlignItems(ui.Center).Children(func() {
-			badge(c, f.cur.color, f.cur.label, t.Space(theme.BadgeM), theme.RadiusTile, t.Rem(1.15))
+			badge(c, f.cur.color, f.cur.label, t.Space(theme.BadgeM), theme.RadiusControl, t.Rem(1.15))
 			ui.Text(c, s.labelOf(f.cur.label)).FontSize(t.Rem(1.15)).FontWeight(600).Role(ui.RoleHeading).Level(1)
 			mark := s.text.Scoped
 			if f.cur.global {
@@ -228,7 +228,7 @@ func (s *Screen) header(c *ui.Context, f *form) {
 				for _, name := range account.ColorPresets {
 					s.colorChoice(c, f, name)
 				}
-				ui.TextInput(c.Key("hex"), &f.hex).Label(s.text.Hex).Font("monospace").FontSize(t.Rem(0.85)).Width(t.Space(theme.HexField)).Radius(theme.RadiusControl).Disabled(s.busy)
+				ui.TextInput(c.Key("hex"), &f.hex).Label(s.text.Hex).Font("monospace").FontSize(t.Rem(0.85)).Width(t.Space(theme.ButtonW)).Radius(theme.RadiusControl).Disabled(s.busy)
 			})
 		})
 		s.notes(c, s.problemTexts(f, "color"))
@@ -251,7 +251,7 @@ func (s *Screen) colorChoice(c *ui.Context, f *form, name string) {
 	if on {
 		ring = color
 	}
-	outer := t.Space(theme.ColorRing)
+	outer := t.Space(theme.DotL + 2*theme.Space1)
 	ui.Column(c).Size(outer, outer).Shrink(0).Radius(theme.RadiusPill).AlignItems(ui.Center).Justify(ui.Center).Border(1.5, ring).Children(func() {
 		btn := ui.Button(c.Key("color-"+name), "").Label(s.colorName(name)).Selected(on).Size(size, size).Padding(0).Radius(size/2).
 			Background(color).Border(0, ui.Color{}).Disabled(s.busy)
@@ -284,7 +284,7 @@ func (r *rows) field(c *ui.Context, label, hint string, value func()) {
 	r.next(c)
 	t := c.Theme()
 	ui.Row(c).MinHeight(t.Space(theme.Row)).PaddingX(t.Space(theme.Space3)).PaddingY(t.Space(theme.Space1)).Gap(t.Space(theme.Space3)).AlignItems(ui.Center).Children(func() {
-		ui.Text(c, label).Role(ui.RoleText).Width(t.Space(theme.FormLabel)).Shrink(0)
+		ui.Text(c, label).Role(ui.RoleText).Width(t.Space(theme.LabelW)).Shrink(0)
 		value()
 		if hint != "" {
 			ui.Text(c, hint).FontSize(t.Rem(0.92)).TextColor(t.TextMuted).SingleLine().Shrink(0)
@@ -555,7 +555,7 @@ func textButton(c *ui.Context, label string, color ui.Color, icon *ui.SVG) ui.El
 }
 
 // barHeight is the height of the sidebar's add bar and of the detail's footer, so their hairlines are one line.
-func barHeight(t *ui.Theme) float32 { return t.Space(theme.Header) }
+func barHeight(t *ui.Theme) float32 { return t.Space(theme.BarL) }
 
 // buttonHeight is the height of every footer button; buttonWidth is the width of Revert and Save, wide enough
 // for the longest label of either language, so that a label change moves nothing.
@@ -656,7 +656,7 @@ func (s *Screen) deleteDialog(c *ui.Context) ui.Element {
 		ui.Column(c).Children(func() {
 			hairline(c)
 			ui.Row(c).Gap(t.Space(theme.Space3)).PaddingY(t.Space(theme.Space2)).Children(func() {
-				ui.Text(c, s.text.PrivateKey).TextColor(t.TextMuted).Width(t.Space(theme.DialogLabel)).Shrink(0)
+				ui.Text(c, s.text.PrivateKey).TextColor(t.TextMuted).Width(t.Space(theme.LabelW)).Shrink(0)
 				key := s.text.None
 				if strings.TrimSpace(a.KeyPath) != "" {
 					key = a.KeyPath
@@ -665,7 +665,7 @@ func (s *Screen) deleteDialog(c *ui.Context) ui.Element {
 			})
 			hairline(c)
 			ui.Row(c).Gap(t.Space(theme.Space3)).PaddingY(t.Space(theme.Space2)).Children(func() {
-				ui.Text(c, s.text.Folders).TextColor(t.TextMuted).Width(t.Space(theme.DialogLabel)).Shrink(0)
+				ui.Text(c, s.text.Folders).TextColor(t.TextMuted).Width(t.Space(theme.LabelW)).Shrink(0)
 				ui.Column(c).Grow(1).Children(func() {
 					folders := usablePaths(*a)
 					if a.Scope.Global || len(folders) == 0 {

@@ -69,7 +69,7 @@ func generate(src []byte) ([]byte, error) {
 		{"Sizes, in steps of Theme.Spacing: t.Space(Control). A sum of tokens is a size too: t.Space(Space3 + BadgeS + Space2).", t.Size.Tokens, steps},
 		{"Window sizes, in DIPs.", t.Window.Tokens, dips},
 		{"Radii, in DIPs: e.Radius(RadiusCard).", t.Radius.Tokens, dips},
-		{"Opacities: e.Opacity(OpacityBusy).", t.Opacity.Tokens, plain},
+		{"Opacities: e.Opacity(OpacityFaded).", t.Opacity.Tokens, plain},
 		{"Durations: c.After(MotionAck).", t.Motion.Tokens, duration},
 	}
 	for _, g := range groups {

@@ -29,7 +29,7 @@ func (s *Screen) View(c *ui.Context) {
 		s.tabBar(c)
 		ui.Divider(c)
 		ui.Scroll(c).Grow(1).AlignItems(ui.Center).Padding(t.Space(theme.Space4), t.Space(theme.Space6), t.Space(theme.Space6), t.Space(theme.Space6)).Children(func() {
-			ui.Column(c).FillWidth().MaxWidth(t.Space(theme.SettingsPane)).Gap(t.Space(theme.Space6)).Children(func() {
+			ui.Column(c).FillWidth().MaxWidth(t.Space(theme.PaneMax)).Gap(t.Space(theme.Space6)).Children(func() {
 				switch Pane(s.tab + 1) {
 				case General:
 					s.general(c)
@@ -82,7 +82,7 @@ func (s *Screen) tabBar(c *ui.Context) {
 		parts := ui.TabsBase(c, &s.tab, len(tabs))
 		parts.List.Gap(t.Space(theme.Space1)).Label(s.text.Tabs).Children(func() {
 			for i, tab := range tabs {
-				el := parts.Tab(i).MinWidth(t.Space(theme.SettingsTab)).Height(t.Space(theme.SettingsTabH)).PaddingX(t.Space(theme.Space1)).Radius(theme.RadiusControl).AlignItems(ui.Center).Justify(ui.Center).Label(tab.name)
+				el := parts.Tab(i).MinWidth(t.Space(theme.TabW)).Height(t.Space(theme.TabH)).PaddingX(t.Space(theme.Space1)).Radius(theme.RadiusControl).AlignItems(ui.Center).Justify(ui.Center).Label(tab.name)
 				color, weight := t.TextMuted, 400
 				switch {
 				case i == s.tab:
@@ -93,7 +93,7 @@ func (s *Screen) tabBar(c *ui.Context) {
 				}
 				el.Children(func() {
 					ui.Column(c).Gap(t.Space(theme.Space1)).AlignItems(ui.Center).Children(func() {
-						ui.Icon(c, tab.icon).FontSize(t.Space(theme.IconTab)).TextColor(color)
+						ui.Icon(c, tab.icon).FontSize(t.Space(theme.IconM)).TextColor(color)
 						ui.Text(c, tab.name).FontSize(t.Rem(0.85)).FontWeight(weight).TextColor(color).SingleLine().Shrink(0)
 					})
 				})
@@ -181,9 +181,9 @@ func (s *Screen) general(c *ui.Context) {
 				if on && choice.value == FollowSystem {
 					ui.Text(c, fmt.Sprintf(s.text.Current, s.systemName())).FontSize(t.Rem(0.92)).TextColor(t.TextMuted)
 				}
-				ui.Row(c).Size(t.Space(theme.IconM), t.Space(theme.IconM)).Shrink(0).Children(func() {
+				ui.Row(c).Size(t.Space(theme.IconS), t.Space(theme.IconS)).Shrink(0).Children(func() {
 					if on {
-						ui.Icon(c, icons.Check).FontSize(t.Space(theme.IconM)).TextColor(t.Accent)
+						ui.Icon(c, icons.Check).FontSize(t.Space(theme.IconS)).TextColor(t.Accent)
 					}
 				})
 			})
@@ -246,7 +246,7 @@ func (s *Screen) backupsPane(c *ui.Context) {
 	t := c.Theme()
 	if s.readOnly {
 		ui.Row(c).Gap(t.Space(theme.Space2)).Padding(t.Space(theme.Space3)).Radius(theme.RadiusCard).Background(theme.Of(c).DangerSoft).Children(func() {
-			ui.Icon(c, icons.Warn).FontSize(t.Space(theme.IconM)).TextColor(t.Danger)
+			ui.Icon(c, icons.Warn).FontSize(t.Space(theme.IconS)).TextColor(t.Danger)
 			ui.Text(c, s.text.ReadOnlyBanner).Grow(1)
 		})
 	}
@@ -285,9 +285,9 @@ func (s *Screen) backupRow(c *ui.Context, b Backup) {
 	open := s.expanded[b.Path] && !unreadable
 	ui.Column(c).Children(func() {
 		other := s.restoring != "" && !busy
-		row := ui.Row(c).MinHeight(t.Space(theme.RowBind)).Padding(t.Space(theme.Space1_5), t.Space(theme.Space3), t.Space(theme.Space1_5), t.Space(theme.Space1)).Gap(t.Space(theme.Space1)).AlignItems(ui.Center)
+		row := ui.Row(c).MinHeight(t.Space(theme.RowL)).Padding(t.Space(theme.Space1_5), t.Space(theme.Space3), t.Space(theme.Space1_5), t.Space(theme.Space1)).Gap(t.Space(theme.Space1)).AlignItems(ui.Center)
 		if other {
-			row.Opacity(theme.OpacityBusy)
+			row.Opacity(theme.OpacityFaded)
 		}
 		row.Children(func() {
 			chevron, label := icons.ChevronRight, s.text.Expand
@@ -328,13 +328,13 @@ func (s *Screen) backupRow(c *ui.Context, b Backup) {
 		if open {
 			for i, a := range b.Accounts {
 				if i > 0 {
-					ui.Column(c).Padding(0, 0, 0, t.Space(theme.Nest)).Children(func() { ui.Divider(c) })
+					ui.Column(c).Padding(0, 0, 0, t.Space(theme.Space1+theme.ControlS+theme.Space1)).Children(func() { ui.Divider(c) })
 				}
 				s.identityRow(c, a)
 			}
 		}
 		if msg := s.failed[b.Path]; msg != "" {
-			ui.Column(c).Padding(0, t.Space(theme.Space3), t.Space(theme.Space2), t.Space(theme.Nest)).Children(func() { s.warn(c, msg) })
+			ui.Column(c).Padding(0, t.Space(theme.Space3), t.Space(theme.Space2), t.Space(theme.Space1+theme.ControlS+theme.Space1)).Children(func() { s.warn(c, msg) })
 		}
 	})
 }
@@ -342,7 +342,7 @@ func (s *Screen) backupRow(c *ui.Context, b Backup) {
 // identityRow is an identity inside a backup: read-only, with a 24 DIP slot at the end under the delete column.
 func (s *Screen) identityRow(c *ui.Context, a account.Account) {
 	t := c.Theme()
-	ui.Row(c.Key("id-"+a.ID)).MinHeight(t.Space(theme.Row)).Padding(0, t.Space(theme.Space3), 0, t.Space(theme.Nest)).Gap(t.Space(theme.Space2)).AlignItems(ui.Center).Children(func() {
+	ui.Row(c.Key("id-"+a.ID)).MinHeight(t.Space(theme.Row)).Padding(0, t.Space(theme.Space3), 0, t.Space(theme.Space1+theme.ControlS+theme.Space1)).Gap(t.Space(theme.Space2)).AlignItems(ui.Center).Children(func() {
 		dot(c, a.Color)
 		ui.Text(c, s.label(a)).SingleLine().Shrink(0)
 		ui.Text(c, a.GitUserEmail).FontSize(t.Rem(0.92)).TextColor(t.TextMuted).Grow(1).Wrap()

@@ -1,6 +1,6 @@
 // Package theme is Idset's glass theme: the ui.Theme every window uses, light and dark, the fills that are not
 // theme roles, and the tokens of design/tokens.json as constants (tokens_gen.go). The values are those of
-// design/tokens.json, except the colors its audit lists as pending.
+// design/tokens.json.
 package theme
 
 //go:generate go run ./gen ../../../design/tokens.json tokens_gen.go
@@ -36,15 +36,15 @@ type Fills struct {
 
 var (
 	lightFills = Fills{
-		Solid: ui.Hex("#f2f2f5"), SolidDetail: ui.Hex("#fbfbfd"), Detail: ui.RGBA(255, 255, 255, 0.45),
-		Card: ui.RGBA(255, 255, 255, 0.2), Field: ui.RGBA(255, 255, 255, 0.22), AccentSoft: ui.RGBA(20, 184, 150, 0.15),
-		Selected: ui.RGBA(0, 0, 0, 0.09), DangerSoft: ui.RGBA(200, 16, 46, 0.12), Fg2: ui.Hex("#3c3c42"),
+		Solid: ui.Hex("#ebebef"), SolidDetail: ui.Hex("#f7f7f9"), Detail: ui.RGBA(255, 255, 255, 0.45),
+		Card: ui.RGBA(255, 255, 255, 0.82), Field: ui.RGBA(255, 255, 255, 0.22), AccentSoft: ui.RGBA(20, 184, 150, 0.15),
+		Selected: ui.RGBA(0, 0, 0, 0.09), DangerSoft: ui.RGBA(200, 16, 46, 0.13), Fg2: ui.Hex("#3c3c42"),
 		CardRim: ui.RGBA(255, 255, 255, 0.45),
 	}
 	darkFills = Fills{
-		Solid: ui.Hex("#2a2a2e"), SolidDetail: ui.Hex("#323236"), Detail: ui.RGBA(0, 0, 0, 0.18),
-		Card: ui.RGBA(255, 255, 255, 0.06), Field: ui.RGBA(0, 0, 0, 0.22), AccentSoft: ui.RGBA(79, 220, 184, 0.18),
-		Selected: ui.RGBA(255, 255, 255, 0.11), DangerSoft: ui.RGBA(255, 107, 128, 0.16), Fg2: ui.Hex("#d6d6dc"),
+		Solid: ui.Hex("#232326"), SolidDetail: ui.Hex("#2d2d31"), Detail: ui.RGBA(0, 0, 0, 0.18),
+		Card: ui.RGBA(255, 255, 255, 0.055), Field: ui.RGBA(0, 0, 0, 0.22), AccentSoft: ui.RGBA(79, 220, 184, 0.18),
+		Selected: ui.RGBA(255, 255, 255, 0.11), DangerSoft: ui.RGBA(255, 107, 128, 0.18), Fg2: ui.Hex("#d6d6dc"),
 		CardRim: ui.RGBA(255, 255, 255, 0.06),
 	}
 )
@@ -91,19 +91,17 @@ func Build(t ui.Theme, highContrast bool) ui.Theme {
 		t.Border = ui.RGBA(255, 255, 255, 0.12)
 		t.Text, t.TextMuted = ui.Hex("#f5f5f7"), ui.Hex("#b8b8c0")
 		t.Accent, t.AccentHover, t.AccentPressed, t.AccentText = ui.Hex("#4fdcb8"), ui.Hex("#72e5c8"), ui.Hex("#94ecd5"), ui.Hex("#10201c")
-		t.Danger, t.Warning, t.Success = ui.Hex("#ff7a8c"), ui.Hex("#ffb340"), ui.Hex("#3ccf62")
-		t.Selection, t.Focus = ui.RGBA(79, 220, 184, 0.32), ui.RGBA(79, 220, 184, 0.45)
-		t.Inverse, t.InverseText = ui.Hex("#f5f5f7"), ui.Hex("#1d1d1f")
+		t.Danger, t.Warning, t.Success = ui.Hex("#ffa3af"), ui.Hex("#ffb340"), ui.Hex("#3ccf62")
+		t.Selection, t.Focus = ui.RGBA(79, 220, 184, 0.32), ui.RGBA(79, 220, 184, 0.6)
 		t.Scrollbar = ui.RGBA(255, 255, 255, 0.35)
 	} else {
 		t.Background = lightFills.Solid
 		t.Surface, t.SurfaceHover, t.SurfacePressed = ui.RGBA(0, 0, 0, 0.05), ui.RGBA(0, 0, 0, 0.07), ui.RGBA(0, 0, 0, 0.12)
 		t.Border = ui.RGBA(60, 60, 67, 0.18)
-		t.Text, t.TextMuted = ui.Hex("#1d1d1f"), ui.Hex("#5e5e65")
-		t.Accent, t.AccentHover, t.AccentPressed, t.AccentText = ui.Hex("#0a7a68"), ui.Hex("#086a5a"), ui.Hex("#075a4d"), ui.Hex("#ffffff")
-		t.Danger, t.Warning, t.Success = ui.Hex("#c8102e"), ui.Hex("#a86500"), ui.Hex("#1e7d36")
-		t.Selection, t.Focus = ui.RGBA(20, 184, 150, 0.25), ui.RGBA(10, 122, 104, 0.4)
-		t.Inverse, t.InverseText = ui.Hex("#1d1d1f"), ui.Hex("#f5f5f7")
+		t.Text, t.TextMuted = ui.Hex("#1d1d1f"), ui.Hex("#58585f")
+		t.Accent, t.AccentHover, t.AccentPressed, t.AccentText = ui.Hex("#086b5b"), ui.Hex("#065c4e"), ui.Hex("#075a4d"), ui.Hex("#ffffff")
+		t.Danger, t.Warning, t.Success = ui.Hex("#b80d29"), ui.Hex("#a86500"), ui.Hex("#1e7d36")
+		t.Selection, t.Focus = ui.RGBA(20, 184, 150, 0.25), ui.RGBA(10, 122, 104, 0.55)
 		t.Scrollbar = ui.RGBA(0, 0, 0, 0.32)
 	}
 	// Push buttons and drop-downs are capsules; a symbol button is a circle.

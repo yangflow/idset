@@ -571,7 +571,7 @@ toolbar: below it, a source list and a detail pane.
   (100) wide, enough for "✓ Saved", "Saving", "已保存" and "保存中", so no label change resizes or moves anything. At the left "Delete" as plain `Danger` text (existing
   identities only), then the status (`Rem(0.92)`, `TextMuted`), then "Revert" (bordered) and "Save", the only filled button.
   Status: "Unsaved changes", or "Not saved" for a draft; a spinner with "Writing…" while saving,
-  when the form is dimmed to half (opacity-busy) and disabled; "Saved" with a check mark on the Save button for
+  when the form is dimmed (opacity-faded) and disabled; "Saved" with a check mark on the Save button for
   1.2 seconds after success; the reason in `Danger` with the warning symbol, wrapping, when the write failed (Save stays available).
   Save and Revert are disabled while there is nothing to save.
 - **Empty.** No list and no footer: "No identities yet" (`Rem(1.15)`, 600), one sentence, "Import Existing"

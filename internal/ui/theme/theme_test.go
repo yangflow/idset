@@ -27,7 +27,7 @@ func TestApplyGivesTheFrameIdsetsTheme(t *testing.T) {
 func TestBuildFollowsTheAppearance(t *testing.T) {
 	light := Build(ui.Theme{}, false)
 	dark := Build(ui.Theme{Dark: true}, false)
-	if light.Accent != ui.Hex("#0a7a68") || dark.Accent != ui.Hex("#4fdcb8") {
+	if light.Accent != ui.Hex("#086b5b") || dark.Accent != ui.Hex("#4fdcb8") {
 		t.Errorf("Accent = %v / %v", light.Accent, dark.Accent)
 	}
 	if dark.AccentText != ui.Hex("#10201c") {

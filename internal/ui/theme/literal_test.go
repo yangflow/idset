@@ -51,7 +51,7 @@ func TestLiteralPattern(t *testing.T) {
 			t.Errorf("%s is not caught", s)
 		}
 	}
-	for _, s := range []string{"t.Space(Space3)", "t.Space(theme.Control)", "t.Space(2*theme.ButtonL+theme.Space2)", "e.Radius(t.Radius)"} {
+	for _, s := range []string{"t.Space(Space3)", "t.Space(theme.Control)", "t.Space(2*theme.ButtonW+theme.Space2)", "e.Radius(t.Radius)"} {
 		if literal.MatchString(s) {
 			t.Errorf("%s is caught", s)
 		}

@@ -200,13 +200,13 @@ func TestEmpty(t *testing.T) {
 	if n := count(tt, "Add Identity"); n != 1 {
 		t.Errorf("Add Identity shows %d times", n)
 	}
-	// The drop zone keeps its one line of 48 whatever the window's height; the block takes the rest.
+	// The drop zone keeps its one line of 44 whatever the window's height; the block takes the rest.
 	for _, h := range []int{480, 700} {
 		tall := ui.NewTester(s.View, 340, h)
 		line, _ := tall.Find("Drop a folder to see its identity")
 		// Between the icon and the line, clear of the rounded corners.
-		if zone := band(tall, int(line.X)-4, int(line.Y+line.H/2)); zone < 46 || zone > 49 {
-			t.Errorf("at %d high the drop zone is %d high, want 48", h, zone)
+		if zone := band(tall, int(line.X)-4, int(line.Y+line.H/2)); zone < 42 || zone > 45 {
+			t.Errorf("at %d high the drop zone is %d high, want 44", h, zone)
 		}
 	}
 	within(t, tt, "No identities yet", "Each folder uses its own Git and SSH identity.", "Add Identity", "Drop a folder to see its identity", "Choose Folder…")
@@ -500,10 +500,10 @@ func TestTitleRowAndFooterAreCompactAndEquallyHigh(t *testing.T) {
 		title, _ := tt.Find("Idset")
 		add, _ := tt.Find("Add Identity")
 		quit, _ := tt.Find("Quit")
-		// The title is centered in its row of 44 as the icons are in the footer's 40.
+		// The title is centered in its row of 36 as the icons are in the footer's 36.
 		top := title.Y + title.H/2
 		bottom := 480 - (quit.Y + quit.H/2)
-		if !same(2*top, 44) || !same(2*bottom, 40) {
+		if !same(2*top, 36) || !same(2*bottom, 36) {
 			t.Errorf("%s: the title row is %v high, the footer %v", goos, 2*top, 2*bottom)
 		}
 		// Both footer buttons are the same small square, Add on the left and Quit on the right, inside the row.

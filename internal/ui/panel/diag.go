@@ -194,7 +194,7 @@ func (s *Screen) unreachableTip(f diagnose.Failure, h string) string {
 // first check runs. A row without an alias keeps the space, so that the folders line up.
 func (s *Screen) connDot(c *ui.Context, a account.Account) {
 	t := c.Theme()
-	slot := ui.Row(c).Size(t.Space(theme.IconM), t.Space(theme.IconM)).Shrink(0).AlignItems(ui.Center).Justify(ui.Center)
+	slot := ui.Row(c).Size(t.Space(theme.IconS), t.Space(theme.IconS)).Shrink(0).AlignItems(ui.Center).Justify(ui.Center)
 	if !diagnose.Checkable(a) {
 		return
 	}
