@@ -12,8 +12,12 @@ import (
 // such as t.Space(2*ButtonL+Space2) starts with a number too, so it is matched only when a name does not follow.
 var literal = regexp.MustCompile(`\.(Space|Radius|Opacity)\(\s*[0-9.]+\s*[),]`)
 
+// typeface is text that sets its own font, size, weight, line height or tracking instead of going through a Style.
+// An icon's size is a token, FontSize(t.Space(theme.Icon...)), so only that form of FontSize passes.
+var typeface = regexp.MustCompile(`\.(Font|FontWeight|LineHeight|LetterSpacing)\(|\.FontSize\((?:[^t]|t[^.]|t\.[^S])`)
+
 // TestNoLiterals keeps the screens and the windows on the tokens: every size, radius and opacity is a name from
-// tokens_gen.go, so design/tokens.json stays the one source.
+// tokens_gen.go, and all text goes through a type Style, so design/tokens.json stays the one source.
 func TestNoLiterals(t *testing.T) {
 	var files []string
 	for _, pattern := range []string{"../*/*.go", "../../../*.go"} {
@@ -41,6 +45,12 @@ func TestNoLiterals(t *testing.T) {
 			if m := literal.FindString(line); m != "" {
 				t.Errorf("%s:%d: %s: use a token from tokens_gen.go", filepath.ToSlash(f), i+1, m)
 			}
+			if filepath.Base(filepath.Dir(f)) == "theme" {
+				continue
+			}
+			if m := typeface.FindString(line); m != "" {
+				t.Errorf("%s:%d: %s: use a type style, theme.Body.On(c, e)", filepath.ToSlash(f), i+1, m)
+			}
 		}
 	}
 }
@@ -53,6 +63,16 @@ func TestLiteralPattern(t *testing.T) {
 	}
 	for _, s := range []string{"t.Space(Space3)", "t.Space(theme.Control)", "t.Space(2*theme.ButtonW+theme.Space2)", "e.Radius(t.Radius)"} {
 		if literal.MatchString(s) {
+			t.Errorf("%s is caught", s)
+		}
+	}
+	for _, s := range []string{`e.Font("monospace")`, "e.FontWeight(600)", "e.FontSize(t.Rem(0.85))", "e.FontSize(size)", "e.LineHeight(1.4)", "e.LetterSpacing(0.2)"} {
+		if !typeface.MatchString(s) {
+			t.Errorf("%s is not caught", s)
+		}
+	}
+	for _, s := range []string{"ui.Icon(c, icon).FontSize(t.Space(theme.Icon))", "theme.Body.On(c, ui.Text(c, s))"} {
+		if typeface.MatchString(s) {
 			t.Errorf("%s is caught", s)
 		}
 	}

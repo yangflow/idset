@@ -1,6 +1,6 @@
 // Command gen writes the theme package's tokens_gen.go from design/tokens.json: the spacing steps and sizes in steps
-// of Theme.Spacing, the window sizes and radii in DIPs, the opacities and the motion durations, so the screens name
-// a token instead of writing a number. go generate runs it in the theme package.
+// of Theme.Spacing, the window sizes and radii in DIPs, the opacities, the motion durations and the type styles, so
+// the screens name a token instead of writing a number. go generate runs it in the theme package.
 package main
 
 import (
@@ -21,7 +21,27 @@ type tokens struct {
 	Radius  family `json:"radius"`
 	Opacity family `json:"opacity"`
 	Motion  family `json:"motion"`
+	Type    struct {
+		Groups []struct {
+			Styles []style `json:"styles"`
+		} `json:"groups"`
+	} `json:"type"`
 }
+
+// style is a type style; its sizes are at the macOS font size, base.
+type style struct {
+	Name          string  `json:"name"`
+	Family        string  `json:"family"`
+	FontSize      float64 `json:"fontSize"`
+	FontWeight    int     `json:"fontWeight"`
+	LineHeight    string  `json:"lineHeight"`
+	LetterSpacing string  `json:"letterSpacing"`
+	Usage         string  `json:"usage"`
+}
+
+// base is the font size the type styles are drawn at: macOS's 13. A style's size is a multiple of it, so on Windows
+// and Linux, at 14, every style scales with the theme.
+const base = 13
 
 type family struct {
 	Tokens []token `json:"tokens"`
@@ -86,6 +106,18 @@ func generate(src []byte) ([]byte, error) {
 		}
 		b.WriteString(")\n")
 	}
+	b.WriteString("\n// Type styles: Secondary.On(c, ui.Text(c, s)).\nvar (\n")
+	for _, g := range t.Type.Groups {
+		for _, st := range g.Styles {
+			value, err := typeStyle(st)
+			if err != nil {
+				return nil, fmt.Errorf("%s: %w", st.Name, err)
+			}
+			fmt.Fprintf(&b, "\t// %s is %s on %s at the default font size, weight %d. %s\n\t%s = %s\n", ident(st.Name),
+				number(st.FontSize), strings.TrimSuffix(st.LineHeight, "px"), st.FontWeight, st.Usage, ident(st.Name), value)
+		}
+	}
+	b.WriteString(")\n")
 	return format.Source(b.Bytes())
 }
 
@@ -145,5 +177,28 @@ func duration(tok token) (string, string, error) {
 	}
 	return fmt.Sprintf("%d * time.Millisecond", v), s, nil
 }
+
+// typeStyle is the Style literal of a type style: its size a multiple of base, its line height a multiple of its
+// size, its tracking in em.
+func typeStyle(st style) (string, error) {
+	if st.FontSize <= 0 || st.FontWeight <= 0 {
+		return "", fmt.Errorf("size %v, weight %v", st.FontSize, st.FontWeight)
+	}
+	line, err := strconv.ParseFloat(strings.TrimSuffix(st.LineHeight, "px"), 64)
+	if err != nil || !strings.HasSuffix(st.LineHeight, "px") {
+		return "", fmt.Errorf("line height %q is not in px", st.LineHeight)
+	}
+	tracking := 0.0
+	if s := st.LetterSpacing; s != "" && s != "0" {
+		if tracking, err = strconv.ParseFloat(strings.TrimSuffix(s, "em"), 64); err != nil || !strings.HasSuffix(s, "em") {
+			return "", fmt.Errorf("letter spacing %q is not in em", s)
+		}
+	}
+	return fmt.Sprintf("Style{Size: %s, Weight: %d, Line: %s, Tracking: %s, Mono: %t}", ratio(st.FontSize, base), st.FontWeight,
+		ratio(line, st.FontSize), number(tracking), st.Family == "mono"), nil
+}
+
+// ratio is a/b, rounded to four places.
+func ratio(a, b float64) string { return strconv.FormatFloat(a/b, 'f', 4, 64) }
 
 func number(v float64) string { return strconv.FormatFloat(v, 'f', -1, 64) }

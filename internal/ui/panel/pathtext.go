@@ -3,20 +3,17 @@ package panel
 import (
 	"github.com/egoist/mygo/ui"
 	"github.com/yangflow/idset/internal/paths"
+	"github.com/yangflow/idset/internal/ui/theme"
 )
 
 // pathFace is the type of a path line: all its pieces share it, so that they read as one string.
 type pathFace struct {
-	mono  bool
-	size  float32
+	style theme.Style
 	color ui.Color
 }
 
-func (f pathFace) apply(e ui.Element) ui.Element {
-	if f.mono {
-		e = e.Font("monospace")
-	}
-	return e.FontSize(f.size).TextColor(f.color)
+func (f pathFace) apply(c *ui.Context, e ui.Element) ui.Element {
+	return f.style.On(c, e).TextColor(f.color)
 }
 
 // pathLine puts a path and a suffix on one line. When the line is too narrow only the middle of the path gives way,
@@ -39,9 +36,9 @@ func pathLine(c *ui.Context, path, suffix, tip string, f pathFace) ui.Element {
 	return ui.Row(c).MinWidth(0).AlignItems(ui.Center).Tooltip(tip).Children(func() {
 		ui.Row(c).MinWidth(0).Clip().AlignItems(ui.Center).Children(func() {
 			if lead != "" {
-				f.apply(ui.Text(c, lead)).Shrink(0)
+				f.apply(c, ui.Text(c, lead)).Shrink(0)
 			}
-			f.apply(ui.Text(c, mid+last+suffix)).SingleLine().Ellipsis(mark).MinWidth(0)
+			f.apply(c, ui.Text(c, mid+last+suffix)).SingleLine().Ellipsis(mark).MinWidth(0)
 		})
 	})
 }

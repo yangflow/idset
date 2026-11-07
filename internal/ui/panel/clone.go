@@ -37,7 +37,7 @@ func (s *Screen) copied(c *ui.Context, until time.Time) bool {
 		return false
 	}
 	t := c.Theme()
-	ui.Text(c, s.text.Copied).FontSize(t.Rem(0.85)).TextColor(t.TextMuted).SingleLine().Shrink(0)
+	theme.Small.On(c, ui.Text(c, s.text.Copied)).TextColor(t.TextMuted).SingleLine().Shrink(0)
 	c.After(left)
 	return true
 }
@@ -52,8 +52,8 @@ func (s *Screen) remoteRow(c *ui.Context, r *match.Result, a account.Account) {
 	t := c.Theme()
 	ui.Row(c.Key("https")).Height(t.Space(theme.RowS)).Padding(0, t.Space(theme.Space2), 0, t.Space(theme.Space3)).Gap(t.Space(theme.Space1_5)).AlignItems(ui.Center).
 		MinWidth(0).Children(func() {
-		ui.Icon(c, icons.Globe).FontSize(t.Rem(1.1)).TextColor(t.TextMuted).Shrink(0)
-		text := ui.Text(c, s.text.HTTPSRow).FontSize(t.Rem(0.9)).SingleLine().Grow(1).MinWidth(0)
+		ui.Icon(c, icons.Globe).FontSize(t.Space(theme.IconS)).TextColor(t.TextMuted).Shrink(0)
+		text := theme.Secondary.On(c, ui.Text(c, s.text.HTTPSRow)).SingleLine().Grow(1).MinWidth(0)
 		tipAbove(c, text, s.text.HTTPSTip)
 		s.copied(c, s.httpsUntil)
 		icon, done := icons.Terminal, s.now().Before(s.httpsUntil)
@@ -81,8 +81,8 @@ func (s *Screen) cloneBlock(c *ui.Context, key string, a account.Account, f *clo
 	cmd, ok := remote.CloneCommand(a, f.value)
 	ui.Column(c.Key(key)).Gap(t.Space(theme.Space1)).Padding(t.Space(theme.Space2), t.Space(theme.Space3), t.Space(theme.Space3), left).Children(func() {
 		ui.Row(c).Gap(t.Space(theme.Space1_5)).AlignItems(ui.Center).Children(func() {
-			in := ui.TextInput(c.Key(key+"-input"), &f.value).Label(s.text.CloneLabel).Placeholder(repoPlaceholder).
-				Tooltip(s.text.CloneTip).Font("monospace").FontSize(t.Rem(0.88)).Height(t.Space(theme.Control)).Radius(theme.RadiusControl).Border(0.5, t.Border).Background(theme.Of(c).Field).Grow(1).MinWidth(0)
+			in := theme.Mono.On(c, ui.TextInput(c.Key(key+"-input"), &f.value)).Label(s.text.CloneLabel).Placeholder(repoPlaceholder).
+				Tooltip(s.text.CloneTip).Height(t.Space(theme.Control)).Radius(theme.RadiusControl).Border(0.5, t.Border).Background(theme.Of(c).Field).Grow(1).MinWidth(0)
 			if focus {
 				in.AutoFocus()
 			}
@@ -104,11 +104,11 @@ func (s *Screen) cloneBlock(c *ui.Context, key string, a account.Account, f *clo
 		})
 		ui.Row(c).PaddingX(t.Space(theme.Space0_5)).AlignItems(ui.Center).MinWidth(0).Children(func() {
 			if !ok {
-				ui.Text(c, s.text.CloneHint).FontSize(t.Rem(0.85)).TextColor(t.TextMuted).SingleLine().MinWidth(0)
+				theme.Small.On(c, ui.Text(c, s.text.CloneHint)).TextColor(t.TextMuted).SingleLine().MinWidth(0)
 				return
 			}
 			// Only the middle gives way: "git clone git@alias:" and the last segment stay.
-			pathLine(c, cmd, "", cmd, pathFace{mono: true, size: t.Rem(0.85), color: t.TextMuted})
+			pathLine(c, cmd, "", cmd, pathFace{style: theme.MonoSmall, color: t.TextMuted})
 		})
 	})
 }

@@ -256,12 +256,12 @@ func (s *Screen) problemBar(c *ui.Context, a account.Account, p diagnose.Problem
 	}
 	ui.Column(c.Key("problem-"+a.ID)).Padding(0, t.Space(theme.Space2), t.Space(theme.Space1_5), t.Space(theme.Space3+theme.BadgeS+theme.Space2)).Children(func() {
 		ui.Row(c).Height(t.Space(theme.RowS)).Gap(t.Space(theme.Space1_5)).AlignItems(ui.Center).MinWidth(0).Children(func() {
-			ui.Icon(c, icon).FontSize(t.Rem(1.1)).TextColor(color).Shrink(0)
+			ui.Icon(c, icon).FontSize(t.Space(theme.IconS)).TextColor(color).Shrink(0)
 			says := ui.Row(c).Grow(1).MinWidth(0).AlignItems(ui.Center).Label(lead + s.text.Then + tip).Children(func() {
-				ui.Text(c, strings.TrimSpace(lead)).FontSize(t.Rem(0.9)).SingleLine().Shrink(0).MinWidth(0)
+				theme.Secondary.On(c, ui.Text(c, strings.TrimSpace(lead))).SingleLine().Shrink(0).MinWidth(0)
 				if key != "" {
 					ui.Row(c).Width(t.Rem(0.28)).Shrink(0)
-					pathLine(c, key, "", tip, pathFace{mono: true, size: t.Rem(0.85), color: t.Text})
+					pathLine(c, key, "", tip, pathFace{style: theme.MonoSmall, color: t.Text})
 				}
 			})
 			tipAbove(c, says, tip)
@@ -280,7 +280,7 @@ func (s *Screen) problemBar(c *ui.Context, a account.Account, p diagnose.Problem
 func (s *Screen) pubAck(c *ui.Context, a account.Account) {
 	t := c.Theme()
 	if s.diag.noPub[a.ID] {
-		text := ui.Text(c, s.text.NoPub).FontSize(t.Rem(0.85)).TextColor(t.TextMuted).SingleLine().Shrink(0)
+		text := theme.Small.On(c, ui.Text(c, s.text.NoPub)).TextColor(t.TextMuted).SingleLine().Shrink(0)
 		tipAboveEnd(c, text, fmt.Sprintf(s.text.NoPubTip, a.KeyPath))
 		return
 	}
@@ -315,9 +315,9 @@ func (s *Screen) retryButton(c *ui.Context, key string, ids []string) {
 	}
 }
 
-// underGlyph is the indent that lines a second line of a bar or notice up with its sentence: past the Rem(1.1)
-// glyph and the space-1_5 gap after it. It follows the font size, so it is not a step of the spacing scale.
-func underGlyph(t *ui.Theme) float32 { return t.Rem(1.1) + t.Space(theme.Space1_5) }
+// underGlyph is the indent that lines a second line of a bar or notice up with its sentence: past the IconS
+// glyph and the Space1_5 gap after it, 20 DIPs at the default spacing.
+func underGlyph(t *ui.Theme) float32 { return t.Space(theme.IconS) + t.Space(theme.Space1_5) }
 
 // nextStep is the line under the sentence of a bar: the fixed next step of the problem, when it has one.
 func (s *Screen) nextStep(c *ui.Context, a account.Account, p diagnose.Problem) {
@@ -343,13 +343,13 @@ func (s *Screen) nextStep(c *ui.Context, a account.Account, p diagnose.Problem) 
 			return
 		}
 		if s.diag.unlockErr[a.ID] {
-			ui.Text(c, s.text.UnlockFailed).FontSize(t.Rem(0.9)).TextColor(t.TextMuted).Padding(0, t.Space(theme.Space1), t.Space(theme.Space1), underGlyph(t))
+			theme.Secondary.On(c, ui.Text(c, s.text.UnlockFailed)).TextColor(t.TextMuted).Padding(0, t.Space(theme.Space1), t.Space(theme.Space1), underGlyph(t))
 		}
 		cmd := diagnose.UnlockCommand(s.env, a)
 		ui.Row(c).Height(t.Space(theme.RowS)).Padding(0, 0, 0, underGlyph(t)).Gap(t.Space(theme.Space1)).AlignItems(ui.Center).MinWidth(0).Children(func() {
-			face := pathFace{mono: true, size: t.Rem(0.85), color: t.TextMuted}
+			face := pathFace{style: theme.MonoSmall, color: t.TextMuted}
 			ui.Row(c).Grow(1).MinWidth(0).AlignItems(ui.Center).Children(func() {
-				face.apply(ui.Text(c, "ssh-add ")).Shrink(0)
+				face.apply(c, ui.Text(c, "ssh-add ")).Shrink(0)
 				pathLine(c, strings.TrimPrefix(cmd, "ssh-add "), "", s.text.UnlockCmdTip, face)
 			})
 			b := symbolButton(c, "unlock-copy-"+a.ID, s.text.CopyUnlock, icons.Terminal, false)
@@ -390,7 +390,7 @@ func (s *Screen) nextStep(c *ui.Context, a account.Account, p diagnose.Problem) 
 func (s *Screen) link(c *ui.Context, key, text, tip string, disabled bool) ui.Element {
 	t := c.Theme()
 	b := ui.Button(c.Key(key), "").Label(text).Disabled(disabled).Background(ui.Color{}).Border(0, ui.Color{}).
-		TextColor(t.Accent).Padding(t.Space(theme.Space0_5), 0).Children(func() { ui.Text(c, text).FontSize(t.Rem(0.9)).SingleLine() })
+		TextColor(t.Accent).Padding(t.Space(theme.Space0_5), 0).Children(func() { theme.Secondary.On(c, ui.Text(c, text)).SingleLine() })
 	if tip != "" {
 		b.Description(tip)
 		tipAbove(c, b, tip)
@@ -418,11 +418,11 @@ func (s *Screen) noSSHNotice(c *ui.Context) {
 	ui.Column(c.Key("no-ssh")).Radius(theme.RadiusCard).Background(theme.Of(c).DangerSoft).Padding(0, t.Space(theme.Space2), t.Space(theme.Space1_5), t.Space(theme.Space3)).
 		Children(func() {
 			ui.Row(c).Height(t.Space(theme.RowS)).Gap(t.Space(theme.Space1_5)).AlignItems(ui.Center).Children(func() {
-				ui.Icon(c, icons.Error).FontSize(t.Rem(1.1)).TextColor(t.Danger).Shrink(0)
-				ui.Text(c, s.text.NoSSH).FontWeight(600).Grow(1).MinWidth(0)
+				ui.Icon(c, icons.Error).FontSize(t.Space(theme.IconS)).TextColor(t.Danger).Shrink(0)
+				theme.BodyStrong.On(c, ui.Text(c, s.text.NoSSH)).Grow(1).MinWidth(0)
 				s.retryButton(c, "retry-ssh", ids)
 			})
-			ui.Text(c, hint).FontSize(t.Rem(0.9)).TextColor(theme.Of(c).Fg2).Padding(0, t.Space(theme.Space1), t.Space(theme.Space1), underGlyph(t))
+			theme.Secondary.On(c, ui.Text(c, hint)).TextColor(theme.Of(c).Fg2).Padding(0, t.Space(theme.Space1), t.Space(theme.Space1), underGlyph(t))
 		})
 }
 
@@ -443,8 +443,8 @@ func (s *Screen) summary(c *ui.Context) {
 	}
 	if len(entries) == 0 {
 		ui.Row(c.Key("all-ok")).Gap(t.Space(theme.Space1_5)).PaddingX(t.Space(theme.Space0_5)).AlignItems(ui.Center).Children(func() {
-			ui.Icon(c, icons.Check).FontSize(t.Rem(1.1)).TextColor(t.Success)
-			ui.Text(c, s.text.AllOK).FontSize(t.Rem(0.9)).TextColor(t.TextMuted)
+			ui.Icon(c, icons.Check).FontSize(t.Space(theme.IconS)).TextColor(t.Success)
+			theme.Secondary.On(c, ui.Text(c, s.text.AllOK)).TextColor(t.TextMuted)
 		})
 		return
 	}
@@ -469,13 +469,13 @@ func (s *Screen) summary(c *ui.Context) {
 			if errs > 0 {
 				icon, color = icons.Error, t.Danger
 			}
-			ui.Icon(c, icon).FontSize(t.Rem(1.1)).TextColor(color).Shrink(0)
-			ui.Text(c, count).FontSize(t.Rem(0.9)).FontWeight(600).Grow(1).MinWidth(0).SingleLine()
+			ui.Icon(c, icon).FontSize(t.Space(theme.IconS)).TextColor(color).Shrink(0)
+			theme.BodyStrong.On(c, ui.Text(c, count)).Grow(1).MinWidth(0).SingleLine()
 			chevron := icons.ChevronRight
 			if s.diag.open {
 				chevron = icons.ChevronDown
 			}
-			ui.Icon(c, chevron).FontSize(t.Rem(1.1)).TextColor(t.TextMuted)
+			ui.Icon(c, chevron).FontSize(t.Space(theme.IconXs)).TextColor(t.TextMuted)
 		})
 		if !s.diag.open {
 			return
@@ -534,10 +534,10 @@ func (s *Screen) entry(c *ui.Context, e diagnose.Entry) {
 	}
 	ui.Row(c.Key("entry-"+string(e.Code)+"-"+e.ID)).Padding(t.Space(theme.Space2), t.Space(theme.Space3)).Gap(t.Space(theme.Space1_5)).AlignItems(ui.Start).
 		Children(func() {
-			ui.Icon(c, icon).FontSize(t.Rem(1.1)).TextColor(color).Shrink(0)
+			ui.Icon(c, icon).FontSize(t.Space(theme.IconS)).TextColor(color).Shrink(0)
 			ui.Column(c).Grow(1).MinWidth(0).Gap(t.Space(theme.Space0_5)).AlignItems(ui.Start).Children(func() {
-				ui.Text(c, what).FontSize(t.Rem(0.9))
-				ui.Text(c, how).FontSize(t.Rem(0.9)).TextColor(t.TextMuted)
+				theme.Secondary.On(c, ui.Text(c, what))
+				theme.Secondary.On(c, ui.Text(c, how)).TextColor(t.TextMuted)
 				switch {
 				case e.Code == diagnose.NET001:
 					if s.link(c, "debug-"+e.ID, s.text.CopyDebug, "", false).Clicked() {
@@ -550,6 +550,6 @@ func (s *Screen) entry(c *ui.Context, e diagnose.Entry) {
 					}
 				}
 			})
-			ui.Text(c, string(e.Code)).Font("monospace").FontSize(t.Rem(0.85)).TextColor(t.TextMuted).Shrink(0)
+			theme.MonoSmall.On(c, ui.Text(c, string(e.Code))).TextColor(t.TextMuted).Shrink(0)
 		})
 }
