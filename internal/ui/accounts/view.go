@@ -133,10 +133,12 @@ func (s *Screen) sidebar(c *ui.Context) {
 func (s *Screen) item(c *ui.Context, id, label, email, color string, scoped, draft bool) {
 	t := c.Theme()
 	// A row added opens and fades in, one deleted closes and fades out, and the others move to their place.
-	row := theme.Arrive(c, theme.Cluster(c, ui.Row(c.Key("item-"+id))), theme.Collapse(), theme.Collapse()).Focusable().Padding(t.Space(theme.Space1_5), t.Space(theme.Space2)).Radius(theme.RadiusControl)
+	row := theme.Arrive(c, theme.Cluster(c, ui.Row(c.Key("item-"+id))), theme.Collapse(), theme.Collapse()).Focusable().Padding(t.Space(theme.Space1_5), t.Space(theme.Space2)).Radius(theme.RadiusRow)
 	switch {
 	case id == s.sel:
 		row.Selected(true).Background(theme.Of(c).Selected)
+	case row.Pressed():
+		row.Background(t.SurfacePressed)
 	case row.Hovered():
 		row.Background(t.SurfaceHover)
 	}
@@ -534,11 +536,9 @@ func (s *Screen) timesGroup(c *ui.Context, f *form) {
 // ghost is a borderless square symbol button.
 func ghost(c *ui.Context, label string, icon *ui.SVG) ui.Element {
 	t := c.Theme()
-	b := ui.Button(c.Key("ghost-"+label), "").Label(label).Size(t.Space(theme.ControlS), t.Space(theme.ControlS)).Padding(0).Radius(theme.RadiusPill).Border(0, ui.Color{}).
+	b := ui.Button(c.Key("ghost-"+label), "").Label(label).Size(t.Space(theme.ControlS), t.Space(theme.ControlS)).Padding(0).Radius(theme.RadiusRow).Border(0, ui.Color{}).
 		Background(ui.Color{}).TextColor(t.TextMuted).Tooltip(label).Children(func() { ui.Icon(c, icon).FontSize(t.Space(theme.Icon)) })
-	if b.Hovered() {
-		b.Background(t.SurfaceHover)
-	}
+	theme.IconButtonState(t, b)
 	return b
 }
 

@@ -226,7 +226,7 @@ scale still follow the desktop; the values are in [tokens.json](../design/tokens
   Liquid Glass; Idset adds no blur of its own. What it adds is light: a 0.5 DIP rim along the top edge, inside a
   window or dialog (rim) and inside a card or the identity list (card-rim), so each reads as a sheet of glass lit
   from above rather than a box. Corners are round: windows and dialogs 16, cards 12, push buttons, segmented
-  controls and the filter field capsules, symbol buttons circles. Text fields keep radius 8, so a field to type in
+  controls and the filter field capsules, symbol buttons `radius-row` squares. Text fields keep radius 8, so a field to type in
   never looks like a button.
 - **Always use theme roles, never literals.** Views read `c.Theme()`; the theme alone holds the values. The exceptions
   are identity colors, below, and the few fills the theme has no role for (card, card-rim, rim, field, accent-soft),
@@ -361,8 +361,8 @@ What Idset uses today:
 | `ui.Divider` | A 0.5 DIP `Border` hairline between list rows and between the sections of a result card. The title row and the footer have none. |
 | Drop zone | A 48 DIP `ui.Row` with a 1 DIP dashed outline (`BorderStyle(ui.BorderDashed)`) in `Accent` at 50% over a fill of `Accent` at 6%, taking files with `DroppedFiles`; a 20 DIP folder glyph in `Accent`, the line, and a 24 DIP high `PrimaryButton` "Choose…" at the end. While `FileDragOver`, the outline is solid `Accent` and the fill accent-soft. See [Dropped files](https://github.com/egoist/mygo/blob/v0.5.5/docs/ui/input.md#dropped-files). |
 | Initial badge | A rounded square with the first letter of the identity's name ("?" without a name), in the identity's color, solid (see [Color](#color-and-dark-mode)): 28 DIPs with radius 8 in a list row, 32 with radius 10 in a result card and the editor header. |
-| Borderless symbol button | The design: an icon button, `control-s` square with `radius-row` (see [Reference tables](#reference-tables)). The code, until the panel moves (`audit.pending`): `Space(7)` square (28), transparent, icon `Icon` (16) in `TextMuted`, `SurfaceHover` fill on hover, `SurfacePressed` while pressed. Must have a `.Label()`. After the path is copied, the icon turns into a check mark with "Copied" before it for 1.2 seconds. |
-| Icon button (title row, footer) | The same 28×28 button with an `Icon` (16) glyph, round. Always has `.Label()` and a `.Tooltip()` with the same text, in both languages: Settings, Add Identity, About Idset, Check Again, Quit (设置 / 添加身份 / 关于 Idset / 重新检查 / 退出 in Chinese). The tooltip is the `Inverse` fill, no shadow, above the button (below the title row's). Same size, 4 DIPs apart, so a missing button never moves another. |
+| Borderless symbol button | The design system's icon button: `ControlS` square (24), `RadiusRow`, transparent, icon `Icon` (16) in `TextMuted`; under the pointer the `SurfaceHover` fill with the glyph in `Text`, while pressed `SurfacePressed` (`theme.IconButtonState`). Must have a `.Label()`. After the path is copied, the icon turns into a check mark with "Copied" before it for 1.2 seconds, and the button keeps its plain look. |
+| Icon button (title row, footer) | The same 24×24 button with an `Icon` (16) glyph. Always has `.Label()` and a `.Tooltip()` with the same text, in both languages: Settings, Add Identity, About Idset, Check Again, Quit (设置 / 添加身份 / 关于 Idset / 重新检查 / 退出 in Chinese). The tooltip is the `Inverse` fill, no shadow, above the button (below the title row's). Same size, 4 DIPs apart, so a missing button never moves another. |
 | Result card | An answer row (the 32 DIP initial badge, the name in `Title` with the path in monospace `TextMuted` under it, then the clone toggle (only with an alias), ⋯ and clear buttons, 2 DIPs apart) and under it one muted line, email · alias, indented 52 DIPs to the name. Card fill with the 1 DIP card rim, radius 12; the cards without a match add a 1 DIP inner outline in `Warning`, the card for a failed `git` one in `Danger`; a matched card with findings takes the color of the worst one. |
 | Bind row | In a result card: color dot (10 DIPs), name and one line of `TextMuted` (the identity's first folder in `MonoSmall`, like the identity list's folders, middle-truncated; "Has <path> · adds another" is its tooltip), "Bind" in `Accent` at the end. 44 DIPs high, hairline above. The whole row is the target. |
 | Card menu | The "⋯" icon button's menu in a matched card: the system's menu (`Element.Menu`), opened by the button on pointer down. A disabled "Rebind to" heading, the other identities by name, and under a separator "Unbind" (only when the identity lists this very folder). The system draws it on its own material, so it has the platform's look, keyboard and screen reader behavior; it cannot show color dots or folders. It opens with "Open in Finder", "Copy Path" and "Choose Another Folder…" above the rebind part. There is no actions row: the clone toggle, the menu and clear are icon buttons in the answer row, in that order. |
@@ -470,7 +470,7 @@ From top to bottom: the title row ("Idset", `Title`, a level 1 heading, and the 
 button at the right; no close button: the tray icon and Escape hide the panel), the content, and the footer. The title
 row is `Space(11)` (44) high with no divider; the footer is `Space(10)` (40), also with no divider: the list's end and the material separate them. The title row
 has `Space(4)` left and `Space(2)` right padding; the footer has `Space(2)` at both sides. The icon buttons are
-28×28 with a 16 glyph, 4 apart. The footer is four icon buttons: "Add Identity" (plus) at the left, then at the right About (`info.circle`), Check Again (`arrow.clockwise`)
+24×24 (`control-s`) with a 16 glyph, 4 apart. The footer is four icon buttons: "Add Identity" (plus) at the left, then at the right About (`info.circle`), Check Again (`arrow.clockwise`)
 and Quit (`power`). The footer after the content:
 
 - With identities, all of them. Without identities, loading or read-only: no Add (the empty state has its own button;
@@ -525,7 +525,7 @@ The result card leads with the answer, padding `Space(3)` (12), radius 12, card 
   and it never changes the card's outline, since HTTPS is not an error. The clone helper is a tool, not a fact, so
   it has a hairline and a section of its own at the bottom, where the eye ends and where a pasted address is
   typed. Both appear only for an identity with an alias, and the helper is the one block that is always there.
-  - HTTPS row: "Remote is HTTPS", with one icon button at the end (`terminal` glyph, 28 x 28, 6 from the edge like
+  - HTTPS row: "Remote is HTTPS", with one icon button at the end (`terminal` glyph, 24 x 24, 6 from the edge like
     the answer row's buttons). The button's name is "Copy Switch-to-SSH Command"; its tooltip is that name and the whole command
     (`git remote set-url origin git@github-work:org/repo.git`), so nothing on the card has to show a long mono
     string. Why it matters ("HTTPS pushes do not use this identity's alias or key.") is the text's tooltip.
@@ -585,8 +585,8 @@ the end the folders: the first one, "+N" when there
 are more, "Global" for a global identity, "no folders" without any. A long first folder is middle-truncated (at
 most half the row) and " +N" always stays; the name and email are single lines too.
 
-An identity with an alias ends in a 28 x 28 disclosure button ("Clone with This Identity": a chevron pointing right
-when closed, down when open; `aria-expanded`); a row without an alias keeps the 28 DIPs empty so the folders stay
+An identity with an alias ends in a 24 x 24 disclosure button ("Clone with This Identity": a chevron pointing right
+when closed, down when open; `aria-expanded`); a row without an alias keeps the 24 DIPs empty so the folders stay
 lined up. The row's body still opens the accounts window; only the button expands. Open, the row is followed, inside
 the same list and without a hairline between them, by the clone helper described above, indented to the name
 (48 DIPs: 12 + 28 + 8) and with no remembered prefix shown as the placeholder "owner/repo". Only one row is open: opening
@@ -808,7 +808,7 @@ MyGo exposes native UI to VoiceOver, Narrator, NVDA and Orca; see
 - [ ] Colors are theme roles (identity colors only on badges next to the name); contrast holds in both appearances
       and with high contrast on.
 - [ ] Nothing depends on color, sound or motion alone.
-- [ ] Pointer targets are at least about 24×24 DIPs (symbol buttons are 28×28).
+- [ ] Pointer targets are at least about 24×24 DIPs (symbol buttons are 24×24).
 - [ ] `ui.NewTester` tests click controls by their accessible names, so a missing name fails the test, and check
       announcements with `Announcements()` (see
       [Testing](https://github.com/egoist/mygo/blob/v0.5.5/docs/ui/testing.md)).

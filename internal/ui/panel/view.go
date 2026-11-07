@@ -117,14 +117,15 @@ func tooltipGhost(c *ui.Context, key, label, tip string, icon *ui.SVG) ui.Elemen
 	return symbolButton(c, key, label, icon, false).Tooltip(tip)
 }
 
-// symbolButton is the ghost button without a tooltip. A done button, one that shows the check mark of a copy, keeps
-// its plain look even while the pointer is still over it.
+// symbolButton is the ghost button without a tooltip: the design system's icon button, a control-s square with
+// radius-row. A done button, one that shows the check mark of a copy, keeps its plain look even while the pointer is
+// still over it.
 func symbolButton(c *ui.Context, key, label string, icon *ui.SVG, done bool) ui.Element {
 	t := c.Theme()
-	b := ui.Button(c.Key(key), "").Label(label).Size(t.Space(theme.Control), t.Space(theme.Control)).Padding(0).Radius(theme.RadiusPill).Border(0, ui.Color{}).
+	b := ui.Button(c.Key(key), "").Label(label).Size(t.Space(theme.ControlS), t.Space(theme.ControlS)).Padding(0).Radius(theme.RadiusRow).Border(0, ui.Color{}).
 		Background(ui.Color{}).TextColor(t.TextMuted).Children(func() { ui.Icon(c, icon).FontSize(t.Space(theme.Icon)) })
-	if b.Hovered() && !done {
-		b.Background(t.SurfaceHover)
+	if !done {
+		theme.IconButtonState(t, b)
 	}
 	// The symbol cross-fades to the check mark when the copy is done, and back.
 	return theme.Swap(b)
@@ -378,8 +379,8 @@ func (s *Screen) row(c *ui.Context, a account.Account) {
 				s.connDot(c, a)
 			}
 			if a.SSHAlias == "" {
-				// The space stays, so that the folders line up.
-				ui.Column(c).Size(t.Space(theme.BadgeS), t.Space(theme.BadgeS)).Shrink(0)
+				// The toggle's space stays, so that the folders line up.
+				ui.Column(c).Size(t.Space(theme.ControlS), t.Space(theme.ControlS)).Shrink(0)
 				return
 			}
 			icon := icons.ChevronRight
