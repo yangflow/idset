@@ -96,6 +96,7 @@ action, and the content is dimmed to `opacity-faded` and disabled.
 | `icon` | `Icon` | in a button, an icon button or a title row |
 | `icon-m` | `IconM` | a settings tab |
 | `icon-l` | `IconL` | the tile of an empty state or a result |
+| tray 20×18 | `internal/trayicon` | the macOS menu bar: the folder 14 tall, centered ([the tray icon](#icons-and-images)) |
 
 **The order of a UI change.**
 
@@ -328,12 +329,14 @@ scale still follow the desktop; the values are in [tokens.json](../design/tokens
 - **The tray icon** is drawn in code by `internal/trayicon/`, so no image file is maintained by hand. It is the
   product icon's mark in one color: the folder, solid, with the keyhole cut through it and the smaller keyhole solid
   inside the cut. It is drawn from the same numbers as [design/icon.svg](../design/icon.svg), on its 100 grid. On
-  macOS it is a 54×36 template icon, black on transparent, that the system tints for the menu bar and scales to 18
-  points tall; the folder is as tall as the icon and centered, so it is as tall as the system's symbols. Elsewhere
+  macOS it is a 40×36 template icon, black on transparent, that the system tints for the menu bar and scales to 18
+  points tall; the folder is 14 points tall and centered, the height of the other icons in the menu bar. Elsewhere
   it is a 32×32 square with the folder as wide as the icon, in a mid gray that stays visible on light and dark
   taskbars. The worst entry of the diagnostics summary adds a badge at the lower right: a triangle for a warning, a
   circle for an error (and when ssh is missing), with a "!" in it, cut free of the folder by a 1.5 px gap; in the
-  square the folder then shrinks to the upper left, so the badge stays clear of the keyhole. Outside macOS the badge is `#d97706` or `#dc2626` with a white mark; in the template it is the ink with the
+  square the folder then shrinks to the upper left, so the badge stays clear of the keyhole; in the template the
+  badge is centered on the folder's lower right corner, (80, 78) on the 100 grid, as the design system's `ALogo`
+  draws it. Outside macOS the badge is `#d97706` or `#dc2626` with a white mark; in the template it is the ink with the
   mark cut out, since the system tints a template icon as a whole. The icon changes once a round of checks has
   finished, never while one runs, and does not flash.
 - **The product icon** is an ivory folder on a graphite tile, its tab at the upper left, with a keyhole cut through

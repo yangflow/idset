@@ -28,33 +28,33 @@ var (
 	dangerInk  = color.NRGBA{R: 0xdc, G: 0x26, B: 0x26, A: 0xff}
 )
 
-// The template is 54×36, 36 being the 18 points of the macOS menu bar at 2x.
-const templateWidth, templateHeight = 54, 36
+// The template is 40×36, 36 being the 18 points of the macOS menu bar at 2x, and its folder is 28 tall, the 14
+// points of the other icons in the menu bar.
+const templateWidth, templateHeight, templateFolder = 40, 36, 28
 
 // The folder and its keyholes are drawn on the 100 grid of design/icon.svg, where the folder spans x 10 to 90 and
 // y 20 to 84.
 const folderLeft, folderTop, folderWidth, folderHeight = 10, 20, 80, 64
 
-// PNG returns the tray icon. A template icon is 54×36, black on transparent for macOS to tint to the menu bar, which
-// scales it to 18 points tall; the folder is as tall as the icon and centered. Otherwise it is 32×32 in a mid gray
-// that stays visible on light and dark taskbars, since Windows and Linux show a square: the folder is as wide as the
-// icon, or, with a badge, smaller at the upper left so that the badge stays clear of the keyhole. A badge sits at
-// the lower right, 1.5 apart from the folder: in a template its "!" is cut out, elsewhere it is in Warning or Danger
-// with a white "!".
+// PNG returns the tray icon. A template icon is 40×36, black on transparent for macOS to tint to the menu bar, which
+// scales it to 18 points tall; the folder is 14 points tall and centered. Otherwise it is 32×32 in a mid gray that
+// stays visible on light and dark taskbars, since Windows and Linux show a square: the folder is as wide as the icon,
+// or, with a badge, smaller at the upper left so that the badge stays clear of the keyhole. A badge sits at the
+// lower right, 1.5 apart from the folder, in a template centered on the folder's corner at (80, 78) of the grid: in a
+// template its "!" is cut out, elsewhere it is in Warning or Danger with a white "!".
 func PNG(template bool, badge Badge) []byte {
 	ink := color.NRGBA{R: 0x8a, G: 0x8a, B: 0x8a, A: 0xff}
 	if template {
 		ink = color.NRGBA{A: 0xff}
 	}
-	w, h, grid := place(template, badge)
+	w, h, grid, bx, by := place(template, badge)
 	img := image.NewNRGBA(image.Rect(0, 0, w, h))
 	paint(img, func(x, y float64) bool { return inside(folder, grid, x, y) }, ink)
 	paint(img, func(x, y float64) bool { gx, gy := grid(x, y); return keyholeCut.inside(gx, gy) }, color.NRGBA{})
 	paint(img, func(x, y float64) bool { gx, gy := grid(x, y); return keyholeCore.inside(gx, gy) }, ink)
-	// The badge is laid out for a 32×32 icon; a template scales it to the height and moves it to the right edge.
-	bk := float64(h) / 32
+	// The badge is laid out for a 32×32 icon, centered on (24.5, 24.5); a template moves its center to (bx, by).
 	drawBadge(img, template, ink, badge, func(x, y float64) (float64, float64) {
-		return (x - float64(w) + 32*bk) / bk, y / bk
+		return x - bx + badgeCenter, y - by + badgeCenter
 	})
 	var b bytes.Buffer
 	if err := png.Encode(&b, img); err != nil {
@@ -63,19 +63,26 @@ func PNG(template bool, badge Badge) []byte {
 	return b.Bytes()
 }
 
-// place returns the icon's size and grid, which maps a point of the icon to the 100 grid of design/icon.svg.
-func place(template bool, badge Badge) (w, h int, grid func(x, y float64) (float64, float64)) {
+// badgeCenter is the center of the badge in its 32×32 layout, and badgeX, badgeY the point of the 100 grid that a
+// template centers it on, the folder's lower right corner.
+const badgeCenter, badgeX, badgeY = 24.5, 80, 78
+
+// place returns the icon's size, its grid, which maps a point of the icon to the 100 grid of design/icon.svg, and
+// the badge's center.
+func place(template bool, badge Badge) (w, h int, grid func(x, y float64) (float64, float64), bx, by float64) {
 	w, h = 32, 32
 	s, ox, oy := 32.0/folderWidth, 0.0, (32-folderHeight*32.0/folderWidth)/2
 	if badge != None {
 		s, ox, oy = 0.35, 0, 1
 	}
+	bx, by = badgeCenter, badgeCenter
 	if template {
 		w, h = templateWidth, templateHeight
-		s = float64(templateHeight) / folderHeight
-		ox, oy = (templateWidth-folderWidth*s)/2, 0
+		s = float64(templateFolder) / folderHeight
+		ox, oy = (templateWidth-folderWidth*s)/2, (templateHeight-templateFolder)/2
+		bx, by = ox+(badgeX-folderLeft)*s, oy+(badgeY-folderTop)*s
 	}
-	return w, h, func(x, y float64) (float64, float64) { return (x-ox)/s + folderLeft, (y-oy)/s + folderTop }
+	return w, h, func(x, y float64) (float64, float64) { return (x-ox)/s + folderLeft, (y-oy)/s + folderTop }, bx, by
 }
 
 // folder is the outline of design/icon.svg's folder, its tab at the upper left, flattened to a polygon.

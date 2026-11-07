@@ -32,16 +32,17 @@ type layout struct {
 }
 
 var (
-	templateLayout = layout{w: 54, h: 36, body: [2]int{8, 18}, cut: [2]int{21, 18}, head: [2]int{26, 18}, foot: [2]int{26, 25}}
+	// On macOS the folder is 28 of the template's 36 rows, centered.
+	templateLayout = layout{w: 40, h: 36, body: [2]int{9, 17}, cut: [2]int{16, 18}, head: [2]int{19, 18}, foot: [2]int{19, 25}}
 	// Off macOS the folder is as wide as the icon, and smaller at the upper left when a badge is shown.
 	squareLayout  = layout{w: 32, h: 32, body: [2]int{4, 15}, cut: [2]int{12, 16}, head: [2]int{15, 16}, foot: [2]int{15, 20}}
 	badgedLayout  = layout{w: 32, h: 32, body: [2]int{4, 11}, cut: [2]int{10, 12}, head: [2]int{13, 12}, foot: [2]int{13, 15}}
 	white         = color.NRGBA{R: 0xff, G: 0xff, B: 0xff, A: 0xff}
 	templateInk   = color.NRGBA{A: 0xff}
 	squareInk     = color.NRGBA{R: 0x8a, G: 0x8a, B: 0x8a, A: 0xff}
-	badgeBodies   = map[bool]map[Badge][2]int{true: {Warning: {42, 31}, Error: {42, 29}}, false: {Warning: {21, 28}, Error: {21, 24}}}
-	badgeMarks    = map[bool]map[Badge][2]int{true: {Warning: {45, 25}, Error: {45, 25}}, false: {Warning: {24, 23}, Error: {24, 23}}}
-	badgeGaps     = map[bool]map[Badge][2]int{true: {Warning: {45, 18}, Error: {39, 22}}, false: {Warning: {24, 16}, Error: {22, 17}}}
+	badgeBodies   = map[bool]map[Badge][2]int{true: {Warning: {30, 31}, Error: {30, 29}}, false: {Warning: {21, 28}, Error: {21, 24}}}
+	badgeMarks    = map[bool]map[Badge][2]int{true: {Warning: {33, 27}, Error: {33, 27}}, false: {Warning: {24, 23}, Error: {24, 23}}}
+	badgeGaps     = map[bool]map[Badge][2]int{true: {Warning: {31, 23}, Error: {32, 22}}, false: {Warning: {24, 16}, Error: {22, 17}}}
 	badges        = []Badge{Warning, Error}
 	badgeInks     = map[Badge]color.NRGBA{Warning: warningInk, Error: dangerInk}
 	allPlacements = []struct {
@@ -97,7 +98,7 @@ func TestNoBadge(t *testing.T) {
 func TestBadges(t *testing.T) {
 	for _, badge := range badges {
 		for _, template := range []bool{true, false} {
-			w, h, grid := place(template, badge)
+			w, h, grid, _, _ := place(template, badge)
 			img := decode(t, PNG(template, badge), w, h)
 			body, mark := nrgba(img, badgeBodies[template][badge]), nrgba(img, badgeMarks[template][badge])
 			want := badgeInks[badge]
