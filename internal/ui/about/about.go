@@ -78,22 +78,22 @@ func (s *Screen) View(c *ui.Context) {
 	theme.Apply(c)
 	t := c.Theme()
 	theme.TitleBar(c, s.text.Window)
-	ui.Column(c).Grow(1).AlignItems(ui.Center).Justify(ui.Center).Padding(0, t.Space(6), t.Space(5), t.Space(6)).Children(func() {
-		ui.Image(c, s.icon).Width(t.Space(16)).Height(t.Space(16))
-		ui.Text(c, "Idset").FontSize(t.Space(4.5)).FontWeight(600).Role(ui.RoleHeading).Level(1).Margin(t.Space(3), 0, 0, 0)
-		ui.Text(c, fmt.Sprintf(s.text.Version, s.version)).TextColor(t.TextMuted).Selectable().Margin(t.Space(0.5), 0, 0, 0)
-		ui.Column(c).AlignItems(ui.Center).Margin(t.Space(3), 0, 0, 0).Children(func() {
-			ui.Text(c, s.text.Copyright).FontSize(t.Rem(0.85)).TextColor(t.TextMuted)
-			ui.Text(c, s.text.License).FontSize(t.Rem(0.85)).TextColor(t.TextMuted)
+	theme.Center(c, ui.Column(c)).Grow(1).Padding(0, t.Space(theme.Space6), t.Space(theme.Space6), t.Space(theme.Space6)).Children(func() {
+		ui.Image(c, s.icon).Width(t.Space(theme.AppIcon)).Height(t.Space(theme.AppIcon))
+		theme.Display.On(c, ui.Text(c, "Idset")).Role(ui.RoleHeading).Level(1).Margin(t.Space(theme.Space3), 0, 0, 0)
+		ui.Text(c, fmt.Sprintf(s.text.Version, s.version)).TextColor(t.TextMuted).Selectable().Margin(t.Space(theme.Space0_5), 0, 0, 0)
+		ui.Column(c).AlignItems(ui.Center).Margin(t.Space(theme.Space3), 0, 0, 0).Children(func() {
+			theme.Small.On(c, ui.Text(c, s.text.Copyright)).TextColor(t.TextMuted)
+			theme.Small.On(c, ui.Text(c, s.text.License)).TextColor(t.TextMuted)
 		})
-		ui.Row(c).Gap(t.Space(2)).AlignItems(ui.Center).Margin(t.Space(5), 0, 0, 0).Children(func() {
+		theme.Cluster(c, ui.Row(c)).Margin(t.Space(theme.Space6), 0, 0, 0).Children(func() {
 			// GitHub is a link: Accent text with the external symbol, no fill.
-			github := ui.Button(c.Key("github"), "").Label(s.text.GitHub).Padding(0, t.Space(1)).Border(0, ui.Color{}).
+			github := ui.Button(c.Key("github"), "").Label(s.text.GitHub).Padding(0, t.Space(theme.Space1)).Border(0, ui.Color{}).
 				Background(ui.Color{}).TextColor(t.Accent)
 			github.Children(func() {
-				ui.Row(c).Gap(t.Space(1)).AlignItems(ui.Center).Children(func() {
-					ui.Icon(c, icons.External).FontSize(t.Space(3))
-					ui.Text(c, s.text.GitHub).FontWeight(500).SingleLine()
+				theme.InlineTight(c, ui.Row(c)).Children(func() {
+					ui.Icon(c, icons.External).FontSize(t.Space(theme.IconXs))
+					theme.BodyMedium.On(c, ui.Text(c, s.text.GitHub)).SingleLine()
 				})
 			})
 			if github.Hovered() {
@@ -107,8 +107,8 @@ func (s *Screen) View(c *ui.Context) {
 			}
 		})
 		if s.updates == Unavailable {
-			ui.Text(c, s.text.Cannot).FontSize(t.Rem(0.92)).TextColor(t.TextMuted).TextAlign(ui.Center).
-				MaxWidth(t.Space(65)).Wrap().Margin(t.Space(2), 0, 0, 0)
+			theme.Secondary.On(c, ui.Text(c, s.text.Cannot)).TextColor(t.TextMuted).TextAlign(ui.Center).
+				MaxWidth(t.Space(theme.Measure)).Wrap().Margin(t.Space(theme.Space2), 0, 0, 0)
 		}
 	})
 }

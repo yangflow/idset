@@ -24,70 +24,100 @@ func nrgba(img image.Image, p [2]int) color.NRGBA {
 	return color.NRGBAModel.Convert(img.At(p[0], p[1])).(color.NRGBA)
 }
 
-// layout is where to look in each kind of icon: in the bow, in the branch cut out of it, in the shaft, in each
-// badge's body and "!", and at a pixel of the key that each badge's gap clears.
+// layout is where to look in one placement of the folder: in its body, in the keyhole cut through it, and in the
+// head and the foot of the keyhole lit inside the cut.
 type layout struct {
-	w, h               int
-	bow, branch, shaft [2]int
-	body, mark, gap    map[Badge][2]int
+	w, h                  int
+	body, cut, head, foot [2]int
 }
 
-var layouts = map[bool]layout{
-	true: {w: 54, h: 36, bow: [2]int{8, 18}, branch: [2]int{14, 18}, shaft: [2]int{35, 17},
-		body: map[Badge][2]int{Warning: {42, 31}, Error: {42, 29}},
-		mark: map[Badge][2]int{Warning: {45, 25}, Error: {45, 25}},
-		gap:  map[Badge][2]int{Warning: {45, 18}, Error: {39, 22}}},
-	false: {w: 32, h: 32, bow: [2]int{4, 16}, branch: [2]int{8, 16}, shaft: [2]int{20, 15},
-		body: map[Badge][2]int{Warning: {21, 28}, Error: {21, 24}},
-		mark: map[Badge][2]int{Warning: {24, 23}, Error: {24, 23}},
-		gap:  map[Badge][2]int{Warning: {24, 16}, Error: {20, 18}}},
+var (
+	templateLayout = layout{w: 54, h: 36, body: [2]int{8, 18}, cut: [2]int{21, 18}, head: [2]int{26, 18}, foot: [2]int{26, 25}}
+	// Off macOS the folder is as wide as the icon, and smaller at the upper left when a badge is shown.
+	squareLayout  = layout{w: 32, h: 32, body: [2]int{4, 15}, cut: [2]int{12, 16}, head: [2]int{15, 16}, foot: [2]int{15, 20}}
+	badgedLayout  = layout{w: 32, h: 32, body: [2]int{4, 11}, cut: [2]int{10, 12}, head: [2]int{13, 12}, foot: [2]int{13, 15}}
+	white         = color.NRGBA{R: 0xff, G: 0xff, B: 0xff, A: 0xff}
+	templateInk   = color.NRGBA{A: 0xff}
+	squareInk     = color.NRGBA{R: 0x8a, G: 0x8a, B: 0x8a, A: 0xff}
+	badgeBodies   = map[bool]map[Badge][2]int{true: {Warning: {42, 31}, Error: {42, 29}}, false: {Warning: {21, 28}, Error: {21, 24}}}
+	badgeMarks    = map[bool]map[Badge][2]int{true: {Warning: {45, 25}, Error: {45, 25}}, false: {Warning: {24, 23}, Error: {24, 23}}}
+	badgeGaps     = map[bool]map[Badge][2]int{true: {Warning: {45, 18}, Error: {39, 22}}, false: {Warning: {24, 16}, Error: {22, 17}}}
+	badges        = []Badge{Warning, Error}
+	badgeInks     = map[Badge]color.NRGBA{Warning: warningInk, Error: dangerInk}
+	allPlacements = []struct {
+		template bool
+		badge    Badge
+		l        layout
+		ink      color.NRGBA
+	}{
+		{true, None, templateLayout, templateInk}, {true, Warning, templateLayout, templateInk}, {true, Error, templateLayout, templateInk},
+		{false, None, squareLayout, squareInk}, {false, Warning, badgedLayout, squareInk}, {false, Error, badgedLayout, squareInk},
+	}
+)
+
+func TestFolder(t *testing.T) {
+	for _, c := range allPlacements {
+		img := decode(t, PNG(c.template, c.badge), c.l.w, c.l.h)
+		if nrgba(img, [2]int{0, c.l.h - 1}).A != 0 {
+			t.Errorf("template %v badge %d: the background must be transparent", c.template, c.badge)
+		}
+		if nrgba(img, c.l.body) != c.ink {
+			t.Errorf("template %v badge %d: the folder must be solid", c.template, c.badge)
+		}
+		if nrgba(img, c.l.cut).A != 0 {
+			t.Errorf("template %v badge %d: the keyhole must be cut through the folder", c.template, c.badge)
+		}
+		if nrgba(img, c.l.head) != c.ink || nrgba(img, c.l.foot) != c.ink {
+			t.Errorf("template %v badge %d: the inner keyhole must be solid", c.template, c.badge)
+		}
+	}
 }
 
-func TestPNG(t *testing.T) {
-	for template, l := range layouts {
-		img := decode(t, PNG(template, None), l.w, l.h)
-		if nrgba(img, [2]int{0, 0}).A != 0 || nrgba(img, l.bow).A != 0xff || nrgba(img, l.shaft).A != 0xff {
-			t.Errorf("template %v: the key must be solid on a transparent background", template)
+// Without a severity there is no badge: every pixel is the folder's ink, at some coverage, and a template keeps the
+// folder whole where a badge would cut its mark.
+func TestNoBadge(t *testing.T) {
+	for _, c := range allPlacements {
+		if c.badge != None {
+			continue
 		}
-		if nrgba(img, l.branch).A != 0 {
-			t.Errorf("template %v: the branch must be cut out of the bow", template)
+		img := decode(t, PNG(c.template, None), c.l.w, c.l.h)
+		for y := range c.l.h {
+			for x := range c.l.w {
+				if p := nrgba(img, [2]int{x, y}); p.A != 0 && (p.R != c.ink.R || p.G != c.ink.G || p.B != c.ink.B) {
+					t.Fatalf("template %v: %v at %d,%d is not the folder's ink", c.template, p, x, y)
+				}
+			}
 		}
-		for _, badge := range []Badge{Warning, Error} {
-			if p := l.gap[badge]; nrgba(img, p).A == 0 {
-				t.Errorf("template %v: %v is not part of the key", template, p)
-			}
-			if p := l.body[badge]; nrgba(img, p).A != 0 {
-				t.Errorf("template %v: no badge without a severity, but %v is drawn", template, p)
-			}
+		if c.template && nrgba(img, badgeMarks[true][Warning]) != templateInk {
+			t.Errorf("template: the folder is cut where no badge is shown")
 		}
 	}
 }
 
 func TestBadges(t *testing.T) {
-	for _, c := range []struct {
-		badge Badge
-		ink   color.NRGBA
-	}{{Warning, warningInk}, {Error, dangerInk}} {
-		for template, l := range layouts {
-			img := decode(t, PNG(template, c.badge), l.w, l.h)
-			body, mark := nrgba(img, l.body[c.badge]), nrgba(img, l.mark[c.badge])
-			want := c.ink
+	for _, badge := range badges {
+		for _, template := range []bool{true, false} {
+			w, h, grid := place(template, badge)
+			img := decode(t, PNG(template, badge), w, h)
+			body, mark := nrgba(img, badgeBodies[template][badge]), nrgba(img, badgeMarks[template][badge])
+			want := badgeInks[badge]
 			if template {
-				want = color.NRGBA{A: 0xff}
+				want = templateInk
 			}
 			if body != want {
-				t.Errorf("badge %d template %v: body %v, want %v", c.badge, template, body, want)
+				t.Errorf("badge %d template %v: body %v, want %v", badge, template, body, want)
 			}
-			if template && mark.A != 0 || !template && mark != (color.NRGBA{R: 0xff, G: 0xff, B: 0xff, A: 0xff}) {
-				t.Errorf("badge %d template %v: mark %v", c.badge, template, mark)
+			if template && mark.A != 0 || !template && mark != white {
+				t.Errorf("badge %d template %v: mark %v", badge, template, mark)
 			}
-			// The key stops short of the badge: the gap is transparent.
-			if a := nrgba(img, l.gap[c.badge]).A; a != 0 {
-				t.Errorf("badge %d template %v: no gap between the key and the badge", c.badge, template)
+			// The badge's gap cuts into the folder: a point of the folder, clear of the keyhole, is transparent.
+			p := badgeGaps[template][badge]
+			gx, gy := grid(float64(p[0])+0.5, float64(p[1])+0.5)
+			if !inside(folder, func(x, y float64) (float64, float64) { return x, y }, gx, gy) || keyholeCut.inside(gx, gy) {
+				t.Fatalf("badge %d template %v: %v is not on the folder", badge, template, p)
 			}
-			// The rest of the key is untouched.
-			if nrgba(img, l.bow).A != 0xff || nrgba(img, l.shaft).A != 0xff {
-				t.Errorf("badge %d template %v: the key lost its bow or shaft", c.badge, template)
+			if a := nrgba(img, p).A; a != 0 {
+				t.Errorf("badge %d template %v: no gap between the folder and the badge", badge, template)
 			}
 		}
 	}

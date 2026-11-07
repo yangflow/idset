@@ -77,7 +77,7 @@ python3 scripts/scan_secrets.py   # 扫描全部历史里的密钥
 |---|---|
 | 行为、数据模型和生成的文件 | [docs/product.md](docs/product.md) |
 | 设计语言：布局、颜色、字体、组件、无障碍（英文） | [docs/design.md](docs/design.md) |
-| 界面画板 | [design/](design/README.md) |
+| 设计系统与界面画布 | [design/](design/README.md) |
 | 工作顺序 | [里程碑](https://github.com/yangflow/idset/milestones)和 [issue](https://github.com/yangflow/idset/issues) |
 | 架构决定（英文） | [docs/adr/](docs/adr/README.md) |
 

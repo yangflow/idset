@@ -8,9 +8,9 @@ import (
 	"github.com/yangflow/idset/internal/keyfile"
 )
 
-// TestMockupStates walks the 18 states of design/screens/accounts.html, in both languages and both schemes, and
+// TestDesignStates walks the 18 states of the Accounts page of the screens canvas (design/README.md), in both languages and both schemes, and
 // checks what each one says. The interactions behind them have their own tests.
-func TestMockupStates(t *testing.T) {
+func TestDesignStates(t *testing.T) {
 	type texts struct{ en, zh []string }
 	states := []struct {
 		name  string
@@ -106,7 +106,7 @@ func TestMockupStates(t *testing.T) {
 		}
 	}
 	if len(states) != 18 {
-		t.Errorf("the mockup has 18 states, the test %d", len(states))
+		t.Errorf("the design has 18 states, the test %d", len(states))
 	}
 }
 

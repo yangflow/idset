@@ -18,12 +18,7 @@ import (
 	"github.com/yangflow/idset/internal/ui/accounts"
 	"github.com/yangflow/idset/internal/ui/panel"
 	"github.com/yangflow/idset/internal/ui/settings"
-)
-
-// The settings window opens at settingsWidth x settingsHeight and may shrink to the minimum.
-const (
-	settingsWidth, settingsHeight       = 720, 480
-	settingsMinWidth, settingsMinHeight = 600, 400
+	"github.com/yangflow/idset/internal/ui/theme"
 )
 
 // keygenTimeout bounds ssh-keygen; an RSA key of 4096 bits can take a while on a slow machine.
@@ -59,7 +54,7 @@ func (a *app) openSettings(req settings.Request) {
 	w.screen.Open(req)
 	w.dialog = &dialogWindow{screen: w.screen}
 	w.win = mygo.NewWindow(mygo.WindowOptions{
-		Title: w.text.Window, Width: settingsWidth, Height: settingsHeight, MinWidth: settingsMinWidth, MinHeight: settingsMinHeight,
+		Title: w.text.Window, Width: theme.SettingsW, Height: theme.SettingsH, MinWidth: theme.SettingsMinW, MinHeight: theme.SettingsMinH,
 		StateKey: "settings", TitleBarStyle: mygo.TitleBarHidden, Vibrancy: formMaterial(), Content: ui.View(w.dialog.view),
 	})
 	w.dialog.parent = w.win

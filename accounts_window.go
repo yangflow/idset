@@ -12,12 +12,7 @@ import (
 	"github.com/yangflow/idset/internal/store"
 	"github.com/yangflow/idset/internal/ui/accounts"
 	settingsui "github.com/yangflow/idset/internal/ui/settings"
-)
-
-// The account window opens at accountsWidth x accountsHeight and may shrink to the minimum.
-const (
-	accountsWidth, accountsHeight       = 760, 520
-	accountsMinWidth, accountsMinHeight = 640, 420
+	"github.com/yangflow/idset/internal/ui/theme"
 )
 
 // accountsWindow is the account window and its screen, for as long as the window is open.
@@ -64,7 +59,7 @@ func (a *app) openAccounts(req accounts.Request) {
 	w.screen.Open(req)
 	w.dialog = &dialogWindow{screen: w.screen}
 	w.win = mygo.NewWindow(mygo.WindowOptions{
-		Title: w.text.Window, Width: accountsWidth, Height: accountsHeight, MinWidth: accountsMinWidth, MinHeight: accountsMinHeight,
+		Title: w.text.Window, Width: theme.AccountsW, Height: theme.AccountsH, MinWidth: theme.AccountsMinW, MinHeight: theme.AccountsMinH,
 		StateKey: "accounts", TitleBarStyle: mygo.TitleBarHidden, Vibrancy: mygo.VibrancySidebar, Content: ui.View(w.dialog.view),
 	})
 	w.dialog.parent = w.win

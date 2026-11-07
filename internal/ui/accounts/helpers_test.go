@@ -51,7 +51,7 @@ func (r *recorder) actions() Actions {
 	}
 }
 
-// sample is the list of the mockup: a scoped work identity first in storage order, a global personal one, a
+// sample is the list of the design: a scoped work identity first in storage order, a global personal one, a
 // custom client identity and an unnamed one.
 func sample() []account.Account {
 	used := func(day int) *time.Time {
@@ -111,7 +111,7 @@ func withDialog(s *Screen) func(c *ui.Context) {
 	return func(c *ui.Context) {
 		s.View(c)
 		if s.DialogOpen() {
-			ui.Column(c).Absolute().Left(0).Bottom(0).Width(theme.DialogWidth).Background(c.Theme().Background).
+			ui.Column(c).Absolute().Left(0).Bottom(0).Width(theme.DialogW).Background(c.Theme().Background).
 				Children(func() { s.Dialog(c) })
 		}
 	}

@@ -1,0 +1,273 @@
+{
+  "name": "Idset",
+  "version": 2,
+  "note": "How screens are put together, from a badge to a window. Every arrangement is one of these patterns, and every value is a token from tokens.json; a screen writes no number of its own. A new arrangement is added here first.",
+  "rules": [
+    "In a fixed-height row everything sits on the center line (cross-axis center).",
+    "Content of several lines is top-aligned.",
+    "A child's left edge lines up with its parent's padding; glyphs sit in a fixed icon box, never on a text baseline.",
+    "A size is one of three: hug the content, fill the parent, or fixed (a size token).",
+    "Trailing content goes to the end with a spacer, never with a margin.",
+    "Space belongs to the layout (gap and padding); a component has no margin of its own.",
+    "Lines under a badge or glyph line up with the name beside it (indent), so a card reads as one column.",
+    "The panel is 340 wide and has one column; text gives way (paths ellipsize in the middle, names at the end), never a button by wrapping."
+  ],
+  "patterns": [
+    {
+      "name": "inline",
+      "direction": "row",
+      "align": "center",
+      "gap": "space-1_5",
+      "usage": "An icon and text, text and a small tag: inside a button, a status line, a finding."
+    },
+    {
+      "name": "item-row",
+      "direction": "row",
+      "align": "center",
+      "gap": "space-2",
+      "padding": [
+        "0",
+        "space-3"
+      ],
+      "width": "fill",
+      "usage": "One row, one thing: an identity row, a bind row, a settings row, a backup row. Trailing items after a spacer."
+    },
+    {
+      "name": "inline-tight",
+      "direction": "row",
+      "align": "center",
+      "gap": "space-1",
+      "usage": "Icon buttons side by side (the title row, a card, the footer), a small glyph and small text."
+    },
+    {
+      "name": "cluster",
+      "direction": "row",
+      "align": "center",
+      "gap": "space-2",
+      "usage": "Items side by side, never wrapping: a dialog's buttons, a problem bar's actions, a badge and its title."
+    },
+    {
+      "name": "field-row",
+      "direction": "row",
+      "align": "center",
+      "gap": "space-3",
+      "padding": [
+        "space-1",
+        "space-3"
+      ],
+      "width": "fill",
+      "usage": "A form row or a detail row: a fixed-width label column, then the value or the field."
+    },
+    {
+      "name": "control",
+      "direction": "row",
+      "align": "center",
+      "justify": "center",
+      "gap": "space-1_5",
+      "height": "control",
+      "padding": [
+        "0",
+        "space-3"
+      ],
+      "radius": "radius-pill",
+      "usage": "The shape of a button. A small button is control-s high with 0 space-2 padding."
+    },
+    {
+      "name": "track",
+      "direction": "row",
+      "align": "center",
+      "gap": "space-0_5",
+      "padding": [
+        "space-0_5"
+      ],
+      "radius": "radius-pill",
+      "usage": "A segmented control's track."
+    },
+    {
+      "name": "stack-tight",
+      "direction": "column",
+      "gap": "space-0_5",
+      "usage": "Lines that sit close: a name and its email, a menu's entries."
+    },
+    {
+      "name": "stack-snug",
+      "direction": "column",
+      "gap": "space-1",
+      "usage": "A group heading and its group, a field and its error, a headline and its reason."
+    },
+    {
+      "name": "stack",
+      "direction": "column",
+      "gap": "space-2",
+      "usage": "Inside a card, the lines of a problem bar, a dialog's body."
+    },
+    {
+      "name": "stack-block",
+      "direction": "column",
+      "gap": "space-3",
+      "usage": "The blocks of the panel's content: the drop zone or result card, the filter, the list, the diagnostics summary."
+    },
+    {
+      "name": "stack-section",
+      "direction": "column",
+      "gap": "space-4",
+      "usage": "A dialog's sections, an empty state's content."
+    },
+    {
+      "name": "stack-page",
+      "direction": "column",
+      "gap": "space-6",
+      "usage": "Between the groups of the editor and of a settings pane."
+    },
+    {
+      "name": "inset-card",
+      "padding": [
+        "space-3"
+      ],
+      "usage": "Cards, problem bars, the panel's content."
+    },
+    {
+      "name": "inset-dialog",
+      "padding": [
+        "space-4"
+      ],
+      "usage": "A dialog window, a menu's frame."
+    },
+    {
+      "name": "inset-pane",
+      "padding": [
+        "space-6"
+      ],
+      "usage": "The accounts detail region, a settings pane, an empty state's region."
+    },
+    {
+      "name": "indent",
+      "usage": "Lines under a leading badge or glyph start where the text beside it does."
+    },
+    {
+      "name": "center",
+      "direction": "column",
+      "align": "center",
+      "justify": "center",
+      "usage": "Empty states, loading, the about window, the letter in a badge."
+    },
+    {
+      "name": "bar",
+      "direction": "row",
+      "align": "center",
+      "gap": "space-1_5",
+      "padding": [
+        "0",
+        "space-2",
+        "0",
+        "space-3"
+      ],
+      "width": "fill",
+      "usage": "The panel's title row and footer, a window's footer: content, a spacer, buttons at the end."
+    },
+    {
+      "name": "spacer",
+      "grow": 1,
+      "usage": "Pushes what follows to the end of a row."
+    },
+    {
+      "name": "truncate",
+      "usage": "Names end in an ellipsis; paths in the middle (code splits start, middle and last folder)."
+    }
+  ],
+  "windows": [
+    {
+      "name": "panel",
+      "size": [
+        "panel-w",
+        "panel-h"
+      ],
+      "material": {
+        "macOS": "Popover",
+        "Windows 11": "Acrylic",
+        "else": "solid"
+      },
+      "frame": [
+        "bar",
+        "inset-card > stack-block",
+        "bar"
+      ],
+      "usage": "The tray panel, fixed size, under the tray icon."
+    },
+    {
+      "name": "accounts",
+      "size": [
+        "accounts-w",
+        "accounts-h"
+      ],
+      "min": [
+        "accounts-min-w",
+        "accounts-min-h"
+      ],
+      "material": {
+        "macOS": "Sidebar",
+        "Windows 11": "Mica",
+        "else": "solid"
+      },
+      "frame": [
+        "sidebar | inset-pane > stack-page",
+        "bar"
+      ],
+      "usage": "The accounts window: the identity list and the editor."
+    },
+    {
+      "name": "settings",
+      "size": [
+        "settings-w",
+        "settings-h"
+      ],
+      "min": [
+        "settings-min-w",
+        "settings-min-h"
+      ],
+      "material": {
+        "macOS": "Popover",
+        "Windows 11": "Mica",
+        "else": "solid"
+      },
+      "frame": [
+        "tabs",
+        "inset-pane > stack-page"
+      ],
+      "usage": "Settings: General, Keys, Import, Backups, Configuration."
+    },
+    {
+      "name": "about",
+      "size": [
+        "about-w",
+        "about-h"
+      ],
+      "material": {
+        "macOS": "Popover",
+        "Windows 11": "Mica",
+        "else": "solid"
+      },
+      "frame": [
+        "inset-pane > center"
+      ],
+      "usage": "About Idset and the update check."
+    },
+    {
+      "name": "dialog",
+      "size": [
+        "dialog-w",
+        "hug"
+      ],
+      "material": {
+        "macOS": "Popover",
+        "Windows 11": "Acrylic",
+        "else": "solid"
+      },
+      "frame": [
+        "inset-dialog > stack-section",
+        "cluster"
+      ],
+      "usage": "A modal child window (ADR 0005); its buttons share one width."
+    }
+  ]
+}

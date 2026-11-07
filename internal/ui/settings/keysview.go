@@ -22,9 +22,9 @@ func (s *Screen) keysPane(c *ui.Context) {
 // keyLabel is the 168 DIP label at the start of a form row; files is the 96 DIP one of the Files group.
 func keyLabel(c *ui.Context, text string, files bool) {
 	t := c.Theme()
-	w := t.Space(42)
+	w := t.Space(theme.LabelW)
 	if files {
-		w = t.Space(24)
+		w = t.Space(theme.LabelW)
 	}
 	ui.Text(c, text).Width(w).Shrink(0).SingleLine()
 }
@@ -35,7 +35,7 @@ func textButton(c *ui.Context, key, label string, icon *ui.SVG) ui.Element {
 	b := ui.Button(c.Key(key), "").Label(label).Background(ui.Color{}).Border(0, ui.Color{}).TextColor(t.Accent)
 	b.Children(func() {
 		if icon != nil {
-			ui.Icon(c, icon).FontSize(t.Space(3))
+			ui.Icon(c, icon).FontSize(t.Space(theme.IconXs))
 		}
 		ui.Text(c, label).SingleLine()
 	})
@@ -46,8 +46,8 @@ func (s *Screen) keyForm(c *ui.Context) {
 	t := c.Theme()
 	busy := s.keys.busy
 	if a, ok := s.identity(s.keys.target); ok {
-		theme.Card(c, ui.Row(c)).Gap(t.Space(2)).Padding(t.Space(2.5), t.Space(3), t.Space(2.5), t.Space(3)).Children(func() {
-			ui.Icon(c, icons.Key).FontSize(t.Space(3.5)).TextColor(t.TextMuted)
+		theme.InsetCard(c, theme.Cluster(c, theme.Card(c, ui.Row(c)))).AlignItems(ui.Start).Children(func() {
+			ui.Icon(c, icons.Key).FontSize(t.Space(theme.IconS)).TextColor(t.TextMuted)
 			ui.Text(c, fmt.Sprintf(s.text.KDiag, s.label(a), s.env.Tilde(a.KeyPath))).Grow(1).Wrap()
 		})
 	}
@@ -56,14 +56,14 @@ func (s *Screen) keyForm(c *ui.Context) {
 		names = append(names, s.providerName(p))
 	}
 	field := func(key string, value *string, label string, mono bool) {
-		in := ui.TextInput(c.Key(key), value).Label(label).Grow(1).TextAlign(ui.End).Radius(theme.FieldRadius).Background(theme.Of(c).Field).Border(0.5, t.Border).Disabled(busy)
+		in := ui.TextInput(c.Key(key), value).Label(label).Grow(1).TextAlign(ui.End).Radius(theme.RadiusControl).Background(theme.Of(c).Field).Border(0.5, t.Border).Disabled(busy)
 		if mono {
-			in.Font("monospace").FontSize(t.Rem(0.88))
+			theme.Mono.On(c, in)
 		}
 	}
-	group := ui.Column(c).Gap(t.Space(5))
+	group := theme.StackPage(c, ui.Column(c))
 	if busy {
-		group.Opacity(0.5)
+		group.Opacity(theme.OpacityFaded)
 	}
 	group.Children(func() {
 		s.section(c, s.text.KNew, func(r *rows) {
@@ -97,9 +97,9 @@ func (s *Screen) keyForm(c *ui.Context) {
 			}
 		})
 	})
-	ui.Row(c).Gap(t.Space(2)).Justify(ui.End).AlignItems(ui.Center).Children(func() {
+	theme.Cluster(c, ui.Row(c)).Justify(ui.End).Children(func() {
 		if busy {
-			ui.Text(c, s.text.Generating).FontSize(t.Rem(0.92)).TextColor(t.TextMuted).SingleLine()
+			theme.Secondary.On(c, ui.Text(c, s.text.Generating)).TextColor(t.TextMuted).SingleLine()
 			ui.Spinner(c)
 		}
 		if ui.PrimaryButton(c.Key("generate"), s.text.Generate).Disabled(busy || s.nameInvalid()).Clicked() {
@@ -115,24 +115,25 @@ func (s *Screen) keyResult(c *ui.Context) {
 	if s.keys.made.Type == keygen.RSA {
 		kind = "RSA 4096"
 	}
-	ui.Row(c).Gap(t.Space(2)).AlignItems(ui.Center).Children(func() {
-		ui.Icon(c, icons.Check).FontSize(t.Space(4)).TextColor(t.Accent)
-		ui.Text(c, s.text.Created).FontSize(t.Rem(1.15)).FontWeight(600).Role(ui.RoleHeading).Level(2).SingleLine()
-		ui.Text(c, kind+" · "+s.providerName(s.keys.provider)).FontSize(t.Rem(0.92)).TextColor(t.TextMuted).SingleLine()
+	theme.Cluster(c, ui.Row(c)).Children(func() {
+		ui.Icon(c, icons.Check).FontSize(t.Space(theme.Icon)).TextColor(t.Accent)
+		theme.Title.On(c, ui.Text(c, s.text.Created)).Role(ui.RoleHeading).Level(2).SingleLine()
+		theme.Secondary.On(c, ui.Text(c, kind+" · "+s.providerName(s.keys.provider))).TextColor(t.TextMuted).SingleLine()
 	})
 
 	s.section(c, s.text.PubKey, func(r *rows) {
 		r.line(c, func() {
 			if key.Public != "" {
-				ui.Text(c, key.Public).Font("monospace").FontSize(t.Rem(0.88)).Grow(1).Wrap().Selectable()
+				theme.Mono.On(c, ui.Text(c, key.Public)).Grow(1).Wrap().Selectable()
 			} else {
 				ui.Spacer(c)
 			}
 			if s.now().Before(s.keys.copied) {
 				c.After(s.keys.copied.Sub(s.now()))
-				ui.Row(c).Gap(t.Space(1)).AlignItems(ui.Center).Shrink(0).Children(func() {
-					ui.Text(c, s.text.Copied).FontSize(t.Rem(0.85)).TextColor(t.TextMuted).SingleLine()
-					ui.Icon(c, icons.Check).FontSize(t.Rem(1.1)).TextColor(t.Accent).Label(s.text.Copied)
+				// The acknowledgment fades in where the button was, and out again.
+				theme.FadeIn(theme.InlineTight(c, ui.Row(c.Key("pub-copied")))).Shrink(0).Children(func() {
+					theme.Small.On(c, ui.Text(c, s.text.Copied)).TextColor(t.TextMuted).SingleLine()
+					ui.Icon(c, icons.Check).FontSize(t.Space(theme.Icon)).TextColor(t.Accent).Label(s.text.Copied)
 				})
 				return
 			}
@@ -147,11 +148,11 @@ func (s *Screen) keyResult(c *ui.Context) {
 		}
 	})
 
-	slot := func() { ui.Row(c).Size(t.Space(6), t.Space(6)).Shrink(0) }
+	slot := func() { ui.Row(c).Size(t.Space(theme.ControlS), t.Space(theme.ControlS)).Shrink(0) }
 	value := func(text string, mono bool) {
 		v := ui.Text(c, text).Grow(1).TextAlign(ui.End).Wrap()
 		if mono {
-			v.Font("monospace").FontSize(t.Rem(0.88))
+			theme.Mono.On(c, v)
 		}
 	}
 	s.section(c, s.text.KFiles, func(r *rows) {
@@ -187,7 +188,7 @@ func (s *Screen) keyResult(c *ui.Context) {
 		r.line(c, func() {
 			if p == account.Custom || p.KeySettingsURL() == "" {
 				ui.Text(c, s.text.AddCustom).Grow(1)
-				ui.Text(c, s.text.AddCustomHint).FontSize(t.Rem(0.92)).TextColor(t.TextMuted).SingleLine()
+				theme.Secondary.On(c, ui.Text(c, s.text.AddCustomHint)).TextColor(t.TextMuted).SingleLine()
 				return
 			}
 			ui.Text(c, fmt.Sprintf(s.text.AddOn, name)).Grow(1)
@@ -195,7 +196,7 @@ func (s *Screen) keyResult(c *ui.Context) {
 			b := ui.Button(c.Key("open-settings"), "").Label(label)
 			b.Children(func() {
 				ui.Text(c, label).SingleLine()
-				ui.Icon(c, icons.External).FontSize(t.Space(3))
+				ui.Icon(c, icons.External).FontSize(t.Space(theme.IconXs))
 			})
 			if b.Clicked() {
 				c.OpenURL(p.KeySettingsURL())
@@ -205,8 +206,8 @@ func (s *Screen) keyResult(c *ui.Context) {
 			ui.Text(c, s.text.Agent).Grow(1)
 			switch s.keys.agent {
 			case agentLoaded:
-				ui.Icon(c, icons.Check).FontSize(t.Space(3)).TextColor(t.Accent)
-				ui.Text(c, s.text.Loaded).FontSize(t.Rem(0.92)).TextColor(t.TextMuted).SingleLine()
+				ui.Icon(c, icons.Check).FontSize(t.Space(theme.IconXs)).TextColor(t.Accent)
+				theme.Secondary.On(c, ui.Text(c, s.text.Loaded)).TextColor(t.TextMuted).SingleLine()
 			case agentBusy:
 				ui.Spinner(c)
 			default:
@@ -221,7 +222,7 @@ func (s *Screen) keyResult(c *ui.Context) {
 				ui.Spinner(c)
 			}
 			if a, ok := s.identity(s.keys.used); ok {
-				ui.Row(c).Gap(t.Space(1.5)).AlignItems(ui.Center).Shrink(0).Children(func() {
+				theme.Inline(c, ui.Row(c)).Shrink(0).Children(func() {
 					dot(c, a.Color)
 					ui.Text(c, s.label(a)).SingleLine()
 				})
@@ -274,26 +275,26 @@ func (s *Screen) pickDialog(c *ui.Context) ui.Element {
 	}
 	t := c.Theme()
 	return theme.Dialog(c, &s.keys.pickOpen, ui.RoleDialog, s.text.UseTitle, func() {
-		ui.Text(c, s.text.UseTitle).FontWeight(600).Role(ui.RoleHeading).Level(2).Wrap()
+		theme.BodyStrong.On(c, ui.Text(c, s.text.UseTitle)).Role(ui.RoleHeading).Level(2).Wrap()
 		ui.Text(c, s.text.UseBody).Wrap()
 		ui.Divider(c)
 		choice := func(value, label string, head func(), sub string) {
 			on := s.keys.pick == value
-			row := ui.RadioBase(c.Key("pick-"+value), &s.keys.pick, value).Label(label).Gap(t.Space(2)).Padding(t.Space(1.25), 0, t.Space(1.25), 0)
+			row := theme.Cluster(c, ui.RadioBase(c.Key("pick-"+value), &s.keys.pick, value)).AlignItems(ui.Start).Label(label).Padding(t.Space(theme.Space1_5), 0, t.Space(theme.Space1_5), 0)
 			row.Children(func() {
 				ring := t.Border
 				if on {
 					ring = t.Accent
 				}
-				ui.Row(c).Size(t.Space(3.5), t.Space(3.5)).Radius(t.Space(1.75)).Border(1.5, ring).Justify(ui.Center).AlignItems(ui.Center).Shrink(0).
-					Margin(t.Space(0.25), 0, 0, 0).Children(func() {
+				theme.Center(c, ui.Column(c)).Size(t.Space(theme.Check), t.Space(theme.Check)).Radius(theme.RadiusPill).Border(1.5, ring).Shrink(0).
+					Margin(t.Space(theme.Space0_5), 0, 0, 0).Children(func() {
 					if on {
-						ui.Column(c).Size(t.Space(1.75), t.Space(1.75)).Radius(t.Space(0.875)).Background(t.Accent)
+						ui.Column(c).Size(t.Space(theme.DotS), t.Space(theme.DotS)).Radius(theme.RadiusPill).Background(t.Accent)
 					}
 				})
-				ui.Column(c).Grow(1).MinWidth(0).Gap(t.Space(0.25)).Children(func() {
-					ui.Row(c).Gap(t.Space(1.5)).AlignItems(ui.Center).Children(head)
-					ui.Text(c, sub).FontSize(t.Rem(0.92)).TextColor(t.TextMuted).Wrap()
+				theme.StackTight(c, ui.Column(c)).Grow(1).MinWidth(0).Children(func() {
+					theme.Inline(c, ui.Row(c)).Children(head)
+					theme.Secondary.On(c, ui.Text(c, sub)).TextColor(t.TextMuted).Wrap()
 				})
 			})
 		}
@@ -306,7 +307,7 @@ func (s *Screen) pickDialog(c *ui.Context) ui.Element {
 				choice(a.ID, s.label(a), func() {
 					dot(c, a.Color)
 					ui.Text(c, s.label(a)).SingleLine().Shrink(0)
-					ui.Text(c, a.GitUserEmail).FontSize(t.Rem(0.92)).TextColor(t.TextMuted).SingleLine()
+					theme.Secondary.On(c, ui.Text(c, a.GitUserEmail)).TextColor(t.TextMuted).SingleLine()
 				}, sub)
 			}
 			sub := fmt.Sprintf(s.text.NewIDSubPlain, s.providerName(s.keys.provider))
@@ -316,8 +317,8 @@ func (s *Screen) pickDialog(c *ui.Context) ui.Element {
 			choice(newIdentity, s.text.NewID, func() { ui.Text(c, s.text.NewID).SingleLine() }, sub)
 		})
 		ui.Divider(c)
-		ui.Text(c, s.text.UseNote).FontSize(t.Rem(0.92)).TextColor(t.TextMuted).Wrap()
-		ui.Row(c).Gap(t.Space(2)).Margin(t.Space(1.5), 0, 0, 0).Children(func() {
+		theme.Secondary.On(c, ui.Text(c, s.text.UseNote)).TextColor(t.TextMuted).Wrap()
+		theme.Cluster(c, ui.Row(c)).Margin(t.Space(theme.Space1_5), 0, 0, 0).Children(func() {
 			if dialogButton(ui.Button(c.Key("pick-cancel"), s.text.Cancel), t).AutoFocus().Clicked() {
 				s.keys.pickOpen = false
 			}

@@ -108,7 +108,7 @@ python3 scripts/scan_secrets.py   # secret scan of the whole history
 |---|---|
 | Behavior, data model and generated files (in Chinese) | [docs/product.md](docs/product.md) |
 | Design language: layout, color, type, components, accessibility | [docs/design.md](docs/design.md) |
-| Screen mockups | [design/](design/README.md) |
+| Design system and screens | [design/](design/README.md) |
 | Order of work | [Milestones](https://github.com/yangflow/idset/milestones) and [issues](https://github.com/yangflow/idset/issues) |
 | Architecture decisions | [docs/adr/](docs/adr/README.md) |
 

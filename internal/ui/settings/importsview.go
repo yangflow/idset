@@ -12,8 +12,8 @@ import (
 func (s *Screen) importPane(c *ui.Context) {
 	t := c.Theme()
 	if s.readOnly {
-		ui.Row(c).Gap(t.Space(2)).Padding(t.Space(2.5), t.Space(3), t.Space(2.5), t.Space(3)).Radius(theme.CardRadius).Background(t.Danger.Alpha(0.12)).Children(func() {
-			ui.Icon(c, icons.Warn).FontSize(t.Space(3.5)).TextColor(t.Danger)
+		theme.InsetCard(c, theme.Cluster(c, ui.Row(c))).AlignItems(ui.Start).Radius(theme.RadiusCard).Background(theme.Of(c).DangerSoft).Children(func() {
+			ui.Icon(c, icons.Warn).FontSize(t.Space(theme.IconS)).TextColor(t.Danger)
 			ui.Text(c, s.text.ImportReadOnly).Grow(1)
 		})
 	}
@@ -22,11 +22,11 @@ func (s *Screen) importPane(c *ui.Context) {
 	case im.scanning || !im.scanned:
 		s.centered(c, func() {
 			ui.Spinner(c)
-			ui.Text(c, s.text.Scanning).FontSize(t.Rem(1.15)).FontWeight(600).Role(ui.RoleHeading).Level(2)
+			theme.Title.On(c, ui.Text(c, s.text.Scanning)).Role(ui.RoleHeading).Level(2)
 		}, s.text.ScanningSub, false)
 	case im.scanErr != "":
-		ui.Row(c).Gap(t.Space(2)).Padding(t.Space(2.5), t.Space(3), t.Space(2.5), t.Space(3)).Radius(theme.CardRadius).Background(t.Danger.Alpha(0.12)).Children(func() {
-			ui.Icon(c, icons.Warn).FontSize(t.Space(3.5)).TextColor(t.Danger)
+		theme.InsetCard(c, theme.Cluster(c, ui.Row(c))).AlignItems(ui.Start).Radius(theme.RadiusCard).Background(theme.Of(c).DangerSoft).Children(func() {
+			ui.Icon(c, icons.Warn).FontSize(t.Space(theme.IconS)).TextColor(t.Danger)
 			ui.Text(c, im.scanErr).Grow(1)
 		})
 		ui.Row(c).Justify(ui.End).Children(func() {
@@ -38,7 +38,7 @@ func (s *Screen) importPane(c *ui.Context) {
 		s.imported(c)
 	case len(im.cands) == 0:
 		s.centered(c, func() {
-			ui.Text(c, s.text.ImportNone).FontSize(t.Rem(1.15)).FontWeight(600).Role(ui.RoleHeading).Level(2)
+			theme.Title.On(c, ui.Text(c, s.text.ImportNone)).Role(ui.RoleHeading).Level(2)
 		}, s.text.ImportNoneBody, true)
 	default:
 		s.candidates(c)
@@ -48,11 +48,11 @@ func (s *Screen) importPane(c *ui.Context) {
 // centered is an empty state: a heading over a muted line, with Scan Again under them when rescan is set.
 func (s *Screen) centered(c *ui.Context, head func(), body string, rescan bool) {
 	t := c.Theme()
-	ui.Column(c).Gap(t.Space(1)).AlignItems(ui.Center).Padding(t.Space(8), t.Space(4), t.Space(8), t.Space(4)).Children(func() {
-		ui.Column(c).Gap(t.Space(2)).AlignItems(ui.Center).Children(head)
-		ui.Text(c, body).TextColor(t.TextMuted).TextAlign(ui.Center).MaxWidth(t.Space(105)).Wrap()
+	theme.StackSnug(c, ui.Column(c)).AlignItems(ui.Center).Padding(t.Space(theme.Space8), t.Space(theme.Space4), t.Space(theme.Space8), t.Space(theme.Space4)).Children(func() {
+		theme.Stack(c, ui.Column(c)).AlignItems(ui.Center).Children(head)
+		ui.Text(c, body).TextColor(t.TextMuted).TextAlign(ui.Center).MaxWidth(t.Space(theme.Measure)).Wrap()
 		if rescan {
-			ui.Row(c).Padding(t.Space(4), 0, 0, 0).Children(func() {
+			ui.Row(c).Padding(t.Space(theme.Space4), 0, 0, 0).Children(func() {
 				if ui.Button(c.Key("rescan"), s.text.Rescan).Clicked() {
 					s.scan()
 				}
@@ -68,15 +68,14 @@ func (s *Screen) candidates(c *ui.Context) {
 	n := s.checkedCount()
 	list := ui.Column(c)
 	if im.busy {
-		list.Opacity(0.5)
+		list.Opacity(theme.OpacityFaded)
 	}
 	list.Children(func() {
 		s.section(c, s.foundTitle(len(im.cands)), func(r *rows) {
 			for i, cand := range im.cands {
 				r.next(c)
 				a := cand.Account
-				ui.Row(c.Key("cand-"+strconv.Itoa(i))).MinHeight(t.Space(11)).Padding(t.Space(1.5), t.Space(3), t.Space(1.5), t.Space(3)).Gap(t.Space(2.5)).
-					AlignItems(ui.Center).Children(func() {
+				theme.Cluster(c, ui.Row(c.Key("cand-"+strconv.Itoa(i)))).MinHeight(t.Space(theme.RowL)).Padding(t.Space(theme.Space1_5), t.Space(theme.Space3), t.Space(theme.Space1_5), t.Space(theme.Space3)).Children(func() {
 					ui.Checkbox(c, &im.checked[i], "").Label(a.Label).Disabled(im.busy)
 					ui.Column(c).Grow(1).Children(func() {
 						name := ui.Text(c, a.Label).SingleLine()
@@ -91,15 +90,15 @@ func (s *Screen) candidates(c *ui.Context) {
 						if a.GitUserEmail != "" {
 							sub = append(sub, a.GitUserEmail)
 						}
-						ui.Text(c, strings.Join(sub, " · ")).FontSize(t.Rem(0.85)).TextColor(t.TextMuted).Wrap()
+						theme.Small.On(c, ui.Text(c, strings.Join(sub, " · "))).TextColor(t.TextMuted).Wrap()
 					})
 					switch {
 					case cand.Exists:
-						ui.Text(c, s.text.Exists).FontSize(t.Rem(0.92)).TextColor(t.TextMuted).SingleLine().Shrink(0)
+						theme.Secondary.On(c, ui.Text(c, s.text.Exists)).TextColor(t.TextMuted).SingleLine().Shrink(0)
 					case cand.Limited && im.checked[i]:
-						ui.Row(c).Gap(t.Space(1)).AlignItems(ui.Center).Shrink(0).Children(func() {
-							ui.Icon(c, icons.Folder).FontSize(t.Space(3)).TextColor(t.TextMuted)
-							ui.Text(c, s.text.AsLimited).FontSize(t.Rem(0.92)).TextColor(t.TextMuted).SingleLine()
+						theme.InlineTight(c, ui.Row(c)).Shrink(0).Children(func() {
+							ui.Icon(c, icons.Folder).FontSize(t.Space(theme.IconXs)).TextColor(t.TextMuted)
+							theme.Secondary.On(c, ui.Text(c, s.text.AsLimited)).TextColor(t.TextMuted).SingleLine()
 						})
 					}
 				})
@@ -115,13 +114,13 @@ func (s *Screen) candidates(c *ui.Context) {
 			}
 		})
 	})
-	ui.Row(c).Gap(t.Space(2)).AlignItems(ui.Center).Children(func() {
+	theme.Cluster(c, ui.Row(c)).Children(func() {
 		if ghost(c, "rescan", s.text.Rescan, icons.Refresh).Disabled(im.busy).Clicked() {
 			s.scan()
 		}
 		ui.Row(c).Grow(1)
 		if im.busy {
-			ui.Text(c, s.text.Importing).FontSize(t.Rem(0.92)).TextColor(t.TextMuted).SingleLine()
+			theme.Secondary.On(c, ui.Text(c, s.text.Importing)).TextColor(t.TextMuted).SingleLine()
 			ui.Spinner(c)
 		}
 		if ui.PrimaryButton(c.Key("import"), s.importLabel(n)).Disabled(im.busy || s.readOnly || n == 0).Clicked() {
@@ -134,16 +133,16 @@ func (s *Screen) candidates(c *ui.Context) {
 func (s *Screen) imported(c *ui.Context) {
 	t := c.Theme()
 	im := &s.imports
-	ui.Row(c).Gap(t.Space(2)).AlignItems(ui.Center).Children(func() {
-		ui.Icon(c, icons.Check).FontSize(t.Space(4)).TextColor(t.Accent)
-		ui.Text(c, s.doneTitle(len(im.added))).FontSize(t.Rem(1.15)).FontWeight(600).Role(ui.RoleHeading).Level(2).SingleLine()
+	theme.Cluster(c, ui.Row(c)).Children(func() {
+		ui.Icon(c, icons.Check).FontSize(t.Space(theme.Icon)).TextColor(t.Accent)
+		theme.Title.On(c, ui.Text(c, s.doneTitle(len(im.added)))).Role(ui.RoleHeading).Level(2).SingleLine()
 	})
 	s.section(c, "", func(r *rows) {
 		for _, a := range im.added {
 			r.line(c, func() {
 				dot(c, a.Color)
 				ui.Text(c, s.label(a)).SingleLine().Shrink(0)
-				ui.Text(c, a.GitUserEmail).FontSize(t.Rem(0.92)).TextColor(t.TextMuted).Grow(1).Wrap()
+				theme.Secondary.On(c, ui.Text(c, a.GitUserEmail)).TextColor(t.TextMuted).Grow(1).Wrap()
 			})
 		}
 	}, func() {
@@ -153,7 +152,7 @@ func (s *Screen) imported(c *ui.Context) {
 		}
 		s.note(c, icons.Check, t.Accent, t.TextMuted, s.text.DoneNote)
 	})
-	ui.Row(c).Gap(t.Space(2)).AlignItems(ui.Center).Children(func() {
+	theme.Cluster(c, ui.Row(c)).Children(func() {
 		if ghost(c, "rescan", s.text.Rescan, icons.Refresh).Clicked() {
 			s.scan()
 		}

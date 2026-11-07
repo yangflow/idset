@@ -26,6 +26,7 @@ import (
 	"github.com/yangflow/idset/internal/ui/accounts"
 	"github.com/yangflow/idset/internal/ui/panel"
 	settingsui "github.com/yangflow/idset/internal/ui/settings"
+	"github.com/yangflow/idset/internal/ui/theme"
 )
 
 const (
@@ -160,7 +161,7 @@ func (a *app) ready() {
 		// it quits.
 		slog.Warn("No tray icon", "error", err)
 		a.win = mygo.NewWindow(mygo.WindowOptions{
-			Title: "Idset", Width: 340, Height: 480, DisableResize: true, Vibrancy: mygo.VibrancyPopover, Content: ui.View(a.screen.View),
+			Title: "Idset", Width: theme.PanelW, Height: theme.PanelH, DisableResize: true, Vibrancy: mygo.VibrancyPopover, Content: ui.View(a.screen.View),
 		})
 		mygo.App.OnWindowAllClosed(mygo.App.Quit)
 		a.load()
@@ -170,7 +171,7 @@ func (a *app) ready() {
 	// The panel does not hide when it loses focus: the user clicks a file manager to start dragging a folder
 	// into it. The tray icon and Escape hide it.
 	a.win = mygo.NewWindow(mygo.WindowOptions{
-		Title: "Idset", Width: 340, Height: 480, Hidden: true, Frameless: true,
+		Title: "Idset", Width: theme.PanelW, Height: theme.PanelH, Hidden: true, Frameless: true,
 		DisableResize: true, DisableMinimize: true, DisableMaximize: true, DisableFullScreen: true,
 		AlwaysOnTop: true, SkipTaskbar: true, Vibrancy: mygo.VibrancyPopover,
 		Content: ui.View(a.screen.View),

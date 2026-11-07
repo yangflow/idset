@@ -30,14 +30,15 @@ func cloneSeed(r match.Result, prefix string) string {
 	return prefix
 }
 
-// copied says "Copied" before a button, for the time that is left after a copy; the button shows the check mark.
-func (s *Screen) copied(c *ui.Context, until time.Time) bool {
+// copied says "Copied" before the button keyed key, for the time that is left after a copy, fading in and out; the
+// button shows the check mark.
+func (s *Screen) copied(c *ui.Context, key string, until time.Time) bool {
 	left := until.Sub(s.now())
 	if left <= 0 {
 		return false
 	}
 	t := c.Theme()
-	ui.Text(c, s.text.Copied).FontSize(t.Rem(0.85)).TextColor(t.TextMuted).SingleLine().Shrink(0)
+	theme.FadeIn(theme.Small.On(c, ui.Text(c.Key(key+"-copied"), s.text.Copied)).TextColor(t.TextMuted).SingleLine().Shrink(0))
 	c.After(left)
 	return true
 }
@@ -50,12 +51,12 @@ func (s *Screen) remoteRow(c *ui.Context, r *match.Result, a account.Account) {
 		return
 	}
 	t := c.Theme()
-	ui.Row(c.Key("https")).Height(t.Space(7)).Padding(0, t.Space(2), 0, t.Space(3)).Gap(t.Space(1.5)).AlignItems(ui.Center).
+	theme.BarRow(c, ui.Row(c.Key("https"))).Height(t.Space(theme.RowS)).
 		MinWidth(0).Children(func() {
-		ui.Icon(c, icons.Globe).FontSize(t.Rem(1.1)).TextColor(t.TextMuted).Shrink(0)
-		text := ui.Text(c, s.text.HTTPSRow).FontSize(t.Rem(0.9)).SingleLine().Grow(1).MinWidth(0)
+		ui.Icon(c, icons.Globe).FontSize(t.Space(theme.IconS)).TextColor(t.TextMuted).Shrink(0)
+		text := theme.Secondary.On(c, ui.Text(c, s.text.HTTPSRow)).SingleLine().Grow(1).MinWidth(0)
 		tipAbove(c, text, s.text.HTTPSTip)
-		s.copied(c, s.httpsUntil)
+		s.copied(c, "https-copy", s.httpsUntil)
 		icon, done := icons.Terminal, s.now().Before(s.httpsUntil)
 		if done {
 			icon = icons.Check
@@ -79,15 +80,15 @@ func (s *Screen) cloneBlock(c *ui.Context, key string, a account.Account, f *clo
 	}
 	t := c.Theme()
 	cmd, ok := remote.CloneCommand(a, f.value)
-	ui.Column(c.Key(key)).Gap(t.Space(1)).Padding(t.Space(2), t.Space(3), t.Space(2.5), left).Children(func() {
-		ui.Row(c).Gap(t.Space(1.5)).AlignItems(ui.Center).Children(func() {
-			in := ui.TextInput(c.Key(key+"-input"), &f.value).Label(s.text.CloneLabel).Placeholder(repoPlaceholder).
-				Tooltip(s.text.CloneTip).Font("monospace").FontSize(t.Rem(0.88)).Height(t.Space(7)).Radius(theme.FieldRadius).Border(0.5, t.Border).Background(theme.Of(c).Field).Grow(1).MinWidth(0)
+	theme.StackSnug(c, ui.Column(c.Key(key))).Padding(t.Space(theme.Space2), t.Space(theme.Space3), t.Space(theme.Space3), left).Children(func() {
+		theme.Inline(c, ui.Row(c)).Children(func() {
+			in := theme.Mono.On(c, ui.TextInput(c.Key(key+"-input"), &f.value)).Label(s.text.CloneLabel).Placeholder(repoPlaceholder).
+				Tooltip(s.text.CloneTip).Height(t.Space(theme.Control)).Radius(theme.RadiusControl).Border(0.5, t.Border).Background(theme.Of(c).Field).Grow(1).MinWidth(0)
 			if focus {
 				in.AutoFocus()
 			}
 			enter := in.Submitted()
-			s.copied(c, f.until)
+			s.copied(c, key+"-copy", f.until)
 			icon, done := icons.Terminal, s.now().Before(f.until)
 			if done {
 				icon = icons.Check
@@ -102,13 +103,13 @@ func (s *Screen) cloneBlock(c *ui.Context, key string, a account.Account, f *clo
 				s.act.CloneCopied(a.ID, remote.Prefix(f.value))
 			}
 		})
-		ui.Row(c).Height(t.Space(4)).PaddingX(t.Space(0.5)).AlignItems(ui.Center).MinWidth(0).Children(func() {
+		ui.Row(c).PaddingX(t.Space(theme.Space0_5)).AlignItems(ui.Center).MinWidth(0).Children(func() {
 			if !ok {
-				ui.Text(c, s.text.CloneHint).FontSize(t.Rem(0.85)).TextColor(t.TextMuted).SingleLine().MinWidth(0)
+				theme.Small.On(c, ui.Text(c, s.text.CloneHint)).TextColor(t.TextMuted).SingleLine().MinWidth(0)
 				return
 			}
 			// Only the middle gives way: "git clone git@alias:" and the last segment stay.
-			pathLine(c, cmd, "", cmd, pathFace{mono: true, size: t.Rem(0.85), color: t.TextMuted})
+			pathLine(c, cmd, "", cmd, pathFace{style: theme.MonoSmall, color: t.TextMuted})
 		})
 	})
 }
@@ -116,7 +117,7 @@ func (s *Screen) cloneBlock(c *ui.Context, key string, a account.Account, f *clo
 // openRowClone is the helper under the open identity row.
 func (s *Screen) openRowClone(c *ui.Context, a account.Account) {
 	t := c.Theme()
-	s.cloneBlock(c, "row-clone", a, &s.rowClone, t.Space(8), true)
+	s.cloneBlock(c, "row-clone", a, &s.rowClone, t.Space(theme.Space3+theme.BadgeS+theme.Space2), true)
 }
 
 // toggleRow opens the clone helper of an identity row, or closes it; only one helper is open at a time.
@@ -144,5 +145,5 @@ func (s *Screen) cardClone(c *ui.Context, a account.Account) {
 		return
 	}
 	ui.Divider(c)
-	s.cloneBlock(c, "clone", a, &s.matchClone, c.Theme().Space(3), true)
+	s.cloneBlock(c, "clone", a, &s.matchClone, c.Theme().Space(theme.Space3), true)
 }

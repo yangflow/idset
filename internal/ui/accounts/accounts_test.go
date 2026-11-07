@@ -3,6 +3,7 @@ package accounts
 import (
 	"errors"
 	"fmt"
+	"image/color"
 	"math"
 	"reflect"
 	"slices"
@@ -721,7 +722,7 @@ func TestDetailScrollsUnderAFixedFooterAtTheDefaultSize(t *testing.T) {
 	if got, _ := r.tt.Find("Revert"); got != revert {
 		t.Errorf("the footer stays: %v %v", got, revert)
 	}
-	// The header is the first thing in the scrolling content, so it scrolls away with it, as in the mockup.
+	// The header is the first thing in the scrolling content, so it scrolls away with it, as in the design.
 	if got, ok := r.tt.Find("Identity"); ok && got.Y >= header.Y {
 		t.Errorf("the header scrolls with the content: %v %v", got, header)
 	}
@@ -928,5 +929,51 @@ func TestFolderRequestOnAnOpenDraft(t *testing.T) {
 	s.Open(Request{New: true, Folder: `c:\users\ada\Work\API`})
 	if got := s.forms[s.Draft()].cur.paths; !slices.Equal(got, []string{"~/Work/API/"}) {
 		t.Errorf("Windows folder: %v", got)
+	}
+}
+
+// The selected row is a neutral step darker or lighter than the list, never the accent: the accent only marks what can
+// be done.
+func TestSelectedRowIsNeutral(t *testing.T) {
+	for _, dark := range []bool{false, true} {
+		r := open(t, "en", sample(), Request{ID: workID})
+		r.tt.SetDark(dark)
+		r.tt.Frame()
+		at := func(label string) color.RGBA {
+			rc, ok := r.tt.Find(label)
+			if !ok {
+				t.Fatalf("no %q row", label)
+			}
+			return r.tt.Image().RGBAAt(int(rc.X+rc.W-4), int(rc.Y+rc.H/2))
+		}
+		selected, other := at("work"), at("personal")
+		if selected == other {
+			t.Errorf("dark %v: the selected row %v looks like the others", dark, selected)
+		}
+		if spread := max(selected.R, selected.G, selected.B) - min(selected.R, selected.G, selected.B); spread > 8 {
+			t.Errorf("dark %v: the selected row is tinted %v, want a neutral fill", dark, selected)
+		}
+	}
+}
+
+func TestAccountWindowFollowsTheSpacingScale(t *testing.T) {
+	r := open(t, "en", sample(), Request{ID: workID})
+	r.tt.SetSize(760, 520)
+	r.tt.Frame()
+	near := func(a, b float32) bool { return a-b < 0.5 && b-a < 0.5 }
+	name, _ := r.tt.Find("personal")
+	email, _ := r.tt.Find("bob@example.net")
+	// List padding 8, row padding 8, a 28 badge and 8 to the text; 2 from the name to the email.
+	if !near(name.X, 8+8+28+8) || !near(email.Y-(name.Y+name.H), 2) {
+		t.Errorf("list row on the scale: name %v, email %v", name, email)
+	}
+	// The detail starts after the 232 sidebar and its hairline; its content and the footer are inset 24.
+	group, _ := r.tt.Find("Identity")
+	if group.X < 232+24 || group.X > 232+25 {
+		t.Errorf("content inset 24: %v", group)
+	}
+	save, _ := r.tt.Find("Save")
+	if !near(save.X+save.W/2, 760-24-80/2) {
+		t.Errorf("footer inset 24 with an 80 wide Save: %v", save)
 	}
 }
