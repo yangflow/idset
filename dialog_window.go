@@ -63,7 +63,7 @@ func (d *dialogWindow) open() {
 	pw, ph := d.parent.Size()
 	d.shown = false
 	w := mygo.NewWindow(mygo.WindowOptions{
-		X: px + (pw-theme.DialogWidth)/2, Y: py + ph/4, Width: theme.DialogWidth, Height: ph / 2, Opacity: 0.01,
+		X: px + (pw-theme.DialogW)/2, Y: py + ph/4, Width: theme.DialogW, Height: ph / 2, Opacity: 0.01,
 		Frameless: true, DisableResize: true, Parent: d.parent, Modal: true, Vibrancy: dialogMaterial(),
 		Content: ui.View(d.dialogView),
 	})

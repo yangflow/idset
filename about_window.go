@@ -8,10 +8,8 @@ import (
 	"github.com/egoist/mygo/plugins/updater"
 	"github.com/egoist/mygo/ui"
 	"github.com/yangflow/idset/internal/ui/about"
+	"github.com/yangflow/idset/internal/ui/theme"
 )
-
-// The about window has a fixed size.
-const aboutWidth, aboutHeight = 320, 320
 
 //go:embed resources/icon.png
 var iconPNG []byte
@@ -43,7 +41,7 @@ func (a *app) openAbout() {
 	text := about.Text(a.locale())
 	w := &aboutWindow{screen: about.New(text, mygo.App.Version(), productIcon(), about.Actions{CheckForUpdates: updater.CheckForUpdates})}
 	w.win = mygo.NewWindow(mygo.WindowOptions{
-		Title: text.Window, Width: aboutWidth, Height: aboutHeight,
+		Title: text.Window, Width: theme.AboutW, Height: theme.AboutH,
 		DisableResize: true, DisableMinimize: true, DisableMaximize: true, DisableFullScreen: true,
 		TitleBarStyle: mygo.TitleBarHidden, Vibrancy: formMaterial(), Content: ui.View(w.screen.View),
 	})

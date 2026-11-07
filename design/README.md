@@ -17,13 +17,17 @@ Both are private to the maintainer; ask for access when you need it.
 
 | Path | Purpose |
 |---|---|
-| `tokens.json` | Every value the UI uses, named by layer: color (light and dark), type, spacing, radius, shadow, size, motion, opacity, plus the contrast audit and the values that still differ from the code (`audit.pending`) |
+| `tokens.json` | Every value the UI uses, named by layer: color (light and dark), type, spacing, radius, shadow, size, window, motion, opacity, plus the contrast audit and the values that still differ from the code (`audit.pending`) |
 | `layout.json` | The layout patterns (rows, stacks, insets, bars, splits) and each window's size and material |
 | `icon.svg` | The product icon's source |
 | `export-icon.sh` | Renders `icon.svg` to `resources/icon.png` with Chrome |
 
-`tokens.json` is the source; the design system's tokens are copied from it. Spacing is in pixels at MyGo's default
-unit of 4: `space-3` (12) is `t.Space(3)` in code. Colors without a MyGo theme role are in `internal/ui/theme`.
+`tokens.json` is the source; the design system's tokens are copied from it, and the code's are generated from it:
+`go generate ./internal/ui/theme` writes `internal/ui/theme/tokens_gen.go`, and a test fails when that file is stale.
+A token's Go name is its name in camel case: `space-3` is `theme.Space3`, used as `t.Space(theme.Space3)` (12 at
+MyGo's default unit of 4); `radius-card` is `theme.RadiusCard`; `motion-ack` is `theme.MotionAck`. Spacing and sizes
+are in pixels at the default unit and become steps of it; a size with a `unit` (`rem`, `stroke`) is not generated.
+Window sizes are in their own family, `window`. Colors without a MyGo theme role are in `internal/ui/theme`.
 
 ## Screens: canvas page → package
 

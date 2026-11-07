@@ -973,7 +973,7 @@ func TestAccountWindowFollowsTheSpacingScale(t *testing.T) {
 		t.Errorf("content inset 24: %v", group)
 	}
 	save, _ := r.tt.Find("Save")
-	if !near(save.X+save.W/2, 760-24-100/2) {
-		t.Errorf("footer inset 24 with a 100 wide Save: %v", save)
+	if !near(save.X+save.W/2, 760-24-80/2) {
+		t.Errorf("footer inset 24 with an 80 wide Save: %v", save)
 	}
 }

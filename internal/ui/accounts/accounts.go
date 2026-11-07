@@ -20,6 +20,7 @@ import (
 	"github.com/yangflow/idset/internal/paths"
 	"github.com/yangflow/idset/internal/store"
 	"github.com/yangflow/idset/internal/ui/locale"
+	"github.com/yangflow/idset/internal/ui/theme"
 )
 
 //go:embed copy.json
@@ -93,7 +94,7 @@ type Key struct {
 }
 
 // flashFor is how long "Written" stays on the Save button.
-const flashFor = 1200 * time.Millisecond
+const flashFor = theme.MotionAck
 
 type confirm struct {
 	id       string

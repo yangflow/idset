@@ -21,6 +21,7 @@ import (
 	"github.com/yangflow/idset/internal/keygen"
 	"github.com/yangflow/idset/internal/paths"
 	"github.com/yangflow/idset/internal/ui/locale"
+	"github.com/yangflow/idset/internal/ui/theme"
 )
 
 //go:embed copy.json
@@ -149,7 +150,7 @@ type KeyDraft struct {
 }
 
 // flashFor is how long "Restored" shows on a row.
-const flashFor = 1200 * time.Millisecond
+const flashFor = theme.MotionAck
 
 type loginNote int
 
