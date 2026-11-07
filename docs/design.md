@@ -88,9 +88,16 @@ Layout uses flexbox in device-independent pixels (DIPs); see
 [Layout](https://github.com/egoist/mygo/blob/v0.5.5/docs/ui/layout.md).
 
 - **One spacing unit.** The theme's `Spacing` (4 DIPs by default; 3 is compact, 5 roomy) is the unit of every widget's
-  padding and gap. Size your own elements with `t.Space(n)` so they follow it. Do not write raw pixel numbers for
-  spacing. Spacing takes the eight steps of `tokens.json` (0.5, 1, 1.5, 2, 3, 4, 6, 8) and nothing in between; a fixed
-  size (a 10 DIP dot, a 22 DIP glyph) may be a fraction.
+  padding and gap. Size your own elements with `t.Space` and a token name, `t.Space(theme.Space3)` or
+  `t.Space(theme.Control)`, so they follow it; a sum of tokens is a size too. Spacing takes the eight steps of
+  `tokens.json` (0.5, 1, 1.5, 2, 3, 4, 6, 8) and nothing in between; a fixed size (a 10 DIP dot, a 22 DIP glyph) may
+  be a fraction.
+- **Tokens in code.** `internal/ui/theme/tokens_gen.go` is generated from `design/tokens.json` by
+  `go generate ./internal/ui/theme`: spacing and sizes in steps of the unit, window sizes and radii in DIPs, opacities
+  and durations. A screen writes no number of its own for a size, radius or opacity: a test fails on `t.Space(3)`,
+  `Radius(12)` or `Opacity(0.5)`, and another fails when the generated file is stale. A value the screens need and
+  `tokens.json` lacks is added there first, then generated. Line widths (borders, hairlines, glyph strokes) and text
+  sizes (`t.Rem`) are not tokens in code yet.
 - **Scale.** Prefer whole multiples of the unit: 1 (4) inside a control row, 2 (8) between related controls and
   between buttons, 3 (12) between blocks of the panel, 4 (16) for the panel's outer padding. Larger gaps need a
   reason, for example the idle drop zone.
@@ -564,8 +571,8 @@ toolbar: below it, a source list and a detail pane.
   (100) wide, enough for "✓ Saved", "Saving", "已保存" and "保存中", so no label change resizes or moves anything. At the left "Delete" as plain `Danger` text (existing
   identities only), then the status (`Rem(0.92)`, `TextMuted`), then "Revert" (bordered) and "Save", the only filled button.
   Status: "Unsaved changes", or "Not saved" for a draft; a spinner with "Writing…" while saving,
-  when the form is dimmed and disabled; "Saved" with a check mark on the Save button for 1.2 seconds after
-  success; the reason in `Danger` with the warning symbol, wrapping, when the write failed (Save stays available).
+  when the form is dimmed to half (opacity-busy) and disabled; "Saved" with a check mark on the Save button for
+  1.2 seconds after success; the reason in `Danger` with the warning symbol, wrapping, when the write failed (Save stays available).
   Save and Revert are disabled while there is nothing to save.
 - **Empty.** No list and no footer: "No identities yet" (`Rem(1.15)`, 600), one sentence, "Import Existing"
   (bordered; opens the settings window on Import) and "New" (primary), centered, with no add bar.

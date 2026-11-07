@@ -50,7 +50,7 @@ func (s *Screen) remoteRow(c *ui.Context, r *match.Result, a account.Account) {
 		return
 	}
 	t := c.Theme()
-	ui.Row(c.Key("https")).Height(t.Space(7)).Padding(0, t.Space(2), 0, t.Space(3)).Gap(t.Space(1.5)).AlignItems(ui.Center).
+	ui.Row(c.Key("https")).Height(t.Space(theme.RowS)).Padding(0, t.Space(theme.Space2), 0, t.Space(theme.Space3)).Gap(t.Space(theme.Space1_5)).AlignItems(ui.Center).
 		MinWidth(0).Children(func() {
 		ui.Icon(c, icons.Globe).FontSize(t.Rem(1.1)).TextColor(t.TextMuted).Shrink(0)
 		text := ui.Text(c, s.text.HTTPSRow).FontSize(t.Rem(0.9)).SingleLine().Grow(1).MinWidth(0)
@@ -79,10 +79,10 @@ func (s *Screen) cloneBlock(c *ui.Context, key string, a account.Account, f *clo
 	}
 	t := c.Theme()
 	cmd, ok := remote.CloneCommand(a, f.value)
-	ui.Column(c.Key(key)).Gap(t.Space(1)).Padding(t.Space(2), t.Space(3), t.Space(3), left).Children(func() {
-		ui.Row(c).Gap(t.Space(1.5)).AlignItems(ui.Center).Children(func() {
+	ui.Column(c.Key(key)).Gap(t.Space(theme.Space1)).Padding(t.Space(theme.Space2), t.Space(theme.Space3), t.Space(theme.Space3), left).Children(func() {
+		ui.Row(c).Gap(t.Space(theme.Space1_5)).AlignItems(ui.Center).Children(func() {
 			in := ui.TextInput(c.Key(key+"-input"), &f.value).Label(s.text.CloneLabel).Placeholder(repoPlaceholder).
-				Tooltip(s.text.CloneTip).Font("monospace").FontSize(t.Rem(0.88)).Height(t.Space(7)).Radius(theme.FieldRadius).Border(0.5, t.Border).Background(theme.Of(c).Field).Grow(1).MinWidth(0)
+				Tooltip(s.text.CloneTip).Font("monospace").FontSize(t.Rem(0.88)).Height(t.Space(theme.Control)).Radius(theme.RadiusControl).Border(0.5, t.Border).Background(theme.Of(c).Field).Grow(1).MinWidth(0)
 			if focus {
 				in.AutoFocus()
 			}
@@ -102,7 +102,7 @@ func (s *Screen) cloneBlock(c *ui.Context, key string, a account.Account, f *clo
 				s.act.CloneCopied(a.ID, remote.Prefix(f.value))
 			}
 		})
-		ui.Row(c).Height(t.Space(4)).PaddingX(t.Space(0.5)).AlignItems(ui.Center).MinWidth(0).Children(func() {
+		ui.Row(c).Height(t.Space(theme.CaptionLine)).PaddingX(t.Space(theme.Space0_5)).AlignItems(ui.Center).MinWidth(0).Children(func() {
 			if !ok {
 				ui.Text(c, s.text.CloneHint).FontSize(t.Rem(0.85)).TextColor(t.TextMuted).SingleLine().MinWidth(0)
 				return
@@ -116,7 +116,7 @@ func (s *Screen) cloneBlock(c *ui.Context, key string, a account.Account, f *clo
 // openRowClone is the helper under the open identity row.
 func (s *Screen) openRowClone(c *ui.Context, a account.Account) {
 	t := c.Theme()
-	s.cloneBlock(c, "row-clone", a, &s.rowClone, t.Space(12), true)
+	s.cloneBlock(c, "row-clone", a, &s.rowClone, t.Space(theme.Space3+theme.BadgeS+theme.Space2), true)
 }
 
 // toggleRow opens the clone helper of an identity row, or closes it; only one helper is open at a time.
@@ -144,5 +144,5 @@ func (s *Screen) cardClone(c *ui.Context, a account.Account) {
 		return
 	}
 	ui.Divider(c)
-	s.cloneBlock(c, "clone", a, &s.matchClone, c.Theme().Space(3), true)
+	s.cloneBlock(c, "clone", a, &s.matchClone, c.Theme().Space(theme.Space3), true)
 }

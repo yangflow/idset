@@ -11,19 +11,20 @@ import (
 	"github.com/yangflow/idset/internal/match"
 	"github.com/yangflow/idset/internal/paths"
 	"github.com/yangflow/idset/internal/store"
+	"github.com/yangflow/idset/internal/ui/theme"
 )
 
 const (
 	// undoFor is how long a bind can be undone, counted from an absolute deadline: the panel closing and opening
 	// again does not add to it.
-	undoFor = 5 * time.Second
+	undoFor = theme.MotionUndo
 	// undoSteps is how many steps the countdown line on the undo bar shortens in.
 	undoSteps = 5
-	undoneFor = 1200 * time.Millisecond
+	undoneFor = theme.MotionAck
 	// updatedFor is how long "Updated" shows after a stale path was changed.
-	updatedFor = 1200 * time.Millisecond
+	updatedFor = theme.MotionAck
 	// coveredFor is how long "Covered by …" shows after a bind that changed nothing.
-	coveredFor = 1200 * time.Millisecond
+	coveredFor = theme.MotionAck
 )
 
 // undoBar is what Undo puts back, and until when.

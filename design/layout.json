@@ -189,7 +189,7 @@
       "name": "bar",
       "direction": "row",
       "height": [
-        "titlebar"
+        "header"
       ],
       "padding": [
         "0",
@@ -271,7 +271,7 @@
       "name": "accounts",
       "size": [
         "accounts-w",
-        "520px"
+        "accounts-h"
       ],
       "material": {
         "macOS": "Sidebar",
@@ -287,7 +287,7 @@
       "name": "settings",
       "size": [
         "settings-w",
-        "panel-h"
+        "settings-h"
       ],
       "material": {
         "macOS": "Popover",
@@ -304,7 +304,7 @@
       "name": "about",
       "size": [
         "about-w",
-        "about-w"
+        "about-h"
       ],
       "material": {
         "macOS": "Popover",
@@ -319,7 +319,7 @@
     {
       "name": "dialog",
       "size": [
-        "dialog",
+        "dialog-w",
         "hug"
       ],
       "material": {

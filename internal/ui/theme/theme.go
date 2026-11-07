@@ -1,6 +1,9 @@
-// Package theme is Idset's glass theme: the ui.Theme every window uses, light and dark, and the fills that are not
-// theme roles. The values are those of design/tokens.json, except the ones its audit lists as pending.
+// Package theme is Idset's glass theme: the ui.Theme every window uses, light and dark, the fills that are not
+// theme roles, and the tokens of design/tokens.json as constants (tokens_gen.go). The values are those of
+// design/tokens.json, except the colors its audit lists as pending.
 package theme
+
+//go:generate go run ./gen ../../../design/tokens.json tokens_gen.go
 
 import (
 	"github.com/egoist/mygo/ui"
@@ -46,19 +49,10 @@ var (
 	}
 )
 
-const (
-	// Capsule is the theme radius, so push buttons and drop-downs are capsules; a symbol button is a circle.
-	Capsule = 999
-	// FieldRadius rounds text inputs, which set it themselves, and the rows of the accounts sidebar.
-	FieldRadius = 8
-	// CardRadius rounds cards, settings groups, banners and the drop zone.
-	CardRadius = 12
-)
-
-// Card gives e the card shape: CardRadius, the card fill and the card rim along its top edge, inside it.
+// Card gives e the card shape: RadiusCard, the card fill and the card rim along its top edge, inside it.
 func Card(c *ui.Context, e ui.Element) ui.Element {
 	f := Of(c)
-	return e.Radius(CardRadius).Background(f.Card).InsetShadow(0, 0.5, 0, 0, f.CardRim)
+	return e.Radius(RadiusCard).Background(f.Card).InsetShadow(0, 0.5, 0, 0, f.CardRim)
 }
 
 // Of returns the fills of the frame's appearance.
@@ -112,7 +106,8 @@ func Build(t ui.Theme, highContrast bool) ui.Theme {
 		t.Inverse, t.InverseText = ui.Hex("#1d1d1f"), ui.Hex("#f5f5f7")
 		t.Scrollbar = ui.RGBA(0, 0, 0, 0.32)
 	}
-	t.Radius = Capsule
+	// Push buttons and drop-downs are capsules; a symbol button is a circle.
+	t.Radius = RadiusPill
 	t.ScrollbarWidth = 6
 	if highContrast {
 		t.Border = t.Border.Mix(t.Text, 0.45)
@@ -129,38 +124,35 @@ func TitleBar(c *ui.Context, title string) {
 	t := c.Theme()
 	bar := c.TitleBar()
 	side := max(bar.Left, bar.Right)
-	ui.Row(c).Height(max(bar.Height, t.Space(7))).PaddingX(side).Justify(ui.Center).AlignItems(ui.Center).DragWindow().
+	ui.Row(c).Height(max(bar.Height, t.Space(Control))).PaddingX(side).Justify(ui.Center).AlignItems(ui.Center).DragWindow().
 		Children(func() {
 			ui.Text(c, title).FontSize(t.Rem(0.85)).TextColor(t.TextMuted).Lines(1, 1)
 		})
 }
 
-// DialogWidth is the width of a dialog's window, in DIPs.
-const DialogWidth = 340
-
 // Dialog draws a dialog in a window of its own, a frameless child of the screen's window whose material shows through
-// it: a column of children Space(3) apart, named label for assistive technology. Escape sets *open to false. The
+// it: a column of children space-3 apart, named label for assistive technology. Escape sets *open to false. The
 // window takes the column's height.
 func Dialog(c *ui.Context, open *bool, role ui.Role, label string, body func()) ui.Element {
 	t := c.Theme()
 	if c.Shortcut(0, ui.KeyEscape) {
 		*open = false
 	}
-	return ui.Column(c).FillWidth().Padding(t.Space(6)).Gap(t.Space(3)).Role(role).Label(label).Children(body)
+	return ui.Column(c).FillWidth().Padding(t.Space(Space6)).Gap(t.Space(Space3)).Role(role).Label(label).Children(body)
 }
 
 // Select is a drop-down choosing one of options into *selected: a compact button as wide as the choice, which opens
 // a menu of the system's with the options, the chosen one checked.
 func Select(c *ui.Context, selected *string, options []string) ui.Element {
 	t := c.Theme()
-	b := ui.Button(c, "").Height(t.Space(6)).PaddingX(t.Space(2)).Gap(t.Space(1.5)).Radius(t.Radius).AlignItems(ui.Center).
+	b := ui.Button(c, "").Height(t.Space(ControlS)).PaddingX(t.Space(Space2)).Gap(t.Space(Space1_5)).Radius(t.Radius).AlignItems(ui.Center).
 		Background(t.Surface).Border(0, ui.Color{})
 	if b.Hovered() {
 		b.Background(t.SurfaceHover)
 	}
 	b.Children(func() {
 		ui.Text(c, *selected).FontSize(t.Rem(0.92)).SingleLine()
-		ui.Icon(c, icons.ChevronDown).FontSize(t.Space(3)).TextColor(t.TextMuted)
+		ui.Icon(c, icons.ChevronDown).FontSize(t.Space(IconXs)).TextColor(t.TextMuted)
 	})
 	return b.Menu(func(m *ui.Menu) {
 		for _, opt := range options {

@@ -105,7 +105,7 @@ func withDialog(s *Screen) func(c *ui.Context) {
 	return func(c *ui.Context) {
 		s.View(c)
 		if s.DialogOpen() {
-			ui.Column(c).Absolute().Left(0).Bottom(0).Width(theme.DialogWidth).Background(c.Theme().Background).
+			ui.Column(c).Absolute().Left(0).Bottom(0).Width(theme.DialogW).Background(c.Theme().Background).
 				Children(func() { s.Dialog(c) })
 		}
 	}
