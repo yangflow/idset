@@ -955,3 +955,25 @@ func TestSelectedRowIsNeutral(t *testing.T) {
 		}
 	}
 }
+
+func TestAccountWindowFollowsTheSpacingScale(t *testing.T) {
+	r := open(t, "en", sample(), Request{ID: workID})
+	r.tt.SetSize(760, 520)
+	r.tt.Frame()
+	near := func(a, b float32) bool { return a-b < 0.5 && b-a < 0.5 }
+	name, _ := r.tt.Find("personal")
+	email, _ := r.tt.Find("bob@example.net")
+	// List padding 8, row padding 8, a 28 badge and 8 to the text; 2 from the name to the email.
+	if !near(name.X, 8+8+28+8) || !near(email.Y-(name.Y+name.H), 2) {
+		t.Errorf("list row on the scale: name %v, email %v", name, email)
+	}
+	// The detail starts after the 232 sidebar and its hairline; its content and the footer are inset 24.
+	group, _ := r.tt.Find("Identity")
+	if group.X < 232+24 || group.X > 232+25 {
+		t.Errorf("content inset 24: %v", group)
+	}
+	save, _ := r.tt.Find("Save")
+	if !near(save.X+save.W/2, 760-24-100/2) {
+		t.Errorf("footer inset 24 with a 100 wide Save: %v", save)
+	}
+}
