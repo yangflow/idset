@@ -29,32 +29,105 @@ colors. Three rules hold the system together:
   that is on. It never marks selection and never meaning.
 - **Selection is neutral.** A selected row, menu entry or tab takes `selected` and keeps its text colors; the identity
   badge keeps its own color. The identity colors are the only other hues, always beside a name.
-- **Fixed scales.** Spacing is 2, 4, 6, 8, 12, 16, 24, 32; radius follows role (8 fields and rows, 12 cards, 16
-  windows, capsules for buttons); type is ten named styles (`Display`, `Title`, `Body`, `BodyMedium`, `BodyStrong`,
+- **Fixed scales.** Spacing is 2, 4, 6, 8, 12, 16, 24, 32; radius follows role (4 small marks, 6 rows and icon
+  buttons, 8 controls, 12 cards, 16 windows, capsules for buttons); type is ten named styles (`Display`, `Title`, `Body`, `BodyMedium`, `BodyStrong`,
   `Secondary`, `Caption`, `Small`, `Mono`, `MonoSmall`).
 
-The code reaches these values screen by screen. Until a screen moves, the measurements below describe the code as it
-is, and `audit.pending` in `tokens.json` lists each value that still differs; a screen's pull request takes its entries
-off that list.
+The design system is the source. When it and the code disagree, the design system is right: a change is made in the
+design system and the screens canvas first, and the code follows. The code reaches these values screen by screen.
+Until a screen moves, the measurements in the screen sections below describe the code as it is, and `audit.pending` in
+`tokens.json` lists each value that still differs; a screen's pull request takes its entries off that list.
+
+## Reference tables
+
+A new component takes its values from these tables, by token name; the numbers are in
+[design/tokens.json](../design/tokens.json) and the Go names in `internal/ui/theme/tokens_gen.go`. The design system
+shows the same tables.
+
+**Radius by role.** Radius follows what a thing is, not how big it is, and does not scale with density.
+
+| Token | Go | Role |
+|---|---|---|
+| `radius-xs` | `RadiusXs` | Small marks: checkboxes, small tags. |
+| `radius-row` | `RadiusRow` | Rows and highlights in them: a row's hover and selected fill, menu entries, icon buttons, tooltips. |
+| `radius-control` | `RadiusControl` | Controls: text inputs, drop-downs, the `badge-s` and `badge-m` badges, problem bars, settings tabs. |
+| `radius-card` | `RadiusCard` | Surfaces: cards, list cards, groups, the drop zone, the `badge-l` tile. |
+| `radius-window` | `RadiusWindow` | Windows and dialog windows as designs draw them; the system draws their corners. |
+| `radius-pill` | `RadiusPill` | Capsules and circles: buttons, segmented controls, switches, status dots, color choices. |
+
+**Interaction states per control.** Hover, pressed and selected are fills laid over the control; focus is a `ring`
+wide `focus` ring outside the control's own shape, shown only for keyboard use. Selection is neutral: `selected`, never
+the accent.
+
+| Control | Rest | Hover | Pressed | Selected or on | Disabled | Focus |
+|---|---|---|---|---|---|---|
+| Primary button | `accent` fill, `on-accent` text, `radius-pill` | `accent-hover` | `accent-pressed` | — | `opacity-disabled` | `focus` ring |
+| Button | `fill`, `fg` text, `radius-pill` | `hover` | `pressed` | — | `opacity-disabled` | `focus` ring |
+| Icon button | `control-s` square, `radius-row`, no fill, `muted` glyph | `hover` fill, `fg` glyph | `pressed` fill | when done, the glyph becomes a check | `opacity-disabled` | `focus` ring |
+| Text button | no fill, `accent` text (`danger` for Delete) | — | — | — | `opacity-disabled` | `focus` ring |
+| Row (sidebar, settings row) | no fill, `radius-row` | `hover` fill | `pressed` fill | `selected` fill, text colors kept | — | `focus` ring |
+| Settings tab | no fill, `radius-control`, `muted` glyph | `hover` fill | `pressed` fill | `selected` fill, `fg` glyph | — | `focus` ring |
+| Text input | `field` fill, `line` outline, `radius-control` | — | — | — | `opacity-disabled` | `focus` ring; on error a `border` wide `danger` outline |
+| Switch, checkbox, radio | `fill` track or box | `hover` | `pressed` | `accent` fill, `on-accent` mark | `opacity-disabled` | `focus` ring |
+| Segmented control | `fill` track, `radius-pill` | `hover` | `pressed` | `raised` segment with `shadow-raised` | `opacity-disabled` | `focus` ring |
+
+While work runs (saving, importing, generating a key, restoring), a spinner and a present-tense line replace the
+action, and the content is dimmed to `opacity-faded` and disabled.
+
+**Empty, loading and error states.**
+
+| Case | Drawn as | Examples |
+|---|---|---|
+| Empty | a `badge-l` tile (`radius-card`, `accent-soft`, an `icon-l` glyph in `accent`), `Title`, one line, at most two buttons, centered | no identities, no backups, nothing found to import |
+| Loading | a spinner and a `Secondary` line, centered; no button that would have to wait for it | reading the configuration, scanning, reading backups |
+| Error, whole view | in the panel, a `badge-l` tile on `danger-soft`, `Title`, the path and the reason, what can be done, centered; in a settings pane, a `danger-soft` banner at the top | `accounts.json` cannot be read, a scan failed |
+| Error, one item | a `border` wide `danger` outline on the card with a finding row; an input's error line; a problem bar under the row | a failed check, validation, a failed write |
+| Warning | a `warning` problem bar or finding row; a `warning` outline on the card | a gone folder, two global identities |
+| Confirmation | a check and `Small` text, kept for `motion-ack` | copied, saved, restored, updated |
+| Undo | the undo bar with its countdown line, committed after `motion-undo` | bind, rebind, use only this |
+| Unsupported | the entry is not shown; one `Secondary` line says why when it is needed | a copy that cannot update itself, no `ssh` |
+
+**Icon sizes.**
+
+| Token | Go | Where |
+|---|---|---|
+| `icon-xs` | `IconXs` | beside small text, a disclosure chevron |
+| `icon-s` | `IconS` | in a row: findings, problem bars, the diagnostics, menus |
+| `icon` | `Icon` | in a button, an icon button or a title row |
+| `icon-m` | `IconM` | a settings tab |
+| `icon-l` | `IconL` | the tile of an empty state or a result |
+
+**The order of a UI change.**
+
+| Step | What | Where | Who |
+|---|---|---|---|
+| 1 Design | a frame for every state; the tokens and the design system; `docs/design.md` when a rule changes; the contrast audit when a color changes | screens canvas, design system, `design/tokens.json`, `design/layout.json` | author |
+| 2 Confirm | the visual direction, before any UI code | screens canvas | maintainer |
+| 3 Generate | `go generate ./internal/ui/theme` writes `tokens_gen.go` | `internal/ui/theme/` | author |
+| 4 Build | native views with tokens, layouts, type styles and motion helpers; `copy.json` in `en` and `zh-Hans`; accessible names; tests; the values reached come off `audit.pending` | `internal/ui/<screen>/` | author |
+| 5 Check | `scripts/check.sh --cross` passes | locally and in CI | author |
+| 6 Accept | the [design acceptance checklist](#design-acceptance-checklist) on real machines; screenshots in the PR body | macOS, Windows, Linux | author |
+| 7 Merge | tokens, documents and code in one pull request that links the changed frames | the pull request | maintainer |
 
 ## Contents
 
-1. [Principles](#principles)
-2. [Layout and spacing](#layout-and-spacing)
-3. [Color and dark mode](#color-and-dark-mode)
-4. [Typography](#typography)
-5. [Icons and images](#icons-and-images)
-6. [Component guide](#component-guide)
-7. [The panel](#the-panel)
-8. [The accounts window](#the-accounts-window)
-9. [The settings window](#the-settings-window)
-10. [The about window](#the-about-window)
-11. [Windows, menus and the tray](#windows-menus-and-the-tray)
-12. [Accessibility checklist](#accessibility-checklist)
-13. [Motion](#motion)
-14. [Localization](#localization)
-15. [Design acceptance checklist](#design-acceptance-checklist)
-16. [References](#references)
+1. [Reference tables](#reference-tables)
+2. [Principles](#principles)
+3. [Layout and spacing](#layout-and-spacing)
+4. [Color and dark mode](#color-and-dark-mode)
+5. [Typography](#typography)
+6. [Icons and images](#icons-and-images)
+7. [Component guide](#component-guide)
+8. [The panel](#the-panel)
+9. [The accounts window](#the-accounts-window)
+10. [The settings window](#the-settings-window)
+11. [The about window](#the-about-window)
+12. [Windows, menus and the tray](#windows-menus-and-the-tray)
+13. [Accessibility checklist](#accessibility-checklist)
+14. [Motion](#motion)
+15. [Localization](#localization)
+16. [Design acceptance checklist](#design-acceptance-checklist)
+17. [References](#references)
 
 ## Principles
 
@@ -167,7 +240,7 @@ scale still follow the desktop; the values are in [tokens.json](../design/tokens
   | `Border` | hairlines; the outline of a text field |
   | `Text`, `TextMuted` | primary text; secondary text, hints, group headings, paths, symbols |
   | `Accent`, `AccentText` | primary buttons (the drop zone's Choose, Save, Bind, Rebind), text buttons and links, switch on, choices, the drop zone's outline (50%) and tint (6%) |
-  | accent-soft | mint as a tint: the selected settings tab, the drop zone while files are dragged over it, the empty state's key tile |
+  | accent-soft | mint as a tint: the drop zone while files are dragged over it, the empty state's `badge-l` tile; never a selection |
   | `Warning` | the inner outline of the "no match", "not a Git repository" and "not a folder" cards; the warning glyph of a finding, and the matched card's outline when its worst finding is a warning; never text |
   | `Danger` | the outline and text of the card when `git` cannot run; the read-only warning, on danger-soft; the error glyph of a finding and the outline of a card with one; Delete |
   | `Success` | the connectivity dot of a passing check and the check mark of the "Configuration OK" line, always with text (the dot's tooltip and accessible name); its green is close to the accent, so it never stands alone |
@@ -288,7 +361,7 @@ What Idset uses today:
 | `ui.Divider` | A 0.5 DIP `Border` hairline between list rows and between the sections of a result card. The title row and the footer have none. |
 | Drop zone | A 48 DIP `ui.Row` with a 1 DIP dashed outline (`BorderStyle(ui.BorderDashed)`) in `Accent` at 50% over a fill of `Accent` at 6%, taking files with `DroppedFiles`; a 20 DIP folder glyph in `Accent`, the line, and a 24 DIP high `PrimaryButton` "Choose…" at the end. While `FileDragOver`, the outline is solid `Accent` and the fill accent-soft. See [Dropped files](https://github.com/egoist/mygo/blob/v0.5.5/docs/ui/input.md#dropped-files). |
 | Initial badge | A rounded square with the first letter of the identity's name ("?" without a name), in the identity's color, solid (see [Color](#color-and-dark-mode)): 28 DIPs with radius 8 in a list row, 32 with radius 10 in a result card and the editor header. |
-| Borderless symbol button | `Space(7)` square (28), transparent, icon `Icon` (16) in `TextMuted`, `SurfaceHover` fill on hover, `SurfacePressed` while pressed. Must have a `.Label()`. After the path is copied, the icon turns into a check mark with "Copied" before it for 1.2 seconds. |
+| Borderless symbol button | The design: an icon button, `control-s` square with `radius-row` (see [Reference tables](#reference-tables)). The code, until the panel moves (`audit.pending`): `Space(7)` square (28), transparent, icon `Icon` (16) in `TextMuted`, `SurfaceHover` fill on hover, `SurfacePressed` while pressed. Must have a `.Label()`. After the path is copied, the icon turns into a check mark with "Copied" before it for 1.2 seconds. |
 | Icon button (title row, footer) | The same 28×28 button with an `Icon` (16) glyph, round. Always has `.Label()` and a `.Tooltip()` with the same text, in both languages: Settings, Add Identity, About Idset, Check Again, Quit (设置 / 添加身份 / 关于 Idset / 重新检查 / 退出 in Chinese). The tooltip is the `Inverse` fill, no shadow, above the button (below the title row's). Same size, 4 DIPs apart, so a missing button never moves another. |
 | Result card | An answer row (the 32 DIP initial badge, the name in `Title` with the path in monospace `TextMuted` under it, then the clone toggle (only with an alias), ⋯ and clear buttons, 2 DIPs apart) and under it one muted line, email · alias, indented 52 DIPs to the name. Card fill with the 1 DIP card rim, radius 12; the cards without a match add a 1 DIP inner outline in `Warning`, the card for a failed `git` one in `Danger`; a matched card with findings takes the color of the worst one. |
 | Bind row | In a result card: color dot (10 DIPs), name and one line of `TextMuted` (the identity's first folder in `MonoSmall`, like the identity list's folders, middle-truncated; "Has <path> · adds another" is its tooltip), "Bind" in `Accent` at the end. 44 DIPs high, hairline above. The whole row is the target. |
@@ -303,7 +376,7 @@ What Idset uses today:
 | Diagnostics summary | After the identity list, once a round of checks has finished. Nothing wrong: one muted line with a `Success` check mark, "Configuration OK". Otherwise a card (card fill, radius 12): a 32 DIP header, a button with `aria-expanded` (the worst glyph, "1 error · 2 warnings" in 600, a chevron), and when open one entry per problem under hairlines: the glyph, what is wrong, how to look into it in `TextMuted`, an optional action ("Copy Command" as a terminal icon button for NET001, "Regenerate" as an `Accent` text button for GIT001), and the code (NET001, SSH001, GIT001, GIT002) in `MonoSmall` at the end. It opens by itself whenever its set of entries changes, and stays as the user left it otherwise. |
 | Undo bar | The last row of the result card, 36 DIPs high, hairline above: "Bound to <identity> ·" and an `Accent` "Undo" text button. A 2 DIP line on the bar's bottom edge, `Accent` at 45%, is as wide as the time left of the card's width, in fifths. |
 | Identity list | A group heading "Identities · N" (`Caption`, `TextMuted`), then one card container (card fill, card rim, radius 12) with 0.5 DIP hairlines between rows, starting at the name (48 DIPs from the edge). |
-| Source list row | A 28 DIP initial badge, name and email on two lines, an optional folder symbol; `Accent` fill with `AccentText` when selected. |
+| Source list row | A 28 DIP initial badge, name and email on two lines, an optional folder symbol; `selected` fill with `radius-row` when selected, text colors kept. |
 | Color choice | A 14 DIP dot in the preset color with its name as `Label`; the chosen one has a ring and a check mark. |
 | Settings row | Label left, value right, 32 DIPs high, hairline between rows inside a card-fill group with radius 12. |
 | Platform filter | A row of `ui.Button`s, one per platform in use when more than one is; the selected one has the `selected` fill and is `Selected(true)` so screen readers read it as selected. |
@@ -418,7 +491,7 @@ The content, in order:
 3. Otherwise: the result card (when there is a result), the ssh notice (when `ssh` is missing), the one-line drop
    zone, the group heading "Identities" with the count, the filter (from three identities on), the identity list with
    its connectivity dots and problem bars, and the diagnostics summary. Without identities there is one centered block
-   instead: a 56×56 tile (radius 14, accent-soft) with the key glyph in `Accent`, then "No identities yet" (`Title`), one short line ("Each folder uses its own Git and SSH identity.")
+   instead: a `badge-l` tile (`radius-card`, accent-soft) with the key glyph in `Accent`, then "No identities yet" (`Title`), one short line ("Each folder uses its own Git and SSH identity.")
    and the filled "Add Identity" button (28 high); the drop zone sits under it, at the bottom of the content.
 
 The drop zone is one row, 48 DIPs high, and shows only while there is no result: the result card takes its place, and clearing the result brings it back. It holds a 20 DIP folder glyph in `Accent`, the line
