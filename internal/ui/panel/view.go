@@ -220,7 +220,7 @@ func (s *Screen) readOnly(c *ui.Context) {
 		reason = inner
 	}
 	ui.Column(c).Grow(1).Gap(t.Space(2.5)).PaddingX(t.Space(2)).AlignItems(ui.Center).Justify(ui.Center).Children(func() {
-		ui.Column(c).Size(t.Space(12), t.Space(12)).Radius(12).Background(t.Danger.Alpha(0.14)).AlignItems(ui.Center).
+		ui.Column(c).Size(t.Space(12), t.Space(12)).Radius(12).Background(theme.Of(c).DangerSoft).AlignItems(ui.Center).
 			Justify(ui.Center).Children(func() {
 			ui.Icon(c, icons.Warn).FontSize(t.Space(6)).TextColor(t.Danger)
 		})
@@ -261,7 +261,7 @@ func (s *Screen) providerChip(c *ui.Context, p account.Provider) {
 	}
 	b := ui.Button(c.Key("chip-"+string(p)), s.providerName(p)).Selected(on).FontSize(t.Rem(0.92)).Height(t.Space(6)).Radius(12)
 	if on {
-		b.Background(t.Accent).TextColor(t.AccentText)
+		b.Background(theme.Of(c).Selected)
 	}
 	if b.Clicked() {
 		s.toggleProvider(p)

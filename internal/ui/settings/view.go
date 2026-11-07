@@ -86,8 +86,8 @@ func (s *Screen) tabBar(c *ui.Context) {
 				color, weight := t.TextMuted, 400
 				switch {
 				case i == s.tab:
-					el.Background(f.AccentSoft)
-					color, weight = t.Accent, 500
+					el.Background(f.Selected)
+					color, weight = t.Text, 500
 				case el.Hovered():
 					el.Background(t.SurfaceHover)
 				}
@@ -243,7 +243,7 @@ func dot(c *ui.Context, color string) {
 func (s *Screen) backupsPane(c *ui.Context) {
 	t := c.Theme()
 	if s.readOnly {
-		ui.Row(c).Gap(t.Space(2)).Padding(t.Space(2.5), t.Space(3), t.Space(2.5), t.Space(3)).Radius(theme.CardRadius).Background(t.Danger.Alpha(0.12)).Children(func() {
+		ui.Row(c).Gap(t.Space(2)).Padding(t.Space(2.5), t.Space(3), t.Space(2.5), t.Space(3)).Radius(theme.CardRadius).Background(theme.Of(c).DangerSoft).Children(func() {
 			ui.Icon(c, icons.Warn).FontSize(t.Space(3.5)).TextColor(t.Danger)
 			ui.Text(c, s.text.ReadOnlyBanner).Grow(1)
 		})

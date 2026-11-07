@@ -82,19 +82,14 @@ func (s *Screen) emptyState(c *ui.Context) {
 	})
 }
 
-// badge is the identity's initial on its color, solid, the letter colored by theme.Ink. ring draws the selection
-// ring around it.
-func badge(c *ui.Context, color, label string, size, radius, fontSize float32, ring bool) {
-	t := c.Theme()
+// badge is the identity's initial on its color, solid, the letter colored by theme.Ink, also on a selected row.
+func badge(c *ui.Context, color, label string, size, radius, fontSize float32) {
 	r, g, b := account.Account{Color: color}.RGB()
 	letter := "?"
 	if l := []rune(strings.TrimSpace(label)); len(l) > 0 {
 		letter = strings.ToUpper(string(l[0]))
 	}
 	e := ui.Column(c).Size(size, size).Shrink(0).Radius(radius).Background(ui.RGB(r, g, b)).AlignItems(ui.Center).Justify(ui.Center)
-	if ring {
-		e.Border(1.5, t.AccentText)
-	}
 	e.Children(func() {
 		ui.Text(c, letter).FontSize(fontSize).FontWeight(600).TextColor(theme.Ink(r, g, b))
 	})
@@ -138,12 +133,9 @@ func (s *Screen) sidebar(c *ui.Context) {
 func (s *Screen) item(c *ui.Context, id, label, email, color string, scoped, draft bool) {
 	t := c.Theme()
 	row := ui.Row(c.Key("item-"+id)).Focusable().Gap(t.Space(2.5)).Padding(t.Space(1.5), t.Space(2)).Radius(theme.FieldRadius).AlignItems(ui.Center)
-	selected := id == s.sel
-	secondary := t.TextMuted
 	switch {
-	case selected:
-		row.Selected(true).Background(t.Accent).TextColor(t.AccentText)
-		secondary = t.AccentText.Alpha(0.8)
+	case id == s.sel:
+		row.Selected(true).Background(theme.Of(c).Selected)
 	case row.Hovered():
 		row.Background(t.SurfaceHover)
 	}
@@ -151,18 +143,18 @@ func (s *Screen) item(c *ui.Context, id, label, email, color string, scoped, dra
 		s.selectID(id)
 	}
 	row.Children(func() {
-		badge(c, color, label, t.Space(7), 8, t.Rem(1), selected)
+		badge(c, color, label, t.Space(7), 8, t.Rem(1))
 		ui.Column(c).Grow(1).Gap(t.Space(0.25)).Children(func() {
 			ui.Text(c, s.labelOf(label)).FontWeight(600)
 			if strings.TrimSpace(email) != "" {
-				ui.Text(c, email).FontSize(t.Rem(0.92)).TextColor(secondary)
+				ui.Text(c, email).FontSize(t.Rem(0.92)).TextColor(t.TextMuted)
 			}
 		})
 		switch {
 		case draft:
-			ui.Text(c, s.text.NewTag).FontSize(t.Rem(0.92)).TextColor(secondary)
+			ui.Text(c, s.text.NewTag).FontSize(t.Rem(0.92)).TextColor(t.TextMuted)
 		case scoped:
-			ui.Icon(c, icons.Folder).FontSize(t.Rem(1.1)).TextColor(secondary).Label(s.text.Scoped)
+			ui.Icon(c, icons.Folder).FontSize(t.Rem(1.1)).TextColor(t.TextMuted).Label(s.text.Scoped)
 		}
 	})
 }
@@ -224,7 +216,7 @@ func (s *Screen) header(c *ui.Context, f *form) {
 	t := c.Theme()
 	ui.Column(c).Gap(t.Space(1.5)).Children(func() {
 		ui.Row(c).Gap(t.Space(2.5)).AlignItems(ui.Center).Children(func() {
-			badge(c, f.cur.color, f.cur.label, t.Space(8), 9, t.Rem(1.15), false)
+			badge(c, f.cur.color, f.cur.label, t.Space(8), 9, t.Rem(1.15))
 			ui.Text(c, s.labelOf(f.cur.label)).FontSize(t.Rem(1.15)).FontWeight(600).Role(ui.RoleHeading).Level(1)
 			mark := s.text.Scoped
 			if f.cur.global {
