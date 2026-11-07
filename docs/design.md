@@ -266,7 +266,7 @@ What Idset uses today:
 | `ui.Spinner` | Reading the configuration and checking a folder. |
 | `ui.Divider` | A 0.5 DIP `Border` hairline between list rows and between the sections of a result card. The title row and the footer have none. |
 | Drop zone | A 48 DIP `ui.Row` with a 1 DIP dashed outline (`BorderStyle(ui.BorderDashed)`) in `Accent` at 50% over a fill of `Accent` at 6%, taking files with `DroppedFiles`; a 20 DIP folder glyph in `Accent`, the line, and a 24 DIP high `PrimaryButton` "Choose…" at the end. While `FileDragOver`, the outline is solid `Accent` and the fill accent-soft. See [Dropped files](https://github.com/egoist/mygo/blob/v0.5.5/docs/ui/input.md#dropped-files). |
-| Initial badge | A rounded square with the first letter of the identity's name ("?" without a name), in the identity's color, solid (see [Color](#color-and-dark-mode)): 28 DIPs with radius 8 in a list row, 32 with radius 9 in a result card. |
+| Initial badge | A rounded square with the first letter of the identity's name ("?" without a name), in the identity's color, solid (see [Color](#color-and-dark-mode)): 28 DIPs with radius 8 in a list row, 32 with radius 10 in a result card and the editor header. |
 | Borderless symbol button | `Space(7)` square (28), transparent, icon `Rem(1.1)` in `TextMuted`, `SurfaceHover` fill on hover, `SurfacePressed` while pressed. Must have a `.Label()`. After the path is copied, the icon turns into a check mark with "Copied" before it for 1.2 seconds. |
 | Icon button (title row, footer) | The same 28×28 button with a `Rem(1.2)` (about 16) glyph, round. Always has `.Label()` and a `.Tooltip()` with the same text, in both languages: Settings, Add Identity, About Idset, Check Again, Quit (设置 / 添加身份 / 关于 Idset / 重新检查 / 退出 in Chinese). The tooltip is the `Inverse` fill, no shadow, above the button (below the title row's). Same size, 4 DIPs apart, so a missing button never moves another. |
 | Result card | An answer row (the 32 DIP initial badge, the name at `Rem(1.15)` 600 with the path in monospace `TextMuted` under it, then the clone toggle (only with an alias), ⋯ and clear buttons, 2 DIPs apart) and under it one muted line, email · alias, indented 52 DIPs to the name. Card fill with the 1 DIP card rim, radius 12; the cards without a match add a 1 DIP inner outline in `Warning`, the card for a failed `git` one in `Danger`; a matched card with findings takes the color of the worst one. |
@@ -526,15 +526,15 @@ toolbar: below it, a source list and a detail pane.
 
 - **Source list** (left, `Space(58)`, 232, straight on the material: `Sidebar` on macOS, no fill of its own). Its
   content starts 16 under the title bar, level with the detail pane's. Group heading "Identities" with the count (11, 600, `TextMuted`), then rows in the panel's order, inset 8 DIPs from the
-  list's sides: `Space(1.5)`×`Space(2)` padding, radius 8, a 28 DIP initial badge (radius 8), the name (13, 600) and
-  the email (`Rem(0.92)`, `TextMuted`) below. Text wraps. An identity limited to folders has
+  list's sides: `Space(1.5)`×`Space(2)` padding, radius 8, a 28 DIP initial badge (radius 8), 8 to the name (13, 600) and
+  the email (`Rem(0.92)`, `TextMuted`) 2 below. Text wraps. An identity limited to folders has
   a folder symbol at the end of its row, named "Scoped" for assistive technology; a draft shows "New" there. The
   selected row has the neutral `selected` fill and keeps its text colors; its badge keeps its color. The list scrolls above an
   add bar fixed to the bottom edge of the sidebar: a hairline, then a borderless "+" symbol button named "Add
   Identity" (also its tooltip), `Space(11)` (44) high with the button centered.
 - **Detail** (right, scrolls on a slightly more opaque layer, the detail fill, separated from the list by a 0.5 DIP
-  hairline). Padding `Space(4)`×`Space(5)` (16×20), `Space(5)` (20) between groups.
-  Header: a 32 DIP initial badge (radius 10), the title (`Rem(1.15)`, 600, level 1), "Global" or "Scoped" (`Rem(0.92)`, `TextMuted`), and at the
+  hairline). Padding `Space(4)` (16) on top and `Space(6)` (24) at the sides and below, `Space(6)` (24) between groups.
+  Header: a 32 DIP initial badge (radius 10), 8 to the title (`Rem(1.15)`, 600, level 1), "Global" or "Scoped" (`Rem(0.92)`, `TextMuted`), and at the
   end the six preset colors as 14 DIP dots (the chosen one ringed and ticked, each named for assistive technology)
   and the hex value.
 - **Groups.** A section title (11, 600, `TextMuted`, level 2) over an inset group in the card fill with radius 12 and the card rim: Identity,
@@ -559,7 +559,7 @@ toolbar: below it, a source list and a detail pane.
 - **Scrolling.** The detail is a scroll view above the fixed footer; the header scrolls with the groups. The source
   list scrolls above its add bar.
 - **Footer.** Hairline above, `Space(11)` (44) high like the sidebar's add bar so the two hairlines are one line, side padding
-  `Space(5)`, everything centered vertically. Delete, Revert and Save are `Space(7)` (28) high; Revert and Save are `Space(25)`
+  `Space(6)` (24) like the detail's, everything centered vertically. Delete, Revert and Save are `Space(7)` (28) high; Revert and Save are `Space(25)`
   (100) wide, enough for "✓ Saved", "Saving", "已保存" and "保存中", so no label change resizes or moves anything. At the left "Delete" as plain `Danger` text (existing
   identities only), then the status (`Rem(0.92)`, `TextMuted`), then "Revert" (bordered) and "Save", the only filled button.
   Status: "Unsaved changes", or "Not saved" for a draft; a spinner with "Writing…" while saving,
