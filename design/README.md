@@ -48,14 +48,19 @@ strings of the package's `copy.json` (English and Simplified Chinese); the tests
 
 ## Changing the UI
 
-A UI change starts from the design; the maintainer confirms the visual direction before UI code is written.
+The design system is the source: when it and the code disagree, the design system is right. A UI change starts from
+the design; the maintainer confirms the visual direction before UI code is written. The steps are also a table under
+Reference tables in `docs/design.md`, next to the tables of radius, interaction states, empty and error states and
+icon sizes that a new component takes its values from.
 
 1. Change or add the frames on the screens canvas, every state, and the tokens in `tokens.json` (and the design
    system) and `docs/design.md` if a rule changes. Run the contrast audit again when a color changes.
 2. The maintainer confirms the visual direction.
-3. Write the native view in `internal/ui/<screen>/` with theme roles and `Space`/`Rem` sizes, localized copy and
-   accessible names, plus tests. When a screen moves to a value in `audit.pending`, take it off the list.
-4. Run `scripts/check.sh --cross`, then the design acceptance checklist in `docs/design.md` on real devices. A
+3. Run `go generate ./internal/ui/theme` to write the tokens into `tokens_gen.go`.
+4. Write the native view in `internal/ui/<screen>/` with the tokens, layouts, type styles and motion helpers,
+   localized copy and accessible names, plus tests. When a screen moves to a value in `audit.pending`, take it off
+   the list.
+5. Run `scripts/check.sh --cross`, then the design acceptance checklist in `docs/design.md` on real devices. A
    headless test is not device acceptance.
 
 Tokens, design notes and code go in the same pull request; the pull request body links the canvas frames it changes.
