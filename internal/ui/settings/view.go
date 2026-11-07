@@ -313,8 +313,10 @@ func (s *Screen) backupRow(c *ui.Context, b Backup) {
 				theme.Secondary.On(c, ui.Text(c, s.text.Restoring)).TextColor(t.TextMuted).SingleLine()
 				ui.Spinner(c)
 			case flash:
-				theme.Secondary.On(c, ui.Text(c, s.text.Restored)).TextColor(t.TextMuted).SingleLine()
-				ui.Icon(c, icons.Check).FontSize(t.Space(theme.Icon)).TextColor(t.Accent)
+				theme.FadeIn(theme.InlineTight(c, ui.Row(c.Key("restored")))).Children(func() {
+					theme.Secondary.On(c, ui.Text(c, s.text.Restored)).TextColor(t.TextMuted).SingleLine()
+					ui.Icon(c, icons.Check).FontSize(t.Space(theme.Icon)).TextColor(t.Accent)
+				})
 			default:
 				if ghost(c, "restore", s.text.Restore, icons.Restore).Disabled(unreadable || s.restoring != "").Clicked() {
 					s.askRestore(b.Path)

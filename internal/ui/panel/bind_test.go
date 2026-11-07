@@ -14,6 +14,7 @@ import (
 	"github.com/yangflow/idset/internal/match"
 	"github.com/yangflow/idset/internal/paths"
 	"github.com/yangflow/idset/internal/store"
+	"github.com/yangflow/idset/internal/ui/theme"
 )
 
 const (
@@ -43,6 +44,8 @@ func card(t *testing.T, res match.Result, list ...account.Account) (*Screen, *ui
 	res.Dir = dir
 	s.SetResult(dir, res, nil)
 	tt.Frame()
+	// The card has come in: its motion is over before a test reads its pixels.
+	tt.Advance(theme.MotionBase)
 	return s, tt, r
 }
 
@@ -667,4 +670,55 @@ func TestOverlapShowsTheFolderOnce(t *testing.T) {
 		t.Error("the one clear button clears both cards")
 	}
 	wantNot(t, tt, "cover this folder")
+}
+
+// countdownWidth is how wide the undo bar's countdown line is in the last frame: the longest run of one accent pixel
+// color in the rows under the Undo button.
+func countdownWidth(t *testing.T, tt *ui.Tester) int {
+	t.Helper()
+	undo, ok := tt.Find("Undo")
+	if !ok {
+		t.Fatal("no Undo button")
+	}
+	img := tt.Image()
+	best := 0
+	for y := int(undo.Y + undo.H); y < int(undo.Y+undo.H)+24 && y < img.Bounds().Max.Y; y++ {
+		run := 0
+		for x := 1; x < img.Bounds().Max.X; x++ {
+			p, q := img.RGBAAt(x, y), img.RGBAAt(x-1, y)
+			if p == q && int(p.B) > int(p.R)+60 {
+				run++
+				best = max(best, run+1)
+			} else {
+				run = 0
+			}
+		}
+	}
+	return best
+}
+
+// The countdown line runs out smoothly by the deadline, and in fifths, with the label, under reduced motion.
+func TestUndoLineGlidesOrStepsUnderReducedMotion(t *testing.T) {
+	for _, reduce := range []bool{false, true} {
+		s, tt, r := card(t, noMatch(), work(), client())
+		tt.SetPreferences(ui.Preferences{ReduceMotion: reduce})
+		clock := newClock(s)
+		click(t, tt, "Bind to client")
+		s.OpDone(bind.Outcome{Op: r.ran[0], Undo: []account.Account{client()}, Result: matched(notes, "client", true)})
+		tt.Frame()
+		tt.Advance(theme.MotionBase)
+		full := countdownWidth(t, tt)
+		clock.at = clock.at.Add(2500 * time.Millisecond)
+		tt.Advance(2500*time.Millisecond - theme.MotionBase)
+		tt.Frame()
+		got := float64(countdownWidth(t, tt)) / float64(full)
+		// Halfway, the line that glides is half as wide; the one that steps still shows three fifths.
+		want := 0.5
+		if reduce {
+			want = 0.6
+		}
+		if got < want-0.04 || got > want+0.04 {
+			t.Errorf("reduced motion %v: after 2.5 s the line is %.2f of its width, want %.1f", reduce, got, want)
+		}
+	}
 }

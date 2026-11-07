@@ -284,7 +284,7 @@ func (s *Screen) pubAck(c *ui.Context, a account.Account) {
 		tipAboveEnd(c, text, fmt.Sprintf(s.text.NoPubTip, a.KeyPath))
 		return
 	}
-	s.copied(c, s.diag.pubUntil[a.ID])
+	s.copied(c, "pub-"+a.ID, s.diag.pubUntil[a.ID])
 }
 
 // recheckButton in the footer checks every identity again.
@@ -470,19 +470,22 @@ func (s *Screen) summary(c *ui.Context) {
 			}
 			ui.Icon(c, icon).FontSize(t.Space(theme.IconS)).TextColor(color).Shrink(0)
 			theme.BodyStrong.On(c, ui.Text(c, count)).Grow(1).MinWidth(0).SingleLine()
-			chevron := icons.ChevronRight
+			// The chevron turns down as the details open.
+			turn := float32(0)
 			if s.diag.open {
-				chevron = icons.ChevronDown
+				turn = 90
 			}
-			ui.Icon(c, chevron).FontSize(t.Space(theme.IconXs)).TextColor(t.TextMuted)
+			theme.Turn(ui.Icon(c, icons.ChevronRight).FontSize(t.Space(theme.IconXs)).TextColor(t.TextMuted), turn)
 		})
 		if !s.diag.open {
 			return
 		}
-		for _, e := range entries {
-			ui.Divider(c)
-			s.entry(c, e)
-		}
+		theme.Arrive(c, ui.Column(c.Key("details")), theme.Collapse(), theme.Collapse()).Children(func() {
+			for _, e := range entries {
+				ui.Divider(c)
+				s.entry(c, e)
+			}
+		})
 	})
 }
 

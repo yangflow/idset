@@ -73,7 +73,8 @@ off that list.
   are needed.
 - **Accessible by default.** Every element can be reached with the keyboard, named for a screen reader, read in both
   appearances, and still works at larger text sizes. See the [checklist](#accessibility-checklist).
-- **No custom motion.** State changes take effect at once. See [Motion](#motion).
+- **Motion explains, never decorates.** Something moves only to say where it came from, what happened, or look
+  here; everything else changes at once. See [Motion](#motion).
 - **Meaning is never carried by color alone.** Say it in words; pair color with text, a symbol or a shape. Every
   identity's color badge sits next to its name, and the state of a result card is written as a sentence.
 - **The UI thread draws.** A frame is built from in-memory state. No disk, network or subprocess work in a view,
@@ -498,7 +499,8 @@ The result card leads with the answer, padding `Space(3)` (12), radius 12, card 
       one (docs/product.md), and the old path is gone from disk anyway.
     - "Ignore" (tooltip "Keep Old Path"): only the prompt goes; the plain no-match card stays and shows no acknowledgement.
   - Undo: after a bind, rebind or "Use only", the undo bar is the last row of the matched card. The countdown line
-    shortens once a second (`c.After` from the absolute deadline), five steps; no animation. After "Undo" the card
+    glides to empty by the absolute deadline, and the label counts down each second (`c.After`); under reduced motion
+    the line steps with the label, five steps. See [Motion](#motion). After "Undo" the card
     returns to what it was, with "Undone" next to the clear button for 1.2 seconds, like "Copied". Unbinding shows
     no bar.
 
@@ -745,20 +747,42 @@ the element tree, roles and accessible names of a running window, which helps fi
 
 ## Motion
 
-Idset has no custom animation: state changes take effect immediately. See
+Motion only says where something came from, what happened, or look here; it is never decoration. The tokens are in
+`tokens.json`'s `motion` family (`motion.moments` lists each moment) and in Go as `theme.MotionFast`,
+`theme.MotionBase`, `theme.MotionShift`, `theme.MotionAck`, `theme.MotionUndo` and `theme.Ease`. The design system's
+motion board plays every moment, with and without reduced motion. MyGo's
 [Transitions](https://github.com/egoist/mygo/blob/v0.5.5/docs/ui/transitions.md) and
-[Drawing and animation](https://github.com/egoist/mygo/blob/v0.5.5/docs/ui/drawing.md) for what the toolkit offers.
+[Drawing and animation](https://github.com/egoist/mygo/blob/v0.5.5/docs/ui/drawing.md) describe the calls.
 
-- **Default is none.** Do not add `Transition`, `Animate` or page transitions without a design that shows the change
-  they explain and the maintainer's agreement; record the exception here.
-- **If an exception is agreed,** use the built-ins with their defaults (element transitions are 200 ms, ease-out)
-  and nothing longer than 300 ms for interface feedback. Avoid frame-by-frame custom animation.
-- **Reduced motion.** `Animate` and element and page transitions already jump to the target when the desktop asks
-  for less motion (`c.Preferences().ReduceMotion`). Any motion you compute yourself must read the preference.
-  Spinners keep turning: they show that work is going on.
-- **Never animate to hide latency**, and do not loop decoration. The tray icon does not flash.
-- **The panel.** None. The drop zone, the result card and the "Copied" acknowledgement change at once; the
-  acknowledgement goes away after 1.2 seconds through `c.After`, not an animation.
+- **One curve, fixed durations.** Everything uses `theme.Ease`, `cubic-bezier(0.2, 0, 0, 1)`: quick out, slow to
+  settle. No springs, no keyframes, no loops. Entries and expanding take `motion-base` (200 ms); exits, collapsing,
+  color changes and swapped content take `motion-fast` (120 ms). Exits are faster than entries.
+- **Short travel.** A card or bar that enters travels `motion-shift` (8 DIPs), never across the window.
+- **Only MyGo's own motion.** Element and content transitions, `AnimatePose` and `AnimateWith`; no timers or
+  frame-by-frame drawing of our own. A screen sets transitions only through the helpers in
+  `internal/ui/theme/motion.go`, and `TestNoLiterals` fails on any other: `Arrive` (way in and out, `motion-base` in
+  and `motion-fast` out by the element's age), `FadeIn`, `Appear`, `Recolor`, `Swap` and `Turn`, with the motions
+  `Slide`, `Fade` and `Collapse`. An element that enters or leaves has a `Key`. The undo countdown's `AnimateWith` is
+  the one value animated in place.
+- **Reduced motion.** When the desktop asks for less motion (`c.Preferences().ReduceMotion`) MyGo keeps fades and
+  color changes and drops movement, collapsing and turning. Motion we compute ourselves (the undo countdown) reads the
+  preference and steps instead. Spinners keep turning: they show that work is going on.
+- **Never animate to hide latency.** The tray icon does not flash. The panel stays quick and quiet: its content does
+  not move as it opens, and its identity list does not move.
+
+| Moment | Trigger | What moves | Tokens | Call | Reduced motion |
+|---|---|---|---|---|---|
+| Drop target | A folder dragged over the panel | The drop zone's border and fill turn accent, and back | motion-fast | `theme.Recolor` | Colors change as usual |
+| Result card | A dropped folder's result arrives | The drop zone fades out; the card settles from 8 above as it fades in; Clear fades it out | motion-base in, motion-fast out | `theme.Arrive(c, card, theme.Slide(-1), theme.Fade())` | Fades in place |
+| Undo bar | Bind, rebind or "Use only" written | The bar rises from 8 below as it fades in; the countdown line glides to empty by the deadline; the bar fades out | motion-base in, motion-fast out; the line motion-undo, linear | `theme.Arrive(c, bar, theme.Slide(1), theme.Fade())`; the line `AnimateWith(key, 0, remaining, ui.Linear)` | The bar fades; the line steps each second |
+| Acknowledgement | A path, public key or command copied; a write succeeded | The symbol cross-fades to a check mark and the word (Copied, Saved, Restored, Updated) fades in; both go back after motion-ack | motion-fast; stays motion-ack | `theme.Swap` on the button, `theme.FadeIn` on the word | Cross-fades as usual |
+| Diagnostics | The diagnostics summary clicked | The details open along their height and the chevron turns down; closing reverses it | motion-base open, motion-fast close | `theme.Arrive(c, details, theme.Collapse(), theme.Collapse())`; the chevron `theme.Turn(e, 90)` | Opens and closes at once |
+| Identity rows | An identity created, saved or deleted in the account window | A new row opens and fades in; a deleted row closes and fades out; the others move to their place | motion-base in, motion-fast out | `Key("item-"+id)`, `theme.Arrive(c, row, theme.Collapse(), theme.Collapse())` | At once |
+| Editor | Another identity selected | The editor's content fades in where the last one was; nothing slides | motion-fast | `Key(id)`, `theme.Appear` | Fades as usual |
+| Windows | The panel, a window, the delete confirmation or a menu opens | The system draws them; Idset adds nothing | — | none | The system's |
+
+A new moment starts on the design system's motion board and in `motion.moments`, with the maintainer's agreement,
+before any code.
 
 ## Localization
 

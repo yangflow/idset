@@ -19,9 +19,12 @@ var typeface = regexp.MustCompile(`\.(Font|FontWeight|LineHeight|LetterSpacing)\
 // gap is spacing between children set by hand instead of through a layout pattern, theme.Stack(c, ui.Column(c)).
 var gap = regexp.MustCompile(`\.Gap\(`)
 
+// motion is a transition or pose set by hand instead of through a helper in motion.go, theme.Arrive(c, e, ...).
+var motion = regexp.MustCompile(`\.(Transition|ContentTransition|AnimatePose)\(`)
+
 // TestNoLiterals keeps the screens and the windows on the tokens: every size, radius and opacity is a name from
-// tokens_gen.go, all text goes through a type Style and every gap comes from a layout pattern, so design/tokens.json
-// and design/layout.json stay the one source.
+// tokens_gen.go, all text goes through a type Style, every gap comes from a layout pattern and every transition from
+// a motion helper, so design/tokens.json and design/layout.json stay the one source.
 func TestNoLiterals(t *testing.T) {
 	var files []string
 	for _, pattern := range []string{"../*/*.go", "../../../*.go"} {
@@ -58,6 +61,9 @@ func TestNoLiterals(t *testing.T) {
 			if gap.MatchString(line) {
 				t.Errorf("%s:%d: Gap: use a layout from design/layout.json, theme.Inline(c, ui.Row(c))", filepath.ToSlash(f), i+1)
 			}
+			if m := motion.FindString(line); m != "" {
+				t.Errorf("%s:%d: %s: use a motion from theme/motion.go, theme.Arrive(c, e, theme.Fade(), theme.Fade())", filepath.ToSlash(f), i+1, m)
+			}
 		}
 	}
 }
@@ -82,5 +88,13 @@ func TestLiteralPattern(t *testing.T) {
 		if typeface.MatchString(s) {
 			t.Errorf("%s is caught", s)
 		}
+	}
+	for _, s := range []string{"e.Transition(ui.ElementTransition{})", "b.ContentTransition(ui.ContentTransition{})", "e.AnimatePose(ui.Pose{}, a)"} {
+		if !motion.MatchString(s) {
+			t.Errorf("%s is not caught", s)
+		}
+	}
+	if motion.MatchString("theme.Arrive(c, e, theme.Fade(), theme.Fade())") {
+		t.Error("a motion helper is caught")
 	}
 }
