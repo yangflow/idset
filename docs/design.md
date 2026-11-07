@@ -308,7 +308,7 @@ The tables below say what to reach for as the accounts, settings and about windo
 | A setting applied immediately (start at login, push on a URL rewrite) | [Switch](https://github.com/egoist/mygo/blob/v0.5.5/docs/ui/switch.md) |
 | A yes/no value submitted with a form ("also delete the private key"), or several independent options (import candidates) | [Checkbox](https://github.com/egoist/mygo/blob/v0.5.5/docs/ui/checkbox.md) |
 | One of two to five visible options (port 22 or 443) | [Radio](https://github.com/egoist/mygo/blob/v0.5.5/docs/ui/radio.md) |
-| One of many options (platform) | `theme.Select`: a 26 high button as wide as the choice with a down chevron, and the options in the system's menu (`Element.Menu`), the chosen one checked; with typing to filter, [Combobox](https://github.com/egoist/mygo/blob/v0.5.5/docs/ui/combobox.md) |
+| One of many options (platform) | `theme.Select`: a `Space(6)` (24) high button with `Space(2)` (8) side padding, as wide as the choice with a down chevron, and the options in the system's menu (`Element.Menu`), the chosen one checked; with typing to filter, [Combobox](https://github.com/egoist/mygo/blob/v0.5.5/docs/ui/combobox.md) |
 | An identity's color | The six presets as named choices; any other value with a [color well](https://github.com/egoist/mygo/blob/v0.5.5/docs/ui/color-picker.md) (`ui.ColorWell`) |
 
 ### Text
@@ -359,7 +359,7 @@ Overlays share focus and Escape behavior; see
 - A dialog is a window of its own (`dialog_window.go`, [ADR 0005](adr/0005-dialogs-and-menus-in-system-windows.md)): frameless, not resizable, modal and a child of the
   window it belongs to, 340 DIPs wide and as tall as its content, centered over its parent, on the system material
   (`Popover` on macOS, `Acrylic` on Windows 11, the solid color on Linux and Windows 10). There is no scrim: the
-  parent shows its inactive look. Inside: `Space(5)` padding, title, text, then the buttons side by side sharing the
+  parent shows its inactive look. Inside: `Space(6)` (24) padding, title, text, then the buttons side by side sharing the
   width, 28 DIPs high, Cancel first and the action last. Escape and Cancel close it; closing it focuses the parent.
   Drawn inside the window, a dialog could only blur that window's own pixels and looked gray (issue 51).
 - Errors say what happened and what to do, on the card or form where they happened (`Error`, or a
@@ -568,7 +568,7 @@ toolbar: below it, a source list and a detail pane.
   Save and Revert are disabled while there is nothing to save.
 - **Empty.** No list and no footer: "No identities yet" (`Rem(1.15)`, 600), one sentence, "Import Existing"
   (bordered; opens the settings window on Import) and "New" (primary), centered, with no add bar.
-- **Delete confirmation.** A dialog window (see Dialogs), 340 wide, `Space(5)` padding:
+- **Delete confirmation.** A dialog window (see Dialogs), 340 wide, `Space(6)` (24) padding:
   "Delete identity <name>?" (`Rem(1)`, 600), a sentence, the private key path and the folders that are not
   deleted automatically between two hairlines (no box), a line that project folders are never touched, the "Also
   delete the private key" checkbox (unchecked by default) and the buttons Cancel (bordered; the Escape action and
@@ -587,7 +587,7 @@ translucent fills, hairlines and text; only dialogs have a shadow.
   and 4 DIP gaps; the bar has 4 above and 6 below. The selected tab has the `selected` fill, its icon and label in `Text` at weight 500, and a
   8 DIP radius; the others are `TextMuted` on no fill. Arrows, Home and End move the choice, as `ui.Tabs` does. The
   pane has no heading of its own: the selected tab names it.
-- **Pane.** Full width below the bar, 16 above and 20 at the sides, scrolling; its content is at most 560 wide and
+- **Pane.** Full width below the bar, 16 above and 24 at the sides and below, groups 24 apart, scrolling; its content is at most 560 wide and
   centered, so wider windows do not stretch the rows.
 - **General.** One grouped list of 32 DIPs rows. Language is three tick rows: "Follow System" (shows the language it
   resolves to), "English" and "简体中文", the last two always in their own language. "Open at login" is a switch row; when
@@ -644,7 +644,7 @@ translucent fills, hairlines and text; only dialogs have a shadow.
   with the rest of the user's config, each behind a muted check. Paths are monospace. Afterwards the rows read "no
   marker block" with a "✓ Removed" note. A failure is inline and names the file that could not be changed, including the
   case where one file was changed and the other not.
-- **Errors and feedback.** Errors are inline notes or banners, never dialogs; the only alerts are the two confirmations above and the identity choice of the Keys pane.
+- **Errors and feedback.** Errors are inline notes or banners (radius 12, padded `Space(3)` (12)), never dialogs; the only alerts are the two confirmations above and the identity choice of the Keys pane.
   Success feedback is the 1.2 s label of the panel.
 
 ## The about window

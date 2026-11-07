@@ -730,3 +730,21 @@ type wrapErr struct{ err error }
 
 func (e *wrapErr) Error() string { return "outer: " + e.err.Error() }
 func (e *wrapErr) Unwrap() error { return e.err }
+
+func TestPaneFollowsTheSpacingScale(t *testing.T) {
+	r := open(t, "en", Request{Pane: General})
+	r.tt.SetSize(500, 600)
+	r.tt.Frame()
+	near := func(a, b float32) bool { return a-b < 0.5 && b-a < 0.5 }
+	// Narrower than the 560 column, the pane is inset 24 at both sides.
+	group, _ := r.tt.Find("Language")
+	if !near(group.X, 24) || !near(group.W, 500-48) {
+		t.Errorf("pane inset 24: %v", group)
+	}
+	// 24 from one group's footnote to the next group's title.
+	note, _ := r.tt.Find("Following the system now: English.")
+	next, _ := r.tt.Find("Startup")
+	if !near(next.Y-(note.Y+note.H), 24) {
+		t.Errorf("groups 24 apart: %v %v", note, next)
+	}
+}
