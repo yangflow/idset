@@ -194,7 +194,7 @@ func (s *Screen) unreachableTip(f diagnose.Failure, h string) string {
 // first check runs. A row without an alias keeps the space, so that the folders line up.
 func (s *Screen) connDot(c *ui.Context, a account.Account) {
 	t := c.Theme()
-	slot := ui.Row(c).Size(t.Space(theme.IconS), t.Space(theme.IconS)).Shrink(0).AlignItems(ui.Center).Justify(ui.Center)
+	slot := theme.Center(c, ui.Column(c)).Size(t.Space(theme.IconS), t.Space(theme.IconS)).Shrink(0)
 	if !diagnose.Checkable(a) {
 		return
 	}
@@ -255,7 +255,7 @@ func (s *Screen) problemBar(c *ui.Context, a account.Account, p diagnose.Problem
 		}
 	}
 	ui.Column(c.Key("problem-"+a.ID)).Padding(0, t.Space(theme.Space2), t.Space(theme.Space1_5), t.Space(theme.Space3+theme.BadgeS+theme.Space2)).Children(func() {
-		ui.Row(c).Height(t.Space(theme.RowS)).Gap(t.Space(theme.Space1_5)).AlignItems(ui.Center).MinWidth(0).Children(func() {
+		theme.Inline(c, ui.Row(c)).Height(t.Space(theme.RowS)).MinWidth(0).Children(func() {
 			ui.Icon(c, icon).FontSize(t.Space(theme.IconS)).TextColor(color).Shrink(0)
 			says := ui.Row(c).Grow(1).MinWidth(0).AlignItems(ui.Center).Label(lead + s.text.Then + tip).Children(func() {
 				theme.Secondary.On(c, ui.Text(c, strings.TrimSpace(lead))).SingleLine().Shrink(0).MinWidth(0)
@@ -323,7 +323,7 @@ func underGlyph(t *ui.Theme) float32 { return t.Space(theme.IconS) + t.Space(the
 func (s *Screen) nextStep(c *ui.Context, a account.Account, p diagnose.Problem) {
 	t := c.Theme()
 	actions := func(children func()) {
-		ui.Row(c).Height(t.Space(theme.ControlS)).Padding(0, 0, 0, underGlyph(t)).Gap(t.Space(theme.Space3)).AlignItems(ui.Center).Children(children)
+		theme.Cluster(c, ui.Row(c)).Height(t.Space(theme.ControlS)).Padding(0, 0, 0, underGlyph(t)).Children(children)
 	}
 	switch p {
 	case diagnose.MissingKey:
@@ -346,7 +346,7 @@ func (s *Screen) nextStep(c *ui.Context, a account.Account, p diagnose.Problem) 
 			theme.Secondary.On(c, ui.Text(c, s.text.UnlockFailed)).TextColor(t.TextMuted).Padding(0, t.Space(theme.Space1), t.Space(theme.Space1), underGlyph(t))
 		}
 		cmd := diagnose.UnlockCommand(s.env, a)
-		ui.Row(c).Height(t.Space(theme.RowS)).Padding(0, 0, 0, underGlyph(t)).Gap(t.Space(theme.Space1)).AlignItems(ui.Center).MinWidth(0).Children(func() {
+		theme.InlineTight(c, ui.Row(c)).Height(t.Space(theme.RowS)).Padding(0, 0, 0, underGlyph(t)).MinWidth(0).Children(func() {
 			face := pathFace{style: theme.MonoSmall, color: t.TextMuted}
 			ui.Row(c).Grow(1).MinWidth(0).AlignItems(ui.Center).Children(func() {
 				face.apply(c, ui.Text(c, "ssh-add ")).Shrink(0)
@@ -417,7 +417,7 @@ func (s *Screen) noSSHNotice(c *ui.Context) {
 	// A notice sits on the danger tint, not in an outline: the glyph and the words say how bad it is.
 	ui.Column(c.Key("no-ssh")).Radius(theme.RadiusCard).Background(theme.Of(c).DangerSoft).Padding(0, t.Space(theme.Space2), t.Space(theme.Space1_5), t.Space(theme.Space3)).
 		Children(func() {
-			ui.Row(c).Height(t.Space(theme.RowS)).Gap(t.Space(theme.Space1_5)).AlignItems(ui.Center).Children(func() {
+			theme.Inline(c, ui.Row(c)).Height(t.Space(theme.RowS)).Children(func() {
 				ui.Icon(c, icons.Error).FontSize(t.Space(theme.IconS)).TextColor(t.Danger).Shrink(0)
 				theme.BodyStrong.On(c, ui.Text(c, s.text.NoSSH)).Grow(1).MinWidth(0)
 				s.retryButton(c, "retry-ssh", ids)
@@ -442,7 +442,7 @@ func (s *Screen) summary(c *ui.Context) {
 		s.diag.seen, s.diag.open = sig, sig != ""
 	}
 	if len(entries) == 0 {
-		ui.Row(c.Key("all-ok")).Gap(t.Space(theme.Space1_5)).PaddingX(t.Space(theme.Space0_5)).AlignItems(ui.Center).Children(func() {
+		theme.Inline(c, ui.Row(c.Key("all-ok"))).PaddingX(t.Space(theme.Space0_5)).Children(func() {
 			ui.Icon(c, icons.Check).FontSize(t.Space(theme.IconS)).TextColor(t.Success)
 			theme.Secondary.On(c, ui.Text(c, s.text.AllOK)).TextColor(t.TextMuted)
 		})
@@ -456,8 +456,7 @@ func (s *Screen) summary(c *ui.Context) {
 	}
 	count := s.count(errs, len(entries)-errs)
 	fillCard(c, "summary", ui.Color{}).Children(func() {
-		head := ui.Row(c).Focusable().Role(ui.RoleButton).Label(count).Expanded(s.diag.open).Height(t.Space(theme.Row)).
-			Padding(0, t.Space(theme.Space2), 0, t.Space(theme.Space3)).Gap(t.Space(theme.Space1_5)).AlignItems(ui.Center)
+		head := theme.BarRow(c, ui.Row(c)).Focusable().Role(ui.RoleButton).Label(count).Expanded(s.diag.open).Height(t.Space(theme.Row))
 		if head.Hovered() {
 			head.Background(t.SurfaceHover)
 		}
@@ -532,10 +531,10 @@ func (s *Screen) entry(c *ui.Context, e diagnose.Entry) {
 	if e.Severity == match.Error {
 		icon, color = icons.Error, t.Danger
 	}
-	ui.Row(c.Key("entry-"+string(e.Code)+"-"+e.ID)).Padding(t.Space(theme.Space2), t.Space(theme.Space3)).Gap(t.Space(theme.Space1_5)).AlignItems(ui.Start).
+	theme.Inline(c, ui.Row(c.Key("entry-"+string(e.Code)+"-"+e.ID))).Padding(t.Space(theme.Space2), t.Space(theme.Space3)).AlignItems(ui.Start).
 		Children(func() {
 			ui.Icon(c, icon).FontSize(t.Space(theme.IconS)).TextColor(color).Shrink(0)
-			ui.Column(c).Grow(1).MinWidth(0).Gap(t.Space(theme.Space0_5)).AlignItems(ui.Start).Children(func() {
+			theme.StackTight(c, ui.Column(c)).Grow(1).MinWidth(0).AlignItems(ui.Start).Children(func() {
 				theme.Secondary.On(c, ui.Text(c, what))
 				theme.Secondary.On(c, ui.Text(c, how)).TextColor(t.TextMuted)
 				switch {

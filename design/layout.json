@@ -30,15 +30,33 @@
         "space-3"
       ],
       "width": "fill",
-      "usage": "One row, one thing: an identity row, a bind row, a settings row, a form row, a backup row. Trailing items after a spacer."
+      "usage": "One row, one thing: an identity row, a bind row, a settings row, a backup row. Trailing items after a spacer."
+    },
+    {
+      "name": "inline-tight",
+      "direction": "row",
+      "align": "center",
+      "gap": "space-1",
+      "usage": "Icon buttons side by side (the title row, a card, the footer), a small glyph and small text."
     },
     {
       "name": "cluster",
       "direction": "row",
-      "wrap": true,
       "align": "center",
       "gap": "space-2",
-      "usage": "Controls side by side: a dialog's buttons, a card's icon buttons, a problem bar's actions."
+      "usage": "Items side by side, never wrapping: a dialog's buttons, a problem bar's actions, a badge and its title."
+    },
+    {
+      "name": "field-row",
+      "direction": "row",
+      "align": "center",
+      "gap": "space-3",
+      "padding": [
+        "space-1",
+        "space-3"
+      ],
+      "width": "fill",
+      "usage": "A form row or a detail row: a fixed-width label column, then the value or the field."
     },
     {
       "name": "control",
@@ -70,6 +88,12 @@
       "direction": "column",
       "gap": "space-0_5",
       "usage": "Lines that sit close: a name and its email, a menu's entries."
+    },
+    {
+      "name": "stack-snug",
+      "direction": "column",
+      "gap": "space-1",
+      "usage": "A group heading and its group, a field and its error, a headline and its reason."
     },
     {
       "name": "stack",

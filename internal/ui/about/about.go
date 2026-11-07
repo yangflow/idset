@@ -78,7 +78,7 @@ func (s *Screen) View(c *ui.Context) {
 	theme.Apply(c)
 	t := c.Theme()
 	theme.TitleBar(c, s.text.Window)
-	ui.Column(c).Grow(1).AlignItems(ui.Center).Justify(ui.Center).Padding(0, t.Space(theme.Space6), t.Space(theme.Space6), t.Space(theme.Space6)).Children(func() {
+	theme.Center(c, ui.Column(c)).Grow(1).Padding(0, t.Space(theme.Space6), t.Space(theme.Space6), t.Space(theme.Space6)).Children(func() {
 		ui.Image(c, s.icon).Width(t.Space(theme.AppIcon)).Height(t.Space(theme.AppIcon))
 		theme.Display.On(c, ui.Text(c, "Idset")).Role(ui.RoleHeading).Level(1).Margin(t.Space(theme.Space3), 0, 0, 0)
 		ui.Text(c, fmt.Sprintf(s.text.Version, s.version)).TextColor(t.TextMuted).Selectable().Margin(t.Space(theme.Space0_5), 0, 0, 0)
@@ -86,12 +86,12 @@ func (s *Screen) View(c *ui.Context) {
 			theme.Small.On(c, ui.Text(c, s.text.Copyright)).TextColor(t.TextMuted)
 			theme.Small.On(c, ui.Text(c, s.text.License)).TextColor(t.TextMuted)
 		})
-		ui.Row(c).Gap(t.Space(theme.Space2)).AlignItems(ui.Center).Margin(t.Space(theme.Space6), 0, 0, 0).Children(func() {
+		theme.Cluster(c, ui.Row(c)).Margin(t.Space(theme.Space6), 0, 0, 0).Children(func() {
 			// GitHub is a link: Accent text with the external symbol, no fill.
 			github := ui.Button(c.Key("github"), "").Label(s.text.GitHub).Padding(0, t.Space(theme.Space1)).Border(0, ui.Color{}).
 				Background(ui.Color{}).TextColor(t.Accent)
 			github.Children(func() {
-				ui.Row(c).Gap(t.Space(theme.Space1)).AlignItems(ui.Center).Children(func() {
+				theme.InlineTight(c, ui.Row(c)).Children(func() {
 					ui.Icon(c, icons.External).FontSize(t.Space(theme.IconXs))
 					theme.BodyMedium.On(c, ui.Text(c, s.text.GitHub)).SingleLine()
 				})

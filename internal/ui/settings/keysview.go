@@ -46,7 +46,7 @@ func (s *Screen) keyForm(c *ui.Context) {
 	t := c.Theme()
 	busy := s.keys.busy
 	if a, ok := s.identity(s.keys.target); ok {
-		theme.Card(c, ui.Row(c)).Gap(t.Space(theme.Space2)).Padding(t.Space(theme.Space3)).Children(func() {
+		theme.InsetCard(c, theme.Cluster(c, theme.Card(c, ui.Row(c)))).AlignItems(ui.Start).Children(func() {
 			ui.Icon(c, icons.Key).FontSize(t.Space(theme.IconS)).TextColor(t.TextMuted)
 			ui.Text(c, fmt.Sprintf(s.text.KDiag, s.label(a), s.env.Tilde(a.KeyPath))).Grow(1).Wrap()
 		})
@@ -61,7 +61,7 @@ func (s *Screen) keyForm(c *ui.Context) {
 			theme.Mono.On(c, in)
 		}
 	}
-	group := ui.Column(c).Gap(t.Space(theme.Space6))
+	group := theme.StackPage(c, ui.Column(c))
 	if busy {
 		group.Opacity(theme.OpacityFaded)
 	}
@@ -97,7 +97,7 @@ func (s *Screen) keyForm(c *ui.Context) {
 			}
 		})
 	})
-	ui.Row(c).Gap(t.Space(theme.Space2)).Justify(ui.End).AlignItems(ui.Center).Children(func() {
+	theme.Cluster(c, ui.Row(c)).Justify(ui.End).Children(func() {
 		if busy {
 			theme.Secondary.On(c, ui.Text(c, s.text.Generating)).TextColor(t.TextMuted).SingleLine()
 			ui.Spinner(c)
@@ -115,7 +115,7 @@ func (s *Screen) keyResult(c *ui.Context) {
 	if s.keys.made.Type == keygen.RSA {
 		kind = "RSA 4096"
 	}
-	ui.Row(c).Gap(t.Space(theme.Space2)).AlignItems(ui.Center).Children(func() {
+	theme.Cluster(c, ui.Row(c)).Children(func() {
 		ui.Icon(c, icons.Check).FontSize(t.Space(theme.Icon)).TextColor(t.Accent)
 		theme.Title.On(c, ui.Text(c, s.text.Created)).Role(ui.RoleHeading).Level(2).SingleLine()
 		theme.Secondary.On(c, ui.Text(c, kind+" · "+s.providerName(s.keys.provider))).TextColor(t.TextMuted).SingleLine()
@@ -130,7 +130,7 @@ func (s *Screen) keyResult(c *ui.Context) {
 			}
 			if s.now().Before(s.keys.copied) {
 				c.After(s.keys.copied.Sub(s.now()))
-				ui.Row(c).Gap(t.Space(theme.Space1)).AlignItems(ui.Center).Shrink(0).Children(func() {
+				theme.InlineTight(c, ui.Row(c)).Shrink(0).Children(func() {
 					theme.Small.On(c, ui.Text(c, s.text.Copied)).TextColor(t.TextMuted).SingleLine()
 					ui.Icon(c, icons.Check).FontSize(t.Space(theme.Icon)).TextColor(t.Accent).Label(s.text.Copied)
 				})
@@ -221,7 +221,7 @@ func (s *Screen) keyResult(c *ui.Context) {
 				ui.Spinner(c)
 			}
 			if a, ok := s.identity(s.keys.used); ok {
-				ui.Row(c).Gap(t.Space(theme.Space1_5)).AlignItems(ui.Center).Shrink(0).Children(func() {
+				theme.Inline(c, ui.Row(c)).Shrink(0).Children(func() {
 					dot(c, a.Color)
 					ui.Text(c, s.label(a)).SingleLine()
 				})
@@ -279,20 +279,20 @@ func (s *Screen) pickDialog(c *ui.Context) ui.Element {
 		ui.Divider(c)
 		choice := func(value, label string, head func(), sub string) {
 			on := s.keys.pick == value
-			row := ui.RadioBase(c.Key("pick-"+value), &s.keys.pick, value).Label(label).Gap(t.Space(theme.Space2)).Padding(t.Space(theme.Space1_5), 0, t.Space(theme.Space1_5), 0)
+			row := theme.Cluster(c, ui.RadioBase(c.Key("pick-"+value), &s.keys.pick, value)).AlignItems(ui.Start).Label(label).Padding(t.Space(theme.Space1_5), 0, t.Space(theme.Space1_5), 0)
 			row.Children(func() {
 				ring := t.Border
 				if on {
 					ring = t.Accent
 				}
-				ui.Row(c).Size(t.Space(theme.Check), t.Space(theme.Check)).Radius(theme.RadiusPill).Border(1.5, ring).Justify(ui.Center).AlignItems(ui.Center).Shrink(0).
+				theme.Center(c, ui.Column(c)).Size(t.Space(theme.Check), t.Space(theme.Check)).Radius(theme.RadiusPill).Border(1.5, ring).Shrink(0).
 					Margin(t.Space(theme.Space0_5), 0, 0, 0).Children(func() {
 					if on {
 						ui.Column(c).Size(t.Space(theme.DotS), t.Space(theme.DotS)).Radius(theme.RadiusPill).Background(t.Accent)
 					}
 				})
-				ui.Column(c).Grow(1).MinWidth(0).Gap(t.Space(theme.Space0_5)).Children(func() {
-					ui.Row(c).Gap(t.Space(theme.Space1_5)).AlignItems(ui.Center).Children(head)
+				theme.StackTight(c, ui.Column(c)).Grow(1).MinWidth(0).Children(func() {
+					theme.Inline(c, ui.Row(c)).Children(head)
 					theme.Secondary.On(c, ui.Text(c, sub)).TextColor(t.TextMuted).Wrap()
 				})
 			})
@@ -317,7 +317,7 @@ func (s *Screen) pickDialog(c *ui.Context) ui.Element {
 		})
 		ui.Divider(c)
 		theme.Secondary.On(c, ui.Text(c, s.text.UseNote)).TextColor(t.TextMuted).Wrap()
-		ui.Row(c).Gap(t.Space(theme.Space2)).Margin(t.Space(theme.Space1_5), 0, 0, 0).Children(func() {
+		theme.Cluster(c, ui.Row(c)).Margin(t.Space(theme.Space1_5), 0, 0, 0).Children(func() {
 			if dialogButton(ui.Button(c.Key("pick-cancel"), s.text.Cancel), t).AutoFocus().Clicked() {
 				s.keys.pickOpen = false
 			}

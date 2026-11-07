@@ -50,7 +50,7 @@ func (s *Screen) remoteRow(c *ui.Context, r *match.Result, a account.Account) {
 		return
 	}
 	t := c.Theme()
-	ui.Row(c.Key("https")).Height(t.Space(theme.RowS)).Padding(0, t.Space(theme.Space2), 0, t.Space(theme.Space3)).Gap(t.Space(theme.Space1_5)).AlignItems(ui.Center).
+	theme.BarRow(c, ui.Row(c.Key("https"))).Height(t.Space(theme.RowS)).
 		MinWidth(0).Children(func() {
 		ui.Icon(c, icons.Globe).FontSize(t.Space(theme.IconS)).TextColor(t.TextMuted).Shrink(0)
 		text := theme.Secondary.On(c, ui.Text(c, s.text.HTTPSRow)).SingleLine().Grow(1).MinWidth(0)
@@ -79,8 +79,8 @@ func (s *Screen) cloneBlock(c *ui.Context, key string, a account.Account, f *clo
 	}
 	t := c.Theme()
 	cmd, ok := remote.CloneCommand(a, f.value)
-	ui.Column(c.Key(key)).Gap(t.Space(theme.Space1)).Padding(t.Space(theme.Space2), t.Space(theme.Space3), t.Space(theme.Space3), left).Children(func() {
-		ui.Row(c).Gap(t.Space(theme.Space1_5)).AlignItems(ui.Center).Children(func() {
+	theme.StackSnug(c, ui.Column(c.Key(key))).Padding(t.Space(theme.Space2), t.Space(theme.Space3), t.Space(theme.Space3), left).Children(func() {
+		theme.Inline(c, ui.Row(c)).Children(func() {
 			in := theme.Mono.On(c, ui.TextInput(c.Key(key+"-input"), &f.value)).Label(s.text.CloneLabel).Placeholder(repoPlaceholder).
 				Tooltip(s.text.CloneTip).Height(t.Space(theme.Control)).Radius(theme.RadiusControl).Border(0.5, t.Border).Background(theme.Of(c).Field).Grow(1).MinWidth(0)
 			if focus {

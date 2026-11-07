@@ -6,13 +6,17 @@ import (
 	"testing"
 )
 
-// TestGenerated fails when tokens_gen.go is not what design/tokens.json makes: run go generate in the theme package.
+// TestGenerated fails when tokens_gen.go is not what design/tokens.json and design/layout.json make: run go generate in the theme package.
 func TestGenerated(t *testing.T) {
 	src, err := os.ReadFile("../../../../design/tokens.json")
 	if err != nil {
 		t.Fatal(err)
 	}
-	want, err := generate(src)
+	lay, err := os.ReadFile("../../../../design/layout.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	want, err := generate(src, lay)
 	if err != nil {
 		t.Fatal(err)
 	}

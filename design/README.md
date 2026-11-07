@@ -28,6 +28,9 @@ A token's Go name is its name in camel case: `space-3` is `theme.Space3`, used a
 MyGo's default unit of 4); `radius-card` is `theme.RadiusCard`; `motion-ack` is `theme.MotionAck`. Spacing and sizes
 are in pixels at the default unit and become steps of it; a size with a `unit` (`rem`, `stroke`) is not generated.
 Window sizes are in their own family, `window`. Colors without a MyGo theme role are in `internal/ui/theme`.
+`layout.json`'s patterns are generated into the same file as functions that lay an element out: `item-row` is
+`theme.ItemRow(c, ui.Row(c))`, `inset-card` is `theme.InsetCard(c, e)`; `bar` is `theme.BarRow`, since `theme.Bar` is
+its height. A pattern with a height or radius is a control's shape and has no function.
 
 ## Screens: canvas page → package
 

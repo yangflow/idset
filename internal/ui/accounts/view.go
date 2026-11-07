@@ -25,7 +25,7 @@ func (s *Screen) View(c *ui.Context) {
 	ui.Column(c).Fill().Children(func() {
 		switch {
 		case s.loading:
-			ui.Column(c).Grow(1).Padding(band, 0, 0, 0).Gap(t.Space(theme.Space2)).AlignItems(ui.Center).Justify(ui.Center).Children(func() {
+			theme.Center(c, theme.Stack(c, ui.Column(c))).Grow(1).Padding(band, 0, 0, 0).Children(func() {
 				ui.Spinner(c)
 				ui.Text(c, s.text.Loading).TextColor(t.TextMuted)
 			})
@@ -57,7 +57,7 @@ func hairline(c *ui.Context) ui.Element {
 
 func (s *Screen) readOnly(c *ui.Context) {
 	t := c.Theme()
-	ui.Column(c).Grow(1).Padding(bandHeight(c), t.Space(theme.Space6), 0, t.Space(theme.Space6)).Gap(t.Space(theme.Space2)).AlignItems(ui.Center).Justify(ui.Center).Children(func() {
+	theme.Center(c, theme.Stack(c, ui.Column(c))).Grow(1).Padding(bandHeight(c), t.Space(theme.Space6), 0, t.Space(theme.Space6)).Children(func() {
 		ui.Icon(c, icons.Warn).FontSize(t.Space(theme.IconL)).TextColor(t.Danger)
 		theme.Title.On(c, ui.Text(c, s.text.ReadOnly)).Role(ui.RoleHeading).Level(2)
 		ui.Text(c, s.text.ReadOnlyHint).TextColor(t.TextMuted).TextAlign(ui.Center)
@@ -68,10 +68,10 @@ func (s *Screen) readOnly(c *ui.Context) {
 // emptyState has no list and no footer; "Add Identity" stays in the toolbar.
 func (s *Screen) emptyState(c *ui.Context) {
 	t := c.Theme()
-	ui.Column(c).Grow(1).Padding(bandHeight(c), 0, 0, 0).Gap(t.Space(theme.Space2)).AlignItems(ui.Center).Justify(ui.Center).Children(func() {
+	theme.Center(c, theme.Stack(c, ui.Column(c))).Grow(1).Padding(bandHeight(c), 0, 0, 0).Children(func() {
 		theme.Title.On(c, ui.Text(c, s.text.NoneTitle)).Role(ui.RoleHeading).Level(2)
 		ui.Text(c, s.text.NoneHint).TextColor(t.TextMuted)
-		ui.Row(c).Gap(t.Space(theme.Space2)).Margin(t.Space(theme.Space2), 0, 0, 0).Children(func() {
+		theme.Cluster(c, ui.Row(c)).Margin(t.Space(theme.Space2), 0, 0, 0).Children(func() {
 			if ui.Button(c, s.text.ImportExisting).Clicked() {
 				s.act.OpenImport()
 			}
@@ -89,7 +89,7 @@ func badge(c *ui.Context, color, label string, size, radius float32, style theme
 	if l := []rune(strings.TrimSpace(label)); len(l) > 0 {
 		letter = strings.ToUpper(string(l[0]))
 	}
-	e := ui.Column(c).Size(size, size).Shrink(0).Radius(radius).Background(ui.RGB(r, g, b)).AlignItems(ui.Center).Justify(ui.Center)
+	e := theme.Center(c, ui.Column(c)).Size(size, size).Shrink(0).Radius(radius).Background(ui.RGB(r, g, b))
 	e.Children(func() {
 		style.On(c, ui.Text(c, letter)).TextColor(theme.Ink(r, g, b))
 	})
@@ -100,7 +100,7 @@ func (s *Screen) sidebar(c *ui.Context) {
 	t := c.Theme()
 	ui.Column(c).Fill().Padding(bandHeight(c), 0, 0, 0).Children(func() {
 		// The list scrolls above the add bar, which stays at the bottom edge of the sidebar.
-		ui.Scroll(c).Grow(1).Padding(t.Space(theme.Space4), t.Space(theme.Space2), t.Space(theme.Space3), t.Space(theme.Space2)).Gap(t.Space(theme.Space0_5)).Children(func() {
+		theme.StackTight(c, ui.Scroll(c)).Grow(1).Padding(t.Space(theme.Space4), t.Space(theme.Space2), t.Space(theme.Space3), t.Space(theme.Space2)).Children(func() {
 			ui.Row(c).Padding(0, t.Space(theme.Space1_5), t.Space(theme.Space1), t.Space(theme.Space1_5)).Children(func() {
 				theme.Caption.On(c, ui.Text(c, s.text.Identities)).TextColor(t.TextMuted).Grow(1).Role(ui.RoleHeading).Level(2)
 				n := len(s.list)
@@ -132,7 +132,7 @@ func (s *Screen) sidebar(c *ui.Context) {
 
 func (s *Screen) item(c *ui.Context, id, label, email, color string, scoped, draft bool) {
 	t := c.Theme()
-	row := ui.Row(c.Key("item-"+id)).Focusable().Gap(t.Space(theme.Space2)).Padding(t.Space(theme.Space1_5), t.Space(theme.Space2)).Radius(theme.RadiusControl).AlignItems(ui.Center)
+	row := theme.Cluster(c, ui.Row(c.Key("item-"+id))).Focusable().Padding(t.Space(theme.Space1_5), t.Space(theme.Space2)).Radius(theme.RadiusControl)
 	switch {
 	case id == s.sel:
 		row.Selected(true).Background(theme.Of(c).Selected)
@@ -144,7 +144,7 @@ func (s *Screen) item(c *ui.Context, id, label, email, color string, scoped, dra
 	}
 	row.Children(func() {
 		badge(c, color, label, t.Space(theme.BadgeS), theme.RadiusControl, theme.BodyStrong)
-		ui.Column(c).Grow(1).Gap(t.Space(theme.Space0_5)).Children(func() {
+		theme.StackTight(c, ui.Column(c)).Grow(1).Children(func() {
 			theme.BodyMedium.On(c, ui.Text(c, s.labelOf(label)))
 			if strings.TrimSpace(email) != "" {
 				theme.Secondary.On(c, ui.Text(c, email)).TextColor(t.TextMuted)
@@ -181,7 +181,7 @@ func (s *Screen) detail(c *ui.Context) {
 		fill = theme.Of(c).Detail
 	}
 	ui.Column(c).Fill().Padding(bandHeight(c), 0, 0, 0).Background(fill).Children(func() {
-		body := ui.Scroll(c).Grow(1).Padding(t.Space(theme.Space4), t.Space(theme.Space6), t.Space(theme.Space6), t.Space(theme.Space6)).Gap(t.Space(theme.Space6))
+		body := theme.StackPage(c, ui.Scroll(c)).Grow(1).Padding(t.Space(theme.Space4), t.Space(theme.Space6), t.Space(theme.Space6), t.Space(theme.Space6))
 		if s.busy {
 			body.Opacity(theme.OpacityFaded)
 		}
@@ -214,8 +214,8 @@ func (s *Screen) syncWidgets(f *form) {
 
 func (s *Screen) header(c *ui.Context, f *form) {
 	t := c.Theme()
-	ui.Column(c).Gap(t.Space(theme.Space1_5)).Children(func() {
-		ui.Row(c).Gap(t.Space(theme.Space2)).AlignItems(ui.Center).Children(func() {
+	theme.StackSnug(c, ui.Column(c)).Children(func() {
+		theme.Cluster(c, ui.Row(c)).Children(func() {
 			badge(c, f.cur.color, f.cur.label, t.Space(theme.BadgeM), theme.RadiusControl, theme.Title)
 			theme.Title.On(c, ui.Text(c, s.labelOf(f.cur.label))).Role(ui.RoleHeading).Level(1)
 			mark := s.text.Scoped
@@ -224,7 +224,7 @@ func (s *Screen) header(c *ui.Context, f *form) {
 			}
 			theme.Secondary.On(c, ui.Text(c, mark)).TextColor(t.TextMuted)
 			ui.Spacer(c)
-			ui.Row(c).Gap(t.Space(theme.Space2)).AlignItems(ui.Center).Children(func() {
+			theme.Cluster(c, ui.Row(c)).Children(func() {
 				for _, name := range account.ColorPresets {
 					s.colorChoice(c, f, name)
 				}
@@ -252,7 +252,7 @@ func (s *Screen) colorChoice(c *ui.Context, f *form, name string) {
 		ring = color
 	}
 	outer := t.Space(theme.DotL + 2*theme.Space1)
-	ui.Column(c).Size(outer, outer).Shrink(0).Radius(theme.RadiusPill).AlignItems(ui.Center).Justify(ui.Center).Border(1.5, ring).Children(func() {
+	theme.Center(c, ui.Column(c)).Size(outer, outer).Shrink(0).Radius(theme.RadiusPill).Border(1.5, ring).Children(func() {
 		btn := ui.Button(c.Key("color-"+name), "").Label(s.colorName(name)).Selected(on).Size(size, size).Padding(0).Radius(size/2).
 			Background(color).Border(0, ui.Color{}).Disabled(s.busy)
 		btn.Children(func() {
@@ -283,7 +283,7 @@ func (r *rows) next(c *ui.Context) {
 func (r *rows) field(c *ui.Context, label, hint string, value func()) {
 	r.next(c)
 	t := c.Theme()
-	ui.Row(c).MinHeight(t.Space(theme.Row)).PaddingX(t.Space(theme.Space3)).PaddingY(t.Space(theme.Space1)).Gap(t.Space(theme.Space3)).AlignItems(ui.Center).Children(func() {
+	theme.FieldRow(c, ui.Row(c)).MinHeight(t.Space(theme.Row)).Children(func() {
 		ui.Text(c, label).Role(ui.RoleText).Width(t.Space(theme.LabelW)).Shrink(0)
 		value()
 		if hint != "" {
@@ -296,13 +296,13 @@ func (r *rows) field(c *ui.Context, label, hint string, value func()) {
 func (r *rows) line(c *ui.Context, content func()) {
 	r.next(c)
 	t := c.Theme()
-	ui.Row(c).MinHeight(t.Space(theme.Row)).PaddingX(t.Space(theme.Space3)).PaddingY(t.Space(theme.Space1)).Gap(t.Space(theme.Space1)).AlignItems(ui.Center).Children(content)
+	theme.InlineTight(c, ui.Row(c)).MinHeight(t.Space(theme.Row)).PaddingX(t.Space(theme.Space3)).PaddingY(t.Space(theme.Space1)).Children(content)
 }
 
 // section is a titled group; its error messages, in Danger, and its help text follow it.
 func (s *Screen) section(c *ui.Context, title, help string, errs []string, body func(r *rows)) {
 	t := c.Theme()
-	ui.Column(c).Gap(t.Space(theme.Space1)).Children(func() {
+	theme.StackSnug(c, ui.Column(c)).Children(func() {
 		theme.Caption.On(c, ui.Text(c, title)).TextColor(t.TextMuted).Role(ui.RoleHeading).Level(2).PaddingX(t.Space(theme.Space3))
 		theme.Card(c, ui.Column(c)).Clip().Children(func() { body(&rows{}) })
 		s.notes(c, errs)
@@ -315,7 +315,7 @@ func (s *Screen) section(c *ui.Context, title, help string, errs []string, body 
 func (s *Screen) notes(c *ui.Context, errs []string) {
 	t := c.Theme()
 	for _, e := range errs {
-		ui.Row(c).Gap(t.Space(theme.Space1)).Margin(t.Space(theme.Space1), t.Space(theme.Space3), 0, t.Space(theme.Space3)).Children(func() {
+		theme.InlineTight(c, ui.Row(c)).Margin(t.Space(theme.Space1), t.Space(theme.Space3), 0, t.Space(theme.Space3)).Children(func() {
 			ui.Icon(c, icons.Warn).FontSize(t.Space(theme.IconS)).TextColor(t.Danger)
 			theme.Secondary.On(c, ui.Text(c, e)).TextColor(t.Danger).Grow(1)
 		})
@@ -358,7 +358,6 @@ func (s *Screen) fromGit(value, prefilled string) string {
 }
 
 func (s *Screen) sshGroup(c *ui.Context, f *form) {
-	t := c.Theme()
 	s.section(c, s.text.GroupSSH, "", s.problemTexts(f, "sshAlias", "keyPath", "hostName", "sshPort"), func(r *rows) {
 		if f.custom() {
 			r.field(c, s.text.Host, "", func() { theme.Mono.On(c, s.input(c, "host", &f.cur.hostName, s.text.Host)) })
@@ -376,10 +375,10 @@ func (s *Screen) sshGroup(c *ui.Context, f *form) {
 				return
 			}
 			ui.Spacer(c)
-			ui.RadioGroup(c, func() {
+			theme.Cluster(c, ui.RadioGroup(c, func() {
 				ui.Radio(c, &f.cur.port, 22, "22").Disabled(s.busy)
 				ui.Radio(c, &f.cur.port, 443, "443").Disabled(s.busy || !f.cur.provider.Supports443())
-			}).Row().Gap(t.Space(theme.Space4)).Label(s.text.Port)
+			})).Label(s.text.Port)
 		})
 	})
 }
@@ -570,11 +569,11 @@ func (s *Screen) footer(c *ui.Context, f *form) {
 		c.After(s.savedUntil.Sub(s.now()))
 	}
 	bw, bh := buttonWidth(t), buttonHeight(t)
-	ui.Row(c).MinHeight(barHeight(t)).Shrink(0).PaddingX(t.Space(theme.Space6)).Gap(t.Space(theme.Space2)).AlignItems(ui.Center).Children(func() {
+	theme.Cluster(c, ui.Row(c)).MinHeight(barHeight(t)).Shrink(0).PaddingX(t.Space(theme.Space6)).Children(func() {
 		if !f.isNew && textButton(c, s.text.Delete, t.Danger, nil).Height(bh).Disabled(s.busy).Clicked() {
 			s.askDelete()
 		}
-		ui.Row(c).Grow(1).Gap(t.Space(theme.Space1_5)).AlignItems(ui.Center).Children(func() { s.status(c, f, dirty) })
+		theme.Inline(c, ui.Row(c)).Grow(1).Children(func() { s.status(c, f, dirty) })
 		if ui.Button(c, s.text.Revert).Size(bw, bh).Disabled(!dirty || s.busy).Clicked() {
 			s.revert()
 		}
@@ -654,7 +653,7 @@ func (s *Screen) deleteDialog(c *ui.Context) ui.Element {
 		theme.Secondary.On(c, ui.Text(c, s.text.DelBody)).TextColor(t.TextMuted).Wrap()
 		ui.Column(c).Children(func() {
 			hairline(c)
-			ui.Row(c).Gap(t.Space(theme.Space3)).PaddingY(t.Space(theme.Space2)).Children(func() {
+			theme.FieldRow(c, ui.Row(c)).AlignItems(ui.Start).Padding(t.Space(theme.Space2), 0).Children(func() {
 				ui.Text(c, s.text.PrivateKey).TextColor(t.TextMuted).Width(t.Space(theme.LabelW)).Shrink(0)
 				key := s.text.None
 				if strings.TrimSpace(a.KeyPath) != "" {
@@ -663,7 +662,7 @@ func (s *Screen) deleteDialog(c *ui.Context) ui.Element {
 				theme.Mono.On(c, ui.Text(c, key)).Grow(1).Wrap()
 			})
 			hairline(c)
-			ui.Row(c).Gap(t.Space(theme.Space3)).PaddingY(t.Space(theme.Space2)).Children(func() {
+			theme.FieldRow(c, ui.Row(c)).AlignItems(ui.Start).Padding(t.Space(theme.Space2), 0).Children(func() {
 				ui.Text(c, s.text.Folders).TextColor(t.TextMuted).Width(t.Space(theme.LabelW)).Shrink(0)
 				ui.Column(c).Grow(1).Children(func() {
 					folders := usablePaths(*a)
@@ -678,7 +677,7 @@ func (s *Screen) deleteDialog(c *ui.Context) ui.Element {
 			hairline(c)
 		})
 		theme.Secondary.On(c, ui.Text(c, s.text.DelNote)).TextColor(t.TextMuted).Wrap()
-		ui.Column(c).Gap(t.Space(theme.Space1)).Children(func() {
+		theme.StackSnug(c, ui.Column(c)).Children(func() {
 			ui.Checkbox(c, &cf.alsoKey, s.text.AlsoKey).Disabled(cf.checking || cf.reason != keyfile.None || s.busy)
 			if text := s.keyReason(cf); text != "" {
 				theme.Secondary.On(c, ui.Text(c, text)).TextColor(t.TextMuted).Wrap().PaddingX(t.Space(theme.Space6))
@@ -689,7 +688,7 @@ func (s *Screen) deleteDialog(c *ui.Context) ui.Element {
 		if cf.err != "" {
 			theme.Secondary.On(c, ui.Text(c, cf.err)).TextColor(t.Danger).Wrap()
 		}
-		ui.Row(c).Gap(t.Space(theme.Space2)).Justify(ui.End).Children(func() {
+		theme.Cluster(c, ui.Row(c)).Justify(ui.End).Children(func() {
 			if ui.Button(c, s.text.Cancel).AutoFocus().Disabled(s.busy).Clicked() {
 				s.confirmOpen = false
 			}
