@@ -315,11 +315,15 @@ func (s *Screen) retryButton(c *ui.Context, key string, ids []string) {
 	}
 }
 
+// underGlyph is the indent that lines a second line of a bar or notice up with its sentence: past the Rem(1.1)
+// glyph and the Space(1.5) gap after it. It follows the font size, so it is not a step of the spacing scale.
+func underGlyph(t *ui.Theme) float32 { return t.Rem(1.1) + t.Space(1.5) }
+
 // nextStep is the line under the sentence of a bar: the fixed next step of the problem, when it has one.
 func (s *Screen) nextStep(c *ui.Context, a account.Account, p diagnose.Problem) {
 	t := c.Theme()
 	actions := func(children func()) {
-		ui.Row(c).Height(t.Space(6)).Padding(0, 0, 0, t.Space(5)).Gap(t.Space(3)).AlignItems(ui.Center).Children(children)
+		ui.Row(c).Height(t.Space(6)).Padding(0, 0, 0, underGlyph(t)).Gap(t.Space(3)).AlignItems(ui.Center).Children(children)
 	}
 	switch p {
 	case diagnose.MissingKey:
@@ -339,10 +343,10 @@ func (s *Screen) nextStep(c *ui.Context, a account.Account, p diagnose.Problem) 
 			return
 		}
 		if s.diag.unlockErr[a.ID] {
-			ui.Text(c, s.text.UnlockFailed).FontSize(t.Rem(0.9)).TextColor(t.TextMuted).Padding(0, t.Space(1), t.Space(1), t.Space(5))
+			ui.Text(c, s.text.UnlockFailed).FontSize(t.Rem(0.9)).TextColor(t.TextMuted).Padding(0, t.Space(1), t.Space(1), underGlyph(t))
 		}
 		cmd := diagnose.UnlockCommand(s.env, a)
-		ui.Row(c).Height(t.Space(7)).Padding(0, 0, 0, t.Space(5)).Gap(t.Space(1)).AlignItems(ui.Center).MinWidth(0).Children(func() {
+		ui.Row(c).Height(t.Space(7)).Padding(0, 0, 0, underGlyph(t)).Gap(t.Space(1)).AlignItems(ui.Center).MinWidth(0).Children(func() {
 			face := pathFace{mono: true, size: t.Rem(0.85), color: t.TextMuted}
 			ui.Row(c).Grow(1).MinWidth(0).AlignItems(ui.Center).Children(func() {
 				face.apply(ui.Text(c, "ssh-add ")).Shrink(0)
@@ -418,7 +422,7 @@ func (s *Screen) noSSHNotice(c *ui.Context) {
 				ui.Text(c, s.text.NoSSH).FontWeight(600).Grow(1).MinWidth(0)
 				s.retryButton(c, "retry-ssh", ids)
 			})
-			ui.Text(c, hint).FontSize(t.Rem(0.9)).TextColor(theme.Of(c).Fg2).Padding(0, t.Space(1), t.Space(1), t.Space(5))
+			ui.Text(c, hint).FontSize(t.Rem(0.9)).TextColor(theme.Of(c).Fg2).Padding(0, t.Space(1), t.Space(1), underGlyph(t))
 		})
 }
 

@@ -191,18 +191,18 @@ scale still follow the desktop; the values are in [tokens.json](../design/tokens
   `Font("monospace")`.
 - **Size relative to the theme.** Use `t.Rem(n)` for sizes (`n` times the theme font size) rather than fixed numbers,
   so custom text follows the user's text scale. Widgets use the theme size.
-- **Five styles.** At the macOS default of 13, every screen uses these and nothing else:
+- **Six styles.** At the macOS default of 13, every screen uses these and nothing else:
 
   | Style | Size | Weight | Used for |
   |---|---|---|---|
+  | display | `Rem(1.4)`, about 18 | 600 | the product name in the about window, and nowhere else |
   | title | `Rem(1.15)`, about 15 | 600 | the panel title "Idset", the identity name in a result card and in the accounts editor, a settings pane's heading, the read-only and empty titles |
   | emphasis | `Rem(1)`, 13 | 600 | identity names in a list, dialog titles, the first line of a notice |
   | body | `Rem(1)`, 13 | 400 | everything else, and all widget text |
   | secondary | `Rem(0.92)`, about 12 | 400, `TextMuted` | hints, notes, emails, status lines, the drop zone line |
   | caption | `Rem(0.85)`, about 11 | 600 for group headings, 400 otherwise, `TextMuted` | group headings ("Identities · 4"), window titles, tab labels, "Copied" |
 
-  Buttons use body or secondary size; a primary or destructive button is 500, a text button 500, others 400. The about
-  window's product name, 18 and 600, is the only other size. Nothing is 700.
+  Buttons use body or secondary size; a primary or destructive button is 500, a text button 500, others 400. Nothing is 700.
 - **Monospace.** Paths, aliases, folders, commands and key file names use `Font("monospace")` (SF Mono, Consolas,
   DejaVu Sans Mono), one step smaller than the text around them, since monospace reads larger: about 11.5 next to
   secondary text, 11 next to captions.
@@ -278,7 +278,7 @@ What Idset uses today:
 | Stale-path prompt | A card of its own above the no-match card: a 40 DIP header (color dot, "<name>'s folder is gone" / 「<name> 的路径已不在」, the name in 600, one line), two 28 DIP path rows under hairlines with no labels (the old path in `TextMuted`, then the new path after an arrow, monospace, one line, middle-truncated, full text in the tooltip), and a 36 DIP row with two text buttons at the right, "Update" in `Accent` and "Ignore" in `TextMuted`; their tooltips are "Change to This Path" and "Keep Old Path". The height is the same for any path. Card fill, no outline, no clear button. |
 | Finding rows | In a matched card, under the details, in a section of their own: a hairline above, `Space(1)` (4) above and below the rows. One 28 DIP row per identity-check finding, email first, then key, like a path row: padding `Space(3)` (12), a `Rem(1.1)` (about 14) glyph, the warning triangle in `Warning` or the error circle in `Danger`, gap `Space(1.5)` (6), and one line of `Rem(0.92)` (about 12) `Text`: "Commits have no author", "Commits use <email> (<name>)", "Commits use <email>", "Pushes use <path>" (「提交没有作者」「提交会署名为 <邮箱>（<身份>）」「提交会署名为 <邮箱>」「推送会用 <路径>」). A long email gives way before its "@", so the domain and the identity name stay; a key path is middle-truncated in monospace like any path. The row's tooltip says why, with the full value: above the row, 6 DIPs away, its start under the row's start, at most 240 DIPs wide. No buttons: fixes belong to the diagnostics. The card's outline is `Danger` when any finding is an error, else `Warning`. |
 | Connectivity dot | At the end of an identity row, after the folders: a 14 DIP slot holding a 6 DIP dot, `Success` when the last `ssh -T` passed, `Danger` when it failed, a 1.5 DIP `TextMuted` ring while the first check runs. Its tooltip and accessible name say it in words: "Connected · <platform> user <user>", "Check failed · <why>", "Checking the connection…". A row without an alias keeps the empty slot so the folders line up; before the first report there are no dots. |
-| Problem bar | Under the row of an identity whose check failed, inside the same list, indented to the name (48 DIPs: 12 + the 28 DIP badge + 8), 28 DIP line: the error circle in `Danger` (the globe in `TextMuted` for an HTTPS remote), one `Rem(0.92)` sentence (a missing key names its path in monospace, middle-truncated), the reason as its tooltip, and "Check Again" (the refresh icon button, disabled while the check runs). Below it, indented 20 more, at most one line of next step: "Unlock with Keychain" on macOS (an `Accent` text button); elsewhere, or after the unlock failed, the `ssh-add <path>` command with a copy button; "Copy Public Key" (a copy icon button) and "Open <platform>" for a rejected key; "Add Rewrite" for an HTTPS remote; "Generate Key" for a missing key, which opens the Keys pane of the settings window filled in for the identity. No hairline between the row and its bar. |
+| Problem bar | Under the row of an identity whose check failed, inside the same list, indented to the name (48 DIPs: 12 + the 28 DIP badge + 8), 28 DIP line: the error circle in `Danger` (the globe in `TextMuted` for an HTTPS remote), one `Rem(0.92)` sentence (a missing key names its path in monospace, middle-truncated), the reason as its tooltip, and "Check Again" (the refresh icon button, disabled while the check runs). Below it, indented past the glyph and its gap (`Rem(1.1)` + `Space(1.5)`, about 20, so it follows the font size), at most one line of next step: "Unlock with Keychain" on macOS (an `Accent` text button); elsewhere, or after the unlock failed, the `ssh-add <path>` command with a copy button; "Copy Public Key" (a copy icon button) and "Open <platform>" for a rejected key; "Add Rewrite" for an HTTPS remote; "Generate Key" for a missing key, which opens the Keys pane of the settings window filled in for the identity. No hairline between the row and its bar. |
 | ssh notice | When the checks find no `ssh`, one card above the drop zone replaces every bar and the summary: the danger-soft tint, radius 12, no outline, the error circle, "ssh not found" (600), "Check Again" over all identities, and one line in `fg2` on how to install it for the platform. |
 | Diagnostics summary | After the identity list, once a round of checks has finished. Nothing wrong: one muted line with a `Success` check mark, "Configuration OK". Otherwise a card (card fill, radius 12): a 32 DIP header, a button with `aria-expanded` (the worst glyph, "1 error · 2 warnings" in 600, a chevron), and when open one entry per problem under hairlines: the glyph, what is wrong, how to look into it in `TextMuted`, an optional action ("Copy Command" as a terminal icon button for NET001, "Regenerate" as an `Accent` text button for GIT001), and the code (NET001, SSH001, GIT001, GIT002) in monospace `Rem(0.85)` at the end. It opens by itself whenever its set of entries changes, and stays as the user left it otherwise. |
 | Undo bar | The last row of the result card, 36 DIPs high, hairline above: "Bound to <identity> ·" and an `Accent` "Undo" text button. A 2 DIP line on the bar's bottom edge, `Accent` at 45%, is as wide as the time left of the card's width, in fifths. |
@@ -652,12 +652,12 @@ translucent fills, hairlines and text; only dialogs have a shadow.
 
 Design: the About page of the [screens canvas](https://claude.ai/artifact/2cP14kKAaf6tajDXeJV555), every state. Behavior is in product.md, "关于窗口". 320×320, the hidden title bar ("About Idset") included, not resizable,
 minimizable or full-screen, on the `Popover` material; one column centered both ways in the space under the title
-bar, `Space(6)` at the sides and `Space(5)` kept free below.
+bar, `Space(6)` (24) at the sides and kept free below.
 
-- **Identity.** The product icon tile at 64 DIP (`Space(16)`), from `resources/icon.png`. Under it, 12 apart, "Idset" (18, 600, a level 1
+- **Identity.** The product icon tile at 64 DIP (`Space(16)`), from `resources/icon.png`. Under it, 12 apart, "Idset" (display, `Rem(1.4)`, about 18, 600, a level 1
   heading), then the muted, selectable "Version 0.1.0", then 12 below the copyright and the license on two muted
   11 lines.
-- **Actions.** 20 under the license, 8 apart and centered: "GitHub", a link in `Accent` (500, no fill) with the external
+- **Actions.** `Space(6)` (24) under the license, 8 apart and centered: "GitHub", a link in `Accent` (500, no fill) with the external
   icon, opens the repository in the browser; "Check for Updates…" is the primary button and opens the updater's own
   window.
 - **Cannot update.** Whether this copy can update itself is found out in the background; until then the primary
