@@ -3,6 +3,26 @@
 release-please writes each release's section from the titles of the pull requests merged since the last one
 (docs/release.md); do not edit it by hand.
 
+## [0.3.0](https://github.com/yangflow/idset/compare/v0.2.1...v0.3.0) (2026-11-07)
+
+
+### Added
+
+* **ui:** draw icon buttons and sidebar rows in the design system's shape ([#97](https://github.com/yangflow/idset/issues/97)) ([5b689bf](https://github.com/yangflow/idset/commit/5b689bf0b57f142d3e03573f3f11978126426467))
+* **ui:** generate the theme's tokens from design/tokens.json ([#91](https://github.com/yangflow/idset/issues/91)) ([c5a8fd5](https://github.com/yangflow/idset/commit/c5a8fd56c716f4b1b25c69a543edd68413be6c94))
+* **ui:** redesign the app and tray icon as a folder with a keyhole ([#81](https://github.com/yangflow/idset/issues/81)) ([a4ac4a7](https://github.com/yangflow/idset/commit/a4ac4a752e6416204f2e7bacf2cdae77f9c22f09))
+* **ui:** show the selected identity, tab and platform in a neutral fill ([#74](https://github.com/yangflow/idset/issues/74)) ([6d1e95f](https://github.com/yangflow/idset/commit/6d1e95f191e20265308e4d458c064edb9c404c4f))
+* **ui:** show where things come from and what happened with motion ([#94](https://github.com/yangflow/idset/issues/94)) ([68b2c36](https://github.com/yangflow/idset/commit/68b2c36eed42c2089c9520da6832bd9e7c76d440))
+* **ui:** space the about window on the design scale ([#85](https://github.com/yangflow/idset/issues/85)) ([87b1a11](https://github.com/yangflow/idset/commit/87b1a11584233e92b6c2642dc843a0b5ba35ebce))
+* **ui:** space the account window on the design scale ([#79](https://github.com/yangflow/idset/issues/79)) ([eb8cdb6](https://github.com/yangflow/idset/commit/eb8cdb6e7163a1d212b682dad054f33d651b15bf))
+* **ui:** space the panel on the design scale with larger icon buttons ([#77](https://github.com/yangflow/idset/issues/77)) ([e36f3fc](https://github.com/yangflow/idset/commit/e36f3fce4e73fb22b9cea9e71b614abb10e7267a))
+* **ui:** space the settings window and dialogs on the design scale ([#83](https://github.com/yangflow/idset/issues/83)) ([1c58b4d](https://github.com/yangflow/idset/commit/1c58b4d7ed56b28b31c20703e9be79144e731a43))
+
+
+### Fixed
+
+* **tray:** size the macOS menu bar icon like its neighbors ([#99](https://github.com/yangflow/idset/issues/99)) ([0df04d7](https://github.com/yangflow/idset/commit/0df04d765a7b0888d4ba7f25dd293a0e8961eabe))
+
 ## [0.2.1](https://github.com/yangflow/idset/compare/v0.2.0...v0.2.1) (2026-10-24)
 
 
