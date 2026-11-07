@@ -12,7 +12,7 @@ import (
 func (s *Screen) importPane(c *ui.Context) {
 	t := c.Theme()
 	if s.readOnly {
-		ui.Row(c).Gap(t.Space(theme.Space2)).Padding(t.Space(theme.Space3)).Radius(theme.RadiusCard).Background(theme.Of(c).DangerSoft).Children(func() {
+		theme.InsetCard(c, theme.Cluster(c, ui.Row(c))).AlignItems(ui.Start).Radius(theme.RadiusCard).Background(theme.Of(c).DangerSoft).Children(func() {
 			ui.Icon(c, icons.Warn).FontSize(t.Space(theme.IconS)).TextColor(t.Danger)
 			ui.Text(c, s.text.ImportReadOnly).Grow(1)
 		})
@@ -25,7 +25,7 @@ func (s *Screen) importPane(c *ui.Context) {
 			theme.Title.On(c, ui.Text(c, s.text.Scanning)).Role(ui.RoleHeading).Level(2)
 		}, s.text.ScanningSub, false)
 	case im.scanErr != "":
-		ui.Row(c).Gap(t.Space(theme.Space2)).Padding(t.Space(theme.Space3)).Radius(theme.RadiusCard).Background(theme.Of(c).DangerSoft).Children(func() {
+		theme.InsetCard(c, theme.Cluster(c, ui.Row(c))).AlignItems(ui.Start).Radius(theme.RadiusCard).Background(theme.Of(c).DangerSoft).Children(func() {
 			ui.Icon(c, icons.Warn).FontSize(t.Space(theme.IconS)).TextColor(t.Danger)
 			ui.Text(c, im.scanErr).Grow(1)
 		})
@@ -48,8 +48,8 @@ func (s *Screen) importPane(c *ui.Context) {
 // centered is an empty state: a heading over a muted line, with Scan Again under them when rescan is set.
 func (s *Screen) centered(c *ui.Context, head func(), body string, rescan bool) {
 	t := c.Theme()
-	ui.Column(c).Gap(t.Space(theme.Space1)).AlignItems(ui.Center).Padding(t.Space(theme.Space8), t.Space(theme.Space4), t.Space(theme.Space8), t.Space(theme.Space4)).Children(func() {
-		ui.Column(c).Gap(t.Space(theme.Space2)).AlignItems(ui.Center).Children(head)
+	theme.StackSnug(c, ui.Column(c)).AlignItems(ui.Center).Padding(t.Space(theme.Space8), t.Space(theme.Space4), t.Space(theme.Space8), t.Space(theme.Space4)).Children(func() {
+		theme.Stack(c, ui.Column(c)).AlignItems(ui.Center).Children(head)
 		ui.Text(c, body).TextColor(t.TextMuted).TextAlign(ui.Center).MaxWidth(t.Space(theme.Measure)).Wrap()
 		if rescan {
 			ui.Row(c).Padding(t.Space(theme.Space4), 0, 0, 0).Children(func() {
@@ -75,8 +75,7 @@ func (s *Screen) candidates(c *ui.Context) {
 			for i, cand := range im.cands {
 				r.next(c)
 				a := cand.Account
-				ui.Row(c.Key("cand-"+strconv.Itoa(i))).MinHeight(t.Space(theme.RowL)).Padding(t.Space(theme.Space1_5), t.Space(theme.Space3), t.Space(theme.Space1_5), t.Space(theme.Space3)).Gap(t.Space(theme.Space2)).
-					AlignItems(ui.Center).Children(func() {
+				theme.Cluster(c, ui.Row(c.Key("cand-"+strconv.Itoa(i)))).MinHeight(t.Space(theme.RowL)).Padding(t.Space(theme.Space1_5), t.Space(theme.Space3), t.Space(theme.Space1_5), t.Space(theme.Space3)).Children(func() {
 					ui.Checkbox(c, &im.checked[i], "").Label(a.Label).Disabled(im.busy)
 					ui.Column(c).Grow(1).Children(func() {
 						name := ui.Text(c, a.Label).SingleLine()
@@ -97,7 +96,7 @@ func (s *Screen) candidates(c *ui.Context) {
 					case cand.Exists:
 						theme.Secondary.On(c, ui.Text(c, s.text.Exists)).TextColor(t.TextMuted).SingleLine().Shrink(0)
 					case cand.Limited && im.checked[i]:
-						ui.Row(c).Gap(t.Space(theme.Space1)).AlignItems(ui.Center).Shrink(0).Children(func() {
+						theme.InlineTight(c, ui.Row(c)).Shrink(0).Children(func() {
 							ui.Icon(c, icons.Folder).FontSize(t.Space(theme.IconXs)).TextColor(t.TextMuted)
 							theme.Secondary.On(c, ui.Text(c, s.text.AsLimited)).TextColor(t.TextMuted).SingleLine()
 						})
@@ -115,7 +114,7 @@ func (s *Screen) candidates(c *ui.Context) {
 			}
 		})
 	})
-	ui.Row(c).Gap(t.Space(theme.Space2)).AlignItems(ui.Center).Children(func() {
+	theme.Cluster(c, ui.Row(c)).Children(func() {
 		if ghost(c, "rescan", s.text.Rescan, icons.Refresh).Disabled(im.busy).Clicked() {
 			s.scan()
 		}
@@ -134,7 +133,7 @@ func (s *Screen) candidates(c *ui.Context) {
 func (s *Screen) imported(c *ui.Context) {
 	t := c.Theme()
 	im := &s.imports
-	ui.Row(c).Gap(t.Space(theme.Space2)).AlignItems(ui.Center).Children(func() {
+	theme.Cluster(c, ui.Row(c)).Children(func() {
 		ui.Icon(c, icons.Check).FontSize(t.Space(theme.Icon)).TextColor(t.Accent)
 		theme.Title.On(c, ui.Text(c, s.doneTitle(len(im.added)))).Role(ui.RoleHeading).Level(2).SingleLine()
 	})
@@ -153,7 +152,7 @@ func (s *Screen) imported(c *ui.Context) {
 		}
 		s.note(c, icons.Check, t.Accent, t.TextMuted, s.text.DoneNote)
 	})
-	ui.Row(c).Gap(t.Space(theme.Space2)).AlignItems(ui.Center).Children(func() {
+	theme.Cluster(c, ui.Row(c)).Children(func() {
 		if ghost(c, "rescan", s.text.Rescan, icons.Refresh).Clicked() {
 			s.scan()
 		}

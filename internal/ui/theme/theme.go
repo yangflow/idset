@@ -3,7 +3,7 @@
 // design/tokens.json.
 package theme
 
-//go:generate go run ./gen ../../../design/tokens.json tokens_gen.go
+//go:generate go run ./gen ../../../design/tokens.json ../../../design/layout.json tokens_gen.go
 
 import (
 	"github.com/egoist/mygo/ui"

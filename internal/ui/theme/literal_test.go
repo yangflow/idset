@@ -16,8 +16,12 @@ var literal = regexp.MustCompile(`\.(Space|Radius|Opacity)\(\s*[0-9.]+\s*[),]`)
 // An icon's size is a token, FontSize(t.Space(theme.Icon...)), so only that form of FontSize passes.
 var typeface = regexp.MustCompile(`\.(Font|FontWeight|LineHeight|LetterSpacing)\(|\.FontSize\((?:[^t]|t[^.]|t\.[^S])`)
 
+// gap is spacing between children set by hand instead of through a layout pattern, theme.Stack(c, ui.Column(c)).
+var gap = regexp.MustCompile(`\.Gap\(`)
+
 // TestNoLiterals keeps the screens and the windows on the tokens: every size, radius and opacity is a name from
-// tokens_gen.go, and all text goes through a type Style, so design/tokens.json stays the one source.
+// tokens_gen.go, all text goes through a type Style and every gap comes from a layout pattern, so design/tokens.json
+// and design/layout.json stay the one source.
 func TestNoLiterals(t *testing.T) {
 	var files []string
 	for _, pattern := range []string{"../*/*.go", "../../../*.go"} {
@@ -50,6 +54,9 @@ func TestNoLiterals(t *testing.T) {
 			}
 			if m := typeface.FindString(line); m != "" {
 				t.Errorf("%s:%d: %s: use a type style, theme.Body.On(c, e)", filepath.ToSlash(f), i+1, m)
+			}
+			if gap.MatchString(line) {
+				t.Errorf("%s:%d: Gap: use a layout from design/layout.json, theme.Inline(c, ui.Row(c))", filepath.ToSlash(f), i+1)
 			}
 		}
 	}

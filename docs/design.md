@@ -92,17 +92,26 @@ Layout uses flexbox in device-independent pixels (DIPs); see
   `t.Space(theme.Control)`, so they follow it; a sum of tokens is a size too. Spacing takes the eight steps of
   `tokens.json` (0.5, 1, 1.5, 2, 3, 4, 6, 8) and nothing in between; a fixed size (a 10 DIP dot, a 22 DIP glyph) may
   be a fraction.
-- **Tokens in code.** `internal/ui/theme/tokens_gen.go` is generated from `design/tokens.json` by
-  `go generate ./internal/ui/theme`: spacing and sizes in steps of the unit, window sizes and radii in DIPs, opacities
-  and durations. A screen writes no number of its own for a size, radius or opacity: a test fails on `t.Space(3)`,
+- **Tokens in code.** `internal/ui/theme/tokens_gen.go` is generated from `design/tokens.json` and
+  `design/layout.json` by `go generate ./internal/ui/theme`: spacing and sizes in steps of the unit, window sizes and
+  radii in DIPs, opacities, durations, type styles and layout patterns. A screen writes no number of its own for a size, radius or opacity: a test fails on `t.Space(3)`,
   `Radius(12)` or `Opacity(0.5)`, or on text that sets its own size or weight instead of a type style, and another
   fails when the generated file is stale. A value the screens need and `tokens.json` lacks is added there first, then
   generated. Line widths (borders, hairlines, glyph strokes) are not tokens in code yet.
 - **Scale.** Prefer whole multiples of the unit: 1 (4) inside a control row, 2 (8) between related controls and
   between buttons, 3 (12) between blocks of the panel, 4 (16) for the panel's outer padding. Larger gaps need a
   reason, for example the idle drop zone.
-- **Structure from containers.** `Column` and `Row` with `Gap` and `Padding`; `Grow(1)` and `Spacer` for free space;
-  `Grid` for forms and aligned tables of controls. Prefer `Gap` to margins on individual children.
+- **Structure from named layouts.** Every row, stack and inset is a pattern of
+  [layout.json](../design/layout.json), generated into `tokens_gen.go` as a function that gives an element its
+  direction, alignment, gap and padding: `theme.Inline(c, ui.Row(c))`, `theme.Stack(c, ui.Column(c))`,
+  `theme.InsetCard(c, e)`, `theme.Center(c, ui.Column(c))`. Rows are `inline` (1.5), `inline-tight` (1), `cluster`
+  (2, never wrapping), `item-row` (2, padding 0 3), `field-row` (3, padding 1 3) and `bar` (`theme.BarRow`, since
+  `Bar` is its height); stacks are `stack-tight` (0.5), `stack-snug` (1), `stack` (2), `stack-block` (3),
+  `stack-section` (4) and `stack-page` (6); insets are `inset-card` (3), `inset-dialog` (4) and `inset-pane` (6). A
+  row's children sit on its center line; a row whose content can run to several lines adds `AlignItems(ui.Start)`.
+  A screen may override a pattern's padding for an indent; it never sets a gap itself, and a test fails on `Gap(` in
+  a screen. A gap no pattern has is added to `layout.json` first, then generated. `Grow(1)` and `Spacer` take the
+  free space; prefer a pattern's gap to margins on individual children.
 - **Sizes are bounds.** Let content reflow; do not fix a width a translation can overflow. Use `MinWidth`, `MaxWidth`
   and `Grow` instead of fixed widths, except for square symbol buttons, badges and the label column of the result
   card.

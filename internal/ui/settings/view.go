@@ -29,7 +29,7 @@ func (s *Screen) View(c *ui.Context) {
 		s.tabBar(c)
 		ui.Divider(c)
 		ui.Scroll(c).Grow(1).AlignItems(ui.Center).Padding(t.Space(theme.Space4), t.Space(theme.Space6), t.Space(theme.Space6), t.Space(theme.Space6)).Children(func() {
-			ui.Column(c).FillWidth().MaxWidth(t.Space(theme.PaneMax)).Gap(t.Space(theme.Space6)).Children(func() {
+			theme.StackPage(c, ui.Column(c)).FillWidth().MaxWidth(t.Space(theme.PaneMax)).Children(func() {
 				switch Pane(s.tab + 1) {
 				case General:
 					s.general(c)
@@ -80,7 +80,7 @@ func (s *Screen) tabBar(c *ui.Context) {
 	}{{s.text.General, icons.Sliders}, {s.text.Keys, icons.Key}, {s.text.Imports, icons.Import}, {s.text.Backups, icons.Clock}, {s.text.Config, icons.Doc}}
 	ui.Row(c).Justify(ui.Center).Padding(t.Space(theme.Space1), t.Space(theme.Space2), t.Space(theme.Space1_5), t.Space(theme.Space2)).Children(func() {
 		parts := ui.TabsBase(c, &s.tab, len(tabs))
-		parts.List.Gap(t.Space(theme.Space1)).Label(s.text.Tabs).Children(func() {
+		theme.InlineTight(c, parts.List).Label(s.text.Tabs).Children(func() {
 			for i, tab := range tabs {
 				el := parts.Tab(i).MinWidth(t.Space(theme.TabW)).Height(t.Space(theme.TabH)).PaddingX(t.Space(theme.Space1)).Radius(theme.RadiusControl).AlignItems(ui.Center).Justify(ui.Center).Label(tab.name)
 				color := t.TextMuted
@@ -92,7 +92,7 @@ func (s *Screen) tabBar(c *ui.Context) {
 					el.Background(t.SurfaceHover)
 				}
 				el.Children(func() {
-					ui.Column(c).Gap(t.Space(theme.Space1)).AlignItems(ui.Center).Children(func() {
+					theme.StackSnug(c, ui.Column(c)).AlignItems(ui.Center).Children(func() {
 						ui.Icon(c, tab.icon).FontSize(t.Space(theme.IconM)).TextColor(color)
 						theme.Caption.On(c, ui.Text(c, tab.name)).TextColor(color).SingleLine().Shrink(0)
 					})
@@ -117,7 +117,7 @@ func (r *rows) next(c *ui.Context) {
 // section is a titled group in the card fill; its notes follow it.
 func (s *Screen) section(c *ui.Context, title string, body func(r *rows), after func()) {
 	t := c.Theme()
-	ui.Column(c).Gap(t.Space(theme.Space1)).Children(func() {
+	theme.StackSnug(c, ui.Column(c)).Children(func() {
 		if title != "" {
 			theme.Caption.On(c, ui.Text(c, title)).TextColor(t.TextMuted).Role(ui.RoleHeading).Level(2).PaddingX(t.Space(theme.Space3))
 		}
@@ -131,7 +131,7 @@ func (s *Screen) section(c *ui.Context, title string, body func(r *rows), after 
 // note is a line of 12 DIP text under a group with a 12 DIP icon in front: a warning, a failure or a success.
 func (s *Screen) note(c *ui.Context, icon *ui.SVG, iconColor, textColor ui.Color, text string) {
 	t := c.Theme()
-	ui.Row(c).Gap(t.Space(theme.Space1)).PaddingX(t.Space(theme.Space3)).Children(func() {
+	theme.InlineTight(c, ui.Row(c)).PaddingX(t.Space(theme.Space3)).Children(func() {
 		ui.Icon(c, icon).FontSize(t.Space(theme.IconXs)).TextColor(iconColor)
 		theme.Secondary.On(c, ui.Text(c, text)).TextColor(textColor).Grow(1)
 	})
@@ -156,7 +156,7 @@ func (r *rows) line(c *ui.Context, content func()) {
 func (r *rows) lineAt(c *ui.Context, left float32, content func()) {
 	r.next(c)
 	t := c.Theme()
-	ui.Row(c).MinHeight(t.Space(theme.Row)).Padding(t.Space(theme.Space1), t.Space(theme.Space3), t.Space(theme.Space1), left).Gap(t.Space(theme.Space2)).AlignItems(ui.Center).Children(content)
+	theme.Cluster(c, ui.Row(c)).MinHeight(t.Space(theme.Row)).Padding(t.Space(theme.Space1), t.Space(theme.Space3), t.Space(theme.Space1), left).Children(content)
 }
 
 func (s *Screen) general(c *ui.Context) {
@@ -168,8 +168,7 @@ func (s *Screen) general(c *ui.Context) {
 			r.next(c)
 			on := s.language == choice.value
 			// A radio, not Selected: Selected would paint the row in the accent color; the design marks the choice with a check.
-			row := ui.RadioBase(c.Key("lang-"+choice.value), &chosen, choice.value).Label(choice.name).MinHeight(t.Space(theme.Row)).Padding(t.Space(theme.Space1), t.Space(theme.Space3), t.Space(theme.Space1), t.Space(theme.Space3)).
-				Gap(t.Space(theme.Space2)).AlignItems(ui.Center)
+			row := theme.ItemRow(c, ui.RadioBase(c.Key("lang-"+choice.value), &chosen, choice.value)).Label(choice.name).MinHeight(t.Space(theme.Row)).Padding(t.Space(theme.Space1), t.Space(theme.Space3), t.Space(theme.Space1), t.Space(theme.Space3))
 			if row.Hovered() {
 				row.Background(t.SurfaceHover)
 			}
@@ -245,21 +244,21 @@ func dot(c *ui.Context, color string) {
 func (s *Screen) backupsPane(c *ui.Context) {
 	t := c.Theme()
 	if s.readOnly {
-		ui.Row(c).Gap(t.Space(theme.Space2)).Padding(t.Space(theme.Space3)).Radius(theme.RadiusCard).Background(theme.Of(c).DangerSoft).Children(func() {
+		theme.InsetCard(c, theme.Cluster(c, ui.Row(c))).AlignItems(ui.Start).Radius(theme.RadiusCard).Background(theme.Of(c).DangerSoft).Children(func() {
 			ui.Icon(c, icons.Warn).FontSize(t.Space(theme.IconS)).TextColor(t.Danger)
 			ui.Text(c, s.text.ReadOnlyBanner).Grow(1)
 		})
 	}
 	switch {
 	case !s.loaded:
-		ui.Row(c).Gap(t.Space(theme.Space2)).Justify(ui.Center).Padding(t.Space(theme.Space6)).Children(func() {
+		theme.InsetPane(c, theme.Cluster(c, ui.Row(c))).Justify(ui.Center).Children(func() {
 			ui.Spinner(c)
 			ui.Text(c, s.text.Loading).TextColor(t.TextMuted)
 		})
 	case s.listErr != "":
 		s.warn(c, s.listErr)
 	case len(s.backups) == 0:
-		ui.Column(c).Gap(t.Space(theme.Space2)).AlignItems(ui.Center).Padding(t.Space(theme.Space8), t.Space(theme.Space4), t.Space(theme.Space8), t.Space(theme.Space4)).Children(func() {
+		theme.Stack(c, ui.Column(c)).AlignItems(ui.Center).Padding(t.Space(theme.Space8), t.Space(theme.Space4), t.Space(theme.Space8), t.Space(theme.Space4)).Children(func() {
 			theme.Title.On(c, ui.Text(c, s.text.EmptyTitle)).Role(ui.RoleHeading).Level(2)
 			ui.Text(c, s.text.EmptyBody).TextColor(t.TextMuted).TextAlign(ui.Center).Wrap()
 		})
@@ -285,7 +284,7 @@ func (s *Screen) backupRow(c *ui.Context, b Backup) {
 	open := s.expanded[b.Path] && !unreadable
 	ui.Column(c).Children(func() {
 		other := s.restoring != "" && !busy
-		row := ui.Row(c).MinHeight(t.Space(theme.RowL)).Padding(t.Space(theme.Space1_5), t.Space(theme.Space3), t.Space(theme.Space1_5), t.Space(theme.Space1)).Gap(t.Space(theme.Space1)).AlignItems(ui.Center)
+		row := theme.InlineTight(c, ui.Row(c)).MinHeight(t.Space(theme.RowL)).Padding(t.Space(theme.Space1_5), t.Space(theme.Space3), t.Space(theme.Space1_5), t.Space(theme.Space1))
 		if other {
 			row.Opacity(theme.OpacityFaded)
 		}
@@ -342,7 +341,7 @@ func (s *Screen) backupRow(c *ui.Context, b Backup) {
 // identityRow is an identity inside a backup: read-only, with a 24 DIP slot at the end under the delete column.
 func (s *Screen) identityRow(c *ui.Context, a account.Account) {
 	t := c.Theme()
-	ui.Row(c.Key("id-"+a.ID)).MinHeight(t.Space(theme.Row)).Padding(0, t.Space(theme.Space3), 0, t.Space(theme.Space1+theme.ControlS+theme.Space1)).Gap(t.Space(theme.Space2)).AlignItems(ui.Center).Children(func() {
+	theme.Cluster(c, ui.Row(c.Key("id-"+a.ID))).MinHeight(t.Space(theme.Row)).Padding(0, t.Space(theme.Space3), 0, t.Space(theme.Space1+theme.ControlS+theme.Space1)).Children(func() {
 		dot(c, a.Color)
 		ui.Text(c, s.label(a)).SingleLine().Shrink(0)
 		theme.Secondary.On(c, ui.Text(c, a.GitUserEmail)).TextColor(t.TextMuted).Grow(1).Wrap()
@@ -352,7 +351,7 @@ func (s *Screen) identityRow(c *ui.Context, a account.Account) {
 			})
 			return
 		}
-		ui.Row(c).Size(t.Space(theme.ControlS), t.Space(theme.ControlS)).Justify(ui.Center).AlignItems(ui.Center).Shrink(0).Children(func() {
+		theme.Center(c, ui.Column(c)).Size(t.Space(theme.ControlS), t.Space(theme.ControlS)).Shrink(0).Children(func() {
 			ui.Icon(c, icons.Folder).FontSize(t.Space(theme.IconS)).TextColor(t.TextMuted).Label(s.text.Scoped)
 		})
 	})
@@ -371,9 +370,9 @@ func (s *Screen) restoreDialog(c *ui.Context) ui.Element {
 		theme.BodyStrong.On(c, ui.Text(c, title)).Role(ui.RoleHeading).Level(2).Wrap()
 		ui.Text(c, s.text.ConfirmBody).Wrap()
 		ui.Divider(c)
-		ui.Column(c).Gap(t.Space(theme.Space1_5)).Children(func() {
+		theme.StackSnug(c, ui.Column(c)).Children(func() {
 			for _, a := range b.Accounts {
-				ui.Row(c).Gap(t.Space(theme.Space2)).AlignItems(ui.Center).Children(func() {
+				theme.Cluster(c, ui.Row(c)).Children(func() {
 					dot(c, a.Color)
 					ui.Text(c, s.label(a)).SingleLine().Shrink(0)
 					theme.Secondary.On(c, ui.Text(c, a.GitUserEmail)).TextColor(t.TextMuted).Grow(1).Wrap()
@@ -382,7 +381,7 @@ func (s *Screen) restoreDialog(c *ui.Context) ui.Element {
 		})
 		ui.Divider(c)
 		theme.Secondary.On(c, ui.Text(c, s.text.ConfirmNote)).TextColor(t.TextMuted).Wrap()
-		ui.Row(c).Gap(t.Space(theme.Space2)).Margin(t.Space(theme.Space1_5), 0, 0, 0).Children(func() {
+		theme.Cluster(c, ui.Row(c)).Margin(t.Space(theme.Space1_5), 0, 0, 0).Children(func() {
 			if dialogButton(ui.Button(c.Key("confirm-cancel"), s.text.Cancel), t).AutoFocus().Clicked() {
 				s.confirmOpen = false
 			}
@@ -461,9 +460,9 @@ func (s *Screen) removeDialog(c *ui.Context) ui.Element {
 		ui.Text(c, s.text.RemoveBody).Wrap()
 		// item is a line of a box: a 12 DIP icon, then the text, whose path (mono) sits between the two plain parts.
 		item := func(icon *ui.SVG, color ui.Color, pre, mono, post string) {
-			ui.Row(c).Gap(t.Space(theme.Space2)).AlignItems(ui.Center).Children(func() {
+			theme.Cluster(c, ui.Row(c)).Children(func() {
 				ui.Icon(c, icon).FontSize(t.Space(theme.IconXs)).TextColor(color)
-				ui.Row(c).Gap(t.Space(theme.Space1)).AlignItems(ui.Center).Children(func() {
+				theme.InlineTight(c, ui.Row(c)).Children(func() {
 					for _, part := range []struct {
 						text string
 						mono bool
@@ -480,7 +479,7 @@ func (s *Screen) removeDialog(c *ui.Context) ui.Element {
 			})
 		}
 		box := func(title string, items func()) {
-			theme.Card(c, ui.Column(c)).Gap(t.Space(theme.Space1_5)).Padding(t.Space(theme.Space3)).Children(func() {
+			theme.InsetCard(c, theme.StackSnug(c, theme.Card(c, ui.Column(c)))).Children(func() {
 				theme.Caption.On(c, ui.Text(c, title)).TextColor(t.TextMuted)
 				items()
 			})
@@ -495,7 +494,7 @@ func (s *Screen) removeDialog(c *ui.Context) ui.Element {
 			item(icons.Check, t.TextMuted, s.text.Kept2Pre, "~/.config/idset/", s.text.Kept2Post)
 			item(icons.Check, t.TextMuted, s.text.Kept3, "", "")
 		})
-		ui.Row(c).Gap(t.Space(theme.Space2)).Margin(t.Space(theme.Space1_5), 0, 0, 0).Children(func() {
+		theme.Cluster(c, ui.Row(c)).Margin(t.Space(theme.Space1_5), 0, 0, 0).Children(func() {
 			if dialogButton(ui.Button(c.Key("remove-cancel"), s.text.Cancel), t).AutoFocus().Clicked() {
 				s.removeOpen = false
 			}
