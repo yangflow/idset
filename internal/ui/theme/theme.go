@@ -1,5 +1,5 @@
 // Package theme is Idset's glass theme: the ui.Theme every window uses, light and dark, and the fills that are not
-// theme roles. The values are those of design/tokens.md.
+// theme roles. The values are those of design/tokens.json, except the ones its audit lists as pending.
 package theme
 
 import (
@@ -8,7 +8,7 @@ import (
 	"github.com/yangflow/idset/internal/ui/icons"
 )
 
-// Fills are the colors of design/tokens.md that ui.Theme has no role for.
+// Fills are the colors of design/tokens.json that ui.Theme has no role for.
 type Fills struct {
 	// Solid fills a window where its material does not show; SolidDetail is the accounts detail pane there.
 	Solid, SolidDetail ui.Color

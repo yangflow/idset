@@ -721,7 +721,7 @@ func TestDetailScrollsUnderAFixedFooterAtTheDefaultSize(t *testing.T) {
 	if got, _ := r.tt.Find("Revert"); got != revert {
 		t.Errorf("the footer stays: %v %v", got, revert)
 	}
-	// The header is the first thing in the scrolling content, so it scrolls away with it, as in the mockup.
+	// The header is the first thing in the scrolling content, so it scrolls away with it, as in the design.
 	if got, ok := r.tt.Find("Identity"); ok && got.Y >= header.Y {
 		t.Errorf("the header scrolls with the content: %v %v", got, header)
 	}

@@ -14,7 +14,7 @@ import (
 )
 
 // textButton is a borderless button in the given color. name is its accessible name and tooltip when it says more
-// than the visible text. Sizes come from the mockup: 5 x 4 DIPs of padding at the default spacing.
+// than the visible text. Sizes come from the design: 5 x 4 DIPs of padding at the default spacing.
 func (s *Screen) textButton(c *ui.Context, key, text, name string, icon *ui.SVG, color ui.Color) ui.Element {
 	t := c.Theme()
 	if name == "" {
@@ -443,7 +443,7 @@ func (s *Screen) findingLine(c *ui.Context, d said) {
 	})
 }
 
-// tipAbove is the tooltip of anchor placed as the mockup has it: above it, 6 DIPs away, its start under the anchor's
+// tipAbove is the tooltip of anchor placed as the design has it: above it, 6 DIPs away, its start under the anchor's
 // start, at most 240 DIPs wide, which Element.Tooltip does not offer (it goes by the pointer, below it, 320 wide).
 func tipAbove(c *ui.Context, anchor ui.Element, text string) {
 	tipPlaced(c, anchor, text, false)

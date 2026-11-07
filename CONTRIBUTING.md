@@ -41,9 +41,9 @@ and `go test ./...` on Windows.
 
 ## UI changes
 
-A UI change starts from the mockup in [design/](design/README.md) and the design language in
-[docs/design.md](docs/design.md); the maintainer confirms the visual direction before UI code is written. Mockup,
-design notes and code go in the same pull request. Use only MyGo native controls and
+A UI change starts from the screens canvas and the design system linked from [design/](design/README.md), and the
+design language in [docs/design.md](docs/design.md); the maintainer confirms the visual direction before UI code is
+written. Tokens, design notes and code go in the same pull request. Use only MyGo native controls and
 theme colors.
 
 Put screenshots in the pull request body (light and dark, one per state), not in the repository.

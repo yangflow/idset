@@ -13,8 +13,29 @@ check the pages again and update the links and this document together.
 The panel (`internal/ui/panel/`) is the reference the values below call "the panel". The accounts, settings and
 about windows follow it.
 
-Related files: [design/README.md](../design/README.md) (mockups and how a UI change is made) and
-[design/tokens.md](../design/tokens.md) (spacing, size and color values in one table).
+Related files: [design/README.md](../design/README.md) (the design artifacts and how a UI change is made),
+[design/tokens.json](../design/tokens.json) (every value, named by layer, with the contrast audit) and
+[design/layout.json](../design/layout.json) (layout patterns and windows).
+
+## The system
+
+The tokens are named by layer, the way the [Idset design system](https://claude.ai/artifact/NFxWM1yWYqsYye5kxtNy7r)
+shows them: a ground (the material or `solid`), regions (`detail`), surfaces (`card`, `field`, `menu`, `raised`), one
+neutral state ladder (`fill`, `hover`, `selected`, `pressed`), the roles (`accent` and what sits on it), four text
+steps (`fg`, `fg2`, `muted`, `faint`), meaning (`danger`, `warning`, `success`), lines and rims, and the identity
+colors. Three rules hold the system together:
+
+- **One mint, for actions only.** `accent` marks what you can do: the primary button, a text button, focus, a switch
+  that is on. It never marks selection and never meaning.
+- **Selection is neutral.** A selected row, menu entry or tab takes `selected` and keeps its text colors; the identity
+  badge keeps its own color. The identity colors are the only other hues, always beside a name.
+- **Fixed scales.** Spacing is 2, 4, 6, 8, 12, 16, 24, 32; radius follows role (8 fields and rows, 12 cards, 16
+  windows, capsules for buttons); type is a role scale (`title`, `emphasis`, `body`, `secondary`, `caption`, `small`,
+  `mono`).
+
+The code reaches these values screen by screen. Until a screen moves, the measurements below describe the code as it
+is, and `audit.pending` in `tokens.json` lists each value that still differs; a screen's pull request takes its entries
+off that list.
 
 ## Contents
 
@@ -58,8 +79,8 @@ Related files: [design/README.md](../design/README.md) (mockups and how a UI cha
 - **The UI thread draws.** A frame is built from in-memory state. No disk, network or subprocess work in a view,
   including reading `accounts.json` and running `git`; start that work in the background and change the state back
   on the UI thread (see [Views](https://github.com/egoist/mygo/blob/v0.5.5/docs/ui/views.md)).
-- **Spec before code.** Every screen is specified in its mockup in `design/` and in this document before it is
-  written. Only `design/` and this document count as the design reference for Idset.
+- **Spec before code.** Every screen is specified on the [screens canvas](https://claude.ai/artifact/2cP14kKAaf6tajDXeJV555) and in this document before it is
+  written. Only the design artifacts, `design/` and this document count as the design reference for Idset.
 
 ## Layout and spacing
 
@@ -90,13 +111,13 @@ Layout uses flexbox in device-independent pixels (DIPs); see
   a divider; the content is the point, and the chrome takes 84 DIPs of the 480. Content padding
   `Space(1)` (4) on top and `Space(3)` (12) at the sides and below, gap between blocks `Space(2.5)` (10). Cards, the
   identity list and the drop zone have a 12 DIP corner radius, windows and dialogs 16. The full measurements are in [The panel](#the-panel) and
-  [tokens.md](../design/tokens.md).
+  [tokens.json](../design/tokens.json).
 
 ## Color and dark mode
 
 Idset draws on the system's material and colors it with its own glass theme in commit mint. Every window sets the
 theme as a copy of the default (`t := *c.Theme()`, then its colors, `c.SetTheme(&t)`), so spacing, font size and text
-scale still follow the desktop; the values are in [tokens.md](../design/tokens.md). See
+scale still follow the desktop; the values are in [tokens.json](../design/tokens.json). See
 [Styling and themes](https://github.com/egoist/mygo/blob/v0.5.5/docs/ui/styling.md) and
 [Vibrancy](https://github.com/egoist/mygo/blob/v0.5.5/docs/ui/windows.md#vibrancy).
 
@@ -158,8 +179,8 @@ scale still follow the desktop; the values are in [tokens.md](../design/tokens.m
   what MyGo's default does: `Border` and `TextMuted` move towards `Text`, and the focus ring is opaque.
 - **Status.** Color supplements a message; the message states the status in words. A warning or danger outline on a
   result card always comes with the sentence that explains it.
-- **Mockups.** Mockups in `design/screens/` simulate the material with a blur over a drawn desktop and show the solid
-  fallback with `?material=solid`; the app running on a real device is what counts.
+- **Designs.** The screens canvas simulates the material with a blur over a drawn desktop; the app running on a real
+  device is what counts.
 
 ## Typography
 
@@ -346,8 +367,8 @@ Overlays share focus and Escape behavior; see
 
 ## The panel
 
-Mockup: [design/screens/panel.html](../design/screens/panel.html), and both appearances side by side in
-[design/screens/panel-appearance.html](../design/screens/panel-appearance.html).
+Design: the Panel page of the [screens canvas](https://claude.ai/artifact/2cP14kKAaf6tajDXeJV555), every state, and both appearances side by side in its
+"light and dark" board.
 
 From top to bottom: the title row ("Idset", `Rem(1.15)` / 600, a level 1 heading, and the Settings icon
 button at the right; no close button: the tray icon and Escape hide the panel), the content, and the footer. The title
@@ -398,9 +419,9 @@ The result card leads with the answer, padding `Space(3)` (12), radius 12, card 
   tooltip), with a 1 DIP inner `Danger` outline.
 - Identity check (docs/product.md): when the repository's own `user.email` or `core.sshCommand` disagrees with the
   matched identity, the finding rows follow the muted line inside the same card, and the outline takes the worst
-  severity. Without findings the card is exactly the plain matched card. Mockup states: no email, another identity's
-  email, an email no identity has, another key, and two findings with long values; `&tip=finding` pins the first
-  row's tooltip.
+  severity. Without findings the card is exactly the plain matched card. Design states: no email, another identity's
+  email, an email no identity has, another key, and two findings with long values.
+
 - Remote and clone (docs/product.md, "Change-remote command" and "Clone helper"). The matched card is read from top
   to bottom as: who and details, what is wrong, what to do next. In that order: the details, the finding rows, the
   HTTPS row, the clone helper. The HTTPS row is the last row of the same block as the findings (one hairline, same
@@ -422,10 +443,9 @@ The result card leads with the answer, padding `Space(3)` (12), radius 12, card 
     not an error: an empty or half-typed input is not a mistake. The input's tooltip lists what it accepts. After
     a copy: check glyph and "Copied" left of the button for 1.2 seconds, the output stays. The input is prefilled
     with the repository's `owner/repo`, else the remembered prefix ("acme/"), else shows the placeholder "owner/repo".
-  - Mockup states: `https`, `https-copied`, `https-check` (finding and HTTPS row stacked), `clone`, `clone-long`,
-    `clone-bad`, `clone-copied`, `row-open`; `&tip=cmd` pins the copy-command tooltip, `&tip=copyclone` and
-    `&tip=clone` those of the helper's button and an identity row's disclosure button.
-- Binding. Mockup states: no match, rebinding to a global identity (the confirmation), matched (by a parent folder, or by the folder itself
+  - Design states: `https`, `https-copied`, `https-check` (finding and HTTPS row stacked), `clone`, `clone-long`,
+    `clone-bad`, `clone-copied`, `row-open`.
+- Binding. Design states: no match, rebinding to a global identity (the confirmation), matched (by a parent folder, or by the folder itself
   with "Unbind"), the rebind menu, already covered, overlap, the undo bar, and after undo.
   - No match: the sentence, a "Bind to" heading (`Rem(0.92)`, 600, `TextMuted`) and one bind row per identity, then a
     last 40 DIP row with "New Identity" (an `Accent` text button with a plus; "New Identity for This Folder" is its
@@ -449,7 +469,7 @@ The result card leads with the answer, padding `Space(3)` (12), radius 12, card 
     its own sits above the no-match card, the same way the overlap card sits above the matched one. The header is
     one line and the paths are middle-truncated, so the card's height never changes. The no-match card below is
     unchanged, so the bind list still works; in its bind rows the middle of the first folder gives way to an
-    ellipsis and the rest stays: "~/…/payments-gateway/". Mockup states: rename, move (a long old path), after "Update" and after
+    ellipsis and the rest stays: "~/…/payments-gateway/". Design states: rename, move (a long old path), after "Update" and after
     "Ignore".
     - "Update" (tooltip "Use New Path"): the card is gone and the folder matches, so the matched card shows with "Updated" next
       to the copy button for 1.2 seconds, like "Copied". There is no undo bar: only bind, rebind and "Use only" have
@@ -489,13 +509,12 @@ replaces it. Both open the accounts window on a new draft. Under that button, "I
 `Accent` text button that opens the settings window on Import.
 
 Planned (product.md): the expand arrow and the HTTPS row and clone
-helper are drawn in the mockup and shown once built (issue 26). Bind, unbind, rebind, "Use only" and undo on result
-cards are built as the mockup shows.
+helper are drawn on the screens canvas and shown once built (issue 26). Bind, unbind, rebind, "Use only" and undo on result
+cards are built as the canvas shows.
 
 ## The accounts window
 
-Mockup: [design/screens/accounts.html](../design/screens/accounts.html), every state in light and dark and in both
-languages. Behavior is in product.md, "账户窗口" and "删除确认". The model is a native grouped-settings window
+Design: the Accounts page of the [screens canvas](https://claude.ai/artifact/2cP14kKAaf6tajDXeJV555), every state. Behavior is in product.md, "账户窗口" and "删除确认". The model is a native grouped-settings window
 (System Settings, Mail accounts): few outlines, one hairline between rows, hierarchy from position and the muted
 color rather than from boxes. Everything is a material, a translucent fill, a hairline or text; only dialogs have a
 shadow.
@@ -559,8 +578,7 @@ toolbar: below it, a source list and a detail pane.
 
 ## The settings window
 
-Mockup: [design/screens/settings.html](../design/screens/settings.html), every state in light and dark and in both
-languages. Behavior is in product.md, "设置窗口". 720×480, a hidden title bar with the title drawn by `theme.TitleBar` ("Idset · Settings"), on the `Popover` material:
+Design: the Settings page of the [screens canvas](https://claude.ai/artifact/2cP14kKAaf6tajDXeJV555), every state. Behavior is in product.md, "设置窗口". 720×480, a hidden title bar with the title drawn by `theme.TitleBar` ("Idset · Settings"), on the `Popover` material:
 translucent fills, hairlines and text; only dialogs have a shadow.
 
 - **Tabs.** A tab bar along the top, under the title bar, on the material, with a 0.5 DIP hairline under it. Five tabs centered as a group, each an icon over a label: General, Keys, Import, Backups, Configuration (通用 /
@@ -630,8 +648,7 @@ translucent fills, hairlines and text; only dialogs have a shadow.
 
 ## The about window
 
-Mockup: [design/screens/about.html](../design/screens/about.html), every state in light and dark and in both
-languages. Behavior is in product.md, "关于窗口". 320×320, the hidden title bar ("About Idset") included, not resizable,
+Design: the About page of the [screens canvas](https://claude.ai/artifact/2cP14kKAaf6tajDXeJV555), every state. Behavior is in product.md, "关于窗口". 320×320, the hidden title bar ("About Idset") included, not resizable,
 minimizable or full-screen, on the `Popover` material; one column centered both ways in the space under the title
 bar, `Space(6)` at the sides and `Space(5)` kept free below.
 
@@ -660,7 +677,7 @@ bar, `Space(6)` at the sides and `Space(5)` kept free below.
 - **Without a tray** (Linux without AppIndicator), the panel is an ordinary window with the system title bar and the
   same content; Escape does not hide it, and closing it quits.
 - **Other windows** (accounts 760×520, settings 720×480, about 320×320) hide the title bar
-  (`TitleBarStyle: mygo.TitleBarHidden`) so the material runs to the top edge, as the mockups show: the system keeps
+  (`TitleBarStyle: mygo.TitleBarHidden`) so the material runs to the top edge, as the designs show: the system keeps
   the window controls, and the view draws the title in their band, centered, 11 and `TextMuted`, dragging the window
   (`theme.TitleBar`). They set `MinWidth` and `MinHeight` so content never clips (the about window does not resize),
   and hide the panel when they open.
@@ -711,7 +728,7 @@ Idset has no custom animation: state changes take effect immediately. See
 [Transitions](https://github.com/egoist/mygo/blob/v0.5.5/docs/ui/transitions.md) and
 [Drawing and animation](https://github.com/egoist/mygo/blob/v0.5.5/docs/ui/drawing.md) for what the toolkit offers.
 
-- **Default is none.** Do not add `Transition`, `Animate` or page transitions without a mockup that shows the change
+- **Default is none.** Do not add `Transition`, `Animate` or page transitions without a design that shows the change
   they explain and the maintainer's agreement; record the exception here.
 - **If an exception is agreed,** use the built-ins with their defaults (element transitions are 200 ms, ease-out)
   and nothing longer than 300 ms for interface feedback. Avoid frame-by-frame custom animation.
@@ -748,7 +765,7 @@ Idset has no custom animation: state changes take effect immediately. See
 
 Run before a UI pull request is merged, and on each target platform before a release:
 
-- [ ] Every state in the mockup is reached in the app (for the panel: loading, read-only, no identities, a list,
+- [ ] Every state on the screens canvas is reached in the app (for the panel: loading, read-only, no identities, a list,
       drag over, filter and no filter result, checking, matched and copied, no match, not a repository, not a
       folder, `git` failed).
 - [ ] Both languages, light and dark checked.

@@ -51,7 +51,7 @@ func (r *recorder) actions() Actions {
 	}
 }
 
-// sample is the list of the mockup: a scoped work identity first in storage order, a global personal one, a
+// sample is the list of the design: a scoped work identity first in storage order, a global personal one, a
 // custom client identity and an unnamed one.
 func sample() []account.Account {
 	used := func(day int) *time.Time {

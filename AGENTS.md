@@ -11,8 +11,10 @@ Reference documents:
 
 - `docs/product.md` (in Chinese): behavior, data model, format of the generated files, flows, scope.
 - `docs/design.md`: the design language: layout, color, type, components, accessibility, localization.
-- `design/tokens.md`: spacing, size and color values, mapped to MyGo theme roles.
-- `design/`: a mockup per screen with all its states.
+- `design/tokens.json`: every color, type, spacing, size and radius value by layer, the contrast audit, and the
+  values the code has not reached yet; `design/layout.json`: layout patterns and windows.
+- `design/README.md`: the design system and screens canvas artifacts (every state of every screen), and how a UI
+  change is made.
 - `docs/adr/`: architecture decisions.
 - `docs/release.md`: the release workflow, its secrets and the steps of a release.
 
@@ -29,7 +31,7 @@ accounts_window.go       opening the account window, Dock icon on macOS, its bac
 about_window.go          opening the about window, finding out in the background whether this copy can update itself
 dialog_window.go         a screen's dialog in a frameless modal child window on the system material (ADR 0005)
 internal/ui/<screen>/    one package per screen: state, copy.json catalog, headless interaction tests;
-                         the name matches design/screens/<screen>.html
+                         the name matches a page of the screens canvas
 internal/ui/panel/       the panel
 internal/ui/accounts/    the account window: list, editor, delete confirmation; Backend holds the store, key and
                          `git config` work behind its actions
@@ -60,7 +62,7 @@ resources/               shipped licenses and product assets
 scripts/                 checks, secret scan, packaging
 mygo.json                name, identifier, version, packaging
 release-please-*.json    the release pull request: version and changelog from the merged titles
-docs/, design/           product spec, design language, ADRs, mockups, tokens
+docs/, design/           product spec, design language, ADRs, tokens, layout, icon source
 ```
 
 ## Commands
@@ -84,9 +86,9 @@ go tool mygo build
   `git config user.email` after cloning; do not use a personal address or the machine's global config.
   `GIT_AUTHOR_EMAIL` and `GIT_COMMITTER_EMAIL` override git config, so check `git var GIT_AUTHOR_IDENT` before
   committing.
-- Product behavior changes start in `docs/product.md`. A UI change starts from the mockup in design/; the
-  maintainer confirms the visual direction before UI code is written. Mockup, `docs/design.md` and code go in
-  the same PR. Screenshots go in the PR body, never in the repository; the only exception is the README images
+- Product behavior changes start in `docs/product.md`. A UI change starts from the screens canvas and the design
+  system (design/README.md); the maintainer confirms the visual direction before UI code is written. Tokens,
+  `docs/design.md` and code go in the same PR. Screenshots go in the PR body, never in the repository; the only exception is the README images
   in `docs/images/`, taken from demo identities on `example.com` in a throwaway home directory.
 - Releases: release-please keeps a release pull request open on `main` and computes the version from the merged
   titles, writing `mygo.json`, where the version lives only, and `CHANGELOG.md`; the `feat`, `fix` and `perf`
@@ -124,7 +126,7 @@ structure yourself. Search open issues first; one issue is one problem.
 - Feature or improvement, `--label enhancement`: `## Problem`, `## Proposed solution`,
   `## Alternatives considered` (when there were any), `## Done when`.
 - Documentation, `--label documentation`: `## Where`, `## What is missing, unclear or wrong`, `## Suggested change`.
-- Labels: `ui` marks work on a screen or a mockup, together with `enhancement` or `bug`; `accessibility` marks
+- Labels: `ui` marks work on a screen or its design, together with `enhancement` or `bug`; `accessibility` marks
   screen-reader, keyboard and contrast work.
 - Pull request: the title is the Conventional Commits subject (it becomes the squash commit). The body has
   `## Summary` (what changes and why), `## Related issue` (`Closes #<n>`), `## How tested` (the commands run and
