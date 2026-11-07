@@ -20,6 +20,11 @@ type Fills struct {
 	Field ui.Color
 	// AccentSoft is the mint accent as a tint.
 	AccentSoft ui.Color
+	// Selected fills the chosen row, tab or chip: a neutral step of the state ladder, between hover and pressed, so
+	// the accent only ever marks what can be done.
+	Selected ui.Color
+	// DangerSoft is the danger color as a tint: under an error banner and the read-only badge.
+	DangerSoft ui.Color
 	// CardRim is the light line along the top edge of a card, inside it, so a card reads as a sheet of glass.
 	CardRim ui.Color
 }
@@ -28,12 +33,12 @@ var (
 	lightFills = Fills{
 		Solid: ui.Hex("#f2f2f5"), SolidDetail: ui.Hex("#fbfbfd"), Detail: ui.RGBA(255, 255, 255, 0.45),
 		Card: ui.RGBA(255, 255, 255, 0.2), Field: ui.RGBA(255, 255, 255, 0.22), AccentSoft: ui.RGBA(20, 184, 150, 0.15),
-		CardRim: ui.RGBA(255, 255, 255, 0.45),
+		Selected: ui.RGBA(0, 0, 0, 0.09), DangerSoft: ui.RGBA(200, 16, 46, 0.12), CardRim: ui.RGBA(255, 255, 255, 0.45),
 	}
 	darkFills = Fills{
 		Solid: ui.Hex("#2a2a2e"), SolidDetail: ui.Hex("#323236"), Detail: ui.RGBA(0, 0, 0, 0.18),
-		Card: ui.RGBA(255, 255, 255, 0.08), Field: ui.RGBA(0, 0, 0, 0.22), AccentSoft: ui.RGBA(79, 220, 184, 0.18),
-		CardRim: ui.RGBA(255, 255, 255, 0.06),
+		Card: ui.RGBA(255, 255, 255, 0.06), Field: ui.RGBA(0, 0, 0, 0.22), AccentSoft: ui.RGBA(79, 220, 184, 0.18),
+		Selected: ui.RGBA(255, 255, 255, 0.11), DangerSoft: ui.RGBA(255, 107, 128, 0.16), CardRim: ui.RGBA(255, 255, 255, 0.06),
 	}
 )
 
@@ -84,11 +89,11 @@ func Apply(c *ui.Context) {
 func Build(t ui.Theme, highContrast bool) ui.Theme {
 	if t.Dark {
 		t.Background = darkFills.Solid
-		t.Surface, t.SurfaceHover, t.SurfacePressed = ui.RGBA(255, 255, 255, 0.08), ui.RGBA(255, 255, 255, 0.11), ui.RGBA(255, 255, 255, 0.16)
+		t.Surface, t.SurfaceHover, t.SurfacePressed = ui.RGBA(255, 255, 255, 0.07), ui.RGBA(255, 255, 255, 0.09), ui.RGBA(255, 255, 255, 0.14)
 		t.Border = ui.RGBA(255, 255, 255, 0.12)
-		t.Text, t.TextMuted = ui.Hex("#f5f5f7"), ui.Hex("#a3a3ab")
+		t.Text, t.TextMuted = ui.Hex("#f5f5f7"), ui.Hex("#b8b8c0")
 		t.Accent, t.AccentHover, t.AccentPressed, t.AccentText = ui.Hex("#4fdcb8"), ui.Hex("#72e5c8"), ui.Hex("#94ecd5"), ui.Hex("#10201c")
-		t.Danger, t.Warning, t.Success = ui.Hex("#ff5c74"), ui.Hex("#ffb340"), ui.Hex("#3ccf62")
+		t.Danger, t.Warning, t.Success = ui.Hex("#ff7a8c"), ui.Hex("#ffb340"), ui.Hex("#3ccf62")
 		t.Selection, t.Focus = ui.RGBA(79, 220, 184, 0.32), ui.RGBA(79, 220, 184, 0.45)
 		t.Inverse, t.InverseText = ui.Hex("#f5f5f7"), ui.Hex("#1d1d1f")
 		t.Scrollbar = ui.RGBA(255, 255, 255, 0.35)
@@ -96,9 +101,9 @@ func Build(t ui.Theme, highContrast bool) ui.Theme {
 		t.Background = lightFills.Solid
 		t.Surface, t.SurfaceHover, t.SurfacePressed = ui.RGBA(0, 0, 0, 0.05), ui.RGBA(0, 0, 0, 0.07), ui.RGBA(0, 0, 0, 0.12)
 		t.Border = ui.RGBA(60, 60, 67, 0.18)
-		t.Text, t.TextMuted = ui.Hex("#1d1d1f"), ui.Hex("#6b6b72")
+		t.Text, t.TextMuted = ui.Hex("#1d1d1f"), ui.Hex("#5e5e65")
 		t.Accent, t.AccentHover, t.AccentPressed, t.AccentText = ui.Hex("#0a7a68"), ui.Hex("#086a5a"), ui.Hex("#075a4d"), ui.Hex("#ffffff")
-		t.Danger, t.Warning, t.Success = ui.Hex("#c8102e"), ui.Hex("#b86e00"), ui.Hex("#1e7d36")
+		t.Danger, t.Warning, t.Success = ui.Hex("#c8102e"), ui.Hex("#a86500"), ui.Hex("#1e7d36")
 		t.Selection, t.Focus = ui.RGBA(20, 184, 150, 0.25), ui.RGBA(10, 122, 104, 0.4)
 		t.Inverse, t.InverseText = ui.Hex("#1d1d1f"), ui.Hex("#f5f5f7")
 		t.Scrollbar = ui.RGBA(0, 0, 0, 0.32)

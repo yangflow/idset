@@ -171,8 +171,9 @@ scale still follow the desktop; the values are in [tokens.json](../design/tokens
   the chosen one ticked).
 - **Appearance.** Do not implement your own dark mode switch; build the light or dark glass theme from
   `c.Theme().Dark`, which follows the system.
-- **Selection.** A selected list row (the accounts window) is filled with `Accent`, its text in `AccentText`, inset
-  8 DIPs from the list's sides with radius 8, like the system's source lists.
+- **Selection.** Selection is neutral: a selected list row (the accounts window), the chosen settings tab and a
+  chosen platform filter take the `selected` fill (`theme.Fills.Selected`) and keep their text colors; a row is inset
+  8 DIPs from the list's sides with radius 8. The accent never marks selection.
 - **Accent.** One primary action per group uses `PrimaryButton`; the panel's is the drop zone's Choose.
 - **Contrast.** Text meets WCAG 2.1 AA, 4.5:1, and glyphs, outlines and control boundaries 3:1, on the solid color
   and on a card over it. Under the desktop's high contrast setting (`c.Preferences().HighContrast`) the theme does
@@ -283,7 +284,7 @@ What Idset uses today:
 | Source list row | A 28 DIP initial badge, name and email on two lines, an optional folder symbol; `Accent` fill with `AccentText` when selected. |
 | Color choice | A 14 DIP dot in the preset color with its name as `Label`; the chosen one has a ring and a check mark. |
 | Settings row | Label left, value right, 32 DIPs high, hairline between rows inside a card-fill group with radius 12. |
-| Platform filter | A row of `ui.Button`s, one per platform in use when more than one is; the selected one is `Accent` with `AccentText` and is `Selected(true)` so screen readers read it as selected. |
+| Platform filter | A row of `ui.Button`s, one per platform in use when more than one is; the selected one has the `selected` fill and is `Selected(true)` so screen readers read it as selected. |
 
 The tables below say what to reach for as the accounts, settings and about windows are added.
 
@@ -527,8 +528,7 @@ toolbar: below it, a source list and a detail pane.
   list's sides: `Space(1.5)`×`Space(2)` padding, radius 8, a 28 DIP initial badge (radius 8), the name (13, 600) and
   the email (`Rem(0.92)`, `TextMuted`) below. Text wraps. An identity limited to folders has
   a folder symbol at the end of its row, named "Scoped" for assistive technology; a draft shows "New" there. The
-  selected row is filled with `Accent` and its text is `AccentText`, like the system's source lists; its badge gets a
-  1.5 DIP `AccentText` ring so a green identity stays apart from the fill. The list scrolls above an
+  selected row has the neutral `selected` fill and keeps its text colors; its badge keeps its color. The list scrolls above an
   add bar fixed to the bottom edge of the sidebar: a hairline, then a borderless "+" symbol button named "Add
   Identity" (also its tooltip), `Space(11)` (44) high with the button centered.
 - **Detail** (right, scrolls on a slightly more opaque layer, the detail fill, separated from the list by a 0.5 DIP
@@ -583,7 +583,7 @@ translucent fills, hairlines and text; only dialogs have a shadow.
 
 - **Tabs.** A tab bar along the top, under the title bar, on the material, with a 0.5 DIP hairline under it. Five tabs centered as a group, each an icon over a label: General, Keys, Import, Backups, Configuration (通用 /
   密钥 / 导入 / 备份 / 配置). A tab is 88 wide and 52 high (`Space(22)`, `Space(13)`) with a 20 DIP icon (`Space(5)`), the 11 label 4 below it,
-  and 4 DIP gaps; the bar has 4 above and 6 below. The selected tab has the accent-soft fill, its icon and label in `Accent`, and a
+  and 4 DIP gaps; the bar has 4 above and 6 below. The selected tab has the `selected` fill, its icon and label in `Text` at weight 500, and a
   8 DIP radius; the others are `TextMuted` on no fill. Arrows, Home and End move the choice, as `ui.Tabs` does. The
   pane has no heading of its own: the selected tab names it.
 - **Pane.** Full width below the bar, 16 above and 20 at the sides, scrolling; its content is at most 560 wide and

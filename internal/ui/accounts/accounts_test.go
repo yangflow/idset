@@ -3,6 +3,7 @@ package accounts
 import (
 	"errors"
 	"fmt"
+	"image/color"
 	"math"
 	"reflect"
 	"slices"
@@ -928,5 +929,29 @@ func TestFolderRequestOnAnOpenDraft(t *testing.T) {
 	s.Open(Request{New: true, Folder: `c:\users\ada\Work\API`})
 	if got := s.forms[s.Draft()].cur.paths; !slices.Equal(got, []string{"~/Work/API/"}) {
 		t.Errorf("Windows folder: %v", got)
+	}
+}
+
+// The selected row is a neutral step darker or lighter than the list, never the accent: the accent only marks what can
+// be done.
+func TestSelectedRowIsNeutral(t *testing.T) {
+	for _, dark := range []bool{false, true} {
+		r := open(t, "en", sample(), Request{ID: workID})
+		r.tt.SetDark(dark)
+		r.tt.Frame()
+		at := func(label string) color.RGBA {
+			rc, ok := r.tt.Find(label)
+			if !ok {
+				t.Fatalf("no %q row", label)
+			}
+			return r.tt.Image().RGBAAt(int(rc.X+rc.W-4), int(rc.Y+rc.H/2))
+		}
+		selected, other := at("work"), at("personal")
+		if selected == other {
+			t.Errorf("dark %v: the selected row %v looks like the others", dark, selected)
+		}
+		if spread := max(selected.R, selected.G, selected.B) - min(selected.R, selected.G, selected.B); spread > 8 {
+			t.Errorf("dark %v: the selected row is tinted %v, want a neutral fill", dark, selected)
+		}
 	}
 }
