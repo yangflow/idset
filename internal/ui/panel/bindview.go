@@ -65,10 +65,10 @@ func (s *Screen) matchedCard(c *ui.Context, r *match.Result, a account.Account) 
 		border = t.Warning
 	}
 	fillCard(c, "result", border).Children(func() {
-		ui.Row(c).Gap(t.Space(2.5)).Padding(t.Space(2.5), t.Space(1.5), 0, t.Space(3)).AlignItems(ui.Center).Children(func() {
-			badge(c, a, t.Space(8), 9, t.Rem(0.95))
-			ui.Column(c).Grow(1).MinWidth(0).Gap(t.Space(0.25)).Children(func() {
-				ui.Text(c, s.label(a)).FontSize(t.Rem(1.08)).FontWeight(600).SingleLine().Tooltip(s.text.UsesHere)
+		ui.Row(c).Gap(t.Space(2)).Padding(t.Space(3), t.Space(1.5), 0, t.Space(3)).AlignItems(ui.Center).Children(func() {
+			badge(c, a, t.Space(8), 10, t.Rem(0.95))
+			ui.Column(c).Grow(1).MinWidth(0).Gap(t.Space(0.5)).Children(func() {
+				ui.Text(c, s.label(a)).FontSize(t.Rem(1.15)).FontWeight(600).SingleLine().Tooltip(s.text.UsesHere)
 				pathLine(c, s.env.Tilde(r.Root), "", "", pathFace{mono: true, size: t.Rem(0.88), color: t.TextMuted})
 			})
 			ui.Row(c).AlignSelf(ui.Start).Gap(t.Space(0.5)).AlignItems(ui.Center).Shrink(0).Children(func() {
@@ -87,7 +87,7 @@ func (s *Screen) matchedCard(c *ui.Context, r *match.Result, a account.Account) 
 			})
 		})
 		// The meta line starts under the name: the card's padding, the badge and the gap.
-		ui.Row(c).MinWidth(0).Padding(t.Space(1.5), t.Space(3), t.Space(2.5), t.Space(13.5)).Children(func() {
+		ui.Row(c).MinWidth(0).Padding(t.Space(1.5), t.Space(3), t.Space(3), t.Space(13)).Children(func() {
 			ui.Text(c, orDefault(a.GitUserEmail, s.text.NoEmail)).FontSize(t.Rem(0.92)).TextColor(t.TextMuted).SingleLine().MinWidth(0)
 			if a.SSHAlias != "" {
 				ui.Text(c, " · "+a.SSHAlias).Font("monospace").FontSize(t.Rem(0.88)).TextColor(t.TextMuted).SingleLine().Shrink(0)
@@ -155,7 +155,7 @@ func (s *Screen) confirmBlock(c *ui.Context) {
 		return
 	}
 	ui.Divider(c)
-	ui.Column(c).Gap(t.Space(2.5)).Padding(t.Space(3)).Children(func() {
+	ui.Column(c).Gap(t.Space(2)).Padding(t.Space(3)).Children(func() {
 		ui.Text(c, fmt.Sprintf(s.text.ConfirmShort, s.label(a)))
 		ui.Row(c).Gap(t.Space(2)).Justify(ui.End).Children(func() {
 			if ui.Button(c, s.text.Cancel).Label(s.text.Cancel).Size(t.Space(20), t.Space(7)).Padding(0).Background(theme.Of(c).Field).Clicked() {
@@ -224,7 +224,7 @@ func (s *Screen) noMatchCard(c *ui.Context, r *match.Result) {
 // bindRow is an identity in the list of a card without a match; the whole row binds.
 func (s *Screen) bindRow(c *ui.Context, a account.Account) {
 	t := c.Theme()
-	row := ui.Row(c).Focusable().Role(ui.RoleButton).Label(fmt.Sprintf(s.text.BindLabel, s.label(a))).Gap(t.Space(2.5)).
+	row := ui.Row(c).Focusable().Role(ui.RoleButton).Label(fmt.Sprintf(s.text.BindLabel, s.label(a))).Gap(t.Space(2)).
 		MinHeight(t.Space(11)).PaddingX(t.Space(3)).AlignItems(ui.Center)
 	if row.Hovered() && !s.busy {
 		row.Background(t.SurfaceHover)
@@ -234,7 +234,7 @@ func (s *Screen) bindRow(c *ui.Context, a account.Account) {
 	}
 	row.Children(func() {
 		dot(c, a, t.Space(2.5))
-		ui.Column(c).Grow(1).Gap(t.Space(0.25)).Children(func() {
+		ui.Column(c).Grow(1).Gap(t.Space(0.5)).Children(func() {
 			// One line each, cut with an ellipsis, so that every row is as high as the others on any font.
 			ui.Text(c, s.label(a)).FontWeight(600).SingleLine().Tooltip(s.label(a))
 			face := pathFace{size: t.Rem(0.9), color: t.TextMuted}
@@ -271,9 +271,9 @@ func (s *Screen) overlapCard(c *ui.Context, r *match.Result) {
 			}
 			win := i == last
 			ui.Divider(c)
-			ui.Row(c.Key("cover-"+a.ID)).Gap(t.Space(2.5)).MinHeight(t.Space(11)).Padding(0, t.Space(2), 0, t.Space(3)).AlignItems(ui.Center).Children(func() {
+			ui.Row(c.Key("cover-"+a.ID)).Gap(t.Space(2)).MinHeight(t.Space(11)).Padding(0, t.Space(2), 0, t.Space(3)).AlignItems(ui.Center).Children(func() {
 				dot(c, a, t.Space(2.5))
-				ui.Column(c).Grow(1).MinWidth(0).Gap(t.Space(0.25)).Children(func() {
+				ui.Column(c).Grow(1).MinWidth(0).Gap(t.Space(0.5)).Children(func() {
 					name := ui.Text(c, s.label(a)).SingleLine()
 					if win {
 						name.FontWeight(600)
@@ -314,7 +314,7 @@ func (s *Screen) staleShown() bool {
 func (s *Screen) staleCard(c *ui.Context, st *match.Stale, a account.Account, root string) {
 	t := c.Theme()
 	fillCard(c, "stale", ui.Color{}).Children(func() {
-		ui.Row(c).Height(t.Space(10)).PaddingX(t.Space(3)).Gap(t.Space(2.5)).AlignItems(ui.Center).Children(func() {
+		ui.Row(c).Height(t.Space(10)).PaddingX(t.Space(3)).Gap(t.Space(2)).AlignItems(ui.Center).Children(func() {
 			dot(c, a, t.Space(2.5))
 			ui.Row(c).Grow(1).MinWidth(0).Children(func() {
 				ui.Text(c, s.label(a)).FontWeight(600).SingleLine().Shrink(0).MaxWidthPercent(50).Tooltip(s.label(a))

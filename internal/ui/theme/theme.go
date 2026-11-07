@@ -23,8 +23,10 @@ type Fills struct {
 	// Selected fills the chosen row, tab or chip: a neutral step of the state ladder, between hover and pressed, so
 	// the accent only ever marks what can be done.
 	Selected ui.Color
-	// DangerSoft is the danger color as a tint: under an error banner and the read-only badge.
+	// DangerSoft is the danger color as a tint: under an error banner or notice and the read-only badge.
 	DangerSoft ui.Color
+	// Fg2 is the second-strongest text, between Text and TextMuted: the body of a notice.
+	Fg2 ui.Color
 	// CardRim is the light line along the top edge of a card, inside it, so a card reads as a sheet of glass.
 	CardRim ui.Color
 }
@@ -33,12 +35,14 @@ var (
 	lightFills = Fills{
 		Solid: ui.Hex("#f2f2f5"), SolidDetail: ui.Hex("#fbfbfd"), Detail: ui.RGBA(255, 255, 255, 0.45),
 		Card: ui.RGBA(255, 255, 255, 0.2), Field: ui.RGBA(255, 255, 255, 0.22), AccentSoft: ui.RGBA(20, 184, 150, 0.15),
-		Selected: ui.RGBA(0, 0, 0, 0.09), DangerSoft: ui.RGBA(200, 16, 46, 0.12), CardRim: ui.RGBA(255, 255, 255, 0.45),
+		Selected: ui.RGBA(0, 0, 0, 0.09), DangerSoft: ui.RGBA(200, 16, 46, 0.12), Fg2: ui.Hex("#3c3c42"),
+		CardRim: ui.RGBA(255, 255, 255, 0.45),
 	}
 	darkFills = Fills{
 		Solid: ui.Hex("#2a2a2e"), SolidDetail: ui.Hex("#323236"), Detail: ui.RGBA(0, 0, 0, 0.18),
 		Card: ui.RGBA(255, 255, 255, 0.06), Field: ui.RGBA(0, 0, 0, 0.22), AccentSoft: ui.RGBA(79, 220, 184, 0.18),
-		Selected: ui.RGBA(255, 255, 255, 0.11), DangerSoft: ui.RGBA(255, 107, 128, 0.16), CardRim: ui.RGBA(255, 255, 255, 0.06),
+		Selected: ui.RGBA(255, 255, 255, 0.11), DangerSoft: ui.RGBA(255, 107, 128, 0.16), Fg2: ui.Hex("#d6d6dc"),
+		CardRim: ui.RGBA(255, 255, 255, 0.06),
 	}
 )
 

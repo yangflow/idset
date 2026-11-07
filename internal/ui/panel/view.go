@@ -42,7 +42,7 @@ func (s *Screen) View(c *ui.Context) {
 	root.Children(func() {
 		// No hide button: the tray icon and Escape hide the panel, as with other tray panels. The title bar and the
 		// footer give the rest to the content: the title bar is 44 high and the footer 40, neither with a hairline.
-		ui.Row(c).Height(t.Space(11)).Padding(0, t.Space(2.25), 0, t.Space(4)).Gap(t.Space(2)).AlignItems(ui.Center).Children(func() {
+		ui.Row(c).Height(t.Space(11)).Padding(0, t.Space(2), 0, t.Space(4)).Gap(t.Space(2)).AlignItems(ui.Center).Children(func() {
 			ui.Text(c, "Idset").FontSize(t.Rem(1.15)).FontWeight(600).Role(ui.RoleHeading).Level(1)
 			ui.Spacer(c)
 			if ghost(c, s.text.Settings, icons.Gear).Clicked() {
@@ -50,11 +50,11 @@ func (s *Screen) View(c *ui.Context) {
 			}
 		})
 		// States without a list never need scrolling, and centering only works in a container of fixed height. The
-		// content has 12 at the sides and cards 10 apart.
+		// content has 12 at the sides and cards 12 apart.
 		if s.loading || s.readErr != nil || len(s.accounts) == 0 {
-			ui.Column(c).Grow(1).Padding(t.Space(1), t.Space(3), t.Space(3)).Gap(t.Space(2.5)).Children(func() { s.content(c) })
+			ui.Column(c).Grow(1).Padding(t.Space(1), t.Space(3), t.Space(3)).Gap(t.Space(3)).Children(func() { s.content(c) })
 		} else {
-			ui.Scroll(c).Grow(1).Padding(t.Space(1), t.Space(3), t.Space(3)).Gap(t.Space(2.5)).Children(func() { s.content(c) })
+			ui.Scroll(c).Grow(1).Padding(t.Space(1), t.Space(3), t.Space(3)).Gap(t.Space(3)).Children(func() { s.content(c) })
 		}
 		ui.Row(c).Height(t.Space(10)).PaddingX(t.Space(2)).Gap(t.Space(1)).AlignItems(ui.Center).Children(func() {
 			// Add Identity stays in the fixed footer, reachable however long the list is. Without a list the
@@ -107,7 +107,7 @@ func (s *Screen) showsResult() bool {
 	return !s.loading && s.readErr == nil && (s.result != nil || s.checking != "" || s.resultErr != nil)
 }
 
-// ghost is a borderless circular symbol button, 26 DIPs at the default spacing, with a 16 DIP glyph. Its label is
+// ghost is a borderless circular symbol button, 28 DIPs at the default spacing, with a 16 DIP glyph. Its label is
 // its accessible name and its tooltip.
 func ghost(c *ui.Context, label string, icon *ui.SVG) ui.Element {
 	return tooltipGhost(c, "ghost-"+label, label, label, icon)
@@ -122,7 +122,7 @@ func tooltipGhost(c *ui.Context, key, label, tip string, icon *ui.SVG) ui.Elemen
 // its plain look even while the pointer is still over it.
 func symbolButton(c *ui.Context, key, label string, icon *ui.SVG, done bool) ui.Element {
 	t := c.Theme()
-	b := ui.Button(c.Key(key), "").Label(label).Size(t.Space(6.5), t.Space(6.5)).Padding(0).Radius(t.Space(6.5)/2).Border(0, ui.Color{}).
+	b := ui.Button(c.Key(key), "").Label(label).Size(t.Space(7), t.Space(7)).Padding(0).Radius(t.Space(7)/2).Border(0, ui.Color{}).
 		Background(ui.Color{}).TextColor(t.TextMuted).Children(func() { ui.Icon(c, icon).FontSize(t.Space(4)) })
 	if b.Hovered() && !done {
 		b.Background(t.SurfaceHover)
@@ -182,8 +182,8 @@ func (s *Screen) content(c *ui.Context) {
 		// A capsule search field with a magnifier inside its start, as macOS 26 draws one.
 		ui.Row(c).Height(t.Space(7)).AlignItems(ui.Center).Children(func() {
 			ui.TextInput(c.Key("filter"), &s.query).Label(s.text.Filter).Placeholder(s.text.Filter).Fill().Radius(theme.Capsule).
-				Border(0, ui.Color{}).Background(t.Surface).Padding(0, t.Space(2.5), 0, t.Space(7.25))
-			ui.Row(c).Absolute().Top(0).Bottom(0).Left(t.Space(2.5)).AlignItems(ui.Center).Children(func() {
+				Border(0, ui.Color{}).Background(t.Surface).Padding(0, t.Space(2), 0, t.Space(7))
+			ui.Row(c).Absolute().Top(0).Bottom(0).Left(t.Space(2)).AlignItems(ui.Center).Children(func() {
 				ui.Icon(c, icons.Search).FontSize(t.Rem(1)).TextColor(t.TextMuted)
 			})
 		})
@@ -204,7 +204,7 @@ func (s *Screen) content(c *ui.Context) {
 	fillCard(c, "list", ui.Color{}).Children(func() {
 		for i, a := range visible {
 			if i > 0 {
-				insetDivider(c, t.Space(12.5))
+				insetDivider(c, t.Space(12))
 			}
 			s.row(c.Key(a.ID), a)
 		}
@@ -219,10 +219,10 @@ func (s *Screen) readOnly(c *ui.Context) {
 	if inner := errors.Unwrap(reason); inner != nil {
 		reason = inner
 	}
-	ui.Column(c).Grow(1).Gap(t.Space(2.5)).PaddingX(t.Space(2)).AlignItems(ui.Center).Justify(ui.Center).Children(func() {
-		ui.Column(c).Size(t.Space(12), t.Space(12)).Radius(12).Background(theme.Of(c).DangerSoft).AlignItems(ui.Center).
+	ui.Column(c).Grow(1).Gap(t.Space(2)).PaddingX(t.Space(2)).AlignItems(ui.Center).Justify(ui.Center).Children(func() {
+		ui.Column(c).Size(t.Space(11), t.Space(11)).Radius(theme.CardRadius).Background(theme.Of(c).DangerSoft).AlignItems(ui.Center).
 			Justify(ui.Center).Children(func() {
-			ui.Icon(c, icons.Warn).FontSize(t.Space(6)).TextColor(t.Danger)
+			ui.Icon(c, icons.Warn).FontSize(t.Space(5.5)).TextColor(t.Danger)
 		})
 		ui.Text(c, s.text.ReadOnly).FontSize(t.Rem(1.15)).FontWeight(600).Role(ui.RoleHeading).Level(2)
 		ui.Text(c, s.env.Tilde(s.dataPath)).Font("monospace").FontSize(t.Rem(0.88)).TextColor(t.TextMuted).TextAlign(ui.Center).Selectable()
@@ -259,7 +259,7 @@ func (s *Screen) providerChip(c *ui.Context, p account.Provider) {
 	for _, q := range s.providers {
 		on = on || q == p
 	}
-	b := ui.Button(c.Key("chip-"+string(p)), s.providerName(p)).Selected(on).FontSize(t.Rem(0.92)).Height(t.Space(6)).Radius(12)
+	b := ui.Button(c.Key("chip-"+string(p)), s.providerName(p)).Selected(on).FontSize(t.Rem(0.92)).Height(t.Space(6)).PaddingX(t.Space(3)).Radius(theme.Capsule)
 	if on {
 		b.Background(theme.Of(c).Selected)
 	}
@@ -360,7 +360,7 @@ func (s *Screen) row(c *ui.Context, a account.Account) {
 		if hasProblem {
 			bottom = t.Space(0.5)
 		}
-		row := ui.Row(c).Focusable().MinHeight(t.Space(12)).Gap(t.Space(2.5)).Padding(t.Space(2), t.Space(1.5), bottom, t.Space(3)).
+		row := ui.Row(c).Focusable().MinHeight(t.Space(12)).Gap(t.Space(2)).Padding(t.Space(2), t.Space(1.5), bottom, t.Space(3)).
 			AlignItems(ui.Center)
 		if row.Hovered() {
 			row.Background(t.SurfaceHover)
@@ -370,7 +370,7 @@ func (s *Screen) row(c *ui.Context, a account.Account) {
 		}
 		row.Children(func() {
 			badge(c, a, t.Space(7), 8, t.Rem(1))
-			ui.Column(c).Grow(1).MinWidth(0).Gap(t.Space(0.25)).Children(func() {
+			ui.Column(c).Grow(1).MinWidth(0).Gap(t.Space(0.5)).Children(func() {
 				ui.Text(c, s.label(a)).FontWeight(600).SingleLine()
 				ui.Text(c, orDefault(a.GitUserEmail, s.text.NoEmail)).FontSize(t.Rem(0.92)).TextColor(t.TextMuted).SingleLine()
 			})
@@ -380,7 +380,7 @@ func (s *Screen) row(c *ui.Context, a account.Account) {
 			}
 			if a.SSHAlias == "" {
 				// The space stays, so that the folders line up.
-				ui.Column(c).Size(t.Space(6.5), t.Space(6.5)).Shrink(0)
+				ui.Column(c).Size(t.Space(7), t.Space(7)).Shrink(0)
 				return
 			}
 			icon := icons.ChevronRight
@@ -413,11 +413,11 @@ func (s *Screen) dropZone(c *ui.Context) {
 	if files := zone.DroppedFiles(); len(files) > 0 {
 		s.Drop(files)
 	}
-	zone.Row().Padding(0, t.Space(2.5), 0, t.Space(3)).Gap(t.Space(2.5)).AlignItems(ui.Center).Children(func() {
+	zone.Row().Padding(0, t.Space(2), 0, t.Space(3)).Gap(t.Space(2)).AlignItems(ui.Center).Children(func() {
 		ui.Icon(c, icons.Folder).FontSize(t.Space(5)).TextColor(t.Accent).Shrink(0)
 		ui.Text(c, s.text.DropLine).FontSize(t.Rem(0.92)).SingleLine().MinWidth(0).Grow(1).Tooltip(s.text.DropHint)
 		if ui.PrimaryButton(c, s.text.ChooseShort).Label(s.text.Choose).Tooltip(s.text.Choose).Height(t.Space(6)).
-			PaddingX(t.Space(2.5)).FontSize(t.Rem(0.92)).FontWeight(500).Shrink(0).Clicked() {
+			PaddingX(t.Space(3)).FontSize(t.Rem(0.92)).FontWeight(500).Shrink(0).Clicked() {
 			s.act.ChooseFolder()
 		}
 	})
