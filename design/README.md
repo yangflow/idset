@@ -1,71 +1,65 @@
 # Design
 
-Mockups and design notes for Idset's native UI. The design language is [docs/design.md](../docs/design.md); the
-values it uses are in [tokens.md](tokens.md); screen behavior is in [docs/product.md](../docs/product.md) (in
-Chinese). Mockups approximate the result; the app running on a real device is what counts.
+Idset's design is kept in two claude.ai artifacts and two files in this folder. The design language is
+[docs/design.md](../docs/design.md); screen behavior is in [docs/product.md](../docs/product.md) (in Chinese). A design
+approximates the result; the app running on a real device is what counts.
 
-## Layout
+## Design artifacts
+
+| Artifact | What it holds |
+|---|---|
+| [Idset design system](https://claude.ai/artifact/NFxWM1yWYqsYye5kxtNy7r) | The tokens of `tokens.json`, the principles, and the components by layer (atoms, controls, rows, cards, windows) with a preview each |
+| [Idset screens](https://claude.ai/artifact/2cP14kKAaf6tajDXeJV555) | A canvas with every state of every screen, in English and the light appearance, one page per screen; it uses the design system |
+
+Both are private to the maintainer; ask for access when you need it.
+
+## Files
 
 | Path | Purpose |
 |---|---|
-| `screens/<screen>.html` | One self-contained mockup per screen with every state: static HTML and CSS with a small script for switching states, no external resources apart from `../icon.svg` |
-| `screens/accounts.html` | The accounts window: every state, light and dark, English and Chinese, switched like the panel |
-| `screens/about.html` | The about window: with and without self-update, keyboard focus, light and dark, English and Chinese |
-| `screens/settings.html` | The settings window (General, Backups, Configuration): every state, light and dark, English and Chinese, switched like the panel |
-| `screens/panel-appearance.html` | The panel side by side in light and dark, with the drag-over state and a focus ring |
+| `tokens.json` | Every value the UI uses, named by layer: color (light and dark), type, spacing, radius, shadow, size, motion, opacity, plus the contrast audit and the values that still differ from the code (`audit.pending`) |
+| `layout.json` | The layout patterns (rows, stacks, insets, bars, splits) and each window's size and material |
 | `icon.svg` | The product icon's source |
-| `icon.html` | The product icon at every size it ships, on light and dark, in a Dock and a taskbar |
 | `export-icon.sh` | Renders `icon.svg` to `resources/icon.png` with Chrome |
-| `tokens.md` | Spacing, size, color and motion values, mapped to MyGo theme roles, plus identity colors |
 
-The tray panel (`screens/panel.html`) is implemented; the accounts window has its mockup (`screens/accounts.html`)
-and no code yet, and so has the settings window (`screens/settings.html`).
+`tokens.json` is the source; the design system's tokens are copied from it. Spacing is in pixels at MyGo's default
+unit of 4: `space-3` (12) is `t.Space(3)` in code. Colors without a MyGo theme role are in `internal/ui/theme`.
 
-## Preview
+## Screens: canvas page → package
 
-Open a file in `screens/` in a browser. In `screens/panel.html` the buttons on the left switch state, light or dark
-scheme and language; the left and right arrow keys step through the states. The address bar follows as
-`?state=…&scheme=light|dark&lang=en|zh&icons=all|today&height=fixed|full`, so a link opens a specific state; `full` lets the panel grow
-past its 480 DIPs so a long card shows whole, since in the app it scrolls. New mockups work the same way and show
-every state. `screens/panel-appearance.html` needs no parameters.
-
-## Screens
-
-| Screen | Design file | Code |
+| Canvas page | Boards | Code |
 |---|---|---|
-| Panel | `screens/panel.html`, `screens/panel-appearance.html` | `internal/ui/panel/` |
-| Accounts | `screens/accounts.html` | `internal/ui/accounts/` (planned) |
-| Settings | `screens/settings.html` | `internal/ui/settings/` (planned) |
-| About | `screens/about.html` | `internal/ui/about/` |
+| Panel | list, drop a folder, bind and undo, moved folders, what Git sees, HTTPS and clone, diagnostics, light and dark | `internal/ui/panel/` |
+| Accounts | editor, saving, delete | `internal/ui/accounts/` |
+| Settings | general, new key, key in use, backups, import, managed config | `internal/ui/settings/` |
+| About | about | `internal/ui/about/` |
 
-A mockup maps to a package: `screens/<screen>.html` is implemented by `internal/ui/<screen>/`. The text and states in
-the mockup are the strings in that package's `copy.json` (English and Simplified Chinese) and the states its `Screen`
-can be in; the test in the package covers each state.
+Each board's frames are named by state, and those are the states the package's `Screen` can be in. The words are the
+strings of the package's `copy.json` (English and Simplified Chinese); the tests in the package cover each state.
 
 ## Changing the UI
 
-A UI change starts from the mockup in design/; the maintainer confirms the visual direction before UI code is
-written.
+A UI change starts from the design; the maintainer confirms the visual direction before UI code is written.
 
-1. Edit or add the mockup in `screens/` (light and dark, every state, both languages), and update `tokens.md` and
-   `docs/design.md` if a rule changes.
+1. Change or add the frames on the screens canvas, every state, and the tokens in `tokens.json` (and the design
+   system) and `docs/design.md` if a rule changes. Run the contrast audit again when a color changes.
 2. The maintainer confirms the visual direction.
 3. Write the native view in `internal/ui/<screen>/` with theme roles and `Space`/`Rem` sizes, localized copy and
-   accessible names, plus tests.
+   accessible names, plus tests. When a screen moves to a value in `audit.pending`, take it off the list.
 4. Run `scripts/check.sh --cross`, then the design acceptance checklist in `docs/design.md` on real devices. A
    headless test is not device acceptance.
 
-Mockup, design notes and code go in the same pull request.
+Tokens, design notes and code go in the same pull request; the pull request body links the canvas frames it changes.
 
 ## Icons
 
 The tray icon is drawn in code by `internal/trayicon/`; change it there and run `go test ./internal/trayicon/`. The
-panel's symbols are inline SVG in `internal/ui/panel/view.go`.
+UI's glyphs are the SVGs in `internal/ui/icons/`, 16 x 16 line drawings at a 1.5 stroke.
 
 The product icon's source is `icon.svg`. After changing it, run `design/export-icon.sh` (it needs Google Chrome, or
 a Chromium-based browser given as `CHROME`) and commit `resources/icon.png` with it; `mygo build` makes every
-platform's icon from that PNG, and the about window shows it. Check the result in `icon.html`. MyGo does not draw SVG
-filters, which is why the app uses the PNG.
+platform's icon from that PNG, and the about window shows it. MyGo does not draw SVG filters, which is why the app
+uses the PNG.
 
 Screenshots go in the pull request body, not into the repository; `design/screenshots/` is ignored by git. The one
 exception is the README images in `docs/images/`, taken from demo identities on `example.com` in a throwaway home

@@ -11,7 +11,7 @@ import (
 	"github.com/yangflow/idset/internal/store"
 )
 
-// sampleCandidates are the candidates of the mockup: three new, one without an email left unchecked by the
+// sampleCandidates are the candidates of the design: three new, one without an email left unchecked by the
 // test that needs it, and one Idset already has.
 func sampleCandidates() []importer.Candidate {
 	cand := func(label, alias, email string) importer.Candidate {

@@ -165,7 +165,7 @@ func (s *Screen) general(c *ui.Context) {
 		for _, choice := range choices {
 			r.next(c)
 			on := s.language == choice.value
-			// A radio, not Selected: Selected would paint the row in the accent color; the mockup marks the choice with a check.
+			// A radio, not Selected: Selected would paint the row in the accent color; the design marks the choice with a check.
 			row := ui.RadioBase(c.Key("lang-"+choice.value), &chosen, choice.value).Label(choice.name).MinHeight(t.Space(8)).Padding(t.Space(1), t.Space(3), t.Space(1), t.Space(3)).
 				Gap(t.Space(2)).AlignItems(ui.Center)
 			if row.Hovered() {

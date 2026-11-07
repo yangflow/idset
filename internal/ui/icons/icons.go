@@ -1,5 +1,5 @@
 // Package icons holds the hand-drawn glyphs of the UI: 16 x 16 line drawings that take the color of the text around
-// them (ui.Icon). They are the SVGs of the mockups in design/screens/; there is no icon set or image file.
+// them (ui.Icon). They are the glyphs of the design system; there is no icon set or image file.
 package icons
 
 import "github.com/egoist/mygo/ui"

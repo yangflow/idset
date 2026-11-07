@@ -2,8 +2,8 @@
 
 - Status: accepted
 - Date: 2026-10-19
-- Related: [docs/design.md](../design.md), "Dialogs, messages and status"; [design/tokens.md](../../design/tokens.md),
-  "Material"; issue 51
+- Related: [docs/design.md](../design.md), "Dialogs, messages and status"; [design/layout.json](../../design/layout.json),
+  "windows"; issue 51
 
 ## Context
 

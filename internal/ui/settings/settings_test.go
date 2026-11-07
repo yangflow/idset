@@ -69,7 +69,7 @@ func identity(label, color string, global bool) account.Account {
 	return a
 }
 
-// sampleBackups are the backups of the mockup: 4, 3, 2 and 1 identities, the third one unreadable.
+// sampleBackups are the backups of the design: 4, 3, 2 and 1 identities, the third one unreadable.
 func sampleBackups() []Backup {
 	four := []account.Account{identity("work", "blue", false), identity("personal", "green", true),
 		identity("client", "orange", false), identity("", "purple", false)}
