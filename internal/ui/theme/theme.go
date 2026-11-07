@@ -184,3 +184,15 @@ func Select(c *ui.Context, selected *string, options []string) ui.Element {
 		}
 	})
 }
+
+// IconButtonState draws an icon button's hover and pressed states, as the design system's interaction states table
+// says: no fill at rest, the hover fill with the glyph in the text color under the pointer, the pressed fill while
+// pressed.
+func IconButtonState(t *ui.Theme, b ui.Element) {
+	switch {
+	case b.Pressed():
+		b.Background(t.SurfacePressed).TextColor(t.Text)
+	case b.Hovered():
+		b.Background(t.SurfaceHover).TextColor(t.Text)
+	}
+}

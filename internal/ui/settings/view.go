@@ -217,11 +217,9 @@ func (s *Screen) general(c *ui.Context) {
 // ghost is a borderless 24 DIP symbol button.
 func ghost(c *ui.Context, key, label string, icon *ui.SVG) ui.Element {
 	t := c.Theme()
-	b := ui.Button(c.Key(key), "").Label(label).Size(t.Space(theme.ControlS), t.Space(theme.ControlS)).Padding(0).Radius(theme.RadiusPill).Border(0, ui.Color{}).
+	b := ui.Button(c.Key(key), "").Label(label).Size(t.Space(theme.ControlS), t.Space(theme.ControlS)).Padding(0).Radius(theme.RadiusRow).Border(0, ui.Color{}).
 		Background(ui.Color{}).TextColor(t.TextMuted).Tooltip(label).Children(func() { ui.Icon(c, icon).FontSize(t.Space(theme.Icon)) })
-	if b.Hovered() {
-		b.Background(t.SurfaceHover)
-	}
+	theme.IconButtonState(t, b)
 	return b
 }
 

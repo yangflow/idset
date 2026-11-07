@@ -552,7 +552,7 @@ func TestSettingsButton(t *testing.T) {
 	}
 }
 
-// The chrome and the list sit on the token scales: icon buttons are 28 circles 8 from the edge, and a row's name
+// The chrome and the list sit on the token scales: icon buttons are 24 squares 8 from the edge, and a row's name
 // starts after the card's 12, the row's 12, the 28 badge and 8.
 func TestPanelFollowsTheSpacingScale(t *testing.T) {
 	work := identity("work", "github-work", "bob@example.com", account.GitHub, 2, "~/work/")
@@ -560,8 +560,8 @@ func TestPanelFollowsTheSpacingScale(t *testing.T) {
 	tt.Frame()
 	for _, label := range []string{"Settings", "Quit"} {
 		b, ok := tt.Find(label)
-		if !ok || b.W != 28 || b.H != 28 {
-			t.Errorf("%s button is %v, want 28 x 28", label, b)
+		if !ok || b.W != 24 || b.H != 24 {
+			t.Errorf("%s button is %v, want 24 x 24", label, b)
 		}
 	}
 	if b, _ := tt.Find("Settings"); b.X+b.W != 340-8 {
