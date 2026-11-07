@@ -79,7 +79,7 @@ func (s *Screen) cloneBlock(c *ui.Context, key string, a account.Account, f *clo
 	}
 	t := c.Theme()
 	cmd, ok := remote.CloneCommand(a, f.value)
-	ui.Column(c.Key(key)).Gap(t.Space(1)).Padding(t.Space(2), t.Space(3), t.Space(2.5), left).Children(func() {
+	ui.Column(c.Key(key)).Gap(t.Space(1)).Padding(t.Space(2), t.Space(3), t.Space(3), left).Children(func() {
 		ui.Row(c).Gap(t.Space(1.5)).AlignItems(ui.Center).Children(func() {
 			in := ui.TextInput(c.Key(key+"-input"), &f.value).Label(s.text.CloneLabel).Placeholder(repoPlaceholder).
 				Tooltip(s.text.CloneTip).Font("monospace").FontSize(t.Rem(0.88)).Height(t.Space(7)).Radius(theme.FieldRadius).Border(0.5, t.Border).Background(theme.Of(c).Field).Grow(1).MinWidth(0)
@@ -116,7 +116,7 @@ func (s *Screen) cloneBlock(c *ui.Context, key string, a account.Account, f *clo
 // openRowClone is the helper under the open identity row.
 func (s *Screen) openRowClone(c *ui.Context, a account.Account) {
 	t := c.Theme()
-	s.cloneBlock(c, "row-clone", a, &s.rowClone, t.Space(8), true)
+	s.cloneBlock(c, "row-clone", a, &s.rowClone, t.Space(12), true)
 }
 
 // toggleRow opens the clone helper of an identity row, or closes it; only one helper is open at a time.

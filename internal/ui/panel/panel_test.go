@@ -551,3 +551,23 @@ func TestSettingsButton(t *testing.T) {
 		t.Fatalf("gear opens settings: %d %d", rec.settings, rec.backups)
 	}
 }
+
+// The chrome and the list sit on the token scales: icon buttons are 28 circles 8 from the edge, and a row's name
+// starts after the card's 12, the row's 12, the 28 badge and 8.
+func TestPanelFollowsTheSpacingScale(t *testing.T) {
+	work := identity("work", "github-work", "bob@example.com", account.GitHub, 2, "~/work/")
+	_, tt, _ := screen(t, work)
+	tt.Frame()
+	for _, label := range []string{"Settings", "Quit"} {
+		b, ok := tt.Find(label)
+		if !ok || b.W != 28 || b.H != 28 {
+			t.Errorf("%s button is %v, want 28 x 28", label, b)
+		}
+	}
+	if b, _ := tt.Find("Settings"); b.X+b.W != 340-8 {
+		t.Errorf("the title row's end inset is %v, want 8", 340-b.X-b.W)
+	}
+	if name, _ := tt.Find("work"); name.X != 12+12+28+8 {
+		t.Errorf("the row's name starts at %v, want 60", name.X)
+	}
+}

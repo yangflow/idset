@@ -11,6 +11,7 @@ import (
 	"github.com/yangflow/idset/internal/diagnose"
 	"github.com/yangflow/idset/internal/match"
 	"github.com/yangflow/idset/internal/ui/icons"
+	"github.com/yangflow/idset/internal/ui/theme"
 )
 
 // Diagnostics is what the owner knows of the connectivity checks: the current check of each identity, the
@@ -253,7 +254,7 @@ func (s *Screen) problemBar(c *ui.Context, a account.Account, p diagnose.Problem
 			tip = fmt.Sprintf(s.text.HTTPSBarTip, r[0].From, r[0].To)
 		}
 	}
-	ui.Column(c.Key("problem-"+a.ID)).Padding(0, t.Space(2), t.Space(1.5), t.Space(8)).Children(func() {
+	ui.Column(c.Key("problem-"+a.ID)).Padding(0, t.Space(2), t.Space(1.5), t.Space(12)).Children(func() {
 		ui.Row(c).Height(t.Space(7)).Gap(t.Space(1.5)).AlignItems(ui.Center).MinWidth(0).Children(func() {
 			ui.Icon(c, icon).FontSize(t.Rem(1.1)).TextColor(color).Shrink(0)
 			says := ui.Row(c).Grow(1).MinWidth(0).AlignItems(ui.Center).Label(lead + s.text.Then + tip).Children(func() {
@@ -409,14 +410,15 @@ func (s *Screen) noSSHNotice(c *ui.Context) {
 			ids = append(ids, a.ID)
 		}
 	}
-	fillCard(c, "no-ssh", t.Danger).Padding(0, t.Space(2), t.Space(1.5), t.Space(3)).
+	// A notice sits on the danger tint, not in an outline: the glyph and the words say how bad it is.
+	ui.Column(c.Key("no-ssh")).Radius(theme.CardRadius).Background(theme.Of(c).DangerSoft).Padding(0, t.Space(2), t.Space(1.5), t.Space(3)).
 		Children(func() {
 			ui.Row(c).Height(t.Space(7)).Gap(t.Space(1.5)).AlignItems(ui.Center).Children(func() {
 				ui.Icon(c, icons.Error).FontSize(t.Rem(1.1)).TextColor(t.Danger).Shrink(0)
 				ui.Text(c, s.text.NoSSH).FontWeight(600).Grow(1).MinWidth(0)
 				s.retryButton(c, "retry-ssh", ids)
 			})
-			ui.Text(c, hint).FontSize(t.Rem(0.9)).TextColor(t.TextMuted).Padding(0, t.Space(1), t.Space(1), t.Space(5))
+			ui.Text(c, hint).FontSize(t.Rem(0.9)).TextColor(theme.Of(c).Fg2).Padding(0, t.Space(1), t.Space(1), t.Space(5))
 		})
 }
 
