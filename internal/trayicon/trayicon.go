@@ -1,4 +1,5 @@
-// Package trayicon draws the tray icon, the product icon's key, so that no image file has to be maintained by hand.
+// Package trayicon draws the tray icon, the product icon's folder with its keyhole, so that no image file has to be
+// maintained by hand.
 package trayicon
 
 import (
@@ -13,7 +14,7 @@ import (
 type Badge int
 
 const (
-	// None: the key alone.
+	// None: the folder alone.
 	None Badge = iota
 	// Warning: a triangle with "!".
 	Warning
@@ -27,25 +28,29 @@ var (
 	dangerInk  = color.NRGBA{R: 0xdc, G: 0x26, B: 0x26, A: 0xff}
 )
 
-// The key is drawn in units of a 54×36 box, 36 being the 18 points of the macOS menu bar at 2x.
-const keyWidth, keyHeight = 54, 36
+// The template is 54×36, 36 being the 18 points of the macOS menu bar at 2x.
+const templateWidth, templateHeight = 54, 36
 
-// PNG returns the tray icon. A template icon is the key at full size, 54×36, black on transparent for macOS to
-// tint to the menu bar, which scales it to 18 points tall. Otherwise it is 32×32, the key scaled to the width and
-// centered, in a mid gray that stays visible on light and dark taskbars, since Windows and Linux show a square. A
-// badge sits at the lower right, 1.5 apart from the key: in a template its "!" is cut out, elsewhere it is in
-// Warning or Danger with a white "!".
+// The folder and its keyholes are drawn on the 100 grid of design/icon.svg, where the folder spans x 10 to 90 and
+// y 20 to 84.
+const folderLeft, folderTop, folderWidth, folderHeight = 10, 20, 80, 64
+
+// PNG returns the tray icon. A template icon is 54×36, black on transparent for macOS to tint to the menu bar, which
+// scales it to 18 points tall; the folder is as tall as the icon and centered. Otherwise it is 32×32 in a mid gray
+// that stays visible on light and dark taskbars, since Windows and Linux show a square: the folder is as wide as the
+// icon, or, with a badge, smaller at the upper left so that the badge stays clear of the keyhole. A badge sits at
+// the lower right, 1.5 apart from the folder: in a template its "!" is cut out, elsewhere it is in Warning or Danger
+// with a white "!".
 func PNG(template bool, badge Badge) []byte {
 	ink := color.NRGBA{R: 0x8a, G: 0x8a, B: 0x8a, A: 0xff}
-	w, h := 32, 32
-	k, dy := float64(w)/keyWidth, (32-keyHeight*32.0/keyWidth)/2
 	if template {
 		ink = color.NRGBA{A: 0xff}
-		w, h, k, dy = keyWidth, keyHeight, 1, 0
 	}
+	w, h, grid := place(template, badge)
 	img := image.NewNRGBA(image.Rect(0, 0, w, h))
-	paint(img, func(x, y float64) bool { return inKey(x/k, (y-dy)/k) }, ink)
-	paint(img, func(x, y float64) bool { return inBranch(x/k, (y-dy)/k) }, color.NRGBA{})
+	paint(img, func(x, y float64) bool { return inside(folder, grid, x, y) }, ink)
+	paint(img, func(x, y float64) bool { gx, gy := grid(x, y); return keyholeCut.inside(gx, gy) }, color.NRGBA{})
+	paint(img, func(x, y float64) bool { gx, gy := grid(x, y); return keyholeCore.inside(gx, gy) }, ink)
 	// The badge is laid out for a 32×32 icon; a template scales it to the height and moves it to the right edge.
 	bk := float64(h) / 32
 	drawBadge(img, template, ink, badge, func(x, y float64) (float64, float64) {
@@ -58,57 +63,86 @@ func PNG(template bool, badge Badge) []byte {
 	return b.Bytes()
 }
 
-// inKey is the product icon's key, solid and pointing right: a rounded diamond bow centered at (18, 18) whose
-// corners reach the top and the bottom, a shaft 9.2 thick from the bow to 53, and two bits under the shaft.
-func inKey(x, y float64) bool {
-	const cy = keyHeight / 2
-	return diamond(x-18, y-cy, 17.5, 3.5) <= 0 || roundRect(x, y, 28, cy-4.6, 53, cy+4.6, 2.8) ||
-		roundRect(x, y, 39, cy, 44, cy+10.6, 1.6) || roundRect(x, y, 46.5, cy, 51.5, cy+8.6, 1.6)
+// place returns the icon's size and grid, which maps a point of the icon to the 100 grid of design/icon.svg.
+func place(template bool, badge Badge) (w, h int, grid func(x, y float64) (float64, float64)) {
+	w, h = 32, 32
+	s, ox, oy := 32.0/folderWidth, 0.0, (32-folderHeight*32.0/folderWidth)/2
+	if badge != None {
+		s, ox, oy = 0.35, 0, 1
+	}
+	if template {
+		w, h = templateWidth, templateHeight
+		s = float64(templateHeight) / folderHeight
+		ox, oy = (templateWidth-folderWidth*s)/2, 0
+	}
+	return w, h, func(x, y float64) (float64, float64) { return (x-ox)/s + folderLeft, (y-oy)/s + folderTop }
 }
 
-// inBranch is the Git branch cut out of the bow: a trunk with a node at each end, and a curve from it to a third
-// node at the upper right.
-func inBranch(x, y float64) bool {
-	const cy, s, half, node = keyHeight / 2, 8.0, 1.3, 2.5
-	trunk, tip := [2]float64{14.2, cy}, [2]float64{20.6, cy - s*0.45}
-	p := [2]float64{x, y}
-	if toSegment(p, [2]float64{trunk[0], cy - s}, [2]float64{trunk[0], cy + s}) <= half {
+// folder is the outline of design/icon.svg's folder, its tab at the upper left, flattened to a polygon.
+var folder = newOutline(10, 33).
+	quad(10, 20, 23, 20).line(35, 20).quad(40, 20, 43, 24).line(45.5, 27.5).quad(47.5, 30, 51, 30).line(77, 30).
+	quad(90, 30, 90, 43).line(90, 71).quad(90, 84, 77, 84).line(23, 84).quad(10, 84, 10, 71).points
+
+// The keyhole cut through the folder, and the smaller mint one lit inside it.
+var (
+	keyholeCut  = keyhole{cx: 50, cy: 53, r: 11.5, top: 57, bottom: 75.5, neck: 13, foot: 17.5}
+	keyholeCore = keyhole{cx: 50, cy: 53, r: 7, top: 57, bottom: 71, neck: 6.5, foot: 9.5}
+)
+
+// keyhole is a round head and a foot that widens from neck at top to foot at bottom, its bottom corners rounded by
+// 2.2.
+type keyhole struct{ cx, cy, r, top, bottom, neck, foot float64 }
+
+func (k keyhole) inside(x, y float64) bool {
+	if math.Hypot(x-k.cx, y-k.cy) <= k.r {
 		return true
 	}
-	// The curve is a quadratic from the trunk to the tip, bent towards the upper right.
-	q := func(t float64) [2]float64 {
+	const c = 2.2
+	l, r := k.cx-k.foot/2, k.cx+k.foot/2
+	foot := newOutline(k.cx-k.neck/2, k.top).line(k.cx+k.neck/2, k.top).line(r, k.bottom-c).quad(r, k.bottom, r-c, k.bottom).
+		line(l+c, k.bottom).quad(l, k.bottom, l, k.bottom-c).points
+	return inPolygon([2]float64{x, y}, foot)
+}
+
+// outline builds a closed polygon from lines and quadratic curves, each curve cut into 12 segments.
+type outline struct{ points [][2]float64 }
+
+func newOutline(x, y float64) *outline { return &outline{points: [][2]float64{{x, y}}} }
+
+func (o *outline) line(x, y float64) *outline {
+	o.points = append(o.points, [2]float64{x, y})
+	return o
+}
+
+func (o *outline) quad(cx, cy, x, y float64) *outline {
+	p := o.points[len(o.points)-1]
+	for i := 1; i <= 12; i++ {
+		t := float64(i) / 12
 		u := 1 - t
-		return [2]float64{u*u*trunk[0] + 2*u*t*tip[0] + t*t*tip[0], u*u*(cy+s*0.35) + 2*u*t*(cy-s*0.25) + t*t*tip[1]}
+		o.points = append(o.points, [2]float64{u*u*p[0] + 2*u*t*cx + t*t*x, u*u*p[1] + 2*u*t*cy + t*t*y})
 	}
-	for i := range 24 {
-		if toSegment(p, q(float64(i)/24), q(float64(i+1)/24)) <= half {
-			return true
+	return o
+}
+
+// inside reports whether the pixel position (x, y), mapped to the grid, is inside the polygon.
+func inside(poly [][2]float64, grid func(x, y float64) (float64, float64), x, y float64) bool {
+	gx, gy := grid(x, y)
+	return inPolygon([2]float64{gx, gy}, poly)
+}
+
+// inPolygon reports whether p is inside the closed polygon, by the even-odd rule.
+func inPolygon(p [2]float64, poly [][2]float64) bool {
+	in := false
+	for i, j := 0, len(poly)-1; i < len(poly); j, i = i, i+1 {
+		a, b := poly[i], poly[j]
+		if (a[1] > p[1]) != (b[1] > p[1]) && p[0] < (b[0]-a[0])*(p[1]-a[1])/(b[1]-a[1])+a[0] {
+			in = !in
 		}
 	}
-	return math.Hypot(x-trunk[0], y-cy-s) <= node || math.Hypot(x-trunk[0], y-cy+s) <= node ||
-		math.Hypot(x-tip[0], y-tip[1]) <= node
+	return in
 }
 
-// diamond is the signed distance from (x, y) to a diamond centered at the origin, its corners r from the center
-// before they are rounded by round: negative inside.
-func diamond(x, y, r, round float64) float64 {
-	u, v := math.Abs(x+y)/math.Sqrt2, math.Abs(y-x)/math.Sqrt2
-	half := r/math.Sqrt2 - round
-	qu, qv := u-half, v-half
-	return math.Hypot(max(qu, 0), max(qv, 0)) + min(max(qu, qv), 0) - round
-}
-
-// roundRect reports whether (x, y) is inside the rectangle from (left, top) to (right, bottom) with corners rounded
-// by r.
-func roundRect(x, y, left, top, right, bottom, r float64) bool {
-	if x < left || x > right || y < top || y > bottom {
-		return false
-	}
-	cx, cy := max(left+r, min(right-r, x)), max(top+r, min(bottom-r, y))
-	return math.Hypot(x-cx, y-cy) <= r
-}
-
-// drawBadge clears the badge's shape grown by 1.5 so that it stands apart from the key, fills the shape, then
+// drawBadge clears the badge's shape grown by 1.5 so that it stands apart from the folder, fills the shape, then
 // draws or cuts out the "!";
 // at maps a pixel position to the 32×32 layout.
 func drawBadge(img *image.NRGBA, template bool, ink color.NRGBA, badge Badge, at func(x, y float64) (float64, float64)) {
