@@ -46,7 +46,7 @@ func (s *Screen) keyForm(c *ui.Context) {
 	t := c.Theme()
 	busy := s.keys.busy
 	if a, ok := s.identity(s.keys.target); ok {
-		theme.Card(c, ui.Row(c)).Gap(t.Space(2)).Padding(t.Space(2.5), t.Space(3), t.Space(2.5), t.Space(3)).Children(func() {
+		theme.Card(c, ui.Row(c)).Gap(t.Space(2)).Padding(t.Space(3)).Children(func() {
 			ui.Icon(c, icons.Key).FontSize(t.Space(3.5)).TextColor(t.TextMuted)
 			ui.Text(c, fmt.Sprintf(s.text.KDiag, s.label(a), s.env.Tilde(a.KeyPath))).Grow(1).Wrap()
 		})
@@ -61,7 +61,7 @@ func (s *Screen) keyForm(c *ui.Context) {
 			in.Font("monospace").FontSize(t.Rem(0.88))
 		}
 	}
-	group := ui.Column(c).Gap(t.Space(5))
+	group := ui.Column(c).Gap(t.Space(6))
 	if busy {
 		group.Opacity(0.5)
 	}
@@ -279,19 +279,19 @@ func (s *Screen) pickDialog(c *ui.Context) ui.Element {
 		ui.Divider(c)
 		choice := func(value, label string, head func(), sub string) {
 			on := s.keys.pick == value
-			row := ui.RadioBase(c.Key("pick-"+value), &s.keys.pick, value).Label(label).Gap(t.Space(2)).Padding(t.Space(1.25), 0, t.Space(1.25), 0)
+			row := ui.RadioBase(c.Key("pick-"+value), &s.keys.pick, value).Label(label).Gap(t.Space(2)).Padding(t.Space(1.5), 0, t.Space(1.5), 0)
 			row.Children(func() {
 				ring := t.Border
 				if on {
 					ring = t.Accent
 				}
-				ui.Row(c).Size(t.Space(3.5), t.Space(3.5)).Radius(t.Space(1.75)).Border(1.5, ring).Justify(ui.Center).AlignItems(ui.Center).Shrink(0).
-					Margin(t.Space(0.25), 0, 0, 0).Children(func() {
+				ui.Row(c).Size(t.Space(3.5), t.Space(3.5)).Radius(theme.Capsule).Border(1.5, ring).Justify(ui.Center).AlignItems(ui.Center).Shrink(0).
+					Margin(t.Space(0.5), 0, 0, 0).Children(func() {
 					if on {
-						ui.Column(c).Size(t.Space(1.75), t.Space(1.75)).Radius(t.Space(0.875)).Background(t.Accent)
+						ui.Column(c).Size(t.Space(1.75), t.Space(1.75)).Radius(theme.Capsule).Background(t.Accent)
 					}
 				})
-				ui.Column(c).Grow(1).MinWidth(0).Gap(t.Space(0.25)).Children(func() {
+				ui.Column(c).Grow(1).MinWidth(0).Gap(t.Space(0.5)).Children(func() {
 					ui.Row(c).Gap(t.Space(1.5)).AlignItems(ui.Center).Children(head)
 					ui.Text(c, sub).FontSize(t.Rem(0.92)).TextColor(t.TextMuted).Wrap()
 				})

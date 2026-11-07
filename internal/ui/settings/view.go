@@ -28,8 +28,8 @@ func (s *Screen) View(c *ui.Context) {
 		theme.TitleBar(c, s.text.Window)
 		s.tabBar(c)
 		ui.Divider(c)
-		ui.Scroll(c).Grow(1).AlignItems(ui.Center).Padding(t.Space(4), t.Space(5), t.Space(5), t.Space(5)).Children(func() {
-			ui.Column(c).FillWidth().MaxWidth(t.Space(140)).Gap(t.Space(5)).Children(func() {
+		ui.Scroll(c).Grow(1).AlignItems(ui.Center).Padding(t.Space(4), t.Space(6), t.Space(6), t.Space(6)).Children(func() {
+			ui.Column(c).FillWidth().MaxWidth(t.Space(140)).Gap(t.Space(6)).Children(func() {
 				switch Pane(s.tab + 1) {
 				case General:
 					s.general(c)
@@ -82,7 +82,7 @@ func (s *Screen) tabBar(c *ui.Context) {
 		parts := ui.TabsBase(c, &s.tab, len(tabs))
 		parts.List.Gap(t.Space(1)).Label(s.text.Tabs).Children(func() {
 			for i, tab := range tabs {
-				el := parts.Tab(i).MinWidth(t.Space(22)).Height(t.Space(13)).PaddingX(t.Space(1)).Radius(8).AlignItems(ui.Center).Justify(ui.Center).Label(tab.name)
+				el := parts.Tab(i).MinWidth(t.Space(22)).Height(t.Space(13)).PaddingX(t.Space(1)).Radius(theme.FieldRadius).AlignItems(ui.Center).Justify(ui.Center).Label(tab.name)
 				color, weight := t.TextMuted, 400
 				switch {
 				case i == s.tab:
@@ -243,7 +243,7 @@ func dot(c *ui.Context, color string) {
 func (s *Screen) backupsPane(c *ui.Context) {
 	t := c.Theme()
 	if s.readOnly {
-		ui.Row(c).Gap(t.Space(2)).Padding(t.Space(2.5), t.Space(3), t.Space(2.5), t.Space(3)).Radius(theme.CardRadius).Background(theme.Of(c).DangerSoft).Children(func() {
+		ui.Row(c).Gap(t.Space(2)).Padding(t.Space(3)).Radius(theme.CardRadius).Background(theme.Of(c).DangerSoft).Children(func() {
 			ui.Icon(c, icons.Warn).FontSize(t.Space(3.5)).TextColor(t.Danger)
 			ui.Text(c, s.text.ReadOnlyBanner).Grow(1)
 		})
@@ -345,7 +345,7 @@ func (s *Screen) identityRow(c *ui.Context, a account.Account) {
 		ui.Text(c, s.label(a)).SingleLine().Shrink(0)
 		ui.Text(c, a.GitUserEmail).FontSize(t.Rem(0.92)).TextColor(t.TextMuted).Grow(1).Wrap()
 		if a.Scope.Global {
-			ui.Row(c).MinWidth(t.Space(6)).Justify(ui.End).Padding(0, t.Space(1.25), 0, 0).Shrink(0).Children(func() {
+			ui.Row(c).MinWidth(t.Space(6)).Justify(ui.End).Padding(0, t.Space(1.5), 0, 0).Shrink(0).Children(func() {
 				ui.Text(c, s.text.Global).FontSize(t.Rem(0.92)).TextColor(t.TextMuted).SingleLine()
 			})
 			return
@@ -478,7 +478,7 @@ func (s *Screen) removeDialog(c *ui.Context) ui.Element {
 			})
 		}
 		box := func(title string, items func()) {
-			theme.Card(c, ui.Column(c)).Gap(t.Space(1.5)).Padding(t.Space(2.5), t.Space(3), t.Space(2.5), t.Space(3)).Children(func() {
+			theme.Card(c, ui.Column(c)).Gap(t.Space(1.5)).Padding(t.Space(3)).Children(func() {
 				ui.Text(c, title).FontSize(t.Rem(0.85)).FontWeight(600).TextColor(t.TextMuted)
 				items()
 			})

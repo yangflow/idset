@@ -146,14 +146,14 @@ func Dialog(c *ui.Context, open *bool, role ui.Role, label string, body func()) 
 	if c.Shortcut(0, ui.KeyEscape) {
 		*open = false
 	}
-	return ui.Column(c).FillWidth().Padding(t.Space(5)).Gap(t.Space(3)).Role(role).Label(label).Children(body)
+	return ui.Column(c).FillWidth().Padding(t.Space(6)).Gap(t.Space(3)).Role(role).Label(label).Children(body)
 }
 
 // Select is a drop-down choosing one of options into *selected: a compact button as wide as the choice, which opens
 // a menu of the system's with the options, the chosen one checked.
 func Select(c *ui.Context, selected *string, options []string) ui.Element {
 	t := c.Theme()
-	b := ui.Button(c, "").Height(t.Space(6.5)).PaddingX(t.Space(2.5)).Gap(t.Space(1.5)).Radius(t.Radius).AlignItems(ui.Center).
+	b := ui.Button(c, "").Height(t.Space(6)).PaddingX(t.Space(2)).Gap(t.Space(1.5)).Radius(t.Radius).AlignItems(ui.Center).
 		Background(t.Surface).Border(0, ui.Color{})
 	if b.Hovered() {
 		b.Background(t.SurfaceHover)

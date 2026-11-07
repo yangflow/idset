@@ -12,7 +12,7 @@ import (
 func (s *Screen) importPane(c *ui.Context) {
 	t := c.Theme()
 	if s.readOnly {
-		ui.Row(c).Gap(t.Space(2)).Padding(t.Space(2.5), t.Space(3), t.Space(2.5), t.Space(3)).Radius(theme.CardRadius).Background(theme.Of(c).DangerSoft).Children(func() {
+		ui.Row(c).Gap(t.Space(2)).Padding(t.Space(3)).Radius(theme.CardRadius).Background(theme.Of(c).DangerSoft).Children(func() {
 			ui.Icon(c, icons.Warn).FontSize(t.Space(3.5)).TextColor(t.Danger)
 			ui.Text(c, s.text.ImportReadOnly).Grow(1)
 		})
@@ -25,7 +25,7 @@ func (s *Screen) importPane(c *ui.Context) {
 			ui.Text(c, s.text.Scanning).FontSize(t.Rem(1.15)).FontWeight(600).Role(ui.RoleHeading).Level(2)
 		}, s.text.ScanningSub, false)
 	case im.scanErr != "":
-		ui.Row(c).Gap(t.Space(2)).Padding(t.Space(2.5), t.Space(3), t.Space(2.5), t.Space(3)).Radius(theme.CardRadius).Background(theme.Of(c).DangerSoft).Children(func() {
+		ui.Row(c).Gap(t.Space(2)).Padding(t.Space(3)).Radius(theme.CardRadius).Background(theme.Of(c).DangerSoft).Children(func() {
 			ui.Icon(c, icons.Warn).FontSize(t.Space(3.5)).TextColor(t.Danger)
 			ui.Text(c, im.scanErr).Grow(1)
 		})
@@ -75,7 +75,7 @@ func (s *Screen) candidates(c *ui.Context) {
 			for i, cand := range im.cands {
 				r.next(c)
 				a := cand.Account
-				ui.Row(c.Key("cand-"+strconv.Itoa(i))).MinHeight(t.Space(11)).Padding(t.Space(1.5), t.Space(3), t.Space(1.5), t.Space(3)).Gap(t.Space(2.5)).
+				ui.Row(c.Key("cand-"+strconv.Itoa(i))).MinHeight(t.Space(11)).Padding(t.Space(1.5), t.Space(3), t.Space(1.5), t.Space(3)).Gap(t.Space(2)).
 					AlignItems(ui.Center).Children(func() {
 					ui.Checkbox(c, &im.checked[i], "").Label(a.Label).Disabled(im.busy)
 					ui.Column(c).Grow(1).Children(func() {
