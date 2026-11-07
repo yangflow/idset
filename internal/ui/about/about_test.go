@@ -94,3 +94,17 @@ func TestFits(t *testing.T) {
 		}
 	}
 }
+
+func TestFollowsTheSpacingScale(t *testing.T) {
+	tt, _ := open(t, "en", Available)
+	text := Text("en")
+	license, ok := tt.Find(text.License)
+	github, ok2 := tt.Find("GitHub")
+	if !ok || !ok2 {
+		t.Fatalf("%q", tt.Texts())
+	}
+	// The actions row sits Space(6), 24, under the license line; the link's label adds the button's own top inset.
+	if gap := github.Y - (license.Y + license.H); gap < 28 {
+		t.Errorf("GitHub label %v is %.1f under the license %v, want at least 28", github, gap, license)
+	}
+}
