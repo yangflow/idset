@@ -20,7 +20,8 @@ func TestGenerated(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !bytes.Equal(got, want) {
+	// A Windows checkout may turn the file's line endings into CRLF; the generator writes LF.
+	if !bytes.Equal(bytes.ReplaceAll(got, []byte("\r\n"), []byte("\n")), want) {
 		t.Fatal("tokens_gen.go is stale: run go generate ./internal/ui/theme")
 	}
 }
